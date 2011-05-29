@@ -1,0 +1,9 @@
+[submodule "third_party/jasmine"]
+	path = third_party/jasmine
+	url = https://github.com/pivotal/jasmine.git
+[submodule "third_party/underscore"]
+	path = third_party/underscore
+	url = https://github.com/documentcloud/underscore.git
+[submodule "third_party/jquery"]
+	path = third_party/jquery
+	url = https://github.com/jquery/jquery.git
