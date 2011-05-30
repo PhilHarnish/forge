@@ -15,6 +15,7 @@ export CLICOLOR='true'
 export LSCOLORS="gxfxcxdxbxegedabagacad"
 
 export PATH="/usr/local/flex/bin:/usr/local/home/philharnish/bin:/usr/local/mysql/bin:$PATH"
+export NODE_PATH=/usr/local/lib/node
 export EDITOR="mate"
 
 # check the window size after each command and, if necessary,
