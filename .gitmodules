@@ -7,3 +7,6 @@
 [submodule "third_party/jquery"]
 	path = third_party/jquery
 	url = https://github.com/jquery/jquery.git
+[submodule "third_party/node"]
+	path = third_party/node
+	url = https://github.com/joyent/node.git

@@ -12,7 +12,7 @@ fi
 
 echo Install node
 if [ -z "$(which node)" ]; then
-  brew -v install --debug node
+  brew -v install --debug --HEAD node
 fi
 
 echo Install npm
