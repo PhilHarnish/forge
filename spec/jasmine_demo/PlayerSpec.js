@@ -1,3 +1,8 @@
+if (typeof require != "undefined") {
+  require("../../src/jasmine_demo/Player.js");
+  require("../../src/jasmine_demo/Song.js");
+}
+
 describe("Player", function() {
   var player;
   var song;
