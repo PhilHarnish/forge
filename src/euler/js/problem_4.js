@@ -8,16 +8,32 @@ exports.preamble = ["Finding the largest palindrome from the product of two",
 
 exports.solutions = {
   brute_force: function () {
-    var p = new Primes();
-    var lastPrime = p.next();
-    var largestFactor;
-    var ceil = Math.ceil(Math.sqrt(NUM));
-    do {
-      lastPrime = p.next();
-      if (NUM % lastPrime == 0) {
-        largestFactor = lastPrime;
+    var a = MAX;
+    var best = 404;
+    while (a > MIN) {
+      var offset = 0;
+      while (offset <= MAX - a) {
+        var b = MAX - offset;
+        if (isPalindrome(a * b) && a * b > best) {
+          best = a * b;
+        }
+        offset++;
       }
-    } while (lastPrime < ceil);
-    return largestFactor;
+      a--;
+    }
+    return best;
   }
 };
+
+function isPalindrome(n) {
+  str = n.toString();
+  var l = str.length ;
+  var l2 = Math.ceil(l / 2);
+  l--;
+  for (var i = 0; i < l2; i++) {
+    if (str[i] != str[l - i]) {
+      return false;
+    }
+  }
+  return true;
+}

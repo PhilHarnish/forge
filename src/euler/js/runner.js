@@ -1,7 +1,7 @@
 var _ = require("../../../third_party/underscore/underscore.js")._;
 
-//var problems = [1, 2, 3, 4];
-var problems = [4];
+//var problems = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+var problems = [10];
 
 _(problems).each(function (i) {
   console.log();
