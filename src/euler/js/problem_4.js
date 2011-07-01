@@ -1,4 +1,5 @@
 var _ = require("../../../third_party/underscore/underscore.js")._;
+var isPalindrome = require("./util.js").isPalindrome;
 
 var MIN = 100;
 var MAX = 999;
@@ -24,16 +25,3 @@ exports.solutions = {
     return best;
   }
 };
-
-function isPalindrome(n) {
-  str = n.toString();
-  var l = str.length ;
-  var l2 = Math.ceil(l / 2);
-  l--;
-  for (var i = 0; i < l2; i++) {
-    if (str[i] != str[l - i]) {
-      return false;
-    }
-  }
-  return true;
-}
