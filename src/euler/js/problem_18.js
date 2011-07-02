@@ -29,10 +29,11 @@ DATA = [
 exports.preamble = ["Finding largest sum through a pyramid."];
 
 exports.solutions = {
-  brute_force: function () {
+  brute_force: function (data) {
+    data = data || DATA;
     var cache = [];
     var dir = [];
-    _(DATA).each(function () {
+    _(data).each(function () {
       cache.push([]);
       dir.push([]);
     });
@@ -40,7 +41,7 @@ exports.solutions = {
       if (cache[x][y]) {
         return cache[x][y];
       }
-      var total = Number(DATA[y][x]);
+      var total = Number(data[y][x]);
       if (y + 1 < cache.length) {
         var left = crawl(x, y + 1);
         var right = crawl(x + 1, y + 1);
