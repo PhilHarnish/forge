@@ -18,7 +18,7 @@ exports.factors = function (n) {
   var p = new Primes();
   var lastPrime;
   var factors = [];
-  var ceil = Math.ceil(Math.sqrt(n));
+  var ceil = Math.ceil(n / 2);
   do {
     lastPrime = p.next();
     if (n % lastPrime == 0) {
