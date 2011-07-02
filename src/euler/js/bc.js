@@ -79,8 +79,3 @@ _.extend(bc, {
 });
 
 exports.bc = bc;
-
-//console.log('result', bc.valueOf(bc.sum(bc(999), bc(999))));
-//console.log('result', 999 + 999);
-console.log('result', bc.valueOf(bc.mult(bc(87178291200), bc(15))));
-console.log('result', 87178291200 * 15);
