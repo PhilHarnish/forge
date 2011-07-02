@@ -1,14 +1,15 @@
 var _ = require("../../../third_party/underscore/underscore.js")._;
+var bc = require("./bc.js").bc;
 
 var Primes = function () {
-  this._lastPrime = -1;
+  var lastPrime = -1;
   this.next = function () {
     abort = 100;
-    this._lastPrime++;
-    while (abort-- && this._lastPrime >= Primes._allPrimes.length) {
+    lastPrime++;
+    while (abort-- && lastPrime >= Primes._allPrimes.length) {
       Primes._findNextPrime();
     }
-    return Primes._allPrimes[this._lastPrime];
+    return Primes._allPrimes[lastPrime];
   };
 };
 Primes._allPrimes = [2, 3];
@@ -35,3 +36,17 @@ Primes._findNextPrime = function() {
 };
 
 exports.Primes = Primes;
+
+var Fibonacci = function () {
+  var last = bc(1);
+  var penultimate = bc(1);
+  this.next = function () {
+    var farthest = penultimate;
+    var next = bc.sum(last, penultimate);
+    penultimate = last;
+    last = next;
+    return farthest;
+  };
+};
+
+exports.Fibonacci = Fibonacci;

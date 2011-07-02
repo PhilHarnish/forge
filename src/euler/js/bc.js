@@ -5,6 +5,7 @@ var bc = function (n) {
 };
 
 _.extend(bc, {
+  TRUNCATE: Infinity,
   _pad: function (n, size) {
     while (n.length < size) {
       n.push(0);
@@ -30,7 +31,7 @@ _.extend(bc, {
     result = [];
 
     var remainder = 0;
-    var digits = Math.max(a.length, b.length);
+    var digits = Math.min(Math.max(a.length, b.length), bc.TRUNCATE);
     a = bc._pad(a, digits);
     b = bc._pad(b, digits);
     var digit = 0;
@@ -55,13 +56,16 @@ _.extend(bc, {
       a = b;
       b = t;
     }
+    // a.length > b.length
     var aLength = a.length;
-    var bLength = b.length;
+    var bLength = Math.min(b.length, bc.TRUNCATE);
     var row;
     var offset = 0;
     var remainder = 0;
+    // For each digit in b...
     for (var bDigit = 0; bDigit < bLength; bDigit++) {
       row = bc._pad([], offset);
+      // Multiply every digit in a...
       for (var aDigit = 0; aDigit < aLength; aDigit++) {
         var subtotal = a[aDigit] * b[bDigit] + remainder;
         row.push(subtotal % 10);
@@ -75,6 +79,22 @@ _.extend(bc, {
       offset++;
     }
     return result;
+  },
+  pow: function(n, p) {
+    var r = bc(1);
+    while (p > 1) {
+      var l = Math.floor(Math.log(p) / Math.log(2));
+      p -= Math.pow(2, l);
+      var m = _(n).clone();
+      while (l--) {
+        m = bc.mult(m, m);
+      }
+      r = bc.mult(r, m);
+    }
+    if (p) {
+      r = bc.mult(r, n);
+    }
+    return r;
   }
 });
 
