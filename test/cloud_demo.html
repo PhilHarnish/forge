@@ -2,8 +2,10 @@
 <html>
 <head>
   <title>Cloud demo</title>
-  <script src="../third_party/jquery/dist/jquery.min.js"></script>
+  <script src="../third_party/jquery/dist/jquery.js"></script>
+  <script src="../third_party/underscore/underscore.js"></script>
   <script src="../third_party/raphael/raphael.js"></script>
+  <script src="../src/cloud/util.js"></script>
   <script src="../src/cloud/main.js"></script>
 <style>
 body {
@@ -22,6 +24,8 @@ body {
 </style>
 </head>
 <body>
+<input id="rotation" type="range"  min="0" max="100" />
+<input id="tilt" type="range"  min="0" max="100" />
 <div id="stage"></div>
 </body>
 </html>
