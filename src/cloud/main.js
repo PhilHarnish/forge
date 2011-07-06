@@ -7,7 +7,7 @@ var camera = setCamera({
   y: Math.round(Number.MAX_VALUE / 2),
   z: Math.round(Number.MAX_VALUE / 2),
   rotation: 1 / 4, // radians (without PI)
-  tilt: 1 / 4 // radians (without PI)
+  tilt: 30 / 100 // radians (without PI)
 });
 
 var viewport;
@@ -17,13 +17,15 @@ $(function () {
   stage = new Raphael("stage", "100%", "100%");
   redraw(stage);
   $("#rotation").change(function () {
-    camera.rotation = ($(this).val() / 100);
-    camera = setCamera(camera);
+    var c = _(camera).clone();
+    c.rotation = $(this).val() / 100;
+    camera = setCamera(c);
     redraw(stage);
   });
   $("#tilt").change(function () {
-    camera.tilt = ($(this).val() / 100);
-    camera = setCamera(camera);
+    var c = _(camera).clone();
+    c.tilt = $(this).val() / 100;
+    camera = setCamera(c);
     redraw(stage);
   });
 });

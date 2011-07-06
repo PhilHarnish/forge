@@ -13,8 +13,8 @@ function setCamera(newCamera) {
       _rotationCos: Math.cos(newCamera.rotation * Math.PI),
       _rotationSin: Math.sin(newCamera.rotation * Math.PI),
       tilt: newCamera.tilt,
-      _tiltCos: Math.cos(Math.atan(Math.sin(newCamera.tilt * Math.PI))),
-      _tiltSin: Math.sin(Math.atan(Math.sin(newCamera.tilt * Math.PI)))
+      _tiltCos: Math.cos(newCamera.tilt * Math.PI),
+      _tiltSin: Math.sin(newCamera.tilt * Math.PI)
     };
     console.log(cameraCache[key]);
   }
