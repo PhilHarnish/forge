@@ -3,14 +3,13 @@
 require 'rubygems'
 require 'sinatra'
 
-def fcsh()
-  # Open fcsh for read/write
-  fd = IO.popen("fcsh", "w+")
+$files = {
+  'web/latest.swf' => "mxmlc -debug=true -target-player=10.2.0 -o=web/latest.swf -compiler.source-path=flash flash/ichigo/Main.as"
+}
 
-  fd
-end
+$targets = {}
 
-def read(fd)
+def fcsh_read(fd)
   fd.flush
 
   buffer = ""
@@ -20,42 +19,34 @@ def read(fd)
       break
     end
   end
-  stdout(buffer)
+  print buffer
+  buffer
 end
 
-def write(fd, str)
+def fcsh_write(fd, str)
+  print str
   fd.puts str
-  read(fd)
+  fcsh_read(fd)
 end
 
-def stdout(str)
-  $stdout.puts str
-  $stdout.flush
+def build(fd, cmd)
+  if $targets[cmd]
+    fcsh_write(fd, "compile %d" % $targets[cmd])
+  else
+    buffer = fcsh_write(fd, cmd)
+    if /Assigned ([\d+]) as the compile target id/ =~ buffer
+      $targets[cmd] = $1
+    end
+  end
 end
 
-$fd = fcsh()
+$fd = IO.popen("fcsh", "w+")
+fcsh_read($fd)
 
-def quit()
-  $fd.close
-  exit
-end
+get '/*' do |path|
+  if $files[path]
+    build($fd, $files[path])
+  end
 
-read($fd)
-
-Signal.trap(:INT) {
-  quit
-}
-
-get '/' do
-  'hello world'
-end
-
-get '/build' do
-  write($fd, "mxmlc -debug=true -target-player=10.2.0 -o=web/latest.swf -compiler.source-path=flash flash/ichigo/Main.as")
-  send_file 'web/latest.swf'
-end
-
-get '/quit' do
-  quit
-  'quit'
+  send_file path
 end
