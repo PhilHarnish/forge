@@ -13,11 +13,7 @@ def fcsh_read(fd)
   fd.flush
 
   buffer = ""
-  while c = fd.read(1)
-    buffer += c
-    if /^\(fcsh\) / =~ buffer
-      break
-    end
+  while buffer += fd.read(1) and ! (/^\(fcsh\) / =~ buffer)
   end
   print buffer
   buffer
