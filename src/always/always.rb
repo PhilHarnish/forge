@@ -4,7 +4,18 @@ require 'rubygems'
 require 'sinatra'
 
 $files = {
-  'web/latest.swf' => "mxmlc -debug=true -target-player=10.2.0 -o=web/latest.swf -compiler.source-path=flash flash/ichigo/Main.as"
+  'test/latest.swf' =>
+    %w(mxmlc
+       -debug=true
+       -target-player=10.2.0
+       -o=test/latest.swf
+       -compiler.source-path=src/deck
+       -define=DEBUGGER::enabled,true
+       -define=DEBUGGER::disabled,false
+       -define=TEST::enabled,false
+       -define=TEST::disabled,true
+       -static-link-runtime-shared-libraries=true
+       src/deck/Main.as).join(' ')
 }
 
 $targets = {}
@@ -20,7 +31,7 @@ def fcsh_read(fd)
 end
 
 def fcsh_write(fd, str)
-  print str
+  print str, "\n"
   fd.puts str
   fcsh_read(fd)
 end
