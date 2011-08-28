@@ -1,3 +1,4 @@
+#!/bin/sh
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
@@ -32,8 +33,7 @@ fi
 
 # Color prompt with git branch.
 source ~/.git-completion.bash
-export PS1='\e[32m\w\e[0m$(__git_ps1 "\e[34m(%s)\e[0m")$ '
-
+export PS1='\[\e[32m\]\w\[\e[0m\]$(__git_ps1 "\[\e[34m\](%s)\[\e[0m\]")$ '
 
 # If this is an xterm set the title to user@host:dir
 case "$TERM" in
