@@ -1,0 +1,181 @@
+// ==UserScript==
+// @name          Glitch Auction Calorie Cost Calculator
+// @description   Calculates the calories ("energy") per currant.
+// @include       http://www.glitch.com/auctions/cat-food/*
+// @author        Phil Harnish <philharnish@gmail.com>
+// @version       1.0
+//
+// ==/UserScript==
+
+function main() {
+  // Remove any items with banned words.
+  var itemToEnergy = {
+    'abbasid_ribs': 88,
+    'all_spice': 1,
+    'apple': 5,
+    'applejack': 25,
+    'awesome_stew': 200,
+    'banana': 10,
+    'banana_no_names': 32,
+    'basic_omelet': 33,
+    'bean_plain': 0,
+    'berry_bowl': 37,
+    'best_bean_dip': 38,
+    'big_salad': 0,
+    'birch_syrup': 4,
+    'black_pepper': 1,
+    'blue_bubble': 5,
+    'bunch_of_grapes': 4,
+    'sno_cone_blue': 0,
+    'broccoli': 0,
+    'bubble_and_squeak': 60,
+    'bun': 9,
+    'butterfly_butter': 6,
+    'cabbage': 0,
+    'camphor': 1,
+    'cardamom': 1,
+    'carrot': 6,
+    'cedar_plank_salmon': 0,
+    'cheese': 6,
+    'cheese_plate': 36,
+    'cheezy_sammich': 23,
+    'cheezy_sauce': 26,
+    'cherry': 1,
+    'chillybusting_chili': 0,
+    'choice_crudites': 38,
+    'cinnamon': 1,
+    'cloudberry': 2,
+    'cloudberry_jam': 0,
+    'cold_taco': 53,
+    'common_crudites': 30,
+    'corn': 6,
+    'corn_off_the_cob': 40,
+    'corny_fritter': 33,
+    'creamy_catsup': 0,
+    'cucumber': 0,
+    'cumin': 1,
+    'curry': 1,
+    'deluxe_sammich': 0,
+    'divine_crepes': 0,
+    'egg_plain': 5,
+    'eggy_scramble': 25,
+    'exotic_fruit_salad': 30,
+    'expensive_grilled_cheese': 0,
+    'flour': 7,
+    'flummery': 0,
+    'fortifying_gruel': 0,
+    'fried_egg': 8,
+    'fried_noodles': 0,
+    'fried_rice': 0,
+    'frog_in_a_hole': 0,
+    'fruit_salad': 0,
+    'gammas_pancakes': 0,
+    'garlic': 1,
+    'ginger': 1,
+    'grain': 1,
+    'greasy_frybread': 0,
+    'green_eggs': 17,
+    'sno_cone_green': 0,
+    'grilled_cheese': 53,
+    'hard_bubble': 15,
+    'hash': 57,
+    'hearty_groddle_sammich': 0,
+    'hearty_omelet': 0,
+    'honey': 4,
+    'hot_n_fizzy_sauce': 0,
+    'hot_pepper': 1,
+    'ice': 0,
+    'ixstyle_braised_meat': 0,
+    'juicy_carpaccio': 56,
+    'lazy_salad': 0,
+    'lemburger': 0,
+    'lemon': 5,
+    'licorice': -3,
+    'lotsa_lox': 34,
+    'mangosteen': 10,
+    'meat': 10,
+    'meat_gumbo': 93,
+    'meat_tetrazzini': 0,
+    'messy_fry_up': 52,
+    'mexicali_eggs': 0,
+    'mild_sauce': 0,
+    'mushroom': 0,
+    'mustard': 1,
+    'nutmeg': 1,
+    'oats': 0,
+    'oaty_cake': 0,
+    'obvious_panini': 0,
+    'oily_dressing': 0,
+    'older_spice': 1,
+    'olive_oil': 0,
+    'onion': 0,
+    'orange': 5,
+    'sno_cone_orange': 0,
+    'parsnip': 0,
+    'pickle': 0,
+    'pinch_of_salt': 1,
+    'pineapple': 7,
+    'papl_upside_down_pizza': 0,
+    'plain_bubble': 2,
+    'plain_noodles': 13,
+    'plank': 0,
+    'plum': 3,
+    'potato': 7,
+    'potato_patty': 26,
+    'proper_rice': 0,
+    'sno_cone_purple': 0,
+    'rice': 0,
+    'rich_tagine': 0,
+    'saffron': 1,
+    'salmon': 0,
+    'sammich': 29,
+    'scrumptious_frittata': 0,
+    'secret_sauce': 0,
+    'sesame_oil': 0,
+    'simple_bbq': 86,
+    'simple_slaw': 24,
+    'snack_pack': 0,
+    'spicy_quesadilla': 0,
+    'spinach': 0,
+    'spinach_salad': 0,
+    'cheese_stinky': 0,
+    'strawberry': 4,
+    'super_veggie_kebabs': 0,
+    'sweet_n_sour_sauce': 29,
+    'tangy_noodles': 0,
+    'tangy_sauce': 0,
+    'tasty_pasta': 0,
+    'tiny_bubble': 0,
+    'tomato': 5,
+    'tortilla': 0,
+    'turmeric': 1,
+    'cheese_very_stinky': 0,
+    'cheese_very_very_stinky': 0,
+    'waffles': 49,
+    'wavy_gravy': 0,
+    'whortleberry': 5,
+    'whortleberry_jelly': 0,
+    'yummy_gruel': 0,
+    'zucchini': 0
+  };
+
+  var maxCpc = 0;
+  var maxName = '';
+  $('#items').find('tr.class_item').each(function(i, elem) {
+    var name = $(elem).attr('id').slice(0, -1);
+    var price = $(elem).find('p.total').text().trim().slice(0, -1);
+    var energy = itemToEnergy[name];
+    var cpc = Math.round(100 * energy / price) / 100;
+    if (cpc > maxCpc) {
+      maxCpc = cpc;
+      maxName = name;
+    }
+    $(this).append('<td>' + cpc + 'cpc<' + '/td>');
+  });
+  $('.auction_results_header').
+      append('<strong>Winner: ' + maxName + '<' + '/strong>');
+}
+
+var script = document.createElement("script");
+script.textContent = "(" + main.toString() + ")();";
+document.body.appendChild(script);
