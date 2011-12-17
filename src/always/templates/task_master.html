@@ -1,0 +1,29 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>asdf</title>
+<script type="text/javascript">
+var complete = function() {
+  console.log("task finished");
+  ping("/finished");
+};
+function ping(url) {
+  var container = {};
+  var start = function () {
+    container.img = new Image();
+    container.img.onload = function () {
+      delete container.img;
+    };
+    container.img.onerror = container.img.onload;
+    container.img.src = url;
+    container.img = null;
+  };
+  start();
+}
+</script>
+</head>
+<body>
+<iframe src="/task"></iframe>
+</body>
+</html>
