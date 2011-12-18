@@ -16,3 +16,6 @@
 [submodule "third_party/node-uuid"]
 	path = third_party/node-uuid
 	url = https://github.com/broofa/node-uuid.git
+[submodule "third_party/jasmine-node"]
+	path = third_party/jasmine-node
+	url = https://github.com/mhevery/jasmine-node.git
