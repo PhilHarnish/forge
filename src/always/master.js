@@ -19,7 +19,6 @@ exports.start = function () {
   if (master) {
     return;
   }
-  console.log("listening on 8001");
   master = true;
   http.createServer(function (req, res) {
     if (req.method == 'GET') {
@@ -47,7 +46,6 @@ exports.start = function () {
             // Registers a new server.
             var body = data.join('');
             var serverId = uuid();
-            console.log("Data posted to master/server:", body);
             var input = JSON.parse(body);
             state.server[serverId] = input;
             console.log("Master stored server:", serverId, ":", input);
@@ -68,16 +66,16 @@ exports.start = function () {
             task: {}
           };
           message.task[taskId] = state.task[taskId];
+          console.log("Master stored task:", taskId, ":", state.task[taskId]);
           res.write('[' + JSON.stringify(message));
           taskPool.push([taskId, [req, res]]);
           processTasks();
           setTimeout(function () {
-            if (state.task[taskId]) {
-              res.write(',');
-              res.write(JSON.stringify(message));
+            if (state.task[taskId].status != "complete") {
+              message.task[taskId].status = "timeout";
             }
             res.write(',');
-            res.write('"timeout"');
+            res.write(JSON.stringify(message));
             res.write(']');
             res.end();
           }, 5000);
@@ -95,7 +93,6 @@ exports.start = function () {
             taskData.push(body);
           });
           req.on('end', function() {
-            console.log('body for /task/TASK_ID:', taskData.join(''));
             var params = querystring.parse(taskData.join(''));
             for (var key in params) {
               state.task[postTaskId][key] = params[key];
@@ -108,7 +105,6 @@ exports.start = function () {
       }
     }
   }).listen(8001);
-  console.log('Master:', master);
 };
 
 exports.registerServer = function (server, callback) {
@@ -124,11 +120,9 @@ exports.registerServer = function (server, callback) {
   var req = http.request(options, function (res) {
     var data = [];
     res.on('data', function (chunk) {
-      console.log('master/server BODY: ' + chunk);
       data.push(chunk);
     });
     res.on('end', function () {
-      console.log("Attempting to parse: ", data.join(''));
       callback(JSON.parse(data.join('')));
     });
   });
@@ -136,10 +130,15 @@ exports.registerServer = function (server, callback) {
   req.end();
 };
 
+var lastMessage = "";
 function processTasks() {
-  console.log("Master processing", taskPool.length, "tasks with",
+  var nextMessage = ["Master processing", taskPool.length, "tasks with",
       taskWorkerPool.length, "workers and",
-      serverPool.length, "servers.");
+      serverPool.length, "servers."].join(' ');
+  if (nextMessage != lastMessage) {
+    lastMessage = nextMessage;
+    console.log(lastMessage);
+  }
   while (taskMasterPool.length && serverPool.length) {
     var taskMaster = taskMasterPool.pop();
     var taskMasterRes = taskMaster[1];

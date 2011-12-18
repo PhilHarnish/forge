@@ -16,7 +16,6 @@ exports.start = function () {
   }
   server = true;
   http.createServer(function (req, res) {
-    console.log(req.url);
     var path = '';
     switch (req.url) {
       case '/task_master':
@@ -57,7 +56,7 @@ master.start();
 master.registerServer({
   address: 'localhost:8002'
 }, function(registry) {
-  console.log("Registered with: " + registry);
+  // 'registry' is the registered server object.
 });
 
 function processTasks() {

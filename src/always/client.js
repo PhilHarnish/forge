@@ -11,6 +11,10 @@ exports.start = function () {
   http.createServer(function (req, res) {
     var daemonData = {};
     var dataHandler = function(data) {
+      // Ignore arrays and strings.
+      if (data.length) {
+        return;
+      }
       for (var key in data) {
         daemonData[key] = data[key];
       }
@@ -33,7 +37,6 @@ exports.start = function () {
       var depth = 0;
       var data = [];
       daemonRes.on('data', function (chunk) {
-        console.log('FROM DAEMON: ' + chunk);
         acc += chunk;
         while (payloadEnd < acc.length) {
           switch (acc[payloadEnd]) {
@@ -62,8 +65,7 @@ exports.start = function () {
           }
           payloadEnd++;
           if (!depth && payloadStart < payloadEnd) {
-            console.log("Client attempting to parse:",
-                acc.substring(payloadStart, payloadEnd));
+            console.log("Attempting to parse: " + acc.substring(payloadStart, payloadEnd));
             var parsed = JSON.parse(acc.substring(payloadStart, payloadEnd));
             payloadStart = payloadEnd + 1;
             data.push(parsed);
@@ -73,8 +75,7 @@ exports.start = function () {
       });
       daemonRes.on('end', function () {
         res.writeHead(200, {'Content-Type': 'text/plain'});
-        res.write('Daemon response to client: ' + acc);
-        res.write('JSON received: ' + JSON.stringify(data));
+        res.write(JSON.stringify(daemonData));
         res.end();
       });
     });
@@ -92,9 +93,13 @@ exports.test = function () {
     path: '/test',
     method: 'POST'
   };
+  var data = [];
   http.request(options, function (res) {
     res.on('data', function (chunk) {
-      console.log('BODY: ' + chunk);
+      data.push(chunk);
+    });
+    res.on('end', function (chunk) {
+      console.log('Test ended:', data.join(''));
     });
   }).end();
 };
