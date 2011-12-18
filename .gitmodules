@@ -13,3 +13,6 @@
 [submodule "third_party/raphael"]
 	path = third_party/raphael
 	url = https://github.com/DmitryBaranovskiy/raphael.git
+[submodule "third_party/node-uuid"]
+	path = third_party/node-uuid
+	url = https://github.com/broofa/node-uuid.git
