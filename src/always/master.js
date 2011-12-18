@@ -81,7 +81,7 @@ exports.start = function () {
           };
           timeout = setTimeout(completeHandler, 5000);
           // TODO: subscribe to 'change'.
-          task.on(task.COMPLETE, completeHandler);
+          task.on(Task.COMPLETE, completeHandler);
           break;
         default:
           if (req.url.indexOf('/task/') != 0) {

@@ -5,27 +5,23 @@
   <title>asdf</title>
 </head>
 <body>
-<script type="text/javascript">
-  console.log(parent);
+<form id='results' method='post' action='http://localhost:8001/task/TASK_ID'>
+</form>
+<script type='text/javascript'>
   parent.complete();
-  post("http://localhost:8001/task/TASK_ID");
-  function post(url) {
-    var form = document.createElement("form");
-    form.setAttribute("method", "POST");
-    form.setAttribute("action", url);
-    var params = {
-      status: "COMPLETE"
-    };
-    for (var key in params) {
-      var input = document.createElement("input");
-      input.setAttribute("type", "hidden");
-      input.setAttribute("name", key);
-      input.setAttribute("value", params[key]);
-      form.appendChild(input);
-    }
-    document.body.appendChild(form);
-    form.submit();
+
+  var form = document.getElementById('results');
+  var params = {
+    status: 'COMPLETE'
+  };
+  for (var key in params) {
+    var input = document.createElement('input');
+    input.setAttribute('type', 'hidden');
+    input.setAttribute('name', key);
+    input.setAttribute('value', params[key]);
+    form.appendChild(input);
   }
+  form.submit();
 </script>
 </body>
 </html>
