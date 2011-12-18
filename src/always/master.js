@@ -2,6 +2,8 @@
 var fs = require('fs'),
     http = require('http'),
     querystring = require('querystring'),
+
+    Task = require('./Task.js'),
     uuid = require('../../third_party/node-uuid/uuid.js');
 
 var serverPool = [];
@@ -58,27 +60,28 @@ exports.start = function () {
           break;
         case '/task':
           // Registers a new task.
-          var taskId = uuid();
-          state.task[taskId] = {
-            status: "created"
-          };
-          var message = {
-            task: {}
-          };
-          message.task[taskId] = state.task[taskId];
-          console.log("Master stored task:", taskId, ":", state.task[taskId]);
-          res.write('[' + JSON.stringify(message));
-          taskPool.push([taskId, [req, res]]);
+          var task = new Task(uuid(), {
+            status: Task.CREATED
+          });
+          state.task[task.id] = task;
+          console.log('Master stored task:', task.id, ':', task.toState());
+          res.write('[' + JSON.stringify(task.toState()));
+          taskPool.push([task, req, res]);
           processTasks();
-          setTimeout(function () {
-            if (state.task[taskId].status != "complete") {
-              message.task[taskId].status = "timeout";
+          var timeout;
+          var completeHandler = function () {
+            clearTimeout(timeout);
+            if (!task.isComplete()) {
+              task.set('status', Task.TIMEOUT);
             }
             res.write(',');
-            res.write(JSON.stringify(message));
+            res.write(JSON.stringify(task.toState()));
             res.write(']');
             res.end();
-          }, 5000);
+          };
+          timeout = setTimeout(completeHandler, 5000);
+          // TODO: subscribe to 'change'.
+          task.on(task.COMPLETE, completeHandler);
           break;
         default:
           if (req.url.indexOf('/task/') != 0) {
@@ -95,7 +98,7 @@ exports.start = function () {
           req.on('end', function() {
             var params = querystring.parse(taskData.join(''));
             for (var key in params) {
-              state.task[postTaskId][key] = params[key];
+              state.task[postTaskId].set(key, params[key]);
             }
             var dest = 'http://localhost:8001/task';
             res.writeHead(302, {'Location': dest});
@@ -148,10 +151,10 @@ function processTasks() {
   }
   while (taskPool.length && taskWorkerPool.length && serverPool.length) {
     // Pair tasks up with servers.
-    var task = taskPool.pop();
-    var taskId = task[0];
-    var taskReq = task[1][0];
-    var taskRes = task[1][1];
+    var taskSet = taskPool.pop();
+    var task = taskSet[0];
+    var taskReq = taskSet[1];
+    var taskRes = taskSet[2];
     var serverId = serverPool[0][0];
     var server = serverPool[0][1];
     taskRes.write(',');
@@ -160,7 +163,7 @@ function processTasks() {
     // Redirect a worker to a server.
     var worker = taskWorkerPool.pop();
     var workerRes = worker[1];
-    var dest = "http://" + server.address + "/task/" + taskId;
+    var dest = "http://" + server.address + "/task/" + task.id;
     workerRes.writeHead(302, {'Location': dest});
     workerRes.end();
   }
