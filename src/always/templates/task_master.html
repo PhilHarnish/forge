@@ -6,24 +6,10 @@
 <script type="text/javascript">
 var complete = function() {
   console.log("task finished");
-  ping("/finished");
 };
-function ping(url) {
-  var container = {};
-  var start = function () {
-    container.img = new Image();
-    container.img.onload = function () {
-      delete container.img;
-    };
-    container.img.onerror = container.img.onload;
-    container.img.src = url;
-    container.img = null;
-  };
-  start();
-}
 </script>
 </head>
 <body>
-<iframe src="/task"></iframe>
+<iframe src="http://localhost:8001/task"></iframe>
 </body>
 </html>

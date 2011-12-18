@@ -19,10 +19,10 @@ server.start();
 
 
 
-setTimeout(function () {
+setInterval(function () {
   // Simulate a request from client to daemon.
   client.test();
-}, 500);
+}, 5000);
 
 
 

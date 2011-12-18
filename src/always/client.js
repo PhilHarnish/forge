@@ -1,12 +1,14 @@
 
 var http = require('http');
 
-var client;
+client = false;
+
 exports.start = function () {
   if (client) {
     return;
   }
-  client = http.createServer(function (req, res) {
+  client = true;
+  http.createServer(function (req, res) {
     var daemonData = {};
     var dataHandler = function(data) {
       for (var key in data) {
@@ -43,7 +45,16 @@ exports.start = function () {
               break;
             case '}':
               depth--;
+              break;
             case '"':
+              if (!depth) {
+                payloadStart = payloadEnd;
+              }
+              if (inString) {
+                depth--;
+              } else {
+                depth++;
+              }
               inString = !inString;
               break;
             case '\\':
@@ -51,6 +62,8 @@ exports.start = function () {
           }
           payloadEnd++;
           if (!depth && payloadStart < payloadEnd) {
+            console.log("Client attempting to parse:",
+                acc.substring(payloadStart, payloadEnd));
             var parsed = JSON.parse(acc.substring(payloadStart, payloadEnd));
             payloadStart = payloadEnd + 1;
             data.push(parsed);
