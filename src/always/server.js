@@ -29,15 +29,15 @@ exports.start = function () {
           res.end();
         });
         break;
-      case '/task/TASK_ID':
-        taskPool.push([req, res]);
-        processTasks();
-        break;
-      case '/finished':
-        console.log('Finished recorded.');
-        break;
       default:
-        console.log('Huh? ' + req.url);
+        if (req.url.indexOf('/task/') == 0) {
+          var taskId = req.url.substring(6);
+          taskPool.push([taskId, [req, res]]);
+          processTasks();
+        } else {
+          res.writeHead(404);
+          res.end();
+        }
     }
     if (path) {
       fs.readFile(path, function (err, data) {
@@ -63,14 +63,15 @@ master.registerServer({
 function processTasks() {
   while (taskPool.length) {
     var task = taskPool.pop();
-    var req = task[0];
-    var res = task[1];
+    var taskId = task[0];
+    var req = task[1][0];
+    var res = task[1][1];
     fs.readFile("templates/task.html", function (err, data) {
       res.writeHead(200, {'Content-Type': 'text/html'});
       if (err) {
         throw err;
       }
-      res.write(data);
+      res.write(data.toString().replace('TASK_ID', taskId));
       res.end();
     });
   }

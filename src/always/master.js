@@ -1,16 +1,18 @@
 
 var fs = require('fs'),
     http = require('http'),
-    querystring = require('querystring');
-
-
+    querystring = require('querystring'),
+    uuid = require('../../third_party/node-uuid/uuid.js');
 
 var serverPool = [];
 var taskMasterPool = [];
 var taskPool = [];
 var taskWorkerPool = [];
 
-state = {};
+state = {
+  server: {},
+  task: {}
+};
 master = false;
 
 exports.start = function () {
@@ -44,28 +46,35 @@ exports.start = function () {
           req.on('end', function() {
             // Registers a new server.
             var body = data.join('');
-            var id = '0D4DEE04-EE57-F74B-0C70B82A1F76E149';
+            var serverId = uuid();
             console.log("Data posted to master/server:", body);
             var input = JSON.parse(body);
-            state[id] = input;
-            console.log("Master Stored:", id, ":", input);
-            res.write('{"server":{"' + id + '":' + JSON.stringify(state[id]));
+            state.server[serverId] = input;
+            console.log("Master stored server:", serverId, ":", input);
+            res.write('{"server":{"' + serverId + '":' +
+                JSON.stringify(state.server[serverId]));
             res.write('}}');
             res.end();
-            serverPool.push(state[id]);
+            serverPool.push([serverId, state.server[serverId]]);
           });
           break;
         case '/task':
           // Registers a new task.
-          res.write('[{"server":{"550e8400-e29b-41d4-a716-446655440000":{');
-          res.write('"address":"localhost:8002"}');
-          res.write('}}');
-          taskPool.push([req, res]);
+          var taskId = uuid();
+          state.task[taskId] = {
+            status: "created"
+          };
+          var message = {
+            task: {}
+          };
+          message.task[taskId] = state.task[taskId];
+          res.write('[' + JSON.stringify(message));
+          taskPool.push([taskId, [req, res]]);
           processTasks();
           setTimeout(function () {
-            if (state['TASK_ID']) {
+            if (state.task[taskId]) {
               res.write(',');
-              res.write(JSON.stringify(state['TASK_ID']));
+              res.write(JSON.stringify(message));
             }
             res.write(',');
             res.write('"timeout"');
@@ -73,7 +82,13 @@ exports.start = function () {
             res.end();
           }, 5000);
           break;
-        case '/task/TASK_ID':
+        default:
+          if (req.url.indexOf('/task/') != 0) {
+            res.writeHead(404);
+            res.end();
+            return;
+          }
+          var postTaskId = req.url.substring(6);
           // Registers an update for a task.
           var taskData = [];
           req.on('data', function(body) {
@@ -82,9 +97,8 @@ exports.start = function () {
           req.on('end', function() {
             console.log('body for /task/TASK_ID:', taskData.join(''));
             var params = querystring.parse(taskData.join(''));
-            state['TASK_ID'] = {};
             for (var key in params) {
-              state['TASK_ID'][key] = params[key];
+              state.task[postTaskId][key] = params[key];
             }
             var dest = 'http://localhost:8001/task';
             res.writeHead(302, {'Location': dest});
@@ -129,18 +143,25 @@ function processTasks() {
   while (taskMasterPool.length && serverPool.length) {
     var taskMaster = taskMasterPool.pop();
     var taskMasterRes = taskMaster[1];
-    var taskMasterDest = "http://" + serverPool[0].address + "/task_master";
+    var taskMasterDest = "http://" + serverPool[0][1].address + "/task_master";
     taskMasterRes.writeHead(302, {'Location': taskMasterDest});
     taskMasterRes.end();
   }
   while (taskPool.length && taskWorkerPool.length && serverPool.length) {
     // Pair tasks up with servers.
     var task = taskPool.pop();
+    var taskId = task[0];
+    var taskReq = task[1][0];
+    var taskRes = task[1][1];
+    var serverId = serverPool[0][0];
+    var server = serverPool[0][1];
+    taskRes.write(',');
+    taskRes.write('{"server":{"' + serverId + '":' +
+        JSON.stringify(server) + '}}');
     // Redirect a worker to a server.
-    var server = serverPool[0];
     var worker = taskWorkerPool.pop();
     var workerRes = worker[1];
-    var dest = "http://" + server.address + "/task/TASK_ID";
+    var dest = "http://" + server.address + "/task/" + taskId;
     workerRes.writeHead(302, {'Location': dest});
     workerRes.end();
   }
