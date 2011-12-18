@@ -6,7 +6,9 @@
  * - A background 'server' to serve files to test runners
  * - A client to negotiate the requests
  */
-console.log('Hello world.');
+
+process.chdir(__dirname);
+require.paths.push('../../src', '../../third_party');
 
 var http = require('http'),
     client = require('./client.js'),
@@ -21,7 +23,7 @@ server.start();
 
 setInterval(function () {
   // Simulate a request from client to daemon.
-  client.test();
+  client.test('TaskTest');
 }, 5000);
 
 

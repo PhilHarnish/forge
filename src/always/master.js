@@ -3,8 +3,8 @@ var fs = require('fs'),
     http = require('http'),
     querystring = require('querystring'),
 
-    Task = require('./Task.js'),
-    uuid = require('../../third_party/node-uuid/uuid.js');
+    Task = require('always/Task.js'),
+    uuid = require('node-uuid/uuid.js');
 
 var serverPool = [];
 var taskMasterPool = [];
@@ -12,6 +12,7 @@ var taskPool = [];
 var taskWorkerPool = [];
 
 state = {
+  client: {},
   server: {},
   task: {}
 };
@@ -23,6 +24,8 @@ exports.start = function () {
   }
   master = true;
   http.createServer(function (req, res) {
+    var task,
+        taskId;
     if (req.method == 'GET') {
       switch (req.url) {
         case '/task_master':
@@ -38,19 +41,43 @@ exports.start = function () {
           res.end();
       }
     } else {
+      var data = [];
+      req.on('data', function(body) {
+        data.push(body);
+      });
       switch (req.url) {
-        case '/server':
-          var data = [];
-          req.on('data', function(body) {
-            data.push(body);
+        case '/':
+          req.on('end', function () {
+            var body = data.join('');
+            var updates = JSON.parse(body);
+            // TODO: Manual merging is lame.
+            var uuid;
+            for (uuid in updates.client) {
+              state.client[uuid] = updates.client[uuid];
+              console.log('Master stored client:', uuid, ':',
+                  updates.client[uuid]);
+            }
+            for (uuid in updates.task) {
+              if (uuid in state.task) {
+                task = state.task[uuid];
+                for (var key in updates.task[uuid]) {
+                  task.set(key, updates.task[uuid][key]);
+                }
+              } else {
+                task = new Task(uuid, updates.task[uuid]);
+                addTask(task, req, res);
+              }
+            }
           });
+          break;
+        case '/server':
           req.on('end', function() {
             // Registers a new server.
             var body = data.join('');
             var serverId = uuid();
             var input = JSON.parse(body);
             state.server[serverId] = input;
-            console.log("Master stored server:", serverId, ":", input);
+            console.log('Master stored server:', serverId, ':', input);
             res.write('{"server":{"' + serverId + '":' +
                 JSON.stringify(state.server[serverId]));
             res.write('}}');
@@ -60,14 +87,10 @@ exports.start = function () {
           break;
         case '/task':
           // Registers a new task.
-          var task = new Task(uuid(), {
+          task = new Task(uuid(), {
             status: Task.CREATED
           });
-          state.task[task.id] = task;
-          console.log('Master stored task:', task.id, ':', task.toState());
-          res.write('[' + JSON.stringify(task.toState()));
-          taskPool.push([task, req, res]);
-          processTasks();
+          addTask(task, req, res);
           var timeout;
           var completeHandler = function () {
             clearTimeout(timeout);
@@ -87,18 +110,14 @@ exports.start = function () {
           if (req.url.indexOf('/task/') != 0) {
             res.writeHead(404);
             res.end();
-            return;
+            break;
           }
-          var postTaskId = req.url.substring(6);
+          taskId = req.url.substring(6);
           // Registers an update for a task.
-          var taskData = [];
-          req.on('data', function(body) {
-            taskData.push(body);
-          });
           req.on('end', function() {
-            var params = querystring.parse(taskData.join(''));
+            var params = querystring.parse(data.join(''));
             for (var key in params) {
-              state.task[postTaskId].set(key, params[key]);
+              state.task[taskId].set(key, params[key]);
             }
             var dest = 'http://localhost:8001/task';
             res.writeHead(302, {'Location': dest});
@@ -109,6 +128,14 @@ exports.start = function () {
     }
   }).listen(8001);
 };
+
+function addTask(task, req, res) {
+  state.task[task.id] = task;
+  console.log('Master stored task:', task.toState());
+  res.write('[' + JSON.stringify(task.toState()));
+  taskPool.push([task, req, res]);
+  processTasks();
+}
 
 exports.registerServer = function (server, callback) {
   var options = {
@@ -133,11 +160,11 @@ exports.registerServer = function (server, callback) {
   req.end();
 };
 
-var lastMessage = "";
+var lastMessage = '';
 function processTasks() {
-  var nextMessage = ["Master processing", taskPool.length, "tasks with",
-      taskWorkerPool.length, "workers and",
-      serverPool.length, "servers."].join(' ');
+  var nextMessage = ['Master processing', taskPool.length, 'tasks with',
+      taskWorkerPool.length, 'workers and',
+      serverPool.length, 'servers.'].join(' ');
   if (nextMessage != lastMessage) {
     lastMessage = nextMessage;
     console.log(lastMessage);
@@ -145,7 +172,8 @@ function processTasks() {
   while (taskMasterPool.length && serverPool.length) {
     var taskMaster = taskMasterPool.pop();
     var taskMasterRes = taskMaster[1];
-    var taskMasterDest = "http://" + serverPool[0][1].address + "/task_master";
+    var taskMasterDest = 'http://' + serverPool[0][1].host + ':' +
+        serverPool[0][1].port + '/task_master';
     taskMasterRes.writeHead(302, {'Location': taskMasterDest});
     taskMasterRes.end();
   }
@@ -153,7 +181,6 @@ function processTasks() {
     // Pair tasks up with servers.
     var taskSet = taskPool.pop();
     var task = taskSet[0];
-    var taskReq = taskSet[1];
     var taskRes = taskSet[2];
     var serverId = serverPool[0][0];
     var server = serverPool[0][1];
@@ -163,7 +190,8 @@ function processTasks() {
     // Redirect a worker to a server.
     var worker = taskWorkerPool.pop();
     var workerRes = worker[1];
-    var dest = "http://" + server.address + "/task/" + task.id;
+    var dest = 'http://' + serverPool[0][1].host + ':' +
+        serverPool[0][1].port + '/task/' + task.id;
     workerRes.writeHead(302, {'Location': dest});
     workerRes.end();
   }

@@ -1,5 +1,8 @@
 
-var http = require('http');
+var http = require('http'),
+
+    Task = require('always/Task.js'),
+    uuid = require('node-uuid/uuid.js');
 
 client = false;
 
@@ -9,6 +12,38 @@ exports.start = function () {
   }
   client = true;
   http.createServer(function (req, res) {
+    var message = {
+      client: {
+      },
+      task: {
+      }
+    };
+    var clientId = uuid();
+    message.client[clientId] = {
+      src: 'git://url',
+      rev: '4e21056949c926f7ac667b7149b579aa00c17b8e'
+    };
+    // TODO: Read tasks from request body.
+    var task = new Task(uuid(), {
+      client: clientId,
+      type: 'jasmine-node',
+      data: 'always/TaskTest.js'
+    });
+    // TODO: This is a little hacky. Need new API more like:
+    // state.toString('client.UUID', 'task.UUID');
+    message.task[task.id] = task.data;
+
+    // Simulate initiating a test run.
+    var options = {
+      host: 'localhost',
+      port: 8001,
+      path: '/',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/jsonrequest'
+      }
+    };
+
     var daemonData = {};
     var dataHandler = function(data) {
       // Ignore arrays and strings.
@@ -17,18 +52,35 @@ exports.start = function () {
       }
       for (var key in data) {
         daemonData[key] = data[key];
+        if (key == 'server') {
+          console.log('Need to notify:', data[key]);
+          var server;
+          for (var uuid in data[key]) {
+            // TODO: Pick the best available server(s).
+            server = data[key][uuid];
+          }
+          var serverOptions = {
+            host: server.host,
+            port: server.port,
+            path: '/',
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/jsonrequest'
+            }
+          };
+          console.log('Sending server:', serverOptions.host,
+              serverOptions.port, serverOptions.path);
+          console.log(JSON.stringify(message));
+          var serverReq = http.request(serverOptions, function (serverRes) {
+            // Don't care?
+          });
+          serverReq.write(JSON.stringify(message));
+          serverReq.end();
+        }
       }
     };
     // Simulate initiating a test run.
-    var options = {
-      host: 'localhost',
-      port: 8001,
-      path: '/task',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/jsonrequest'
-      }
-    };
+    options.port = 8001;
     var daemonReq = http.request(options, function (daemonRes) {
       var acc = "";
       var payloadStart = 1;
@@ -65,7 +117,6 @@ exports.start = function () {
           }
           payloadEnd++;
           if (!depth && payloadStart < payloadEnd) {
-            console.log("Attempting to parse: " + acc.substring(payloadStart, payloadEnd));
             var parsed = JSON.parse(acc.substring(payloadStart, payloadEnd));
             payloadStart = payloadEnd + 1;
             data.push(parsed);
@@ -79,14 +130,11 @@ exports.start = function () {
         res.end();
       });
     });
-    daemonReq.write('[{src: "git",' +
-        'rev: "4e21056949c926f7ac667b7149b579aa00c17b8e",' +
-        'tests: ["templates/task.html"]}]\n');
-    daemonReq.end();
+    daemonReq.end(JSON.stringify(message));
   }).listen(8000);
 };
 
-exports.test = function () {
+exports.test = function (test) {
   var options = {
     host: 'localhost',
     port: 8000,
@@ -94,13 +142,15 @@ exports.test = function () {
     method: 'POST'
   };
   var data = [];
-  http.request(options, function (res) {
+  var req = http.request(options, function (res) {
     res.on('data', function (chunk) {
       data.push(chunk);
     });
     res.on('end', function (chunk) {
       console.log('Test ended:', data.join(''));
     });
-  }).end();
+  });
+  req.write("test=" + test);
+  req.end();
 };
 

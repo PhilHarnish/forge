@@ -2,7 +2,8 @@ var events = require("events");
 
 var Task = function(id, data) {
   this.id = id;
-  this.data = data;
+  this.data = data || {};
+  this.data.status = this.data.status || Task.CREATED;
   this.state = {
     task: {}
   };
