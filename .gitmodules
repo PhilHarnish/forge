@@ -25,3 +25,6 @@
 [submodule "third_party/should"]
 	path = third_party/should
 	url = https://github.com/visionmedia/should.js.git
+[submodule "third_party/node-mime"]
+	path = third_party/node-mime
+	url = https://github.com/bentomas/node-mime.git

@@ -3,6 +3,7 @@ var fs = require('fs'),
     http = require('http'),
     master = require('always/master.js'),
 
+    mime = require('node-mime/mime.js'),
     Task = require('always/Task.js');
 
 server = false;
@@ -90,10 +91,10 @@ exports.start = function () {
     }
     if (path) {
       fs.readFile(path, function (err, data) {
-        res.writeHead(200, {'Content-Type': 'text/html'});
         if (err) {
           throw err;
         }
+        res.writeHead(200, {'Content-Type': mime.lookup(path)});
         res.end(data);
       });
     }
