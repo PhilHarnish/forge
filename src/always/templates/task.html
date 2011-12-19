@@ -11,18 +11,46 @@ $TASK_BODY
 <form id='results' method='post' action='http://localhost:8001/task/$TASK_ID'>
 </form>
 <script type='text/javascript'>
+  var filename = 'jasmine-2.0.0.rc1.js';
+  function removeJasmineFrames(text) {
+    var lines = [];
+    text.split(/\n/).forEach(function(line){
+      if (line.indexOf(filename) == -1) {
+        lines.push(line);
+      }
+    });
+    return lines.join('\n');
+  }
   var jasmineEnv = jasmine.getEnv();
+  // Prevent async behavior.
+  jasmineEnv.updateInterval = 0;
   var reporter = new jasmine.JsApiReporter();
   jasmineEnv.addReporter(reporter);
   jasmineEnv.execute();
-  console.log("Test results:", reporter.results());
 
   parent.complete();
 
   var form = document.getElementById('results');
+  var raw = reporter.results();
+  var results = [];
+  for (var i in raw) {
+    var result = {
+      result: raw[i].result
+    };
+    var messages = [];
+    for (var message in raw[i].messages) {
+      messages.push(removeJasmineFrames(raw[i].messages[0].trace.stack));
+    }
+    if (messages.length) {
+      result.messages = messages;
+    }
+    results.push(result);
+  }
   var params = {
-    status: 'COMPLETE'
+    status: 'COMPLETE',
+    results: JSON.stringify(results)
   };
+  console.log('Sending', params);
   for (var key in params) {
     var input = document.createElement('input');
     input.setAttribute('type', 'hidden');

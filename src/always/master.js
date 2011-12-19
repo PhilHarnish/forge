@@ -87,24 +87,9 @@ exports.start = function () {
           break;
         case '/task':
           // Registers a new task.
-          task = new Task(uuid(), {
+          addTask(new Task(uuid(), {
             status: Task.CREATED
-          });
-          addTask(task, req, res);
-          var timeout;
-          var completeHandler = function () {
-            clearTimeout(timeout);
-            if (!task.isComplete()) {
-              task.set('status', Task.TIMEOUT);
-            }
-            res.write(',');
-            res.write(JSON.stringify(task.toState()));
-            res.write(']');
-            res.end();
-          };
-          timeout = setTimeout(completeHandler, 5000);
-          // TODO: subscribe to 'change'.
-          task.on(Task.COMPLETE, completeHandler);
+          }), req, res);
           break;
         default:
           if (req.url.indexOf('/task/') != 0) {
@@ -116,8 +101,20 @@ exports.start = function () {
           // Registers an update for a task.
           req.on('end', function() {
             var params = querystring.parse(data.join(''));
+            // TODO: Hacky?
+            var status;
+            if ('status' in params) {
+              status = params.status;
+              delete params.status;
+            }
+            if ('results' in params) {
+              params.results = JSON.parse(params.results);
+            }
             for (var key in params) {
               state.task[taskId].set(key, params[key]);
+            }
+            if (status) {
+              state.task[taskId].set('status', status);
             }
             var dest = 'http://localhost:8001/task';
             res.writeHead(302, {'Location': dest});
@@ -135,6 +132,20 @@ function addTask(task, req, res) {
   res.write('[' + JSON.stringify(task.toState()));
   taskPool.push([task, req, res]);
   processTasks();
+  var timeout;
+  var completeHandler = function () {
+    clearTimeout(timeout);
+    if (!task.isComplete()) {
+      task.set('status', Task.TIMEOUT);
+    }
+    res.write(',');
+    res.write(JSON.stringify(task.toState()));
+    res.write(']');
+    res.end();
+  };
+  timeout = setTimeout(completeHandler, 5000);
+  // TODO: subscribe to 'change'.
+  task.on(Task.COMPLETE, completeHandler);
 }
 
 exports.registerServer = function (server, callback) {

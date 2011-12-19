@@ -75,8 +75,7 @@ exports.start = function () {
           var serverReq = http.request(serverOptions, function (serverRes) {
             // Don't care?
           });
-          serverReq.write(JSON.stringify(message));
-          serverReq.end();
+          serverReq.end(JSON.stringify(message));
         }
       }
     };
@@ -127,8 +126,7 @@ exports.start = function () {
       });
       daemonRes.on('end', function () {
         res.writeHead(200, {'Content-Type': 'text/plain'});
-        res.write(JSON.stringify(daemonData));
-        res.end();
+        res.end(JSON.stringify(daemonData));
       });
     });
     daemonReq.end(JSON.stringify(message));
@@ -148,7 +146,21 @@ exports.test = function (test) {
       data.push(chunk);
     });
     res.on('end', function (chunk) {
-      console.log('Test ended:', data.join(''));
+      var results = JSON.parse(data.join(''));
+      var failed = false;
+      for (var task in results.task) {
+        for (var result in results.task[task].results) {
+          if (results.task[task].results[result].result != 'passed') {
+            console.log('\n\n\n', task, '\n',
+                results.task[task].results[result].messages.join('\n\n'));
+            failed = true;
+          }
+        }
+      }
+      if (failed) {
+        console.log();
+        console.log('FAILED')
+      }
     });
   });
   req.write("test=" + test);
