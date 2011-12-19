@@ -77,6 +77,12 @@ exports.start = function () {
           var taskId = req.url.substring(6);
           taskPool.push([taskId, [req, res]]);
           processTasks();
+        } else if (req.url.indexOf('/res/') == 0) {
+          // URL: /res/<snapshot>/path/to/file.
+          var parts = req.url.substring(5).split('/');
+          // TODO: Use snapshot.
+          var snapshot = parts.shift();
+          path = '../../' + parts.join('/');
         } else {
           res.writeHead(404);
           res.end();
@@ -88,8 +94,7 @@ exports.start = function () {
         if (err) {
           throw err;
         }
-        res.write(data);
-        res.end();
+        res.end(data);
       });
     }
   }).listen(8002);
@@ -104,12 +109,41 @@ master.registerServer({
   // 'registry' arg is the registered server object.
 });
 
-
-
+var NODE_HARNESS = '<script src="/res/base/' + [
+      'src/always/templates/node_harness.js',
+      'third_party/jasmine-node/lib/jasmine-node/jasmine-2.0.0.rc1.js'
+    ].join('"><' + '/script><script src="/res/base/') +
+    '"><' + '/script>';
+var INCLUDE_TEMPLATE = '<script type="text/javascript">' +
+    '  alias = "$SCRIPT_ALIAS";' +
+    '  exports = module.exports = require(alias)' +
+    '<' + '/script>' +
+    '<script src="$SCRIPT_SRC"><' + '/script>' +
+    '<script type="text/javascript">' +
+    '  deps[alias] = module.exports;' +
+    '<' + '/script>';
 var TEST_HEADER = '<script type="text/javascript">';
-var TEST_FOOTER = '</script>';
+var TEST_FOOTER = '<' + '/script>';
 
-
+// TODO: Calculate this at runtime.
+var deps = {
+  'spec/always/TaskTest.js': [
+    'third_party/node/lib/util.js', // TODO: Temp.
+    'third_party/node/lib/assert.js', // TODO: Temp.
+    'third_party/should/lib/should.js', // TODO: Temp.
+    'src/always/Task.js'
+  ],
+  'src/always/Task.js': [
+    'third_party/node/lib/events.js'
+  ]
+};
+// TODO: Replace this with a better deps.js? Better paths? Smarter "require"?
+var aliases = {
+  'src/always/Task.js': 'always/Task.js',
+  'third_party/node/lib/assert.js': 'assert',
+  'third_party/node/lib/events.js': 'events',
+  'third_party/node/lib/util.js': 'util'
+};
 
 function processTasks() {
   while (taskPool.length) {
@@ -124,9 +158,12 @@ function processTasks() {
     var task = serverState.task[taskId];
     // NB: task.data is the node with all data.
     // TODO: Better state library!
-    var path = '../../spec/' + task.data.data;
+    var path = '../../' + task.data.data;
     // TODO: simultaneous data and template file reads!
-    var taskBody = TEST_HEADER + fs.readFileSync(path) + TEST_FOOTER;
+    var includeBase = '/res/' + task.data.snapshot + '/';
+    var taskBody = NODE_HARNESS +
+        testIncludes(includeBase, task.data.data) +
+        TEST_HEADER + fs.readFileSync(path) + TEST_FOOTER;
     var res = taskGroup[1][1];
     fs.readFile('templates/task.html', function (err, data) {
       res.writeHead(200, {'Content-Type': 'text/html'});
@@ -139,6 +176,21 @@ function processTasks() {
       res.end();
     });
   }
+}
+
+function testIncludes(base, test) {
+  var result = [];
+  for (var dep in deps[test]) {
+    var file = deps[test][dep];
+    if (file in deps) {
+      result.push(testIncludes(base, file));
+    }
+    var body = INCLUDE_TEMPLATE.
+        replace('$SCRIPT_ALIAS', aliases[file]).
+        replace('$SCRIPT_SRC', base + file);
+    result.push(body);
+  }
+  return result.join('');
 }
 
 setInterval(processTasks, 100);

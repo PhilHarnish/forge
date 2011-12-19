@@ -21,13 +21,14 @@ exports.start = function () {
     var clientId = uuid();
     message.client[clientId] = {
       src: 'git://url',
-      rev: '4e21056949c926f7ac667b7149b579aa00c17b8e'
+      snapshot: '4e21056949c926f7ac667b7149b579aa00c17b8e'
     };
     // TODO: Read tasks from request body.
     var task = new Task(uuid(), {
       client: clientId,
+      snapshot: '4e21056949c926f7ac667b7149b579aa00c17b8e',
       type: 'jasmine-node',
-      data: 'always/TaskTest.js'
+      data: 'spec/always/TaskTest.js'
     });
     // TODO: This is a little hacky. Need new API more like:
     // state.toString('client.UUID', 'task.UUID');
