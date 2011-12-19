@@ -26,12 +26,19 @@ exports.start = function () {
     // TODO: Read tasks from request body.
     var task = new Task(uuid(), {
       client: clientId,
-      snapshot: '4e21056949c926f7ac667b7149b579aa00c17b8e',
+      snapshot: uuid(), // TODO: Temporary cache busting.
       type: 'jasmine-node',
       data: 'spec/always/TaskTest.js'
     });
     // TODO: This is a little hacky. Need new API more like:
     // state.toString('client.UUID', 'task.UUID');
+    message.task[task.id] = task.data;
+    task = new Task(uuid(), {
+      client: clientId,
+      snapshot: uuid(), // TODO: Temporary cache busting.
+      type: 'jasmine-node',
+      data: 'spec/always/StateTest.js'
+    });
     message.task[task.id] = task.data;
 
     // Simulate initiating a test run.
@@ -52,13 +59,11 @@ exports.start = function () {
         return;
       }
       for (var key in data) {
-        daemonData[key] = data[key];
         if (key == 'server') {
-          console.log('Need to notify:', data[key]);
           var server;
-          for (var uuid in data[key]) {
+          for (var uuid in data.server) {
             // TODO: Pick the best available server(s).
-            server = data[key][uuid];
+            server = data.server[uuid];
           }
           var serverOptions = {
             host: server.host,
@@ -69,13 +74,14 @@ exports.start = function () {
               'Content-Type': 'application/jsonrequest'
             }
           };
-          console.log('Sending server:', serverOptions.host,
-              serverOptions.port, serverOptions.path);
-          console.log(JSON.stringify(message));
           var serverReq = http.request(serverOptions, function (serverRes) {
             // Don't care?
           });
           serverReq.end(JSON.stringify(message));
+        } else if (key == 'task') {
+          for (task in data.task) {
+            daemonData[task] = data.task[task];
+          }
         }
       }
     };
@@ -137,7 +143,7 @@ exports.test = function (test) {
   var options = {
     host: 'localhost',
     port: 8000,
-    path: '/test',
+    path: '/task',
     method: 'POST'
   };
   var data = [];
@@ -148,19 +154,17 @@ exports.test = function (test) {
     res.on('end', function (chunk) {
       var results = JSON.parse(data.join(''));
       var failed = false;
-      for (var task in results.task) {
-        for (var result in results.task[task].results) {
-          if (results.task[task].results[result].result != 'passed') {
+      for (var task in results) {
+        for (var result in results[task].results) {
+          if (results[task].results[result].result != 'passed') {
             console.log('\n\n\n', task, '\n',
-                results.task[task].results[result].messages.join('\n\n'));
+                results[task].results[result].messages.join('\n\n'));
             failed = true;
           }
         }
       }
-      if (failed) {
-        console.log();
-        console.log('FAILED')
-      }
+      console.log();
+      console.log(failed ? 'FAILED' : 'PASSED')
     });
   });
   req.write("test=" + test);

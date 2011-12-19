@@ -13,6 +13,9 @@ $TASK_BODY
 <script type='text/javascript'>
   var filename = 'jasmine-2.0.0.rc1.js';
   function removeJasmineFrames(text) {
+    if (!text) {
+      return text;
+    }
     var lines = [];
     text.split(/\n/).forEach(function(line){
       if (line.indexOf(filename) == -1) {

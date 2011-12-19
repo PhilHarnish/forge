@@ -1,4 +1,5 @@
 
+process.chdir(__dirname);
 require.paths.push('../third_party/', '../src/');
 
 var util;

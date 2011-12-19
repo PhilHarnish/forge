@@ -118,21 +118,28 @@ var NODE_HARNESS = '<script src="/res/base/' + [
 var INCLUDE_TEMPLATE = '<script type="text/javascript">' +
     '  alias = "$SCRIPT_ALIAS";' +
     '  exports = module.exports = require(alias)' +
-    '<' + '/script>' +
-    '<script src="$SCRIPT_SRC"><' + '/script>' +
+    '<' + '/script>\n' +
+    '<script src="$SCRIPT_SRC"><' + '/script>\n' +
     '<script type="text/javascript">' +
     '  deps[alias] = module.exports;' +
-    '<' + '/script>';
-var TEST_HEADER = '<script type="text/javascript">';
-var TEST_FOOTER = '<' + '/script>';
+    '<' + '/script>\n';
 
 // TODO: Calculate this at runtime.
 var deps = {
+  'spec/always/StateTest.js': [
+    'third_party/node/lib/util.js', // TODO: Temp.
+    'third_party/node/lib/assert.js', // TODO: Temp.
+    'third_party/should/lib/should.js', // TODO: Temp.
+    'src/always/State.js'
+  ],
   'spec/always/TaskTest.js': [
     'third_party/node/lib/util.js', // TODO: Temp.
     'third_party/node/lib/assert.js', // TODO: Temp.
     'third_party/should/lib/should.js', // TODO: Temp.
     'src/always/Task.js'
+  ],
+  'src/always/State.js': [
+    'third_party/node/lib/events.js'
   ],
   'src/always/Task.js': [
     'third_party/node/lib/events.js'
@@ -140,10 +147,12 @@ var deps = {
 };
 // TODO: Replace this with a better deps.js? Better paths? Smarter "require"?
 var aliases = {
+  'src/always/State.js': 'always/State.js',
   'src/always/Task.js': 'always/Task.js',
   'third_party/node/lib/assert.js': 'assert',
   'third_party/node/lib/events.js': 'events',
-  'third_party/node/lib/util.js': 'util'
+  'third_party/node/lib/util.js': 'util',
+  'third_party/should/lib/should.js': 'should'
 };
 
 function processTasks() {
@@ -162,9 +171,7 @@ function processTasks() {
     var path = '../../' + task.data.data;
     // TODO: simultaneous data and template file reads!
     var includeBase = '/res/' + task.data.snapshot + '/';
-    var taskBody = NODE_HARNESS +
-        testIncludes(includeBase, task.data.data) +
-        TEST_HEADER + fs.readFileSync(path) + TEST_FOOTER;
+    var taskBody = NODE_HARNESS + testIncludes(includeBase, task.data.data);
     var res = taskGroup[1][1];
     fs.readFile('templates/task.html', function (err, data) {
       res.writeHead(200, {'Content-Type': 'text/html'});
@@ -181,16 +188,15 @@ function processTasks() {
 
 function testIncludes(base, test) {
   var result = [];
+  var body;
   for (var dep in deps[test]) {
     var file = deps[test][dep];
-    if (file in deps) {
-      result.push(testIncludes(base, file));
-    }
-    var body = INCLUDE_TEMPLATE.
-        replace('$SCRIPT_ALIAS', aliases[file]).
-        replace('$SCRIPT_SRC', base + file);
-    result.push(body);
+    result.push(testIncludes(base, file));
   }
+  body = INCLUDE_TEMPLATE.
+      replace('$SCRIPT_ALIAS', aliases[test]).
+      replace('$SCRIPT_SRC', base + test);
+  result.push(body);
   return result.join('');
 }
 

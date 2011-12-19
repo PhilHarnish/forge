@@ -133,15 +133,22 @@ function addTask(task, req, res) {
   taskPool.push([task, req, res]);
   processTasks();
   var timeout;
+  // TODO: Writing to res is hacky.
+  res.pendingCount = res.pendingCount || 0;
+  res.pendingCount++;
   var completeHandler = function () {
     clearTimeout(timeout);
+    res.pendingCount--;
     if (!task.isComplete()) {
       task.set('status', Task.TIMEOUT);
     }
     res.write(',');
     res.write(JSON.stringify(task.toState()));
-    res.write(']');
-    res.end();
+    // TODO: This assumes no one else has added tests.
+    if (!res.pendingCount) {
+      res.write(']');
+      res.end();
+    }
   };
   timeout = setTimeout(completeHandler, 5000);
   // TODO: subscribe to 'change'.
