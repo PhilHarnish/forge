@@ -35,6 +35,10 @@ State.prototype.add = function(key, type, data) {
   return this._children[key];
 };
 
+State.prototype.update = function(key, type, data) {
+  return this._children[key] || this.add(key, type, data);
+};
+
 State.prototype._toJsonObject = function () {
   var result = {},
       key;

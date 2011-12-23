@@ -43,6 +43,13 @@ describe("toString()", function () {
 });
 
 describe("updating", function () {
+  it("should create and return a child if one does not exist", function () {
+    var root = new State();
+    expect(root.get("child")).toBeUndefined();
+    var child = root.update("child", State, {key: "value"});
+    child.toString().should.equal(JSON.stringify({child: {key: "value"}}));
+    root.toString().should.equal(JSON.stringify({child: {key: "valu"}}));
+  });
   it("should overwrite updates to properties", function () {
   });
   it("should blend updates to children", function () {

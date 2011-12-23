@@ -130,10 +130,7 @@ exports.start = function () {
 };
 
 function addTask(id, data, req, res) {
-  var task = state.get("task").get(id);
-  if (!task) {
-    task = state.get("task").add(id, Task, data);
-  }
+  var task = state.get("task").update(id, Task, data);
   console.log('Master stored task:', task.toString());
   res.write('[' + task.toString());
   taskPool.push([task, req, res]);
