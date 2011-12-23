@@ -166,11 +166,9 @@ function processTasks() {
       return;
     }
     var task = serverState.task[taskId];
+    var includeBase = '/res/' + task.data.snapshot + '/';
     // NB: task.data is the node with all data.
     // TODO: Better state library!
-    var path = '../../' + task.data.data;
-    // TODO: simultaneous data and template file reads!
-    var includeBase = '/res/' + task.data.snapshot + '/';
     var taskBody = NODE_HARNESS + testIncludes(includeBase, task.data.data);
     var res = taskGroup[1][1];
     fs.readFile('templates/task.html', function (err, data) {
