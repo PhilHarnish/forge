@@ -15,7 +15,7 @@ var taskWorkerPool = [];
 state = new State();
 state.add("client");
 state.add("server");
-state.add("task", Task);
+state.add("task");
 master = false;
 
 exports.start = function () {
@@ -50,6 +50,7 @@ exports.start = function () {
           req.on("end", function () {
             var body = data.join("");
             var updates = JSON.parse(body);
+            console.log("BODY:", body);
             // TODO: Manual merging is lame.
             var uuid;
             for (uuid in updates.client) {

@@ -1,10 +1,19 @@
 
 var http = require('http'),
 
+    State = require('always/State.js'),
     Task = require('always/Task.js'),
     uuid = require('node-uuid/uuid.js');
 
 client = false;
+
+// TODO: centralized state library!
+// Arbitrarily different to avoid conflict with master's copy.
+// This ensures any bugs in my code blow up.
+clientState = new State();
+clientState.add("client");
+clientState.add("server");
+clientState.add("task");
 
 exports.start = function () {
   if (client) {
@@ -12,34 +21,24 @@ exports.start = function () {
   }
   client = true;
   http.createServer(function (req, res) {
-    var message = {
-      client: {
-      },
-      task: {
-      }
-    };
     var clientId = uuid();
-    message.client[clientId] = {
+    clientState.get("client").update(clientId, State, {
       src: 'git://url',
       snapshot: '4e21056949c926f7ac667b7149b579aa00c17b8e'
-    };
+    });
     // TODO: Read tasks from request body.
-    var task = new Task(uuid(), {
+    clientState.get("task").update(uuid(), Task, {
       client: clientId,
       snapshot: uuid(), // TODO: Temporary cache busting.
       type: 'jasmine-node',
       data: 'spec/always/TaskTest.js'
     });
-    // TODO: This is a little hacky. Need new API more like:
-    // state.toString('client.UUID', 'task.UUID');
-    message.task[task.id] = task._data;
-    task = new Task(uuid(), {
+    clientState.get("task").update(uuid(), Task, {
       client: clientId,
       snapshot: uuid(), // TODO: Temporary cache busting.
       type: 'jasmine-node',
       data: 'spec/always/StateTest.js'
     });
-    message.task[task.id] = task._data;
 
     // Simulate initiating a test run.
     var options = {
@@ -77,7 +76,8 @@ exports.start = function () {
           var serverReq = http.request(serverOptions, function (serverRes) {
             // Don't care?
           });
-          serverReq.end(JSON.stringify(message));
+          // TODO: Only send what is necessary.
+          serverReq.end(clientState.toString());
         } else if (key == 'task') {
           for (task in data.task) {
             daemonData[task] = data.task[task];
@@ -86,7 +86,6 @@ exports.start = function () {
       }
     };
     // Simulate initiating a test run.
-    options.port = 8001;
     var daemonReq = http.request(options, function (daemonRes) {
       var acc = "";
       var payloadStart = 1;
@@ -135,7 +134,9 @@ exports.start = function () {
         res.end(JSON.stringify(daemonData));
       });
     });
-    daemonReq.end(JSON.stringify(message));
+    // TODO: This is a little hacky. Need new API more like:
+    // state.toString('/client/UUID', '/task/UUID');
+    daemonReq.end(clientState.toString());
   }).listen(8000);
 };
 

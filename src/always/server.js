@@ -4,6 +4,7 @@ var fs = require('fs'),
     master = require('always/master.js'),
 
     mime = require('node-mime/mime.js'),
+    State = require('always/State.js');
     Task = require('always/Task.js');
 
 server = false;
@@ -13,11 +14,10 @@ server = false;
 // TODO: centralized state library!
 // Arbitrarily different to avoid conflict with master's copy.
 // This ensures any bugs in my code blow up.
-serverState = {
-  client: {},
-  server: {},
-  task: {}
-};
+serverState = new State();
+serverState.add("client");
+serverState.add("server");
+serverState.add("task");
 
 taskPool = [];
 
@@ -27,35 +27,34 @@ exports.start = function () {
   }
   server = true;
   http.createServer(function (req, res) {
-    var path = '';
+    var path = "";
     var data = [];
-    req.on('data', function(body) {
+    req.on("data", function(body) {
       data.push(body);
     });
     switch (req.url) {
-      case '/':
+      case "/":
         // TODO: FIXME. Duplicated code from master.js.
-        req.on('end', function () {
-          var body = data.join('');
+        req.on("end", function () {
+          var body = data.join("");
           var updates = JSON.parse(body);
-          console.log('Server parsed:', updates);
+          console.log("Server parsed:", updates);
           // TODO: Manual merging is lame.
-          var uuid;
-          for (uuid in updates.client) {
-            serverState.client[uuid] = updates.client[uuid];
-            console.log("Server stored client:", uuid, ":",
-                updates.client[uuid]);
+          var id;
+          for (id in updates.client) {
+            serverState.get("client").update(id, State, updates.client[id]);
+            console.log("Server stored client:", id, ":",
+                updates.client[id]);
           }
-          for (uuid in updates.task) {
-            if (uuid in serverState.task) {
-              task = serverState.task[uuid];
-              for (var key in updates.task[uuid]) {
-                task.set(key, updates.task[uuid][key]);
+          for (id in updates.task) {
+            task = serverState.get("task").get(id);
+            if (task) {
+              for (var key in updates.task[id]) {
+                task.set(key, updates.task[id][key]);
               }
             } else {
-              task = new Task(uuid, updates.task[uuid]);
-              serverState.task[uuid] = task;
-              console.log('Server stored task:', task.toString());
+              task = serverState.get("task").add(id, Task, updates.task[id]);
+              console.log("Server stored task:", task.toString());
             }
           }
         });
@@ -160,13 +159,13 @@ function processTasks() {
   while (taskPool.length) {
     var taskGroup = taskPool.pop();
     var taskId = taskGroup[0];
-    if (!(taskId in serverState.task)) {
+    var task = serverState.get("task").get(taskId);
+    if (!task) {
       // TODO: Pretty shitty iteration. Gets stuck too easily.
       taskPool.push(taskGroup);
       console.log('Server does not know task', taskId);
       return;
     }
-    var task = serverState.task[taskId];
     var includeBase = '/res/' + task._data.snapshot + '/';
     // NB: task.data is the node with all data.
     // TODO: Better state library!
