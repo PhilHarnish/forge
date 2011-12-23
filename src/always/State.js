@@ -29,14 +29,20 @@ State.prototype.apply = function(data) {
   }
 };
 
-State.prototype.add = function(key, type, data) {
-  type = type || State;
-  this._children[key] = new type(this._path + "/" + key, data);
+State.prototype.group = function (key, type) {
+  var child = this.add(key);
+  child._type = type || child._type;
+  return child;
+};
+
+State.prototype.add = function(key, data) {
+  this._children[key] = new this._type(this._path + "/" + key, data);
   return this._children[key];
 };
 
-State.prototype.update = function(key, type, data) {
-  return this._children[key] || this.add(key, type, data);
+State.prototype.update = function(key, data) {
+  // TODO: Update existing children!
+  return this._children[key] || this.add(key, data);
 };
 
 State.prototype._toJsonObject = function () {

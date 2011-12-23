@@ -11,9 +11,9 @@ client = false;
 // Arbitrarily different to avoid conflict with master's copy.
 // This ensures any bugs in my code blow up.
 clientState = new State();
-clientState.add("client");
-clientState.add("server");
-clientState.add("task");
+clientState.group("client");
+clientState.group("server");
+clientState.group("task", Task);
 
 exports.start = function () {
   if (client) {
@@ -22,18 +22,18 @@ exports.start = function () {
   client = true;
   http.createServer(function (req, res) {
     var clientId = uuid();
-    clientState.get("client").update(clientId, State, {
+    clientState.get("client").update(clientId, {
       src: 'git://url',
       snapshot: '4e21056949c926f7ac667b7149b579aa00c17b8e'
     });
     // TODO: Read tasks from request body.
-    clientState.get("task").update(uuid(), Task, {
+    clientState.get("task").update(uuid(), {
       client: clientId,
       snapshot: uuid(), // TODO: Temporary cache busting.
       type: 'jasmine-node',
       data: 'spec/always/TaskTest.js'
     });
-    clientState.get("task").update(uuid(), Task, {
+    clientState.get("task").update(uuid(), {
       client: clientId,
       snapshot: uuid(), // TODO: Temporary cache busting.
       type: 'jasmine-node',

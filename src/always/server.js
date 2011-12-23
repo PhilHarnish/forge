@@ -15,9 +15,9 @@ server = false;
 // Arbitrarily different to avoid conflict with master's copy.
 // This ensures any bugs in my code blow up.
 serverState = new State();
-serverState.add("client");
-serverState.add("server");
-serverState.add("task");
+serverState.group("client");
+serverState.group("server");
+serverState.group("task", Task);
 
 taskPool = [];
 
@@ -42,7 +42,7 @@ exports.start = function () {
           // TODO: Manual merging is lame.
           var id;
           for (id in updates.client) {
-            serverState.get("client").update(id, State, updates.client[id]);
+            serverState.get("client").update(id, updates.client[id]);
             console.log("Server stored client:", id, ":",
                 updates.client[id]);
           }
@@ -53,7 +53,7 @@ exports.start = function () {
                 task.set(key, updates.task[id][key]);
               }
             } else {
-              task = serverState.get("task").add(id, Task, updates.task[id]);
+              task = serverState.get("task").add(id, updates.task[id]);
               console.log("Server stored task:", task.toString());
             }
           }

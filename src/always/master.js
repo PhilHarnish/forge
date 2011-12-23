@@ -13,9 +13,9 @@ var taskPool = [];
 var taskWorkerPool = [];
 
 state = new State();
-state.add("client");
-state.add("server");
-state.add("task");
+state.group("client");
+state.group("server");
+state.group("task", Task);
 master = false;
 
 exports.start = function () {
@@ -54,7 +54,7 @@ exports.start = function () {
             // TODO: Manual merging is lame.
             var uuid;
             for (uuid in updates.client) {
-              state.get("client").update(uuid, State, updates.client[uuid]);
+              state.get("client").update(uuid, updates.client[uuid]);
               console.log("Master stored client:", uuid, ":",
                   updates.client[uuid]);
             }
@@ -76,7 +76,7 @@ exports.start = function () {
             var body = data.join("");
             var serverId = uuid();
             var input = JSON.parse(body);
-            var server = state.get("server").update(serverId, State, input);
+            var server = state.get("server").update(serverId, input);
             console.log("Master stored server:", serverId, ":", input);
             res.end(server.toString());
             serverPool.push([serverId, server]);
@@ -122,7 +122,7 @@ exports.start = function () {
 }
 
 function addTask(id, data, req, res) {
-  var task = state.get("task").update(id, Task, data);
+  var task = state.get("task").update(id, data);
   console.log('Master stored task:', task.toString());
   res.write('[' + task.toString());
   taskPool.push([task, req, res]);
