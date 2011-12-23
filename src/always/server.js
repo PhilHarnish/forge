@@ -142,7 +142,8 @@ var deps = {
     'third_party/node/lib/events.js'
   ],
   'src/always/Task.js': [
-    'third_party/node/lib/events.js'
+    'third_party/node/lib/events.js',
+    'src/always/State.js'
   ]
 };
 // TODO: Replace this with a better deps.js? Better paths? Smarter "require"?

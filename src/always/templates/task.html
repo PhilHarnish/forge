@@ -37,12 +37,15 @@ $TASK_BODY
   var raw = reporter.results();
   var results = [];
   for (var i in raw) {
+    var row = raw[i];
     var result = {
-      result: raw[i].result
+      result: row.result
     };
     var messages = [];
-    for (var message in raw[i].messages) {
-      messages.push(removeJasmineFrames(raw[i].messages[0].trace.stack));
+    for (var message in row.messages) {
+      if (row.messages[message].trace) {
+        messages.push(removeJasmineFrames(row.messages[message].trace.stack));
+      }
     }
     if (messages.length) {
       result.messages = messages;
