@@ -48,7 +48,7 @@ describe("updating", function () {
     expect(root.get("child")).toBeUndefined();
     var child = root.update("child", State, {key: "value"});
     child.toString().should.equal(JSON.stringify({child: {key: "value"}}));
-    root.toString().should.equal(JSON.stringify({child: {key: "valu"}}));
+    root.toString().should.equal(JSON.stringify({child: {key: "value"}}));
   });
   it("should overwrite updates to properties", function () {
   });

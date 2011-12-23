@@ -11,16 +11,10 @@ var serverPool = [];
 var taskMasterPool = [];
 var taskPool = [];
 var taskWorkerPool = [];
-/*
-state = {
-  client: {},
-  server: {},
-  task: {}
-};
-*/
+
 state = new State();
-state.client = {};
-state.server = {};
+state.add("client");
+state.add("server");
 state.add("task", Task);
 master = false;
 
@@ -52,15 +46,15 @@ exports.start = function () {
         data.push(body);
       });
       switch (req.url) {
-        case '/':
-          req.on('end', function () {
-            var body = data.join('');
+        case "/":
+          req.on("end", function () {
+            var body = data.join("");
             var updates = JSON.parse(body);
             // TODO: Manual merging is lame.
             var uuid;
             for (uuid in updates.client) {
-              state.client[uuid] = updates.client[uuid];
-              console.log('Master stored client:', uuid, ':',
+              state.get("client").update(uuid, State, updates.client[uuid]);
+              console.log("Master stored client:", uuid, ":",
                   updates.client[uuid]);
             }
             for (uuid in updates.task) {
@@ -75,22 +69,19 @@ exports.start = function () {
             }
           });
           break;
-        case '/server':
-          req.on('end', function() {
+        case "/server":
+          req.on("end", function() {
             // Registers a new server.
-            var body = data.join('');
+            var body = data.join("");
             var serverId = uuid();
             var input = JSON.parse(body);
-            state.server[serverId] = input;
-            console.log('Master stored server:', serverId, ':', input);
-            res.write('{"server":{"' + serverId + '":' +
-                JSON.stringify(state.server[serverId]));
-            res.write('}}');
-            res.end();
-            serverPool.push([serverId, state.server[serverId]]);
+            var server = state.get("server").update(serverId, State, input);
+            console.log("Master stored server:", serverId, ":", input);
+            res.end(server.toString());
+            serverPool.push([serverId, server]);
           });
           break;
-        case '/task':
+        case "/task":
           // Registers a new task.
           addTask(uuid(), {}, req, res);
           break;
@@ -127,7 +118,7 @@ exports.start = function () {
       }
     }
   }).listen(8001);
-};
+}
 
 function addTask(id, data, req, res) {
   var task = state.get("task").update(id, Task, data);
@@ -193,8 +184,8 @@ function processTasks() {
   while (taskMasterPool.length && serverPool.length) {
     var taskMaster = taskMasterPool.pop();
     var taskMasterRes = taskMaster[1];
-    var taskMasterDest = 'http://' + serverPool[0][1].host + ':' +
-        serverPool[0][1].port + '/task_master';
+    var taskMasterDest = "http://" + serverPool[0][1].get("host") + ":" +
+        serverPool[0][1].get("port") + "/task_master";
     taskMasterRes.writeHead(302, {'Location': taskMasterDest});
     taskMasterRes.end();
   }
@@ -206,13 +197,12 @@ function processTasks() {
     var serverId = serverPool[0][0];
     var server = serverPool[0][1];
     taskRes.write(',');
-    taskRes.write('{"server":{"' + serverId + '":' +
-        JSON.stringify(server) + '}}');
+    taskRes.write(server.toString());
     // Redirect a worker to a server.
     var worker = taskWorkerPool.pop();
     var workerRes = worker[1];
-    var dest = 'http://' + serverPool[0][1].host + ':' +
-        serverPool[0][1].port + '/task/' + task.id;
+    var dest = "http://" + serverPool[0][1].get("host") + ":" +
+        serverPool[0][1].get("port") + "/task/" + task.id;
     workerRes.writeHead(302, {'Location': dest});
     workerRes.end();
   }
