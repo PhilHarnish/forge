@@ -31,13 +31,13 @@ describe("toString()", function () {
 
   it("should serialize a root State with children.", function () {
     var s = new State();
-    s.add("child", {key: "value"});
+    s.add("child", State, {key: "value"});
     s.toString().should.equal(JSON.stringify({child: {key: "value"}}));
   });
 
   it("should root a child State when serializing", function () {
     var root = new State();
-    var child = root.add("child", {key: "value"});
+    var child = root.add("child", State, {key: "value"});
     child.toString().should.equal(JSON.stringify({child: {key: "value"}}));
   });
 });

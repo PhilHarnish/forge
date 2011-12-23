@@ -4,6 +4,7 @@ var events = require("events"),
 
 var Task = function(id, data) {
   State.call(this, id, data);
+  this._type = Task;
   // TODO: Remove 'id'
   this.id = id.split("/").pop();
   this._data.status = this._data.status || Task.CREATED;

@@ -1,6 +1,7 @@
 var events = require("events");
 
 var State = function(path, data) {
+  this._type = State;
   this._path = path || "";
   this._children = {};
   this._data = {};
@@ -28,8 +29,9 @@ State.prototype.apply = function(data) {
   }
 };
 
-State.prototype.add = function(key, data) {
-  this._children[key] = new State(this._path + "/" + key, data);
+State.prototype.add = function(key, type, data) {
+  type = type || State;
+  this._children[key] = new type(this._path + "/" + key, data);
   return this._children[key];
 };
 

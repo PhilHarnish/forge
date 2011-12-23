@@ -3,6 +3,7 @@ var fs = require('fs'),
     http = require('http'),
     querystring = require('querystring'),
 
+    State = require('always/State.js'),
     Task = require('always/Task.js'),
     uuid = require('node-uuid/uuid.js');
 
@@ -10,12 +11,17 @@ var serverPool = [];
 var taskMasterPool = [];
 var taskPool = [];
 var taskWorkerPool = [];
-
+/*
 state = {
   client: {},
   server: {},
   task: {}
 };
+*/
+state = new State();
+state.client = {};
+state.server = {};
+state.add("task", Task);
 master = false;
 
 exports.start = function () {
@@ -58,14 +64,13 @@ exports.start = function () {
                   updates.client[uuid]);
             }
             for (uuid in updates.task) {
-              if (uuid in state.task) {
-                task = state.task[uuid];
+              task = state.get('task').get(uuid);
+              if (task) {
                 for (var key in updates.task[uuid]) {
                   task.set(key, updates.task[uuid][key]);
                 }
               } else {
-                task = new Task("/task/" + uuid, updates.task[uuid]);
-                addTask(task, req, res);
+                addTask(uuid, updates.task[uuid], req, res);
               }
             }
           });
@@ -87,10 +92,7 @@ exports.start = function () {
           break;
         case '/task':
           // Registers a new task.
-          // TODO: Remove 2nd arg.
-          addTask(new Task(uuid(), {
-            status: Task.CREATED
-          }), req, res);
+          addTask(uuid(), {}, req, res);
           break;
         default:
           if (req.url.indexOf('/task/') != 0) {
@@ -112,10 +114,10 @@ exports.start = function () {
               params.results = JSON.parse(params.results);
             }
             for (var key in params) {
-              state.task[taskId].set(key, params[key]);
+              state.get("task").get(taskId).set(key, params[key]);
             }
             if (status) {
-              state.task[taskId].set('status', status);
+              state.get("task").get(taskId).set('status', status);
             }
             var dest = 'http://localhost:8001/task';
             res.writeHead(302, {'Location': dest});
@@ -127,8 +129,11 @@ exports.start = function () {
   }).listen(8001);
 };
 
-function addTask(task, req, res) {
-  state.task[task.id] = task;
+function addTask(id, data, req, res) {
+  var task = state.get("task").get(id);
+  if (!task) {
+    task = state.get("task").add(id, Task, data);
+  }
   console.log('Master stored task:', task.toString());
   res.write('[' + task.toString());
   taskPool.push([task, req, res]);
