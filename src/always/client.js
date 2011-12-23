@@ -32,14 +32,14 @@ exports.start = function () {
     });
     // TODO: This is a little hacky. Need new API more like:
     // state.toString('client.UUID', 'task.UUID');
-    message.task[task.id] = task.data;
+    message.task[task.id] = task._data;
     task = new Task(uuid(), {
       client: clientId,
       snapshot: uuid(), // TODO: Temporary cache busting.
       type: 'jasmine-node',
       data: 'spec/always/StateTest.js'
     });
-    message.task[task.id] = task.data;
+    message.task[task.id] = task._data;
 
     // Simulate initiating a test run.
     var options = {
@@ -152,7 +152,7 @@ exports.test = function (test) {
       data.push(chunk);
     });
     res.on('end', function (chunk) {
-      var results = JSON.parse(data.join(''));
+      var results = JSON.parse(data.join(""));
       var failed = false;
       for (var task in results) {
         for (var result in results[task].results) {

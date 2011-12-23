@@ -64,7 +64,7 @@ exports.start = function () {
                   task.set(key, updates.task[uuid][key]);
                 }
               } else {
-                task = new Task(uuid, updates.task[uuid]);
+                task = new Task("/task/" + uuid, updates.task[uuid]);
                 addTask(task, req, res);
               }
             }
@@ -87,6 +87,7 @@ exports.start = function () {
           break;
         case '/task':
           // Registers a new task.
+          // TODO: Remove 2nd arg.
           addTask(new Task(uuid(), {
             status: Task.CREATED
           }), req, res);
@@ -128,8 +129,8 @@ exports.start = function () {
 
 function addTask(task, req, res) {
   state.task[task.id] = task;
-  console.log('Master stored task:', task.toState());
-  res.write('[' + JSON.stringify(task.toState()));
+  console.log('Master stored task:', task.toString());
+  res.write('[' + task.toString());
   taskPool.push([task, req, res]);
   processTasks();
   var timeout;
@@ -143,7 +144,7 @@ function addTask(task, req, res) {
       task.set('status', Task.TIMEOUT);
     }
     res.write(',');
-    res.write(JSON.stringify(task.toState()));
+    res.write(task.toString());
     // TODO: This assumes no one else has added tests.
     if (!res.pendingCount) {
       res.write(']');

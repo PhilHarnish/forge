@@ -15,7 +15,7 @@ State.prototype.set = function(key, value) {
 };
 
 State.prototype.get = function(key) {
-  return this._data[key];
+  return this._children[key] || this._data[key];
 };
 
 State.prototype.apply = function(data) {

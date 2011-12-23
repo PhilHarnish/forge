@@ -55,7 +55,7 @@ exports.start = function () {
             } else {
               task = new Task(uuid, updates.task[uuid]);
               serverState.task[uuid] = task;
-              console.log('Server stored task:', task.toState());
+              console.log('Server stored task:', task.toString());
             }
           }
         });
@@ -162,14 +162,14 @@ function processTasks() {
     if (!(taskId in serverState.task)) {
       // TODO: Pretty shitty iteration. Gets stuck too easily.
       taskPool.push(taskGroup);
-      console.log('Server does not know', taskId);
+      console.log('Server does not know task', taskId);
       return;
     }
     var task = serverState.task[taskId];
-    var includeBase = '/res/' + task.data.snapshot + '/';
+    var includeBase = '/res/' + task._data.snapshot + '/';
     // NB: task.data is the node with all data.
     // TODO: Better state library!
-    var taskBody = NODE_HARNESS + testIncludes(includeBase, task.data.data);
+    var taskBody = NODE_HARNESS + testIncludes(includeBase, task._data.data);
     var res = taskGroup[1][1];
     fs.readFile('templates/task.html', function (err, data) {
       res.writeHead(200, {'Content-Type': 'text/html'});
