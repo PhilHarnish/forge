@@ -34,26 +34,15 @@ exports.start = function () {
     });
     switch (req.url) {
       case "/":
-        // TODO: FIXME. Duplicated code from master.js.
         req.on("end", function () {
           var updates = JSON.parse(data.join(""));
           // TODO: Manual merging is lame.
           var id;
           for (id in updates.client) {
-            serverState.get("client").update(id, updates.client[id]);
-            console.log("Server stored client:", id, ":",
-                updates.client[id]);
+            serverState.get("client").post(id, updates.client[id]);
           }
           for (id in updates.task) {
-            task = serverState.get("task").get(id);
-            if (task) {
-              for (var key in updates.task[id]) {
-                task.set(key, updates.task[id][key]);
-              }
-            } else {
-              task = serverState.get("task").add(id, updates.task[id]);
-              console.log("Server stored task:", task.toString());
-            }
+            serverState.get("task").post(id, updates.task[id]);
           }
         });
         // TODO: Better response?

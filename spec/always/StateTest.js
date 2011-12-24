@@ -10,22 +10,23 @@ describe("Construction", function () {
   it("should accept constructor arguments.", function () {
     var root = new State("test", {tautology: true,
         contradiction: false});
-    root.get("tautology").should.equal(true);
-    root.get("contradiction").should.equal(false);
+    expect(root.get("tautology")).toBeTruthy();
+    expect(root.get("contradiction")).toBeFalsy();
   });
 
   it("should create children with post.", function () {
-    var root = new State();
-    var child = root.post("empty");
-    root.get("empty").should.equal(child);
-    child = root.post("simple", {key: "value"});
-    root.get("simple").get("key").should.equal("value");
+    var root = new State("root");
+    var child = root.post("empty/");
+    expect(root.get("empty")).toEqual(child);
+    child = root.post("simple/", {key: "value"});
+    expect(root.get("simple").get("key")).toEqual("value");
   });
 
   it("should allow posting repeatedly.", function () {
     var root = new State();
-    root.post("path").post("to", {key: "value"});
-    expect(JSON.parse(root.toString())).toEqual({path: {to: {key: "value"}}});
+    root.post("path/").post("to/", {key: "value"});
+    expect(JSON.parse(root.toString())).
+        toEqual({"path/": {"to/": {key: "value"}}});
   });
 
   it("should allow specifying type of children.", function () {
@@ -41,6 +42,7 @@ describe("Construction", function () {
     expect(c.add("c1", {key: "value"})).toEqual(jasmine.any(State));
     expect(c.add("c2", {key: "value"})).toNotEqual(jasmine.any(SubState));
   });
+
 });
 
 describe("toString()", function () {
@@ -55,17 +57,16 @@ describe("toString()", function () {
     root.toString().should.equal(JSON.stringify({key: "value"}));
   });
 
-
   it("should serialize a root State with children.", function () {
     var root = new State();
-    root.add("child", {key: "value"});
-    root.toString().should.equal(JSON.stringify({child: {key: "value"}}));
+    root.post("child/", {key: "value"});
+    root.toString().should.equal(JSON.stringify({"child/": {key: "value"}}));
   });
 
   it("should root a child State when serializing", function () {
     var root = new State();
-    var child = root.add("child", {key: "value"});
-    child.toString().should.equal(JSON.stringify({child: {key: "value"}}));
+    var child = root.post("child/", {key: "value"});
+    child.toString().should.equal(JSON.stringify({"child/": {key: "value"}}));
   });
 });
 
@@ -73,7 +74,7 @@ describe("GET", function () {
   var root;
   beforeEach(function () {
     root = new State();
-    root.post("path").post("to", {"key": "value"});
+    root.post("path/").post("to/", {"key": "value"});
   });
 
   it("should traverse absolute paths", function () {
@@ -90,6 +91,30 @@ describe("GET", function () {
   });
 });
 
+describe("POST", function () {
+  var root;
+  beforeEach(function () {
+    root = new State();
+    root.group("subgroup");
+    root.group("substate", SubState);
+  });
+
+  it("should post multiple items to different groups at once", function () {
+    var post = {
+      "subgroup/": {
+        "id/": { key: "value" }
+      },
+      "substate/": {
+        "id/": { key: "value" }
+      }
+    };
+    root.post("/", post);
+    expect(JSON.parse(root.toString())).toEqual(post);
+    expect(root.get("/subgroup/id")).toEqual(jasmine.any(State));
+    expect(root.get("/substate/id")).toEqual(jasmine.any(SubState));
+  });
+});
+
 describe("Updating", function () {
   var root;
   beforeEach(function () {
@@ -103,8 +128,8 @@ describe("Updating", function () {
 
   it("should create and return a child if one does not exist", function () {
     expect(root.get("child")).toBeUndefined();
-    var child = root.post("child", {key: "value"});
-    child.toString().should.equal(JSON.stringify({child: {key: "value"}}));
+    var child = root.post("child/", {key: "value"});
+    child.toString().should.equal(JSON.stringify({"child/": {key: "value"}}));
   });
 
   it("should overwrite updates to properties", function () {
@@ -119,29 +144,29 @@ describe("Updating", function () {
 
   it("should blend updates to children", function () {
     var a = root.group("a");
-    var expected = {
-      a: {
+    var post = {
+      "a/": {
         unique: "value",
         shared: "first"
       },
-      b: {
+      "b/": {
         shared: "first"
       }
     };
-    root.post("/", expected);
-    expect(JSON.parse(root.toString())).toEqual(expected);
+    root.post("/", post);
+    expect(JSON.parse(root.toString())).toEqual(post);
     root.post("/", {
-      a: {
+      "a/": {
         shared: "second"
       },
-      b: {
+      "b/": {
         unique: "value",
         shared: "second"
       }
     });
-    expected.a.shared = "second";
-    expected.b.shared = "second";
-    expected.b.unique = "value";
-    expect(JSON.parse(root.toString())).toEqual(expected);
+    post["a/"].shared = "second";
+    post["b/"].shared = "second";
+    post["b/"].unique = "value";
+    expect(JSON.parse(root.toString())).toEqual(post);
   });
 });

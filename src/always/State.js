@@ -21,7 +21,7 @@ State.prototype.set = function(key, value) {
 State.prototype.get = function(key) {
   var location = this._get(key);
   // Intentionally return undefined if path segments remain.
-  return location[1] ? undefined : location[0];
+  return location[1].length ? undefined : location[0];
 };
 
 State.prototype._get = function (key) {
@@ -38,7 +38,7 @@ State.prototype._get = function (key) {
       }
     }
   }
-  return [target, path.join("/")];
+  return [target, path];
 };
 
 // TODO: Deprecate? Private?
@@ -59,9 +59,6 @@ State.prototype.group = function (key, type) {
   return child;
 };
 
-// TODO: Reconcile differences between add, update, apply.
-// Perhaps via GET / POST and paths.
-
 // TODO: Deprecate? Private?
 State.prototype.add = function(key, data) {
   var child = new this._type(this._path + "/" + key, data);
@@ -74,8 +71,28 @@ State.prototype.add = function(key, data) {
 State.prototype.post = function(path, data) {
   var location = this._get(path);
   var target = location[0];
-  var key = location[1];
-  return key ? target.add(key, data) : target.apply(data);
+  var incompletePath = location[1];
+  // TODO: Iterate over keys in data and create recursively?
+  var collectionName;
+  while (incompletePath.length) {
+    collectionName = incompletePath.shift();
+    if (collectionName && incompletePath.length) {
+      target = target.add(collectionName);
+    }
+  }
+  // Posting to an entity, eg: /path/to/entity { ... }
+  if (collectionName) {
+    return target.set(collectionName, data);
+  }
+  // Posting to a collection, eg: /path/to/collection/ { id1: ..., id2: ... }
+  for (var key in data) {
+    if (key.slice(-1) == "/") {
+      target.post(key, data[key]);
+    } else {
+      target.set(key, data[key]);
+    }
+  }
+  return target;
 };
 // TODO: Deprecate.
 State.prototype.update = State.prototype.post;
@@ -87,7 +104,7 @@ State.prototype._toJsonObject = function () {
     result[key] = this._data[key];
   }
   for (key in this._children) {
-    result[key] = this._children[key]._toJsonObject();
+    result[key + "/"] = this._children[key]._toJsonObject();
   }
   return result;
 };
@@ -98,7 +115,7 @@ State.prototype.toString = function () {
   var path = this._path.split("/");
   while (path.length > 1) {
     var next = {};
-    next[path.pop()] = result;
+    next[path.pop() + "/"] = result;
     result = next;
   }
   return JSON.stringify(result);
