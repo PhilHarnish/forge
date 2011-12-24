@@ -30,11 +30,14 @@ describe("Construction", function () {
     var s = new State();
     expect(SubState).toBeDefined();
     var a = s.group("a", SubState);
-    //var b = s.group("b", State);
-    //var c = s.group("c");
-    var a1 = a.add("a1", {key: "value"});
-    console.log(a1 instanceof SubState, a1 instanceof State, a1);
-    a1.should.be.instanceof(SubState);
+    expect(a.add("a1", {key: "value"})).toEqual(jasmine.any(State));
+    expect(a.add("a2", {key: "value"})).toEqual(jasmine.any(SubState));
+    var b = s.group("b", State);
+    expect(b.add("b1", {key: "value"})).toEqual(jasmine.any(State));
+    expect(b.add("b2", {key: "value"})).toNotEqual(jasmine.any(SubState));
+    var c = s.group("c");
+    expect(c.add("c1", {key: "value"})).toEqual(jasmine.any(State));
+    expect(c.add("c2", {key: "value"})).toNotEqual(jasmine.any(SubState));
   });
 });
 
