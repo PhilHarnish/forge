@@ -36,9 +36,7 @@ exports.start = function () {
       case "/":
         // TODO: FIXME. Duplicated code from master.js.
         req.on("end", function () {
-          var body = data.join("");
-          var updates = JSON.parse(body);
-          console.log("Server parsed:", updates);
+          var updates = JSON.parse(data.join(""));
           // TODO: Manual merging is lame.
           var id;
           for (id in updates.client) {

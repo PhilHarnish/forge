@@ -2,6 +2,8 @@ var events = require("events");
 
 var State = function(path, data) {
   this._type = State;
+  this._root = this; // Needed?
+  this._parent = null; // Needed?
   this._path = path || "";
   this._children = {};
   this._data = {};
@@ -10,15 +12,36 @@ var State = function(path, data) {
 
 State.prototype = new events.EventEmitter();
 
+// TODO: Needed?
 State.prototype.set = function(key, value) {
   this._data[key] = value;
   return this._data[key];
 };
 
 State.prototype.get = function(key) {
-  return this._children[key] || this._data[key];
+  var location = this._get(key);
+  // Intentionally return undefined if path segments remain.
+  return location[1] ? undefined : location[0];
 };
 
+State.prototype._get = function (key) {
+  var target = key[0] == "/" ? this._root : this;
+  var path = key.split("/");
+  while (path.length && target) {
+    var segment = path.shift();
+    if (segment) {
+      if ((segment in target._children) || (segment in target._data)) {
+        target = target._children[segment] || target._data[segment];
+      } else {
+        path.unshift(segment);
+        break;
+      }
+    }
+  }
+  return [target, path.join("/")];
+};
+
+// TODO: Deprecate? Private?
 State.prototype.apply = function(data) {
   for (var key in data) {
     if (key in this._children) {
@@ -27,6 +50,7 @@ State.prototype.apply = function(data) {
       this.set(key, data[key]);
     }
   }
+  return this;
 };
 
 State.prototype.group = function (key, type) {
@@ -35,15 +59,26 @@ State.prototype.group = function (key, type) {
   return child;
 };
 
+// TODO: Reconcile differences between add, update, apply.
+// Perhaps via GET / POST and paths.
+
+// TODO: Deprecate? Private?
 State.prototype.add = function(key, data) {
-  this._children[key] = new this._type(this._path + "/" + key, data);
-  return this._children[key];
+  var child = new this._type(this._path + "/" + key, data);
+  this._children[key] = child;
+  child._root = this._root;
+  child._parent = this;
+  return child;
 };
 
-State.prototype.update = function(key, data) {
-  // TODO: Update existing children!
-  return this._children[key] || this.add(key, data);
+State.prototype.post = function(path, data) {
+  var location = this._get(path);
+  var target = location[0];
+  var key = location[1];
+  return key ? target.add(key, data) : target.apply(data);
 };
+// TODO: Deprecate.
+State.prototype.update = State.prototype.post;
 
 State.prototype._toJsonObject = function () {
   var result = {},
