@@ -21,33 +21,33 @@ exports.start = function () {
   }
   client = true;
   http.createServer(function (req, res) {
-    var clientId = uuid();
-    clientState.get("client").update(clientId, {
-      src: 'git://url',
-      snapshot: '4e21056949c926f7ac667b7149b579aa00c17b8e'
+    var clientId = uuid() + "/";
+    clientState.get("client").post(clientId, {
+      src: "git://url",
+      snapshot: "4e21056949c926f7ac667b7149b579aa00c17b8e"
     });
     // TODO: Read tasks from request body.
-    clientState.get("task").update(uuid(), {
+    clientState.get("task").post(uuid() + "/", {
       client: clientId,
       snapshot: uuid(), // TODO: Temporary cache busting.
-      type: 'jasmine-node',
-      data: 'spec/always/TaskTest.js'
+      type: "jasmine-node",
+      data: "spec/always/TaskTest.js"
     });
-    clientState.get("task").update(uuid(), {
+    clientState.get("task").post(uuid() + "/", {
       client: clientId,
       snapshot: uuid(), // TODO: Temporary cache busting.
-      type: 'jasmine-node',
-      data: 'spec/always/StateTest.js'
+      type: "jasmine-node",
+      data: "spec/always/StateTest.js"
     });
 
     // Simulate initiating a test run.
     var options = {
-      host: 'localhost',
+      host: "localhost",
       port: 8001,
-      path: '/',
-      method: 'POST',
+      path: "/",
+      method: "POST",
       headers: {
-        'Content-Type': 'application/jsonrequest'
+        "Content-Type": "application/jsonrequest"
       }
     };
 
@@ -58,29 +58,29 @@ exports.start = function () {
         return;
       }
       for (var key in data) {
-        if (key == 'server') {
+        if (key == "server/") {
           var server;
-          for (var uuid in data.server) {
+          for (var uuid in data["server/"]) {
             // TODO: Pick the best available server(s).
-            server = data.server[uuid];
+            server = data["server/"][uuid];
           }
           var serverOptions = {
             host: server.host,
             port: server.port,
-            path: '/',
-            method: 'POST',
+            path: "/",
+            method: "POST",
             headers: {
-              'Content-Type': 'application/jsonrequest'
+              "Content-Type": "application/jsonrequest"
             }
           };
           var serverReq = http.request(serverOptions, function (serverRes) {
-            // Don't care?
+            // Don"t care?
           });
           // TODO: Only send what is necessary.
           serverReq.end(clientState.toString());
-        } else if (key == 'task') {
-          for (task in data.task) {
-            daemonData[task] = data.task[task];
+        } else if (key == "task/") {
+          for (task in data["task/"]) {
+            daemonData[task] = data["task/"][task];
           }
         }
       }
@@ -93,20 +93,20 @@ exports.start = function () {
       var inString = false;
       var depth = 0;
       var data = [];
-      daemonRes.on('data', function (chunk) {
+      daemonRes.on("data", function (chunk) {
         acc += chunk;
         while (payloadEnd < acc.length) {
           switch (acc[payloadEnd]) {
-            case '{':
+            case "{":
               if (!depth) {
                 payloadStart = payloadEnd;
               }
               depth++;
               break;
-            case '}':
+            case "}":
               depth--;
               break;
-            case '"':
+            case "\"":
               if (!depth) {
                 payloadStart = payloadEnd;
               }
@@ -117,7 +117,7 @@ exports.start = function () {
               }
               inString = !inString;
               break;
-            case '\\':
+            case "\\":
               payloadEnd++;
           }
           payloadEnd++;
@@ -129,43 +129,44 @@ exports.start = function () {
           }
         }
       });
-      daemonRes.on('end', function () {
-        res.writeHead(200, {'Content-Type': 'text/plain'});
+      daemonRes.on("end", function () {
+        res.writeHead(200, {"Content-Type": "text/plain"});
         res.end(JSON.stringify(daemonData));
       });
     });
     // TODO: This is a little hacky. Need new API more like:
-    // state.toString('/client/UUID', '/task/UUID');
+    // state.toString("/client/UUID", "/task/UUID");
+    console.log("Sending:", clientState.toString());
     daemonReq.end(clientState.toString());
   }).listen(8000);
 };
 
 exports.test = function (test) {
   var options = {
-    host: 'localhost',
+    host: "localhost",
     port: 8000,
-    path: '/task',
-    method: 'POST'
+    path: "/task",
+    method: "POST"
   };
   var data = [];
   var req = http.request(options, function (res) {
-    res.on('data', function (chunk) {
+    res.on("data", function (chunk) {
       data.push(chunk);
     });
-    res.on('end', function (chunk) {
+    res.on("end", function (chunk) {
       var results = JSON.parse(data.join(""));
       var failed = false;
       for (var task in results) {
         for (var result in results[task].results) {
-          if (results[task].results[result].result != 'passed') {
-            console.log('\n\n\n', task, '\n',
-                results[task].results[result].messages.join('\n\n'));
+          if (results[task].results[result].result != "passed") {
+            console.log("\n\n\n", task, "\n",
+                results[task].results[result].messages.join("\n\n"));
             failed = true;
           }
         }
       }
       console.log();
-      console.log(failed ? 'FAILED' : 'PASSED')
+      console.log(failed ? "FAILED" : "PASSED")
     });
   });
   req.write("test=" + test);

@@ -23,7 +23,7 @@ server.start();
 
 setInterval(function () {
   // Simulate a request from client to daemon.
-  client.test('TaskTest');
+  client.test("TaskTest");
 }, 5000);
 
 

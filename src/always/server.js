@@ -4,8 +4,9 @@ var fs = require('fs'),
     master = require('always/master.js'),
 
     mime = require('node-mime/mime.js'),
-    State = require('always/State.js');
-    Task = require('always/Task.js');
+    State = require('always/State.js'),
+    Task = require('always/Task.js'),
+    uuid = require('node-uuid/uuid.js');
 
 server = false;
 
@@ -36,13 +37,14 @@ exports.start = function () {
       case "/":
         req.on("end", function () {
           var updates = JSON.parse(data.join(""));
+          console.log("Server got:", updates);
           // TODO: Manual merging is lame.
           var id;
-          for (id in updates.client) {
-            serverState.get("client").post(id, updates.client[id]);
+          for (id in updates["client/"]) {
+            serverState.get("client").post(id, updates["client/"][id]);
           }
-          for (id in updates.task) {
-            serverState.get("task").post(id, updates.task[id]);
+          for (id in updates["task/"]) {
+            serverState.get("task").post(id, updates["task/"][id]);
           }
         });
         // TODO: Better response?
@@ -89,10 +91,13 @@ exports.start = function () {
 
 master.start();
 
-master.registerServer({
+var message = {};
+message[uuid() + "/"] = {
   host: 'localhost',
   port: '8002'
-}, function() {
+};
+
+master.registerServer(message, function() {
   // 'registry' arg is the registered server object.
 });
 

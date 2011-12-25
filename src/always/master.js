@@ -52,19 +52,19 @@ exports.start = function () {
             var updates = JSON.parse(body);
             // TODO: Manual merging is lame.
             var uuid;
-            for (uuid in updates.client) {
-              state.get("client").update(uuid, updates.client[uuid]);
+            for (uuid in updates["client/"]) {
+              state.get("client").update(uuid, updates["client/"][uuid]);
               console.log("Master stored client:", uuid, ":",
-                  updates.client[uuid]);
+                  updates["client/"][uuid]);
             }
-            for (uuid in updates.task) {
-              task = state.get('task').get(uuid);
+            for (uuid in updates["task/"]) {
+              task = state.get("task").get(uuid);
               if (task) {
-                for (var key in updates.task[uuid]) {
-                  task.set(key, updates.task[uuid][key]);
+                for (var key in updates["task/"][uuid]) {
+                  task.set(key, updates["task/"][uuid][key]);
                 }
               } else {
-                addTask(uuid, updates.task[uuid], req, res);
+                addTask(uuid, updates["task/"][uuid], req, res);
               }
             }
           });
@@ -73,12 +73,17 @@ exports.start = function () {
           req.on("end", function() {
             // Registers a new server.
             var body = data.join("");
-            var serverId = uuid();
             var input = JSON.parse(body);
-            var server = state.get("server").update(serverId, input);
-            console.log("Master stored server:", serverId, ":", input);
-            res.end(server.toString());
-            serverPool.push([serverId, server]);
+            var collection = state.get("server");
+            for (var serverId in input) {
+              var server = collection.post(serverId, input[serverId]);
+              // TODO: Do this via added callback.
+              console.log("Master stored server:",serverId, ":",
+                  input[serverId]);
+              // TODO: Simply iterate over server pool collection.
+              serverPool.push([serverId, server]);
+            }
+            res.end(body);
           });
           break;
         case "/task":
@@ -118,7 +123,7 @@ exports.start = function () {
       }
     }
   }).listen(8001);
-}
+};
 
 function addTask(id, data, req, res) {
   var task = state.get("task").update(id, data);
@@ -151,21 +156,22 @@ function addTask(id, data, req, res) {
 
 exports.registerServer = function (server, callback) {
   var options = {
-    host: 'localhost',
+    host: "localhost",
     port: 8001,
-    path: '/server',
-    method: 'POST',
+    path: "/server",
+    method: "POST",
     headers: {
-      'Content-Type': 'application/jsonrequest'
+      "Content-Type": "application/jsonrequest"
     }
   };
   var req = http.request(options, function (res) {
     var data = [];
-    res.on('data', function (chunk) {
+    res.on("data", function (chunk) {
       data.push(chunk);
     });
-    res.on('end', function () {
-      callback(JSON.parse(data.join('')));
+    res.on("end", function () {
+      console.log("Attempting to parse:", data.join(""));
+      callback(JSON.parse(data.join("")));
     });
   });
   req.write(JSON.stringify(server));
