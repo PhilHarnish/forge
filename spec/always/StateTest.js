@@ -33,14 +33,14 @@ describe("Construction", function () {
     var root = new State();
     expect(SubState).toBeDefined();
     var a = root.group("a", SubState);
-    expect(a.add("a1", {key: "value"})).toEqual(jasmine.any(State));
-    expect(a.add("a2", {key: "value"})).toEqual(jasmine.any(SubState));
+    expect(a._add("a1", {key: "value"})).toEqual(jasmine.any(State));
+    expect(a._add("a2", {key: "value"})).toEqual(jasmine.any(SubState));
     var b = root.group("b", State);
-    expect(b.add("b1", {key: "value"})).toEqual(jasmine.any(State));
-    expect(b.add("b2", {key: "value"})).toNotEqual(jasmine.any(SubState));
+    expect(b._add("b1", {key: "value"})).toEqual(jasmine.any(State));
+    expect(b._add("b2", {key: "value"})).toNotEqual(jasmine.any(SubState));
     var c = root.group("c");
-    expect(c.add("c1", {key: "value"})).toEqual(jasmine.any(State));
-    expect(c.add("c2", {key: "value"})).toNotEqual(jasmine.any(SubState));
+    expect(c._add("c1", {key: "value"})).toEqual(jasmine.any(State));
+    expect(c._add("c2", {key: "value"})).toNotEqual(jasmine.any(SubState));
   });
 
 });
@@ -168,5 +168,37 @@ describe("Updating", function () {
     post["b/"].shared = "second";
     post["b/"].unique = "value";
     expect(JSON.parse(root.toString())).toEqual(post);
+  });
+});
+
+describe("Events", function () {
+  var root;
+  beforeEach(function () {
+    root = new State();
+  });
+
+  it("should signal added states.", function () {
+    expect(root.onAdded).toBeDefined();
+    var results = [];
+    root.onAdded.add(function (arg) {
+      results.push(arg);
+    });
+    root.post("/", {
+      "a/": {
+        key: "value"
+      }
+    });
+    expect(results.length).toEqual(1);
+    expect(results[0]).toBe(root.get("a"));
+    var post = {
+      "b/": {
+        key: "value"
+      },
+      "c/": {
+        key: "value"
+      }
+    };
+    root.post("/", post);
+    expect(results.length).toEqual(3);
   });
 });

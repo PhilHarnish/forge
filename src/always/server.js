@@ -34,23 +34,6 @@ exports.start = function () {
       data.push(body);
     });
     switch (req.url) {
-      case "/":
-        req.on("end", function () {
-          var updates = JSON.parse(data.join(""));
-          console.log("Server got:", updates);
-          // TODO: Manual merging is lame.
-          var id;
-          for (id in updates["client/"]) {
-            serverState.get("client").post(id, updates["client/"][id]);
-          }
-          for (id in updates["task/"]) {
-            serverState.get("task").post(id, updates["task/"][id]);
-          }
-        });
-        // TODO: Better response?
-        res.writeHead(200);
-        res.end('OK');
-        break;
       case '/task_master':
         fs.readFile('templates/task_master.html', function (err, data) {
           res.writeHead(200, {'Content-Type': 'text/html'});
@@ -60,6 +43,14 @@ exports.start = function () {
           res.write(data);
           res.end();
         });
+        break;
+      case "/":
+        req.on("end", function () {
+          serverState.post(req.url, JSON.parse(data.join("")));
+        });
+        // TODO: Better response?
+        res.writeHead(200);
+        res.end('OK');
         break;
       default:
         if (req.url.indexOf('/task/') == 0) {
@@ -130,16 +121,16 @@ var deps = {
     'src/always/Task.js'
   ],
   'src/always/State.js': [
-    'third_party/node/lib/events.js'
+    'src/always/Signal.js'
   ],
   'src/always/Task.js': [
-    'third_party/node/lib/events.js',
     'src/always/State.js'
   ]
 };
 // TODO: Replace this with a better deps.js? Better paths? Smarter "require"?
 var aliases = {
   'src/always/State.js': 'always/State.js',
+  'src/always/Signal.js': 'always/Signal.js',
   'src/always/Task.js': 'always/Task.js',
   'third_party/node/lib/assert.js': 'assert',
   'third_party/node/lib/events.js': 'events',

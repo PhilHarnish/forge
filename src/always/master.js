@@ -42,7 +42,7 @@ exports.start = function () {
       }
     } else {
       var data = [];
-      req.on('data', function(body) {
+      req.on("data", function(body) {
         data.push(body);
       });
       switch (req.url) {
@@ -91,14 +91,14 @@ exports.start = function () {
           addTask(uuid(), {}, req, res);
           break;
         default:
-          if (req.url.indexOf('/task/') != 0) {
+          if (req.url.indexOf("/task/") != 0) {
             res.writeHead(404);
             res.end();
             break;
           }
           taskId = req.url.substring(6);
           // Registers an update for a task.
-          req.on('end', function() {
+          req.on("end", function() {
             var params = querystring.parse(data.join(''));
             // TODO: Hacky?
             var status;
@@ -151,7 +151,7 @@ function addTask(id, data, req, res) {
   };
   timeout = setTimeout(completeHandler, 5000);
   // TODO: subscribe to 'change'.
-  task.on(Task.COMPLETE, completeHandler);
+  task.onComplete.add(completeHandler);
 }
 
 exports.registerServer = function (server, callback) {
@@ -170,7 +170,6 @@ exports.registerServer = function (server, callback) {
       data.push(chunk);
     });
     res.on("end", function () {
-      console.log("Attempting to parse:", data.join(""));
       callback(JSON.parse(data.join("")));
     });
   });

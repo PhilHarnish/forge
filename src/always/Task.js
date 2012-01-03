@@ -1,6 +1,4 @@
-var events = require("events"),
-
-    State = require("always/State.js");
+var State = require("always/State.js");
 
 var Task = function(id, data) {
   State.call(this, id, data);
@@ -16,17 +14,19 @@ Task.COMPLETE = 'COMPLETE';
 Task.TIMEOUT = 'TIMEOUT';
 
 Task.prototype = new State();
+State.prototype.signals = {
+  onComplete: true
+};
 
 Task.prototype.set = function(key, value) {
   this._data[key] = value;
-  this.emit('change', key, value);
-  if (key == 'status') {
-    // Emit 'created', 'pending', 'complete', 'timeout', etc.
-    this.emit(value);
+  if (key == 'status' && value == Task.COMPLETE) {
+    this.onComplete.signal();
   }
 };
 
 Task.prototype.isComplete = function () {
+  // TODO: This is ugly.
   return this._data.status == Task.COMPLETE ||
       this._data.status == Task.TIMEOUT;
 };

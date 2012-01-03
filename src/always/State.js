@@ -1,4 +1,6 @@
-var events = require("events");
+var events = require("events"),
+
+    Signal = require("always/Signal.js");
 
 var State = function(path, data) {
   this._type = State;
@@ -7,10 +9,15 @@ var State = function(path, data) {
   this._path = path || "";
   this._children = {};
   this._data = {};
+  Signal.init(this);
   this.apply(data);
 };
 
-State.prototype = new events.EventEmitter();
+// TODO: Switch prototype assignment to in-line.
+State.prototype = {};
+State.prototype.signals = {
+  onAdded: true
+};
 
 // TODO: Needed?
 State.prototype.set = function(key, value) {
@@ -54,17 +61,16 @@ State.prototype.apply = function(data) {
 };
 
 State.prototype.group = function (key, type) {
-  var child = this.add(key);
-  child._type = type || child._type;
-  return child;
+  return this._add(key, type);
 };
 
-// TODO: Deprecate? Private?
-State.prototype.add = function(key, data) {
-  var child = new this._type(this._path + "/" + key, data);
+State.prototype._add = function(key, type) {
+  var child = new this._type(this._path + "/" + key);
   this._children[key] = child;
   child._root = this._root;
   child._parent = this;
+  child._type = type || child._type;
+  this.onAdded && this.onAdded.signal(child);
   return child;
 };
 
@@ -77,7 +83,7 @@ State.prototype.post = function(path, data) {
   while (incompletePath.length) {
     collectionName = incompletePath.shift();
     if (collectionName && incompletePath.length) {
-      target = target.add(collectionName);
+      target = target._add(collectionName);
     }
   }
   // Posting to an entity, eg: /path/to/entity { ... }

@@ -1,9 +1,9 @@
 
-var http = require('http'),
+var http = require("http"),
 
-    State = require('always/State.js'),
-    Task = require('always/Task.js'),
-    uuid = require('node-uuid/uuid.js');
+    State = require("always/State.js"),
+    Task = require("always/Task.js"),
+    uuid = require("node-uuid/uuid.js");
 
 client = false;
 
@@ -136,7 +136,6 @@ exports.start = function () {
     });
     // TODO: This is a little hacky. Need new API more like:
     // state.toString("/client/UUID", "/task/UUID");
-    console.log("Sending:", clientState.toString());
     daemonReq.end(clientState.toString());
   }).listen(8000);
 };
