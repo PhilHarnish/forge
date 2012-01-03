@@ -1,6 +1,12 @@
 var Signal = function() {
 };
 
+Signal.init = function(obj) {
+  for (var signal in obj.signals) {
+    obj[signal] = new Signal;
+  }
+};
+
 Signal.prototype = {
   add: function(callback) {
     if (!this._callback) {
@@ -33,7 +39,7 @@ Signal.prototype = {
       var i = 0;
       var listener = listeners[i] || listeners;
       while (listener) {
-        listener.call(this, arguments);
+        listener.apply(this, arguments);
         listener = listeners[++i];
       }
     }

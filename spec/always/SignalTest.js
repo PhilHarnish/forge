@@ -1,20 +1,36 @@
 var spec = require("../../test"),
     Signal = require("always/Signal.js");
 
-describe("Signal", function () {
+describe("Mixin", function () {
+  it("should mixin specified signals.", function () {
+    var o = {
+      signals: {
+        signalA: true,
+        signalB: true
+      }
+    };
+    Signal.init(o);
+    expect(o.signalA).toEqual(jasmine.any(Signal));
+    expect(o.signalB).toEqual(jasmine.any(Signal));
+    expect(o['signalC']).toBeUndefined();
+  });
+});
+
+describe("Signaling", function () {
   var s,
       callbacks = [],
       status = [];
   var getCallback = function (i) {
     if (!callbacks[i]) {
-      callbacks[i] = function () {
-        status[i] = (status[i] || 0) + 1;
+      callbacks[i] = function (arg) {
+        var increment = arg || 1;
+        status[i] = (status[i] || 0) + increment;
       };
     }
     return callbacks[i];
   };
   beforeEach(function () {
-    s = new Signal();
+    s = new Signal;
     callbacks = [];
     status = [];
   });
@@ -42,6 +58,14 @@ describe("Signal", function () {
     s.remove(getCallback(1));
     s.signal();
     expect(status[0]).toEqual(1);
+  });
+
+  it("signal should pass along args", function () {
+    s.add(getCallback(0));
+    s.signal(5);
+    expect(status[0]).toEqual(5);
+    s.signal(2);
+    expect(status[0]).toEqual(7);
   });
 
   it("should handle complex sequences of add/remove/signal", function () {
