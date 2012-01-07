@@ -1,11 +1,11 @@
 
-var fs = require('fs'),
-    http = require('http'),
-    querystring = require('querystring'),
+var fs = require("fs"),
+    http = require("http"),
+    querystring = require("querystring"),
 
-    State = require('always/State.js'),
-    Task = require('always/Task.js'),
-    uuid = require('node-uuid/uuid.js');
+    State = require("always/State.js"),
+    Task = require("always/Task.js"),
+    uuid = require("node-uuid/uuid.js");
 
 var serverPool = [];
 var taskMasterPool = [];
@@ -23,16 +23,25 @@ exports.start = function () {
     return;
   }
   master = true;
+  var current = {};
+  state.get("task").onAdded.add(function (task) {
+    addTask(task, current.req, current.res);
+  });
+  state.get("server").onAdded.add(function (server) {
+    console.log("Master stored server:",
+        server.toString());
+    serverPool.push(server);
+  });
   http.createServer(function (req, res) {
     var task,
         taskId;
-    if (req.method == 'GET') {
+    if (req.method == "GET") {
       switch (req.url) {
-        case '/task_master':
+        case "/task_master":
           taskMasterPool.push([req, res]);
           processTasks();
           break;
-        case '/task':
+        case "/task":
           taskWorkerPool.push([req, res]);
           processTasks();
           break;
@@ -48,47 +57,22 @@ exports.start = function () {
       switch (req.url) {
         case "/":
           req.on("end", function () {
+            current.req = req;
+            current.res = res;
             var body = data.join("");
             var updates = JSON.parse(body);
-            // TODO: Manual merging is lame.
-            var uuid;
-            for (uuid in updates["client/"]) {
-              state.get("client").update(uuid, updates["client/"][uuid]);
-              console.log("Master stored client:", uuid, ":",
-                  updates["client/"][uuid]);
-            }
-            for (uuid in updates["task/"]) {
-              task = state.get("task").get(uuid);
-              if (task) {
-                for (var key in updates["task/"][uuid]) {
-                  task.set(key, updates["task/"][uuid][key]);
-                }
-              } else {
-                addTask(uuid, updates["task/"][uuid], req, res);
-              }
-            }
+            state.post(req.url, updates);
           });
           break;
         case "/server":
           req.on("end", function() {
             // Registers a new server.
             var body = data.join("");
-            var input = JSON.parse(body);
-            var collection = state.get("server");
-            for (var serverId in input) {
-              var server = collection.post(serverId, input[serverId]);
-              // TODO: Do this via added callback.
-              console.log("Master stored server:",serverId, ":",
-                  input[serverId]);
-              // TODO: Simply iterate over server pool collection.
-              serverPool.push([serverId, server]);
-            }
+            console.log("New server data:", body);
+            var updates = JSON.parse(body);
+            state.post(req.url, updates);
             res.end(body);
           });
-          break;
-        case "/task":
-          // Registers a new task.
-          addTask(uuid(), {}, req, res);
           break;
         default:
           if (req.url.indexOf("/task/") != 0) {
@@ -99,24 +83,24 @@ exports.start = function () {
           taskId = req.url.substring(6);
           // Registers an update for a task.
           req.on("end", function() {
-            var params = querystring.parse(data.join(''));
+            var params = querystring.parse(data.join(""));
             // TODO: Hacky?
             var status;
-            if ('status' in params) {
+            if ("status" in params) {
               status = params.status;
               delete params.status;
             }
-            if ('results' in params) {
+            if ("results" in params) {
               params.results = JSON.parse(params.results);
             }
             for (var key in params) {
               state.get("task").get(taskId).set(key, params[key]);
             }
             if (status) {
-              state.get("task").get(taskId).set('status', status);
+              state.get("task").get(taskId).set("status", status);
             }
-            var dest = 'http://localhost:8001/task';
-            res.writeHead(302, {'Location': dest});
+            var dest = "http://localhost:8001/task";
+            res.writeHead(302, {"Location": dest});
             res.end();
           });
           break;
@@ -125,10 +109,9 @@ exports.start = function () {
   }).listen(8001);
 };
 
-function addTask(id, data, req, res) {
-  var task = state.get("task").update(id, data);
-  console.log('Master stored task:', task.toString());
-  res.write('[' + task.toString());
+function addTask(task, req, res) {
+  console.log("Master stored task:", task.toString());
+  res.write("[" + task.toString());
   taskPool.push([task, req, res]);
   processTasks();
   var timeout;
@@ -139,18 +122,18 @@ function addTask(id, data, req, res) {
     clearTimeout(timeout);
     res.pendingCount--;
     if (!task.isComplete()) {
-      task.set('status', Task.TIMEOUT);
+      task.set("status", Task.TIMEOUT);
     }
-    res.write(',');
+    res.write(",");
     res.write(task.toString());
     // TODO: This assumes no one else has added tests.
     if (!res.pendingCount) {
-      res.write(']');
+      res.write("]");
       res.end();
     }
   };
   timeout = setTimeout(completeHandler, 5000);
-  // TODO: subscribe to 'change'.
+  // TODO: subscribe to "change".
   task.onComplete.add(completeHandler);
 }
 
@@ -177,11 +160,11 @@ exports.registerServer = function (server, callback) {
   req.end();
 };
 
-var lastMessage = '';
+var lastMessage = "";
 function processTasks() {
-  var nextMessage = ['Master processing', taskPool.length, 'tasks with',
-      taskWorkerPool.length, 'workers and',
-      serverPool.length, 'servers.'].join(' ');
+  var nextMessage = ["Master processing", taskPool.length, "tasks with",
+      taskWorkerPool.length, "workers and",
+      serverPool.length, "servers."].join(" ");
   if (nextMessage != lastMessage) {
     lastMessage = nextMessage;
     console.log(lastMessage);
@@ -189,9 +172,9 @@ function processTasks() {
   while (taskMasterPool.length && serverPool.length) {
     var taskMaster = taskMasterPool.pop();
     var taskMasterRes = taskMaster[1];
-    var taskMasterDest = "http://" + serverPool[0][1].get("host") + ":" +
-        serverPool[0][1].get("port") + "/task_master";
-    taskMasterRes.writeHead(302, {'Location': taskMasterDest});
+    var taskMasterDest = "http://" + serverPool[0].get("host") + ":" +
+        serverPool[0].get("port") + "/task_master";
+    taskMasterRes.writeHead(302, {"Location": taskMasterDest});
     taskMasterRes.end();
   }
   while (taskPool.length && taskWorkerPool.length && serverPool.length) {
@@ -199,18 +182,15 @@ function processTasks() {
     var taskSet = taskPool.pop();
     var task = taskSet[0];
     var taskRes = taskSet[2];
-    var serverId = serverPool[0][0];
-    var server = serverPool[0][1];
-    taskRes.write(',');
+    var server = serverPool[0];
+    taskRes.write(",");
     taskRes.write(server.toString());
     // Redirect a worker to a server.
     var worker = taskWorkerPool.pop();
     var workerRes = worker[1];
-    var dest = "http://" + serverPool[0][1].get("host") + ":" +
-        serverPool[0][1].get("port") + "/task/" + task.id;
-    workerRes.writeHead(302, {'Location': dest});
+    var dest = "http://" + serverPool[0].get("host") + ":" +
+        serverPool[0].get("port") + "/task/" + task.id;
+    workerRes.writeHead(302, {"Location": dest});
     workerRes.end();
   }
 }
-
-setInterval(processTasks, 100);

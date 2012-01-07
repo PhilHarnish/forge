@@ -70,7 +70,6 @@ State.prototype._add = function(key, type) {
   child._root = this._root;
   child._parent = this;
   child._type = type || child._type;
-  this.onAdded && this.onAdded.signal(child);
   return child;
 };
 
@@ -78,11 +77,13 @@ State.prototype.post = function(path, data) {
   var location = this._get(path);
   var target = location[0];
   var incompletePath = location[1];
+  var addedParent = null;
   // TODO: Iterate over keys in data and create recursively?
   var collectionName;
   while (incompletePath.length) {
     collectionName = incompletePath.shift();
     if (collectionName && incompletePath.length) {
+      addedParent = target;
       target = target._add(collectionName);
     }
   }
@@ -97,6 +98,11 @@ State.prototype.post = function(path, data) {
     } else {
       target.set(key, data[key]);
     }
+  }
+  // TODO: Refactor to fix recursive add behavior. This only works one layer
+  // deep currently.
+  if (addedParent) {
+    addedParent.onAdded && addedParent.onAdded.signal(target);
   }
   return target;
 };

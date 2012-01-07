@@ -180,5 +180,3 @@ function testIncludes(base, test) {
   result.push(body);
   return result.join('');
 }
-
-setInterval(processTasks, 100);
