@@ -1,5 +1,5 @@
 var spec = require("../../test"),
-    Signal = require("always/Signal.js");
+    Signal = require("signal/Signal.js");
 
 describe("Mixin", function () {
   it("should mixin specified signals.", function () {

@@ -121,7 +121,7 @@ var deps = {
     'src/always/Task.js'
   ],
   'src/always/State.js': [
-    'src/always/Signal.js'
+    'src/signal/Signal.js'
   ],
   'src/always/Task.js': [
     'src/always/State.js'
@@ -130,7 +130,7 @@ var deps = {
 // TODO: Replace this with a better deps.js? Better paths? Smarter "require"?
 var aliases = {
   'src/always/State.js': 'always/State.js',
-  'src/always/Signal.js': 'always/Signal.js',
+  'src/signal/Signal.js': 'signal/Signal.js',
   'src/always/Task.js': 'always/Task.js',
   'third_party/node/lib/assert.js': 'assert',
   'third_party/node/lib/events.js': 'events',

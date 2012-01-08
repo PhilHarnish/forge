@@ -1,6 +1,6 @@
 var events = require("events"),
 
-    Signal = require("always/Signal.js");
+    Signal = require("signal/Signal.js");
 
 var State = function(path, data) {
   this._type = State;
