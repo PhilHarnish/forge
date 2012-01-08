@@ -165,11 +165,12 @@ describe("Composing", function () {
   var sequence,
       callbacks,
       s;
-  var getCallback = function (name) {
+  var callback = function (name) {
     if (!callbacks[name]) {
-      callbacks[name] = function () {
+      callbacks[name] = function (input) {
         var args = JSON.stringify(Array.prototype.slice.call(arguments, 0));
         sequence.push(name + "(" + args.slice(1, -1) + ")");
+        return name + input;
       };
     }
     return callbacks[name];
@@ -182,37 +183,30 @@ describe("Composing", function () {
   });
 
   it("should call sequences in order", function () {
-    s(getCallback("A"));
-    s(getCallback("B"));
-    s(getCallback("C"));
+    s(callback("A"))(callback("B"))(callback("C"));
     s();
     expect(sequence).toEqual(["A()", "B()", "C()"]);
   });
 
   it("should call nested callbacks outside -> in", function () {
-    var a = Signal(getCallback("A"));
-    var a1 = Signal(getCallback("A1"));
-    var a2 = Signal(getCallback("A2"));
-    var b = Signal(getCallback("B"));
-    s(a);
-    a(a1);
-    a(a2);
-    s(b);
+    s(Signal(callback("A"))
+        (callback("A1"))(callback("A2"))
+    );
+    s(callback("B"));
     s();
     expect(sequence).toEqual(["A()", "A1()", "A2()", "B()"]);
   });
 
-  it("should wait until all joins complete then callback", function () {
-    //
-  });
-
   describe("return values", function () {
     it ("should return simple values", function () {
-      //
+      s(callback("A"));
+      expect(s(1)).toEqual("A1");
     });
 
     it("should return the last value", function () {
-      //
+      s(callback("A"))(callback("B"));
+      expect(s(1)).toEqual("B1");
+      expect(sequence).toEqual(["A(1)", "B(1)"]);
     });
   });
 });
