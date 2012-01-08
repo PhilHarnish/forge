@@ -1,4 +1,25 @@
-var Signal = function() {
+var Signal = function(that, fn) {
+  var leaf = function (that, fn) {
+    var child;
+    if (that) {
+      if (typeof fn == "function") {
+        child = function () {
+          fn.apply(that, arguments);
+        };
+      } else if (that.instanceOfSignal || typeof that == "function") {
+        child = that;
+      }
+    }
+    return child ? leaf.add(child) : leaf.signal.apply(leaf, arguments);
+  };
+
+  for (var key in Signal.prototype) {
+    leaf[key] = Signal.prototype[key];
+  }
+
+  leaf(that, fn);
+
+  return leaf;
 };
 
 Signal.init = function(obj) {
@@ -16,6 +37,7 @@ Signal.prototype = {
     } else {
       this._callback.push(callback);
     }
+    return this;
   },
   remove: function(callback) {
     var listeners = this._callback;
@@ -32,18 +54,22 @@ Signal.prototype = {
         }
       }
     }
+    return this;
   },
   signal: function() {
     var listeners = this._callback;
+    var result;
     if (listeners) {
       var i = 0;
       var listener = listeners[i] || listeners;
       while (listener) {
-        listener.apply(this, arguments);
+        result = listener.apply(this, arguments);
         listener = listeners[++i];
       }
     }
-  }
+    return result;
+  },
+  instanceOfSignal: true
 };
 
 module.exports = Signal;

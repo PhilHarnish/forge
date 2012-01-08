@@ -10,16 +10,16 @@ describe("Mixin", function () {
       }
     };
     Signal.init(o);
-    expect(o.signalA).toEqual(jasmine.any(Signal));
-    expect(o.signalB).toEqual(jasmine.any(Signal));
+    expect(o.signalA.instanceOfSignal).toBeTruthy();
+    expect(o.signalB.instanceOfSignal).toBeTruthy();
     expect(o['signalC']).toBeUndefined();
   });
 });
 
 describe("Signaling", function () {
   var s,
-      callbacks = [],
-      status = [];
+      callbacks,
+      status;
   var getCallback = function (i) {
     if (!callbacks[i]) {
       callbacks[i] = function (arg) {
@@ -97,5 +97,122 @@ describe("Signaling", function () {
       s.signal();
       expect(status).toEqual(expected);
     }
+  });
+});
+
+describe("Shorthand", function () {
+  var called,
+      s,
+      callback;
+  beforeEach(function () {
+    called = 0;
+    callback = function () {
+      called++;
+    };
+  });
+
+  it("should take a function for pass through", function () {
+    s = Signal(callback);
+    s();
+    expect(called).toBeTruthy();
+  });
+
+  it("should bind a function", function () {
+    var o = {
+      input: undefined,
+      fn: function () {
+        this.input = arguments;
+      }
+    };
+    s = Signal(o, o.fn);
+    s(4, 5, 6);
+    expect(o.input).toEqual([4, 5, 6]);
+  });
+
+  it("should allow removal of callbacks", function () {
+    s = Signal(callback);
+    s.remove(callback);
+    s();
+    expect(called).toBeFalsy();
+  });
+
+  it("should function chain", function () {
+    s = Signal();
+    s(callback)(callback);
+    s();
+    expect(called).toBe(2);
+  });
+
+  describe("events", function () {
+    var onEvent;
+    beforeEach(function () {
+      onEvent = Signal();
+    });
+
+    it("should add multiple callbacks after construction", function () {
+      onEvent(callback);
+      onEvent();
+      expect(called).toBeTruthy();
+      expect(called).toBe(1);
+      onEvent(callback);
+      onEvent();
+      expect(called).toBe(3);
+    });
+  });
+});
+
+describe("Composing", function () {
+  var sequence,
+      callbacks,
+      s;
+  var getCallback = function (name) {
+    if (!callbacks[name]) {
+      callbacks[name] = function () {
+        var args = JSON.stringify(Array.prototype.slice.call(arguments, 0));
+        sequence.push(name + "(" + args.slice(1, -1) + ")");
+      };
+    }
+    return callbacks[name];
+  };
+
+  beforeEach(function () {
+    sequence = [];
+    callbacks = {};
+    s = Signal();
+  });
+
+  it("should call sequences in order", function () {
+    s(getCallback("A"));
+    s(getCallback("B"));
+    s(getCallback("C"));
+    s();
+    expect(sequence).toEqual(["A()", "B()", "C()"]);
+  });
+
+  it("should call nested callbacks outside -> in", function () {
+    var a = Signal(getCallback("A"));
+    var a1 = Signal(getCallback("A1"));
+    var a2 = Signal(getCallback("A2"));
+    var b = Signal(getCallback("B"));
+    s(a);
+    a(a1);
+    a(a2);
+    s(b);
+    s();
+    expect(sequence).toEqual(["A()", "A1()", "A2()", "B()"]);
+  });
+
+  it("should wait until all joins complete then callback", function () {
+    //
+  });
+
+  describe("return values", function () {
+    it ("should return simple values", function () {
+      //
+    });
+
+    it("should return the last value", function () {
+      //
+    });
   });
 });
