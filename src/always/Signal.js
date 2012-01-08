@@ -1,22 +1,22 @@
 var Signal = function(that, fn) {
-  var leaf = function (that, fn) {
+  var f = function (that, fn) {
     if (fn && typeof fn == "function") {
-      return leaf.add(function () {
+      return f.add(function () {
         fn.apply(that, arguments);
       });
     } else if (that && typeof that == "function") {
-      return leaf.add(that);
+      return f.add(that);
     }
-    return leaf.signal.apply(leaf, arguments);
+    return f.signal.apply(f, arguments);
   };
 
   for (var key in Signal.prototype) {
-    leaf[key] = Signal.prototype[key];
+    f[key] = Signal.prototype[key];
   }
 
-  arguments.length && leaf(that, fn);
+  arguments.length && f(that, fn);
 
-  return leaf;
+  return f;
 };
 
 Signal.init = function(obj) {
