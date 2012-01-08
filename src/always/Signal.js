@@ -1,23 +1,20 @@
 var Signal = function(that, fn) {
   var leaf = function (that, fn) {
-    var child;
-    if (that) {
-      if (typeof fn == "function") {
-        child = function () {
-          fn.apply(that, arguments);
-        };
-      } else if (that.instanceOfSignal || typeof that == "function") {
-        child = that;
-      }
+    if (fn && typeof fn == "function") {
+      return leaf.add(function () {
+        fn.apply(that, arguments);
+      });
+    } else if (that && typeof that == "function") {
+      return leaf.add(that);
     }
-    return child ? leaf.add(child) : leaf.signal.apply(leaf, arguments);
+    return leaf.signal.apply(leaf, arguments);
   };
 
   for (var key in Signal.prototype) {
     leaf[key] = Signal.prototype[key];
   }
 
-  leaf(that, fn);
+  arguments.length && leaf(that, fn);
 
   return leaf;
 };
@@ -68,8 +65,7 @@ Signal.prototype = {
       }
     }
     return result;
-  },
-  instanceOfSignal: true
+  }
 };
 
 module.exports = Signal;

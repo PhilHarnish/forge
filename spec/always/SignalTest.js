@@ -10,8 +10,8 @@ describe("Mixin", function () {
       }
     };
     Signal.init(o);
-    expect(o.signalA.instanceOfSignal).toBeTruthy();
-    expect(o.signalB.instanceOfSignal).toBeTruthy();
+    expect(o.signalA.add).toBe(Signal.prototype.add);
+    expect(o.signalB.add).toBe(Signal.prototype.add);
     expect(o['signalC']).toBeUndefined();
   });
 });
