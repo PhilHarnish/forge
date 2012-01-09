@@ -1,6 +1,6 @@
 var Signal = require("signal/Signal.js");
 
-var State = function(path, data) {
+var State = function (path, data) {
   this._type = State;
   this._root = this; // Needed?
   this._parent = null; // Needed?
@@ -18,12 +18,12 @@ State.prototype.signals = {
 };
 
 // TODO: Needed?
-State.prototype.set = function(key, value) {
+State.prototype.set = function (key, value) {
   this._data[key] = value;
   return this._data[key];
 };
 
-State.prototype.get = function(key) {
+State.prototype.get = function (key) {
   var location = this._get(key);
   // Intentionally return undefined if path segments remain.
   return location[1].length ? undefined : location[0];
@@ -47,7 +47,7 @@ State.prototype._get = function (key) {
 };
 
 // TODO: Deprecate? Private?
-State.prototype.apply = function(data) {
+State.prototype.apply = function (data) {
   for (var key in data) {
     if (key in this._children) {
       this._children[key].apply(data[key]);
@@ -62,7 +62,7 @@ State.prototype.group = function (key, type) {
   return this._add(key, type);
 };
 
-State.prototype._add = function(key, type) {
+State.prototype._add = function (key, type) {
   var child = new this._type(this._path + "/" + key);
   this._children[key] = child;
   child._root = this._root;
@@ -71,7 +71,7 @@ State.prototype._add = function(key, type) {
   return child;
 };
 
-State.prototype.post = function(path, data) {
+State.prototype.post = function (path, data) {
   var location = this._get(path);
   var target = location[0];
   var incompletePath = location[1];

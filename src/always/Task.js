@@ -1,6 +1,6 @@
 var State = require("always/State.js");
 
-var Task = function(id, data) {
+var Task = function (id, data) {
   State.call(this, id, data);
   // TODO: Remove 'id'
   this.id = id.split("/").pop();
@@ -17,7 +17,7 @@ Task.prototype.signals = {
   onComplete: true
 };
 
-Task.prototype.set = function(key, value) {
+Task.prototype.set = function (key, value) {
   this._data[key] = value;
   if (key == 'status' && value == Task.COMPLETE) {
     this.onComplete.signal();
