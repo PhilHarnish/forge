@@ -1,12 +1,12 @@
 
-var fs = require('fs'),
-    http = require('http'),
-    master = require('always/master.js'),
+var fs = require("fs"),
+    http = require("http"),
+    master = require("always/master.js"),
 
-    mime = require('node-mime/mime.js'),
-    State = require('always/State.js'),
-    Task = require('always/Task.js'),
-    uuid = require('node-uuid/uuid.js');
+    mime = require("node-mime/mime.js"),
+    State = require("always/State.js"),
+    Task = require("always/Task.js"),
+    uuid = require("node-uuid/uuid.js");
 
 server = false;
 
@@ -34,9 +34,9 @@ exports.start = function () {
       data.push(body);
     });
     switch (req.url) {
-      case '/task_master':
-        fs.readFile('templates/task_master.html', function (err, data) {
-          res.writeHead(200, {'Content-Type': 'text/html'});
+      case "/task_master":
+        fs.readFile("templates/task_master.html", function (err, data) {
+          res.writeHead(200, {"Content-Type": "text/html"});
           if (err) {
             throw err;
           }
@@ -50,19 +50,19 @@ exports.start = function () {
         });
         // TODO: Better response?
         res.writeHead(200);
-        res.end('OK');
+        res.end("OK");
         break;
       default:
-        if (req.url.indexOf('/task/') == 0) {
+        if (req.url.indexOf("/task/") == 0) {
           var taskId = req.url.substring(6);
           taskPool.push([taskId, [req, res]]);
           processTasks();
-        } else if (req.url.indexOf('/res/') == 0) {
+        } else if (req.url.indexOf("/res/") == 0) {
           // URL: /res/<snapshot>/path/to/file.
-          var parts = req.url.substring(5).split('/');
+          var parts = req.url.substring(5).split("/");
           // TODO: Use snapshot.
           var snapshot = parts.shift();
-          path = '../../' + parts.join('/');
+          path = "../../" + parts.join("/");
         } else {
           res.writeHead(404);
           res.end();
@@ -73,7 +73,7 @@ exports.start = function () {
         if (err) {
           throw err;
         }
-        res.writeHead(200, {'Content-Type': mime.lookup(path)});
+        res.writeHead(200, {"Content-Type": mime.lookup(path)});
         res.end(data);
       });
     }
@@ -84,11 +84,11 @@ master.start();
 
 var message = {};
 message[uuid() + "/"] = {
-  host: 'localhost',
-  port: '8002'
+  host: "localhost",
+  port: "8002"
 };
 
-master.registerServer(message, function() {
+master.registerServer(message, function () {
   // 'registry' arg is the registered server object.
 });
 
@@ -108,34 +108,34 @@ var INCLUDE_TEMPLATE = '<script type="text/javascript">' +
 
 // TODO: Calculate this at runtime.
 var deps = {
-  'spec/always/StateTest.js': [
-    'third_party/node/lib/util.js', // TODO: Temp.
-    'third_party/node/lib/assert.js', // TODO: Temp.
-    'third_party/should/lib/should.js', // TODO: Temp.
-    'src/always/State.js'
+  "spec/always/StateTest.js": [
+    "third_party/node/lib/util.js", // TODO: Temp.
+    "third_party/node/lib/assert.js", // TODO: Temp.
+    "third_party/should/lib/should.js", // TODO: Temp.
+    "src/always/State.js"
   ],
-  'spec/always/TaskTest.js': [
-    'third_party/node/lib/util.js', // TODO: Temp.
-    'third_party/node/lib/assert.js', // TODO: Temp.
-    'third_party/should/lib/should.js', // TODO: Temp.
-    'src/always/Task.js'
+  "spec/always/TaskTest.js": [
+    "third_party/node/lib/util.js", // TODO: Temp.
+    "third_party/node/lib/assert.js", // TODO: Temp.
+    "third_party/should/lib/should.js", // TODO: Temp.
+    "src/always/Task.js"
   ],
-  'src/always/State.js': [
-    'src/signal/Signal.js'
+  "src/always/State.js": [
+    "src/signal/Signal.js"
   ],
-  'src/always/Task.js': [
-    'src/always/State.js'
+  "src/always/Task.js": [
+    "src/always/State.js"
   ]
 };
 // TODO: Replace this with a better deps.js? Better paths? Smarter "require"?
 var aliases = {
-  'src/always/State.js': 'always/State.js',
-  'src/signal/Signal.js': 'signal/Signal.js',
-  'src/always/Task.js': 'always/Task.js',
-  'third_party/node/lib/assert.js': 'assert',
-  'third_party/node/lib/events.js': 'events',
-  'third_party/node/lib/util.js': 'util',
-  'third_party/should/lib/should.js': 'should'
+  "src/always/State.js": "always/State.js",
+  "src/signal/Signal.js": "signal/Signal.js",
+  "src/always/Task.js": "always/Task.js",
+  "third_party/node/lib/assert.js": "assert",
+  "third_party/node/lib/events.js": "events",
+  "third_party/node/lib/util.js": "util",
+  "third_party/should/lib/should.js": "should"
 };
 
 function processTasks() {
@@ -146,21 +146,21 @@ function processTasks() {
     if (!task) {
       // TODO: Pretty shitty iteration. Gets stuck too easily.
       taskPool.push(taskGroup);
-      console.log('Server does not know task', taskId);
+      console.log("Server does not know task", taskId);
       return;
     }
-    var includeBase = '/res/' + task._data.snapshot + '/';
+    var includeBase = "/res/" + task._data.snapshot + "/";
     // NB: task.data is the node with all data.
     // TODO: Better state library!
     var taskBody = NODE_HARNESS + testIncludes(includeBase, task._data.data);
     var res = taskGroup[1][1];
-    fs.readFile('templates/task.html', function (err, data) {
-      res.writeHead(200, {'Content-Type': 'text/html'});
+    fs.readFile("templates/task.html", function (err, data) {
+      res.writeHead(200, {"Content-Type": "text/html"});
       if (err) {
         throw err;
       }
-      var body = data.toString().replace('$TASK_ID', taskId);
-      body = body.replace('$TASK_BODY', taskBody);
+      var body = data.toString().replace("$TASK_ID", taskId);
+      body = body.replace("$TASK_BODY", taskBody);
       res.write(body);
       res.end();
     });
@@ -175,8 +175,8 @@ function testIncludes(base, test) {
     result.push(testIncludes(base, file));
   }
   body = INCLUDE_TEMPLATE.
-      replace('$SCRIPT_ALIAS', aliases[test]).
-      replace('$SCRIPT_SRC', base + test);
+      replace("$SCRIPT_ALIAS", aliases[test]).
+      replace("$SCRIPT_SRC", base + test);
   result.push(body);
-  return result.join('');
+  return result.join("");
 }
