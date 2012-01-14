@@ -31,12 +31,6 @@ exports.start = function () {
       client: clientId,
       snapshot: uuid(), // TODO: Temporary cache busting.
       type: "jasmine-node",
-      data: "spec/always/TaskTest.js"
-    });
-    clientState.get("task").post(uuid() + "/", {
-      client: clientId,
-      snapshot: uuid(), // TODO: Temporary cache busting.
-      type: "jasmine-node",
       data: "spec/always/StateTest.js"
     });
 

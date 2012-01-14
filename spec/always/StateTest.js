@@ -48,25 +48,26 @@ describe("Construction", function () {
 describe("toString()", function () {
   it("should serialize an empty State.", function () {
     var root = new State();
-    root.toString().should.equal("{}");
+    expect(root.toString()).toEqual("{}");
   });
 
   it("should serialize a simple root State.", function () {
     var root = new State();
     root.set("key", "value");
-    root.toString().should.equal(JSON.stringify({key: "value"}));
+    expect(root.toString()).toEqual(JSON.stringify({key: "value"}));
   });
 
   it("should serialize a root State with children.", function () {
     var root = new State();
     root.post("child/", {key: "value"});
-    root.toString().should.equal(JSON.stringify({"child/": {key: "value"}}));
+    expect(root.toString()).toEqual(JSON.stringify({"child/": {key: "value"}}));
   });
 
   it("should root a child State when serializing", function () {
     var root = new State();
     var child = root.post("child/", {key: "value"});
-    child.toString().should.equal(JSON.stringify({"child/": {key: "value"}}));
+    expect(child.toString()).toEqual(
+        JSON.stringify({"child/": {key: "value"}}));
   });
 });
 
@@ -78,16 +79,16 @@ describe("GET", function () {
   });
 
   it("should traverse absolute paths", function () {
-    root.get("/").should.equal(root);
-    root.get("/path/to/key").should.equal("value");
-    root.get("/path/to").get("/path/to/key").should.equal("value");
+    expect(root.get("/")).toEqual(root);
+    expect(root.get("/path/to/key")).toEqual("value");
+    expect(root.get("/path/to").get("/path/to/key")).toEqual("value");
     expect(root.get("/path/to").get("/key")).toBeUndefined();
   });
 
   it("should traverse relative paths", function () {
     expect(root.get("path")).toBeDefined();
-    root.get("path/to/key").should.equal("value");
-    root.get("path/to").get("key").should.equal("value");
+    expect(root.get("path/to/key")).toEqual("value");
+    expect(root.get("path/to").get("key")).toEqual("value");
   });
 });
 
@@ -123,13 +124,14 @@ describe("Updating", function () {
 
   it("should set and get.", function () {
     expect(root.get("lost")).toBeUndefined();
-    root.set("found", "value").should.equal("value");
+    expect(root.set("found", "value")).toEqual("value");
   });
 
   it("should create and return a child if one does not exist", function () {
     expect(root.get("child")).toBeUndefined();
     var child = root.post("child/", {key: "value"});
-    child.toString().should.equal(JSON.stringify({"child/": {key: "value"}}));
+    expect(child.toString()).toEqual(
+        JSON.stringify({"child/": {key: "value"}}));
   });
 
   it("should overwrite updates to properties", function () {
@@ -138,8 +140,8 @@ describe("Updating", function () {
         "old": "updated value",
         "new": "new value"
       });
-    root.get("old").should.equal("updated value");
-    root.get("new").should.equal("new value");
+    expect(root.get("old")).toEqual("updated value");
+    expect(root.get("new")).toEqual("new value");
   });
 
   it("should blend updates to children", function () {

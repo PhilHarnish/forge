@@ -9,8 +9,3 @@ function require(path) {
   }
   return deps[path];
 }
-
-// TODO: This kinda sucks. Needed for node's event.js
-process = {
-  EventEmitter: function () {}
-};

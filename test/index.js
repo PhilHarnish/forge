@@ -10,15 +10,13 @@ try {
 }
 
 var jasmine = require('jasmine-node/lib/jasmine-node'),
-    should = require('should'),
     TerminalReporter = require('jasmine-node/lib/jasmine-node/reporter').
         TerminalReporter;
 
-var filename = 'jasmine-2.0.0.rc1.js';
 function removeJasmineFrames(text) {
   var lines = [];
-  text.split(/\n/).forEach(function(line){
-    if (line.indexOf(filename) == -1) {
+  text.split(/\n/).forEach(function(line) {
+    if (line.indexOf('jasmine-2.0.0.rc1.js') == -1) {
       lines.push(line);
     }
   });

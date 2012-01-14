@@ -109,16 +109,7 @@ var INCLUDE_TEMPLATE = '<script type="text/javascript">' +
 // TODO: Calculate this at runtime.
 var deps = {
   'spec/always/StateTest.js': [
-    'third_party/node/lib/util.js', // TODO: Temp.
-    'third_party/node/lib/assert.js', // TODO: Temp.
-    'third_party/should/lib/should.js', // TODO: Temp.
     'src/always/State.js'
-  ],
-  'spec/always/TaskTest.js': [
-    'third_party/node/lib/util.js', // TODO: Temp.
-    'third_party/node/lib/assert.js', // TODO: Temp.
-    'third_party/should/lib/should.js', // TODO: Temp.
-    'src/always/Task.js'
   ],
   'src/always/State.js': [
     'src/signal/Signal.js'
@@ -132,10 +123,6 @@ var aliases = {
   'src/always/State.js': 'always/State.js',
   'src/signal/Signal.js': 'signal/Signal.js',
   'src/always/Task.js': 'always/Task.js',
-  'third_party/node/lib/assert.js': 'assert',
-  'third_party/node/lib/events.js': 'events',
-  'third_party/node/lib/util.js': 'util',
-  'third_party/should/lib/should.js': 'should'
 };
 
 function processTasks() {
