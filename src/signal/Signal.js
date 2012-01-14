@@ -19,6 +19,8 @@ var Signal = function(that, fn) {
   return f;
 };
 
+
+// TODO(philharnish): Deprecate.
 Signal.init = function(obj) {
   for (var signal in obj.signals) {
     obj[signal] = new Signal;
