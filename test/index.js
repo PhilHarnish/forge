@@ -1,26 +1,26 @@
 
 process.chdir(__dirname);
-require.paths.push('../third_party/', '../src/');
+require.paths.push("../third_party/", "../src/", "../");
 
 var util;
 try {
-  util = require('util');
+  util = require("util");
 } catch (e) {
-  util = require('sys');
+  util = require("sys");
 }
 
-var jasmine = require('jasmine-node/lib/jasmine-node'),
-    TerminalReporter = require('jasmine-node/lib/jasmine-node/reporter').
+var jasmine = require("jasmine-node/lib/jasmine-node"),
+    TerminalReporter = require("jasmine-node/lib/jasmine-node/reporter").
         TerminalReporter;
 
 function removeJasmineFrames(text) {
   var lines = [];
   text.split(/\n/).forEach(function(line) {
-    if (line.indexOf('jasmine-2.0.0.rc1.js') == -1) {
+    if (line.indexOf("jasmine-2.0.0.rc1.js") == -1) {
       lines.push(line);
     }
   });
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
 jasmineEnv = jasmine.getEnv();
