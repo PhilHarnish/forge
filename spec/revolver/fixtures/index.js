@@ -134,21 +134,17 @@ var _deps = {
 })(_deps);
 
 /**
- * Returns a shallow copy of local _deps.
+ * Returns a shallow copy of local _deps in file => [deps] format..
  * @param filter (optional) specify file to retrieve deps for.
  */
 exports.getDeps = function (filter) {
   var result = {};
   if (filter in _deps) {
-    result[filter] = {
-      deps: _deps[filter].deps.concat()
-    };
+    result[filter] = _deps[filter].deps.concat();
   } else {
     for (var key in _deps) {
       if (!filter || filter.match(key)) {
-        result[key] = {
-          deps: _deps[key].deps.concat()
-        };
+        result[key] = _deps[key].deps.concat()
       }
     }
   }
