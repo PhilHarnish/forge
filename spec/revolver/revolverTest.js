@@ -30,8 +30,9 @@ describe("revolver", function () {
     if (revolver.getCacheList().length > 0) {
       require("sys").exit(1);
     }
+    delete global.importOrder;
+    delete global.executeOrder;
   });
-
 
   it("should require the application successfully", function () {
     app = require("views/SignIn.js");

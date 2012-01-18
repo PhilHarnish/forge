@@ -14,12 +14,10 @@ describe("Detect relationships", function () {
   });
 
   it("should populate dependency data", function () {
-    expect(h.getFiles()).toBeDefined();
     expect(h.getFiles().length).toBeGreaterThan(0);
   });
 
   it("should identify tests", function () {
-    expect(h.getTests()).toBeDefined();
     expect(h.getTests().length).toBeGreaterThan(0);
   });
 
@@ -27,5 +25,9 @@ describe("Detect relationships", function () {
     expect(h.isComplete()).toBeTruthy();
     h.addDeps({"missing_deps.js": ["non_existent_file.js"]});
     expect(h.isComplete()).toBeFalsy();
+  });
+
+  it("should detect system under test", function () {
+
   });
 });

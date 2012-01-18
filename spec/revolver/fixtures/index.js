@@ -204,7 +204,10 @@ var REQUIRE_ID_REGEXP = /\/([^/]+).js/;
  * Returns the contents of a file given filePathString.
  * @param filePathString
  */
-exports.getFileContents = function (filePathString) {
+exports.getFileContents = function (filePathString, opt_callback) {
+  if (opt_callback) {
+    return opt_callback(exports.getFileContents(filePathString));
+  }
   if (filePathString in _deps) {
     var target = _deps[filePathString];
     var requires = [];
