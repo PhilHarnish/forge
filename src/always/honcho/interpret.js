@@ -48,11 +48,6 @@ exports.identifier = function (type, identifier) {
     identifier: latchedIdentifier,
     _next: _identifierTypeList[type]
   };
-  // Special list of all identifiers.
-  _identifierTypeList["*"] = {
-    identifier: latchedIdentifier,
-    _next: _identifierTypeList["*"]
-  };
 };
 
 exports.identify = function (fileName, contents, typeHint) {
@@ -62,8 +57,6 @@ exports.identify = function (fileName, contents, typeHint) {
           _EXTENSION_REGEX.exec(fileName)[0]));
   var identifyTypeStack = [
     "*",
-    "",
-    initialType.type.split("/")[0], // TODO: de-dupe
     initialType.type
   ];
   while (identifyTypeStack.length) {
@@ -71,7 +64,7 @@ exports.identify = function (fileName, contents, typeHint) {
     var iterator = _identifierTypeList[type];
     var last = null;
     while (iterator) {
-      var result = iterator.identifier(initialType, fileName, contents);
+      var result = iterator.identifier(fileName, contents, initialType);
       if (result) {
         if (last) {
           // A non-null 'last' implies we've moved away from head and the
@@ -180,6 +173,21 @@ exports.source = function (fileName, contents, typeHint) {
   return best.interpreter(fileName, contents, type);
 };
 
+exports.baseInterpreter = function (fileName, contents, type) {
+  var shaHash = crypto.createHash("sha1");
+  shaHash.update(contents);
+  return {
+    digest: shaHash.digest("hex"),
+    fileName: fileName,
+    type: type
+  };
+};
+
+var _initialInterpreter = {
+  accept: _parseAcceptType("*/*;q=0.1"),
+  interpreter: exports.baseInterpreter
+};
+
 /**
  * Load identifiers and interpreters.
  */
@@ -199,18 +207,3 @@ exports.source = function (fileName, contents, typeHint) {
   identifiers: exports.identifier,
   interpreters: exports.interpreter
 });
-
-var _baseInterpreter = function (fileName, contents, type) {
-  var shaHash = crypto.createHash("sha1");
-  shaHash.update(contents);
-  return {
-    digest: shaHash.digest("hex"),
-    fileName: fileName,
-    type: type
-  };
-};
-
-var _initialInterpreter = {
-  accept: _parseAcceptType("*/*;q=0.1"),
-  interpreter: _baseInterpreter
-};
