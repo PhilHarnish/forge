@@ -56,7 +56,7 @@ var _deps = {
   },
 
   // Tests.
-  "tests/Test.js": {
+  "tests/TestBase.js": {
     deps: [
       "events/EventDispatcher.js"
     ]
@@ -64,55 +64,55 @@ var _deps = {
   "tests/TestRunner.js": {
     deps: [
       "events/Event.js",
-      "tests/Test.js"
+      "tests/TestBase.js"
     ]
   },
-  "tests/events/TestEvent.js": {
+  "tests/events/EventTest.js": {
     deps: [
       "events/Event.js",
-      "tests/Test.js"
+      "tests/TestBase.js"
     ]
   },
-  "tests/events/TestEventDispatcher.js": {
+  "tests/events/EventDispatcherTest.js": {
     deps: [
       "events/Event.js",
       "events/EventDispatcher.js",
-      "tests/Test.js"
+      "tests/TestBase.js"
     ]
   },
-  "tests/ui/TestButton.js": {
+  "tests/ui/ButtonTest.js": {
     deps: [
       "events/Event.js",
       "ui/Button.js",
-      "tests/Test.js"
+      "tests/TestBase.js"
     ]
   },
-  "tests/ui/TestCheckBox.js": {
+  "tests/ui/CheckBoxTest.js": {
     deps: [
       "events/Event.js",
       "ui/CheckBox.js",
-      "tests/Test.js"
+      "tests/TestBase.js"
     ]
   },
-  "tests/ui/TestSubmitButton.js": {
+  "tests/ui/SubmitButtonTest.js": {
     deps: [
       "events/Event.js",
       "ui/SubmitButton.js",
-      "tests/Test.js"
+      "tests/TestBase.js"
     ]
   },
-  "tests/ui/TestTextField.js": {
+  "tests/ui/TextFieldTest.js": {
     deps: [
       "events/Event.js",
       "ui/TextField.js",
-      "tests/Test.js"
+      "tests/TestBase.js"
     ]
   },
-  "tests/ui/TestUiElement.js": {
+  "tests/ui/UiElementTest.js": {
     deps: [
       "events/Event.js",
       "ui/UiElement.js",
-      "tests/Test.js"
+      "tests/TestBase.js"
     ]
   }
 };

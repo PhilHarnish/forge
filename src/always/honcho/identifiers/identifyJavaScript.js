@@ -1,4 +1,4 @@
-_REQUIRE_REGEXP = /require\(['"]([^'"]+)['"]\)/g;
+var _REQUIRE_REGEXP = /\s*=\s*require\(/g;
 
 var _detectJavaScript = function (fileName,contents, type) {
   // TODO: Detect JavaScript.
@@ -6,7 +6,12 @@ var _detectJavaScript = function (fileName,contents, type) {
 };
 
 var _identifyJavaScript = function (fileName, contents, type) {
-  // No reason to doubt type hint.
+  if (contents.match(_REQUIRE_REGEXP)) {
+    type += ";nodejs=1";
+  }
+  if (fileName.slice(-7) == "Test.js") {
+    type += ";test=1";
+  }
   return type;
 };
 

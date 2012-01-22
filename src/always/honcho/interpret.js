@@ -64,7 +64,7 @@ exports.identify = function (fileName, contents, typeHint) {
     var iterator = _identifierTypeList[type];
     var last = null;
     while (iterator) {
-      var result = iterator.identifier(fileName, contents, initialType);
+      var result = iterator.identifier(fileName, contents, initialType.type);
       if (result) {
         if (last) {
           // A non-null 'last' implies we've moved away from head and the
@@ -73,7 +73,7 @@ exports.identify = function (fileName, contents, typeHint) {
           iterator._next = _identifierTypeList[type];
           _identifierTypeList[type] = iterator;
         }
-        return result;
+        return _parseAcceptType(result);
       }
       last = iterator;
       iterator = iterator._next;

@@ -19,5 +19,5 @@ module.exports = {
   // Happily accept JS identified as NodeJS
   "application/javascript;nodejs=1": _interpretNodeJs,
   // Tolerate ordinary JavaScript at 80% "quality".
-  "application/javascript;q=.8": _interpretNodeJs,
+  "application/javascript;q=.8": _interpretNodeJs
 };
