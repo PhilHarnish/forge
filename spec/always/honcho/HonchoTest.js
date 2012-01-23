@@ -10,24 +10,12 @@ describe("Detect relationships", function () {
   var h;
   beforeEach(function () {
     h = new Honcho;
-    h.addDeps(fixtures.getDeps());
+    h._getFileContents = fixtures.getFileContents;
   });
 
-  it("should populate dependency data", function () {
-    expect(h.getFiles().length).toBeGreaterThan(0);
-  });
-
-  it("should identify tests", function () {
-    expect(h.getTests().length).toBeGreaterThan(0);
-  });
-
-  it("should detect complete and incomplete dependencies", function () {
-    expect(h.isComplete()).toBeTruthy();
-    h.addDeps({"missing_deps.js": ["non_existent_file.js"]});
-    expect(h.isComplete()).toBeFalsy();
-  });
-
-  it("should detect system under test", function () {
-
+  it("should add a file", function () {
+    h.addFileName("events/Event.js");
+    var reference = h.find("events/Event.js");
+    console.log(h._index);
   });
 });

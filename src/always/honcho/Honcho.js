@@ -1,46 +1,30 @@
+var fs = require("fs"),
+
+    Index = require("always/honcho/Index.js"),
+    Resource = require("always/honcho/Resource.js"),
+    Signal = require("signal/Signal.js");
+
 var Honcho = function () {
-  this._source = {};
+  this._index = new Index();
 };
 
-var _TEST_REGEX = /Test\.js/;
-
 Honcho.prototype = {
-  addDeps: function (deps) {
-    for (var file in deps) {
-      this._source[file] = {
-        deps: deps[file].concat()
-      };
+  addFileName: function (fileName) {
+    if (!this._index.find(fileName)) {
+      var resource = Resource.fromFileName(fileName);
+      this._getFileContents(resource);
+      this._index.add(resource);
     }
   },
 
-  getFiles: function () {
-    var result = [];
-    for (var file in this._source) {
-      result.push(file);
-    }
-    return result;
+  _getFileContents: function (resource) {
+    fs.readFile(resource.fileName, function (err, data) {
+      resource.setContents(data);
+    });
   },
 
-  getTests: function () {
-    var result = [];
-    for (var file in this._source) {
-      if (_TEST_REGEX.test(file)) {
-        result.push(file);
-      }
-    }
-    return result;
-  },
-
-  isComplete: function () {
-    for (var fileIterator in this._source) {
-      var deps = this._source[fileIterator];
-      for (var depIndex in deps.deps) {
-        if (!(deps.deps[depIndex] in this._source)) {
-          return false;
-        }
-      }
-    }
-    return true;
+  find: function (reference) {
+    return this._index.find(reference);
   }
 };
 
