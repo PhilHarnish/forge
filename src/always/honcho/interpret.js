@@ -1,5 +1,4 @@
-var crypto = require('crypto'),
-    fs = require("fs"),
+var fs = require("fs"),
 
     mime = require("third_party/node-mime/mime.js");
 
@@ -50,9 +49,11 @@ exports.identifier = function (type, identifier) {
   };
 };
 
-exports.identify = function (fileName, contents, typeHint) {
+exports.identify = function (resource, typeHint) {
+  var fileName = resource.fileName,
+      contents = resource.contents;
   _identifyCount++;
-  var initialType = typeHint ||
+  var initialType = resource.type || typeHint ||
       _parseAcceptType(mime.lookup(fileName,
           _EXTENSION_REGEX.exec(fileName)[0]));
   var identifyTypeStack = [
@@ -154,8 +155,8 @@ var _findMostEligible = function (goalAccept, left, right) {
   return left;
 };
 
-exports.source = function (fileName, contents, typeHint) {
-  var type = exports.identify(fileName, contents, typeHint);
+exports.interpret = function (resource, typeHint) {
+  var type = typeHint || exports.identify(resource, typeHint);
   var interpreterTypeStack = [
     "",
     type.type.split("/")[0], // TODO: de-dupe
@@ -170,15 +171,12 @@ exports.source = function (fileName, contents, typeHint) {
       iterator = iterator._next;
     }
   }
-  return best.interpreter(fileName, contents, type);
+  return best.interpreter(resource, type);
 };
 
-exports.baseInterpreter = function (fileName, contents, type) {
-  var shaHash = crypto.createHash("sha1");
-  shaHash.update(contents);
+exports.baseInterpreter = function (resource, type) {
   return {
-    digest: shaHash.digest("hex"),
-    fileName: fileName,
+    fileName: resource.fileName,
     type: type
   };
 };

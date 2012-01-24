@@ -206,7 +206,7 @@ var REQUIRE_ID_REGEXP = /\/([^/]+).js/;
  */
 exports.getFileContents = function (filePathString, opt_callback) {
   if (opt_callback) {
-    return opt_callback(exports.getFileContents(filePathString));
+    return opt_callback(null, exports.getFileContents(filePathString));
   }
   if (filePathString in _deps) {
     var target = _deps[filePathString];

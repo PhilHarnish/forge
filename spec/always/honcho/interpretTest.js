@@ -22,11 +22,16 @@ describe("Custom identifiers and interpreters", function () {
   });
 
   it("should visit custom handler once", function () {
+    var resource = {
+      fileName: "example.txt",
+      contents: ""
+    };
     interpret.interpreter("text/plain", customInterpreter);
     expect(called).toBeFalsy();
-    interpret.source("example.txt", "");
+    interpret.interpret(resource);
     expect(called).toBe(1);
-    interpret.source("example.js", "");
+    resource.fileName = "example.js";
+    interpret.interpret(resource);
     expect(called).toBe(1);
   });
 
@@ -50,7 +55,11 @@ describe("Identification", function () {
     };
     var actual = {};
     for (var file in expected) {
-      actual[file] = interpret.identify(file, "").type;
+      var resource = {
+        fileName: file,
+        contents: ""
+      };
+      actual[file] = interpret.identify(resource).type;
     }
     expect(expected).toEqual(actual);
   });
@@ -59,9 +68,12 @@ describe("Identification", function () {
 describe("Interpretation", function () {
   var result;
   it("should return basic file information", function () {
-    result = interpret.source("example.txt", "");
-    expect(result.digest).toEqual("da39a3ee5e6b4b0d3255bfef95601890afd80709");
-    expect(result.type.type).toEqual("text/plain");
+    var resource = {
+      fileName: "example.txt",
+      contents: ""
+    };
+    result = interpret.interpret(resource);
     expect(result.fileName).toEqual("example.txt");
+    expect(result.type.type).toEqual("text/plain");
   });
 });

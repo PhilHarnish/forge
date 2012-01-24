@@ -2,8 +2,9 @@ var baseInterpreter = require("always/honcho/interpret.js").
     baseInterpreter;
 
 _REQUIRE_REGEXP = /require\(['"]([^'"]+)['"]\)/g;
-var _interpretNodeJs = function (fileName, contents, type) {
-  var interpretation = baseInterpreter(fileName, contents, type);
+var _interpretNodeJs = function (resource, type) {
+  var contents = resource.contents;
+  var interpretation = baseInterpreter(resource, type);
   interpretation.deps = [];
   var match;
   do {

@@ -15,7 +15,15 @@ describe("Detect relationships", function () {
 
   it("should add a file", function () {
     h.addFileName("events/Event.js");
-    var reference = h.find("events/Event.js");
-    console.log(h._index);
+    var resource = h.find("events/Event.js");
+    expect(resource).toBeDefined();
+  });
+
+  it("should add all files", function () {
+    for (var file in fixtures.getDeps()) {
+      h.addFileName(file);
+    }
+    // TODO: What asserts make sense?
+    expect(true).toBeTruthy();
   });
 });
