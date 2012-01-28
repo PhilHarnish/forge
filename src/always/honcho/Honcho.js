@@ -10,7 +10,7 @@ var Honcho = function () {
 };
 
 Honcho.prototype = {
-  addFileName: function (fileName) {
+  load: function (fileName) {
     var resource = this.resolve(fileName);
     if (!resource.contents && !resource.writeLock) {
       resource.writeLock = true;

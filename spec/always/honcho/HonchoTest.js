@@ -14,16 +14,16 @@ describe("Detect relationships", function () {
   });
 
   it("should add a file", function () {
-    h.addFileName("events/Event.js");
+    h.load("events/Event.js");
     var resource = h.find("events/Event.js");
     expect(resource).toBeDefined();
   });
 
   it("should add all files", function () {
     for (var file in fixtures.getDeps()) {
-      h.addFileName(file);
+      h.load(file);
     }
-    // TODO: What asserts make sense?
+    // TODO: What asserts make sense? Nothing blew up, does that count?
     expect(true).toBeTruthy();
   });
 });

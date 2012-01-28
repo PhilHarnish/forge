@@ -62,11 +62,57 @@ Signal.prototype = {
       var i = 0;
       var listener = listeners[i] || listeners;
       while (listener) {
-        result = listener.apply(this, arguments);
+        if (listener._enter) {
+          result = listener._enter(this, this.resume, arguments);
+        } else {
+          result = listener.apply(this, arguments);
+        }
         listener = listeners[++i];
       }
     }
     return result;
+  },
+  lock: function (args) {
+    if (!this._locked) {
+      this._locked = 1;
+    } else {
+      throw new Error("Unable to obtain lock.");
+    }
+    if (args) {
+      this._lockQueue.push(args);
+    }
+  },
+  unlock: function (unlockValue) {
+    if (this._locked == 1) {
+      this._locked = 0;
+    }
+    if (this.onLockComplete) {
+      this.onLockComplete(unlockValue);
+      delete this.onLockComplete;
+    }
+  },
+  _processQueue: function (unlockValue) {
+    while (this._lockQueue && this._lockQueue.length && this._locked == 0) {
+      this._enter(this, this._processQueue, this._lockQueue.shift());
+    }
+    return unlockValue;
+  },
+  _enter: function (parent, onLockComplete, args) {
+    if (this._locked > 0) {
+      this._lockQueue.push(args);
+      this.onLockComplete(parent, onLockComplete);
+      return;
+    }
+    var result = this.signal.apply(this, args);
+    if (this._locked > 0) {
+      this._lockQueue = [args];
+      this.onLockComplete = new Signal(parent, onLockComplete);
+      return;
+    }
+    return result;
+  },
+  resume: function () {
+
   }
 };
 

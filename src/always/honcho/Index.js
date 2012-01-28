@@ -8,11 +8,6 @@ Index.prototype = {
   add: function (resource, references) {
     references = references || resource.references;
     for (var reference in references) {
-      if (!isNaN(Number(reference))) {
-        console.log("wtf, number given...?", reference);
-        console.log(resource);
-        throw new Error();
-      }
       // TODO: Support multiple adds?
       this._index[reference] = resource;
     }
