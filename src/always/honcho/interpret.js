@@ -1,6 +1,6 @@
 var fs = require("fs"),
 
-    mime = require("third_party/node-mime/mime.js");
+    mime = require("node-mime/mime.js");
 
 // Takes any text following "." or "/", whichever comes last. Else "".
 var _EXTENSION_REGEX = /[^./]*$/;

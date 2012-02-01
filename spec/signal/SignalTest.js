@@ -1,6 +1,8 @@
 var spec = require("../../test"),
     Signal = require("signal/Signal.js");
 
+console.log("Signal imported.");
+
 describe("Mixin", function () {
   it("should mixin specified signals.", function () {
     var o = {

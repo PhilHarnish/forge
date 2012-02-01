@@ -9,7 +9,7 @@ try {
   util = require("sys");
 }
 
-var jasmine = require("jasmine-node/lib/jasmine-node"),
+var j = require("jasmine-node/lib/jasmine-node"),
     TerminalReporter = require("jasmine-node/lib/jasmine-node/reporter").
         TerminalReporter;
 
@@ -23,13 +23,16 @@ function removeJasmineFrames(text) {
   return lines.join("\n");
 }
 
-jasmineEnv = jasmine.getEnv();
-jasmineEnv.addReporter(new TerminalReporter({
-    print: util.print,
-    stackFilter: removeJasmineFrames
-}));
+exports.resetJasmineEnv = function () {
+  jasmine.currentEnv_ = new jasmine.Env();
+  jasmine.getEnv().addReporter(new TerminalReporter({
+      print: util.print,
+      stackFilter: removeJasmineFrames
+  }));
+};
+exports.jasmine = jasmine;
 
 // Hacky way to execute tests after they are all defined.
 setTimeout(function () {
-  jasmineEnv.execute();
+  jasmine.getEnv().execute();
 }, 0);
