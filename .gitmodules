@@ -28,3 +28,6 @@
 [submodule "third_party/node-mime"]
 	path = third_party/node-mime
 	url = https://github.com/bentomas/node-mime.git
+[submodule "third_party/jake"]
+	path = third_party/jake
+	url = https://github.com/280north/jake.git
