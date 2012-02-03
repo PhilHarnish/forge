@@ -1,6 +1,5 @@
 require.paths.push("src", "third_party");
-var Honcho = require("always/honcho/Honcho.js"),
-    revolver = require("revolver/revolver.js");
+var Honcho = require("always/honcho/Honcho.js");
 
 var honcho = new Honcho();
 honcho.loadDir(process.cwd());
@@ -11,12 +10,17 @@ var id = 0;
 var testLoop = function () {
   test.resetJasmineEnv();
   honcho.test("...");
-  test.jasmine.getEnv().execute();
-  // Rinse and repeat.
-  setTimeout(testLoop, 5000);
+  // TODO: Pretty gross.
+  if (test.jasmine.getEnv().currentRunner_.specs().length) {
+    test.jasmine.getEnv().execute();
+  }
 };
-
-setTimeout(testLoop, 5000);
+var warmupTimeout;
+var testLoopWarmup = function () {
+  clearTimeout(warmupTimeout);
+  warmupTimeout = setTimeout(testLoop, 50);
+};
+honcho.onFileChange(testLoopWarmup);
 
 /**
  * Wrapper for `always` client.

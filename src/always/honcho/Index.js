@@ -12,8 +12,9 @@ Index.prototype = {
       this._index[reference] = resource;
     }
     if (!(resource.id in this._listeners)) {
-      var listener = function () {
-        this.add.apply(this, arguments);
+      var that = this;
+      var listener = function (references) {
+        that.add.call(that, resource, references);
       };
       this._listeners[resource.id] = listener;
       resource.onReferencesAdded(listener);

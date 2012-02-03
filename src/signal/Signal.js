@@ -19,7 +19,6 @@ var Signal = function(that, fn) {
   return f;
 };
 
-
 // TODO(philharnish): Deprecate.
 Signal.init = function(obj) {
   for (var signal in obj.signals) {
@@ -65,7 +64,7 @@ Signal.prototype = {
         if (listener._enter) {
           result = listener._enter(this, this.resume, arguments);
         } else {
-          result = listener.apply(this, arguments);
+          result = listener.apply(listener, arguments);
         }
         listener = listeners[++i];
       }
@@ -112,7 +111,7 @@ Signal.prototype = {
     return result;
   },
   resume: function () {
-
+    throw new Error("Not yet implemented.");
   }
 };
 

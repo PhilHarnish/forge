@@ -8,12 +8,14 @@ exports.unloadAll = function () {
 
 var _lastUnloadPrefix = "";
 exports.unload = function (files) {
+  var unloaded = false;
   if (!(files instanceof Array)) {
     files = [files];
   }
   for (var i = 0; i < files.length; i++) {
     var file = files[i];
     if (_lastUnloadPrefix && ((_lastUnloadPrefix + file) in require.cache)) {
+      unloaded = true;
       delete require.cache[_lastUnloadPrefix + file];
     } else {
       for (var cache in require.cache) {
@@ -21,11 +23,13 @@ exports.unload = function (files) {
         if (parts.length == 2 && parts[1] == "") {
           _lastUnloadPrefix = parts[0];
           delete require.cache[cache];
+          unloaded = true;
           break;
         }
       }
     }
   }
+  return unloaded;
 };
 
 exports.getCacheList = function () {
