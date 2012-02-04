@@ -82,7 +82,11 @@ Honcho.prototype = {
       var resource = this._index._index[key];
       if (!(resource.id in tests) && resource.type && resource.type.test) {
         tests[resource.id] = resource;
-        require(resource.fileName);
+        try {
+          require(resource.fileName);
+        } catch (e) {
+          console.log(e.stack);
+        }
       }
     }
   },
