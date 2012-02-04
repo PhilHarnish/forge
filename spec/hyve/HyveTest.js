@@ -7,7 +7,7 @@ var setup = function () {
 };
 var sample = {key: "value"};
 
-describe("Paths", function () {
+xdescribe("Paths", function () {
   beforeEach(setup);
 
   it("should be rooted", function () {
@@ -15,7 +15,7 @@ describe("Paths", function () {
   });
 });
 
-describe("Signaling", function () {
+xdescribe("Signaling", function () {
   beforeEach(setup);
 
   var signalData;
