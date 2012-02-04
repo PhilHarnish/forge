@@ -1,3 +1,6 @@
+var _ = require("third_party/underscore/underscore.js"),
+    Dna = require("src/dna/Dna.js");
+
 describe("dna", function() {
   it("should default to a string with zero", function() {
     var d = new Dna();
@@ -16,7 +19,8 @@ describe("dna", function() {
   it("should throw an error if initialized with invalid length", function () {
     _([2, 5, 11, 21]).each(function(length) {
       var input = String.fromCharCode.apply(String, _.range(length));
-      expect(function () { var d = new Dna(input); }).toThrow(new RangeError());
+      expect(function () { var d = new Dna(input); }).
+          toThrow(jasmine.any(RangeError));
     });
   });
 });

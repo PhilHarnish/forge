@@ -1,6 +1,6 @@
 var Dna = function(seed) {
-  this.value = seed || String.fromCharCode(0);
-  var length = this.value.length;
+  this._value = seed || String.fromCharCode(0);
+  var length = this._value.length;
   var isPow2 = length & (length + 1);
   if (length & (length + 1)) {
     throw new RangeError;
@@ -9,9 +9,11 @@ var Dna = function(seed) {
 
 Dna.prototype = {
   toString: function () {
-    return this.value;
+    return this._value;
   },
   valueOf: function () {
-    return this.value;
+    return this._value;
   }
 };
+
+module.exports = Dna;
