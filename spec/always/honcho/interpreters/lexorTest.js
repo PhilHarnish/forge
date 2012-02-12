@@ -1,5 +1,5 @@
 var spec = require("../../../../test"),
-    lexor = require("always/honcho/interpreters/lexor.js");
+    lexor = require("always/mother/interpreters/lexor.js");
 
 var START,
     result;

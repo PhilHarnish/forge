@@ -1,4 +1,4 @@
-var baseInterpreter = require("always/honcho/interpret.js").
+var baseInterpreter = require("always/mother/interpret.js").
     baseInterpreter;
 
 _REQUIRE_REGEXP = /require\(['"]([^'"]+)['"]\)/g;

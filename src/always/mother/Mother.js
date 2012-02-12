@@ -1,8 +1,8 @@
 var fs = require("fs"),
 
-    Index = require("always/honcho/Index.js"),
-    interpret = require("always/honcho/interpret.js"),
-    Resource = require("always/honcho/Resource.js"),
+    Index = require("always/mother/Index.js"),
+    interpret = require("always/mother/interpret.js"),
+    Resource = require("always/mother/Resource.js"),
     revolver = require("revolver/revolver.js"),
     Signal = require("signal/Signal.js");
 

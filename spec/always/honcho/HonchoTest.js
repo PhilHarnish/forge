@@ -1,6 +1,6 @@
 var spec = require("../../../test"),
 
-    Honcho = require("always/honcho/Honcho.js"),
+    Honcho = require("always/mother/Mother.js"),
     fixtures = require("spec/revolver/fixtures");
 
 describe("Watching directories", function () {

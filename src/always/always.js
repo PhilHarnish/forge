@@ -1,5 +1,5 @@
 require.paths.push("src", "third_party");
-var Honcho = require("always/honcho/Honcho.js");
+var Honcho = require("always/mother/Mother.js");
 
 var honcho = new Honcho();
 honcho.loadDir(process.cwd());

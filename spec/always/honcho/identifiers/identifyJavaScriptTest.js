@@ -1,7 +1,7 @@
 var spec = require("../../../../test"),
 
     fixtures = require("spec/revolver/fixtures"),
-    identifyJavaScript = require("src/always/honcho/identifiers/" +
+    identifyJavaScript = require("src/always/mother/identifiers/" +
         "identifyJavaScript.js")["application/javascript"];
 
 describe("Identifies attributes", function () {

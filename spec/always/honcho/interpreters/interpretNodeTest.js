@@ -1,7 +1,7 @@
 var spec = require("../../../../test"),
 
     fixtures = require("spec/revolver/fixtures"),
-    interpretNode = require("src/always/honcho/interpreters/interpretNode.js");
+    interpretNode = require("src/always/mother/interpreters/interpretNode.js");
 
 var interpreter;
 for (var k in interpretNode) {

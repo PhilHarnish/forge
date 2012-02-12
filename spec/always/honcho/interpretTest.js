@@ -1,7 +1,7 @@
 var spec = require("../../../test"),
 
     fixtures = require("spec/revolver/fixtures"),
-    interpret = require("always/honcho/interpret.js"),
+    interpret = require("always/mother/interpret.js"),
     revolver = require("src/revolver/revolver.js");
 
 describe("Custom identifiers and interpreters", function () {
@@ -17,8 +17,8 @@ describe("Custom identifiers and interpreters", function () {
 
   afterEach(function () {
     // Reload interpret.
-    revolver.unload(["always/honcho/interpret.js"]);
-    interpret = require("always/honcho/interpret.js");
+    revolver.unload(["always/mother/interpret.js"]);
+    interpret = require("always/mother/interpret.js");
   });
 
   it("should visit custom handler once", function () {
