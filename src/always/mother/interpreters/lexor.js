@@ -47,11 +47,9 @@ State.prototype.lex = function (input, index) {
           throw new Error("Unknown transition", state);
         }
       }
-      //result.consumedInput = Math.max(match[0].length, lastTokenIndex);
       break;
     }
   }
-
   return result;
 };
 

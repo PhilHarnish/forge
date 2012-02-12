@@ -95,7 +95,6 @@ do {
   var token = lexer.getNextToken();
   tokens.push(token);
 } while (token && max--);
-console.log("TOKENS:", tokens);
 
 describe("States", function () {
   it("should transition states", function () {
