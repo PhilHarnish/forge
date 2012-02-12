@@ -1,15 +1,15 @@
 require.paths.push("src", "third_party");
-var Honcho = require("always/mother/Mother.js");
+var Mother = require("always/mother/Mother.js");
 
-var honcho = new Honcho();
-honcho.loadDir(process.cwd());
+var mother = new Mother();
+mother.loadDir(process.cwd());
 
 var test = require(process.cwd() + "/test");
 
 var id = 0;
 var testLoop = function () {
   test.resetJasmineEnv();
-  honcho.test("...");
+  mother.test("...");
   // TODO: Pretty gross.
   if (test.jasmine.getEnv().currentRunner_.specs().length) {
     test.jasmine.getEnv().execute();
@@ -20,7 +20,7 @@ var testLoopWarmup = function () {
   clearTimeout(warmupTimeout);
   warmupTimeout = setTimeout(testLoop, 50);
 };
-honcho.onFileChange(testLoopWarmup);
+mother.onFileChange(testLoopWarmup);
 
 /**
  * Wrapper for `always` client.

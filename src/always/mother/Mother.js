@@ -6,7 +6,7 @@ var fs = require("fs"),
     revolver = require("revolver/revolver.js"),
     Signal = require("signal/Signal.js");
 
-var Honcho = function () {
+var Mother = function () {
   this._index = new Index();
   this._affected = {};
   this.onFileChange = new Signal();
@@ -14,7 +14,7 @@ var Honcho = function () {
 
 var FILE_ID_REGEX = /(?:(?:[^/]+\/)*..?\/)*(.*)$/;
 
-Honcho.prototype = {
+Mother.prototype = {
   load: function (fileName) {
     var resource = this.resolve(fileName);
     if (!resource.contents && !resource.writeLock) {
@@ -161,4 +161,4 @@ function visitAffected(affectedMap, index, resource, result) {
   return result;
 }
 
-module.exports = Honcho;
+module.exports = Mother;
