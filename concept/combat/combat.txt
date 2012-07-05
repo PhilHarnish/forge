@@ -1,0 +1,56 @@
+Area of Effect
+Damage over time
+Slashing (dot)
+Bashing (armor piercing)
+
+
+Projectiles
+
+Melee
+
+Remote detonation
+
+Type
+* Fire
+* Ice
+* Lightening
+* Holy/Light
+* Evil/Dark
+* Earth
+* Poison
+* Wind, sound
+
+Status
+* Slow / Stop
+* Stunned / Paralyzed
+* Sick (health cannot regen)
+* Poisoned
+* Sleep
+* Haste
+* Knockback
+* Invisible
+* Regen
+
+Vectors
+* Defense
+* Offense / attack power
+
+
+Increase Max HP
+
+
+
+Effect duration
+* Indefinite
+* Curse / Blessing (ie, mutual exclusion)
+* Timed
+* Ends after taking damage
+* Valid @ % health (>= or <= %)
+* Valid @ % speed (slow, fast)
+* Charges / Consumable
+* Recharges
+** Over time
+** Dealing damage
+** Taking damage
+** Fuel
+** Nurture

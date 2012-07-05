@@ -1,0 +1,61 @@
+Fire
+------------
+S: Bio
+W: Water
+Requires oxygen
+
+Ice
+------------
+S: Water
+W: Fire
+
+Water
+------------
+S: Fire
+W: Water
+
+Fire -> Ice -> Water -> Fire
+
+
+Lightning/Thunder
+------------
+S: Machines, Water?, Ice?
+-> Conductive types
+W: Earth
+-> Non-conductive types
+
+Earth
+------------
+S:
+W: Airborn, plant?
+
+Wind
+------------
+S: Airborn
+W:
+
+Explosive = Fire + Wind
+
+Laser
+------------
+
+
+Holy/Light
+------------
+(healing spells)
+S: Holy
+
+Dark
+------------
+S: Dark
+
+Poison/Bio
+------------
+(dot)
+S: Bio
+
+Gravity
+------------
+(% damage attack)
+
+
