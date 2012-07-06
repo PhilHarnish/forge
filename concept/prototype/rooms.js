@@ -52,12 +52,13 @@ function makeRoom(position) {
     for (var ry = 0; ry < ROOM_TILES; ry++) {
       result.push("<tr>");
       for (var rx = 0; rx < ROOM_TILES; rx++) {
-        result.push("<td class='" + tileStatus(position, rx, ry) + "'>" +
-            rx + "x" + ry + "</td>")
+        result.push(
+            "<td class='" + tileStatus(position, rx, ry) + "'></td>")
       }
       result.push("</tr>");
     }
-    ROOM_CACHE[id] = $("<table class='room' id='" + id + "'>" +
+    ROOM_CACHE[id] = $("<table class='room'" +
+        "id='" + id + "' style='top: 0; left: 0'>" +
         result.join("") + "</table>");
   }
   return ROOM_CACHE[id];
