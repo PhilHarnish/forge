@@ -73,7 +73,14 @@ function tileStatus(position, rx, ry) {
 }
 
 function move(position, delta) {
-  // First, position the existing room.
+  // First, make and position the adjacent room.
+  var newPosition = sumPoints(position, delta);
+  var adjacent = makeRoom(newPosition);
+  adjacent.css(getOffset(delta));
+  $("#dropzone").append(adjacent);
+  adjacent.animate(getOffset([0, 0]));
+
+  // Next, position the existing room.
   var room = getIdenifier(position, true);
   $(room).animate(getOffset(multiplyPoints([-1, -1], delta)),
     {
@@ -82,13 +89,6 @@ function move(position, delta) {
       }
     }
   );
-
-  // Next, make and position the adjacent room.
-  var newPosition = sumPoints(position, delta);
-  var adjacent = makeRoom(newPosition);
-  adjacent.css(getOffset(delta));
-  $("#dropzone").append(adjacent);
-  adjacent.animate(getOffset([0, 0]));
 
   return newPosition;
 }
