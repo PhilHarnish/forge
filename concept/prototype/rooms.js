@@ -78,11 +78,11 @@ function move(position, delta) {
   var adjacent = makeRoom(newPosition);
   adjacent.css(getOffset(delta));
   $("#dropzone").append(adjacent);
-  adjacent.animate(getOffset([0, 0]));
+  adjacent.stop().animate(getOffset([0, 0]));
 
   // Next, position the existing room.
   var room = getIdenifier(position, true);
-  $(room).animate(getOffset(multiplyPoints([-1, -1], delta)),
+  $(room).stop().animate(getOffset(multiplyPoints([-1, -1], delta)),
     {
       complete: function () {
         $(this).remove();
