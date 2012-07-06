@@ -4,7 +4,7 @@ var ARROW = {
   RIGHT: 39,
   DOWN: 40
 };
-var ROOM_TILES = 7;
+var ROOM_TILES = 9;
 var TILE_SIZE = 50;
 var MARGINS = 3;
 var ROOM_SIZE = ROOM_TILES * (TILE_SIZE + MARGINS);
@@ -13,11 +13,15 @@ var ROOM_CACHE = {};
 var position = [0, 0];
 
 $(function () {
+  $("#viewport").css({
+    width: ROOM_SIZE,
+    height: ROOM_SIZE
+  });
   $("#restart-button").click(restart);
   restart();
 });
 
-$(document).keyup(function (e) {
+$(document).keydown(function (e) {
   switch (e.which) {
     case ARROW.LEFT:
       console.log("LEFT");
@@ -42,6 +46,8 @@ $(document).keyup(function (e) {
 });
 
 function restart() {
+  position = [0, 0];
+  ROOM_CACHE = {};
   $("#dropzone").empty().append(makeRoom(position));
 }
 
@@ -65,7 +71,8 @@ function makeRoom(position) {
 }
 
 function tileStatus(position, rx, ry) {
-  if (rx == 3 || ry == 3) {
+  var door = Math.floor(ROOM_TILES / 2);
+  if (rx == door || ry == door) {
     return "room-vacant";
   } else if (rx % (ROOM_TILES - 1) && ry % (ROOM_TILES - 1)) {
     return "room-vacant";
