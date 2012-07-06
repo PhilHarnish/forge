@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+  <title>Room navigation prototype</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../third_party/bootstrap/docs/assets/css/bootstrap.css"
+        rel="stylesheet">
+<style>
+body {
+  margin: 10px;
+}
+#viewport {
+  width: 371px;
+  height: 372px;
+  background: #eee;
+  overflow: hidden;
+  position: relative;
+}
+#avatar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 50px;
+  height: 50px;
+  margin: auto;
+  font-size: 50px;
+  line-height: 50px;
+}
+.room {
+  position: absolute;
+}
+.room td {
+  width: 50px;
+  height: 50px;
+  border: 1px solid black;
+}
+.room-blocked {
+  background: #000;
+  color: #fff;
+}
+.btn {
+  margin: 5px;
+}
+</style>
+</head>
+<body>
+<div id="viewport">
+<div id="dropzone">
+</div>
+<p id="avatar">
+  @
+</p>
+</div>
+<a class="btn" id="restart-button">restart</a>
+<script src="../../third_party/jquery/dist/jquery.js"></script>
+<script src="rooms.js"></script>
+</body>
+</html>
