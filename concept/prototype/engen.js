@@ -11,26 +11,27 @@ function tileStatus(position, tile) {
   var verticalEdge = tx % edge == 0;
   var horizontalEdge = ty % edge == 0;
 
+  var vacant;
+
   if (!horizontalEdge && !verticalEdge) {
     // The inside is always empty.
-    return "room-vacant";
+    vacant = true;
   } else if (horizontalEdge && verticalEdge) {
     // The corners are always filled.
-    return "room-blocked";
   } else if (ty == 0 && !topLeft.top) {
     // Draw a small or wide door.
-    return tx == door || topLeft.topWide ? "room-vacant" : "room-blocked";
+    vacant = tx == door || topLeft.topWide;
   } else if (tx == 0 && !topLeft.left) {
     // Draw a small or wide door.
-    return ty == door || topLeft.leftWide ? "room-vacant" : "room-blocked";
+    vacant = ty == door || topLeft.leftWide;
   } else if (tx == edge && !right.left) {
     // Draw a small or wide door.
-    return ty == door || right.leftWide ? "room-vacant" : "room-blocked";
+    vacant = ty == door || right.leftWide;
   } else if (ty == edge && !bottom.top) {
     // Draw a small or wide door.
-    return tx == door || bottom.topWide ? "room-vacant" : "room-blocked";
+    vacant = tx == door || bottom.topWide;
   }
-  return "room-blocked";
+  return vacant ? "room-vacant" : "room-blocked";
 }
 
 var METADATA_CACHE = {};
