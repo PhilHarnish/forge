@@ -37,3 +37,6 @@
 [submodule "third_party/jQuery-Animate-Enhanced"]
 	path = third_party/jQuery-Animate-Enhanced
 	url = https://github.com/benbarnett/jQuery-Animate-Enhanced.git
+[submodule "third_party/alea"]
+	path = third_party/alea
+	url = https://github.com/PhilHarnish/alea.git
