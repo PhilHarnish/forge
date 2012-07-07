@@ -6,7 +6,7 @@ var ARROW = {
 };
 var ROOM_TILES = 9;
 var TILE_SIZE = 50;
-var MARGINS = 3;
+var MARGINS = 2;
 var ROOM_SIZE = ROOM_TILES * (TILE_SIZE + MARGINS);
 var ROOM_CACHE = {};
 
@@ -24,19 +24,15 @@ $(function () {
 $(document).keydown(function (e) {
   switch (e.which) {
     case ARROW.LEFT:
-      console.log("LEFT");
       position = move(position, [-1, 0]);
       break;
     case ARROW.RIGHT:
-      console.log("RIGHT");
       position = move(position, [1, 0]);
       break;
     case ARROW.UP:
-      console.log("UP");
       position = move(position, [0, -1]);
       break;
     case ARROW.DOWN:
-      console.log("DOWN");
       position = move(position, [0, 1]);
       break;
     default:
@@ -68,16 +64,6 @@ function makeRoom(position) {
         result.join("") + "</table>");
   }
   return ROOM_CACHE[id];
-}
-
-function tileStatus(position, rx, ry) {
-  var door = Math.floor(ROOM_TILES / 2);
-  if (rx == door || ry == door) {
-    return "room-vacant";
-  } else if (rx % (ROOM_TILES - 1) && ry % (ROOM_TILES - 1)) {
-    return "room-vacant";
-  }
-  return "room-blocked";
 }
 
 function move(position, delta) {

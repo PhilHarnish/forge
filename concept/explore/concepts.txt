@@ -1,0 +1,145 @@
+Path finding
+* Map / Compass
+* Light / Night vision goggles
+** Other-worldy vision (eg, hidden walkways)
+* Flying beatle from skyward sword
+* Navigator (tip system)
+** Audio cues
+** Scents?
+** Rumble (screen, presumably)
+* Mind reading
+* Pariscope, binoculars
+* Camera
+* Ability to spot weaknesses (eg destructable terrain)
+
+
+General travel
+* Swimming
+** Diving
+** Flipper
+** Snorkel
+** Wet suit
+** Tank
+** Iron boots (for sinking)
+** Floatation (for rising)
+** Raft
+* Ground
+** Run-and-smash
+** Run-and-jump
+** Water walking
+* Air
+** Sky walking
+** Jumping
+** Gliding
+* Hazards
+** Geiger counter
+** Hazmat suit
+** Gas mask
+** Warm suits
+** Cold suits
+** Insulated suits
+** Lead suits
+** Pressure suits
+* Vehicles / Mounts
+** Railed
+** Over-ground
+** Flying
+** Submersible
+** Lava?
+
+
+Obstacle clearing
+* Bomb, keg
+* Key
+** Scanner / Mask
+** Whistle
+** Membership card
+** Scents?
+** Movement sequences
+** ID card
+-> Player finds key "308": reflects DNA associated with 308xxxx
+   attempts to use on rooms labeled "308" have % chance to succeed
+   Success will identify card permanently
+* Ticket
+* "Magic bracelet" (heavy lifting)
+* Switches
+** Melting ice
+** Matching item w/ obstacle (metroid, shadow company)
+** Presure plates
+** Timed switches
+** Fire (torch), Lightening (circuit), etc.
+
+
+Gap clearing
+* Hook shot
+* Ladder
+* Rope
+* Zip line
+* High jump, long jump
+
+Other
+* Armor / Damage resist
+** Orbiting shield
+* Stealing
+** Stealing power (eg FFVII materia)
+* Shrink/grow (eg, metroid small size)
+* Wall climbing
+* Double jump
+* Bait
+* Net
+* Rosetta stone
+* Future/past from skyward sword
+* Mirror / teleport
+* "Sixth sense" icon warning before enemy strikes
+* Magnifying lens
+* Item sets?
+* Item combining / Crafting?
+** Materials
+* Increase rare drops
+** Increase item type drops (coin, hearts, food, etc)
+* Seeds (projectile, plant & wait)
+* Camera
+* Deeds (symbol of ownership)
+* Disguises
+** Invisibility
+* Sense improvement
+** Touch?
+** Hearing
+** Sight
+** Smell?
+** Taste?
+* Wind / Bellow
+* Treadmills
+* Whip
+* Raising/lowering sand/water/lava levels
+* Extra lives
+* Ability to eat spoiled foods
+
+Tools
+* Hammer / Pickaxe
+* Shovel / "mole mitts"
+* Screw driver
+* Harness
+* "Hacking" tools?
+* Weilder
+** Fuel/power
+* Saw
+* Projectile Weapon
+** Quiver
+** Projectile + X (fire, ice, etc)
+** Bombchu (travels & explodes)
+** Catapult
+** Slingshot
+* Boomerang for fetching items
+* Shield
+** Blocks fire
+** Blocks/reflects lasers
+* Containers
+** Magic powder
+* Seasons / Time of day mechanics
+
+
+Final Fantasy Materia / combos
+FF / JRPG status effects
+Magicka combos
+Pokemon types, items
