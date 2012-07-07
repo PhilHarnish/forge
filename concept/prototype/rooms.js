@@ -55,7 +55,7 @@ function makeRoom(position) {
       result.push("<tr>");
       for (var rx = 0; rx < ROOM_TILES; rx++) {
         result.push(
-            "<td class='" + tileStatus(position, rx, ry) + "'></td>")
+            "<td class='" + tileStatus(position, [rx, ry]) + "'></td>")
       }
       result.push("</tr>");
     }
