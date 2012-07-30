@@ -40,10 +40,12 @@ function roomMetadata(position) {
   if (!(id in METADATA_CACHE)) {
     var rand = getRandGenerator(position);
     METADATA_CACHE[id] = {
+      id: rand.peek() & ((1 << 4) - 1),
       top: rand.bit(),
       topWide: rand.bit(),
       left: rand.bit(),
-      leftWide: rand.bit()
+      leftWide: rand.bit(),
+      color: rand.bits(3 * 4)
     };
   }
   return METADATA_CACHE[id];
@@ -79,6 +81,9 @@ function getRand(position) {
 function getRandGenerator(position) {
   var rand = getRand(position);
   return {
+    peek: function () {
+      return rand;
+    },
     bit: function () {
       var result = rand & 1;
       rand >>= 1;
