@@ -51,6 +51,21 @@ function roomMetadata(position) {
   return METADATA_CACHE[id];
 }
 
+var REGION_CACHE = {};
+function regionMetadata(position) {
+  var id = position.join("x");
+  if (!(id in REGION_CACHE)) {
+    var rand = getRandGenerator(position);
+    REGION_CACHE[id] = {
+      id: rand.peek() & ((1 << 2) - 1),
+      vertical: rand.bit(),
+      horizontal: rand.bit(),
+      color: rand.bits(6 * 4)
+    };
+  }
+  return REGION_CACHE[id];
+}
+
 var RAND_CACHE = {};
 var CACHE_BLOCK = 8;
 function getRand(position) {
@@ -95,4 +110,8 @@ function getRandGenerator(position) {
       return result;
     }
   };
+}
+
+function sumPoints(a, b) {
+  return [a[0] + b[0], a[1] + b[1]];
 }
