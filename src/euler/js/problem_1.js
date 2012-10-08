@@ -3,8 +3,8 @@ var _ = require("../../../third_party/underscore/underscore.js")._;
 var MULTIPLES = [3, 5];
 var CEIL = 1000;
 
-exports.preamble = ["Finding the sum of all the multiples of", MULTIPLES.join(" or "),
-    "below", CEIL + "."];
+exports.preamble = ["Finding the sum of all the multiples of",
+  MULTIPLES.join(" or "), "below", CEIL + "."];
 exports.solutions = {
   brute_force: function () {
     var sum = 0;
