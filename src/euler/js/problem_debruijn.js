@@ -6,24 +6,22 @@ var _ = require("../../../third_party/underscore/underscore.js")._;
 
 var LENGTH = 7;
 var BASE = 5;
-var FORBIDDEN = [];
-var REQUIRED = [];
-var OTHER = [];
 
 exports.preamble = ["Finding shortest debruijn-esque sequence for", LENGTH,
-  "subsequence given an alphabet of length", BASE, "avoiding [" +
-  FORBIDDEN.join("], [") + "] requiring [" + REQUIRED.join("], [") + "] and",
-  OTHER.length, "other matching functions."
+  "subsequence given an alphabet of length and special required criteria."
 ];
 
 // Implementation constants.
-
+var MAX = Math.pow(BASE, LENGTH - 1);
 // There must be ceil(log_2(LENGTH + 1)) bits to store LENGTH digits.
 // For example, LENGTH = 4 needs to hold up to 4 consecutive 0s in the 0
 // bucket (0..4 inclusive) and requires 3 bits.
 var BUCKET_SIZE = Math.ceil(Math.log(LENGTH + 1) / Math.log(2));
-var BUCKET_BITMASK = (1 << BUCKET_SIZE) - 1;
 var ZEROS = "0000000000000"; // Cheap way to provide padded 0s.
+var BUTTON_L = 0; // Arbitrary.
+var BUTTON_R = 1; // Arbitrary.
+var BUTTON_A = 2; // Arbitrary.
+var MUST_VISIT = getMustVisit();
 
 exports.solutions = {
   /**
@@ -36,17 +34,14 @@ exports.solutions = {
     }
     var vertices = [];
     var dualVertices = [];
-    var sums = [];
-    var max = Math.pow(BASE, LENGTH - 1);
     var i;
     // Initialize.
-    for (i = 0; i < max; i++) {
+    for (i = 0; i < MAX; i++) {
       vertices[i] = getNeighbors(i);
       dualVertices[i] = [];
-      sums[i] = getSums(i);
     }
     // Create a dual of the graph.
-    for (i = 0; i < max; i++) {
+    for (i = 0; i < MAX; i++) {
       var current = vertices[i];
       for (var outgoing = 0; outgoing < BASE; outgoing++) {
         dualVertices[current[outgoing]].push(i);
@@ -72,7 +67,7 @@ exports.solutions = {
       elements.push(looped[i]);
       tested[parseInt(elements.join(""), BASE)] = true;
     }
-    for (i = 0; i < max; i++) {
+    for (i = 0; i < MAX; i++) {
       if (!tested[i]) {
         throw new Error(i + " was never visited.");
       }
@@ -105,6 +100,58 @@ exports.solutions = {
   }
 };
 
+function getMustVisit() {
+  var result = [];
+  var count = 0;
+  var max = Math.pow(BASE, LENGTH);
+  for (var i = 0; i < max; i++) {
+    var sums = getSums(i);
+    var numLeft = sums[BUTTON_L] % 4; // 4 lefts or rights cancel out.
+    var numRight = sums[BUTTON_R] % 4;
+    var netOneTurn = Math.abs(numLeft - numRight) % 2 == 1;
+    var str = (ZEROS + i.toString(BASE)).slice(-LENGTH);
+    var numDoubles = 0;
+    var first = str[0];
+    var lastDouble = false;
+    for (var c = 1; c < str.length; c++) {
+      if (first == str[c] && !lastDouble) {
+        numDoubles++;
+      }
+      lastDouble = first == str[c];
+      first = str[c];
+    }
+    var everyDigit = true;
+    for (var s = 0; s < sums.length && everyDigit; s++) {
+      everyDigit = everyDigit && (sums[s] > 0);
+    }
+    // Start: 78125.
+    // w/ first two match: 15625
+    // w/ 3rd is not 1st or 2nd: 12500
+    // w/ 3rd is not A: 62500
+    // w/ net 1 turn: 39062
+    // w/ numDoubles: 18960
+    // w/ everyDigit: 16800
+    // ALL: 228
+    // w/o first two match: 584
+    // w/o 3rd is not a: 288
+    // w/o net one turn: 384
+    // w/o numDoubles >= 2: 576
+    // w/o every digit: 3008
+    if (str[0] == str[1] && // First two buttons match.
+        str[1] != str[2] && // Button 3 does not match buttons one or two.
+        str[2] != BUTTON_A && // Button 3 is not A.
+        netOneTurn && // Net effect of one turn.
+        numDoubles >= 2 && // At least two doubles.
+        everyDigit && // Assumes each digit was also required.
+        'no-op') { // For ease of commenting out individual lines above.
+      result.push(i);
+      count++;
+    }
+  }
+  console.log("Num must visit:", count);
+  return result;
+}
+
 function getNeighbors(n) {
   var result = [];
   // Convert to base BASE and take the last LENGTH - 1 digits.
@@ -118,17 +165,15 @@ function getNeighbors(n) {
 }
 
 function getSums(n) {
-  if (BASE > 10) {
-    throw new Error("Only supports decimal digits.");
+  var result = [];
+  for (var i = 0; i < BASE; i++) {
+    result[i] = 0;
   }
-  var result = 0;
-  var converted = n.toString(BASE);
+  var converted = (ZEROS + n.toString(BASE)).slice(-LENGTH);
   for (var idx = 0; idx < converted.length; idx++) {
     var digit = Number(converted[idx]);
-    result += 1 << (digit * BUCKET_SIZE);
+    result[digit]++;
   }
-  // Since the converted string isn't 0 padded on the left, add missing 0s.
-  result += LENGTH - converted.length;
   return result;
 }
 
@@ -191,3 +236,4 @@ function traverse(graph, spanningEdges) {
   }
   return result;
 }
+
