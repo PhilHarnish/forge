@@ -1,0 +1,27 @@
+
+Genetics can be sold.
+Alien artifacts can be sold.
+
+Human atifacts can be bought.
+
+
+
+Everything has "DNA" which helps understanding.
+Selling goods which are understood leads to better returns.
+
+
+
+Units:
+* Credits
+  Production vs consumption
+* Food
+  Production vs consumption
+* Power
+  Production vs consumption
+* Water
+  Production vs consumption
+* Z genetic DNA understanding
+* P tech DNA understanding
+* T tech DNA understanding (skills)
+
+

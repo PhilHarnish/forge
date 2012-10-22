@@ -1,0 +1,87 @@
+Phases
+1) Explore (see vs keep)
+2) Develop
+3) Settle
+4a)Sell
+4b)Consume
+5) Produce
+
+
+Structure Types
+(X) Planets
+<X> Developments
+
+
+Strengths: Commerce vs Combat
+Defences: Commerce vs Combat
+
+
+Resources:
+* Novelty
+* Ore
+* Genetics
+* Alien
+
+Windfall vs Steady
+
+
+Powers:
+1) Explore
++1-2 See
++1 Keep
+
+2) Develop
++1 commerce
++1 commerce (iff develop)
+-1-2 develop
+
+3) Settle
+x2 settle permitted
++1 commerce after settle
++1-3 military
+-1 military
+   convert military to commerce @ 1 less cost
+-2 settle
+-1 ore settle
+-1/+1 ore settle
+-2/+2 alien settle
+Discard -> 0 commerce settle (non-alien)
+Discard -> +3 military settle
+Discard 1-2 -> +1 military settle
+
+4a)Sell
++X commerce
+<color> +1 commerce
+<novelty|ore|genetics> +2 commerce
+<novelty> +3 commerce
+<novelty> +3 commerce (iff this world)
++1 commerce (iff this world)
+
+4b)Consume
+1-3 <any|color> -> 1 VPs
+1-3 <any|color> -> 1 VPs, 1 commerce
+1 <color> -> 2 VPs
+1 <color> -> 1 commerce
+1 genetics -> 2 commerce
+2 genetics -> 3 commerce
+2 <ore|any> -> 3 VPs
+1 <any> -> 2 commerce
+<3 colors> -> 3 VPs
++1-2 commerce
+$ ability (with $ powers)
+$ ability (without $ powers)
+
+5) Produce
+1 <color> resource
+1 <color> resource, 1 commerce
+<color> resource : 1 commerce (iff this world)
+<color> resource : 2 VPs (iff this world)
+1 <any|color> windfall resource
+<X colors> : X commerce
+X military : X commerce
+1 discard -> alien produce
+2 commerce
+
+Other:
+"Uplift", "Imperial", "Alien", "Rebel", etc.
+Duplicate developments; limit 1
