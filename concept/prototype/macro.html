@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <title>Environment generation prototype</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../third_party/bootstrap/docs/assets/css/bootstrap.css"
+        rel="stylesheet">
+<style>
+body {
+  background: #333;
+}
+#controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+#dropzone li {
+  margin: 10px;
+  width: 620px; /* Subtract 2*10px for left/right margin. */
+  height: 110px; /* Subtract 3*10px for margin, then into thirds. */
+  line-height: 110px;
+  overflow: hidden;
+  background-color: #999;
+}
+#dropzone .safe {
+  background-color: #eee;
+  -webkit-animation-name: safe-pulse;
+  -webkit-animation-duration: 2s;
+  -webkit-animation-iteration-count: infinite;
+}
+@-webkit-keyframes safe-pulse {
+  from {
+    box-shadow: 0 0 9px #eee;
+  }
+  50% {
+    box-shadow: 0 0 18px #fff;
+  }
+  to {
+    box-shadow: 0 0 9px #eee;
+  }
+}
+.icon {
+  position: relative;
+  font-size: 160px;
+}
+.icon .percentage {
+  position: absolute;
+  left: 0;
+  overflow: hidden;
+}
+</style>
+</head>
+<body>
+<ul id="dropzone" class="unstyled"></ul>
+<ul id="controls" class="unstyled">
+  <li>
+    <a class="btn" id="start-button">start</a>
+  </li>
+</ul>
+<script src="../../third_party/jquery/dist/jquery.js"></script>
+<script src="../../third_party/jQuery-Animate-Enhanced/jquery.animate-enhanced.min.js"></script>
+<script src="../../third_party/EaselJS/lib/easeljs-NEXT.min.js"></script>
+<script src="../../third_party/alea/Mash.js"></script>
+<script src="../../third_party/alea/Alea.js"></script>
+<script src="engen.js"></script>
+<script src="macro.js"></script>
+</body>
+</html>
