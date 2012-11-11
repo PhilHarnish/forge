@@ -15,10 +15,10 @@ function start() {
     prng: prng
   };
   var floorId = generateFloor(state);
-  selectedPlayer = generatePlayer(state);
+  selectedPlayer = getPlayer(state);
   visit(state, selectedPlayer, floorId);
   var dropzone = $("#dropzone");
-  dropzone.html(drawFloors(state));
+  dropzone.append.apply(dropzone, drawFloors(state));
   dropzone.click(onClick);
 }
 
@@ -26,19 +26,11 @@ function onClick(e) {
   visit(state, selectedPlayer, e.target.id);
 }
 
-function visit(state, playerId, floorId) {
-  console.log("player", playerId, "visits", floorId);
-  var player = state.players[playerId];
-  if (player.floor) {
-    // Remove from last floor.
-    var lastFloor = getFloor(state, player.floor);
-    lastFloor.players[playerId] = false;
-  }
-  var floor = state.floors[floorId];
-  floor.status.safe = true;
-  floor.status.visited = true;
-  floor.players[playerId] = true;
-  player.floor = floorId;
+function visit(state, player, floorId) {
+  console.log("player", player[0].id, "visits", floorId);
+  var floor = getFloor(state, floorId);
+  floor.addClass("safe visited");
+  floor.append(player);
 }
 
 function getRandGenerator(seed) {
@@ -58,62 +50,45 @@ function generateFloor(state, parent) {
   var id = "floor" + state.prng.uint32();
   var floor = getFloor(state, id);
   if (parent) {
-    floor.neighbors.push(parent);
+    floor.append(generateDoor(parent));
   }
-  floor.neighbors.push("floor" + state.prng.uint32());
+  floor.append(generateDoor("floor" + state.prng.uint32()));
 
   return id;
 }
 
-function generatePlayer(state) {
-  var id = "player" + state.prng.uint32();
-  state.players[id] = {
-    floor: undefined
-  };
+function generateDoor(destination) {
+  return $(["<a href='#", destination, "'>door</a>"].join(""));
+}
 
-  return id;
+function getPlayer(state) {
+  var id = "player" + state.prng.uint32();
+  state.players[id] = $(["<p id='", id, "'></p>"].join(""));
+  return state.players[id];
 }
 
 function getFloor(state, id) {
   var floor = state.floors[id];
   if (!floor) {
-    floor = {
-      id: id,
-      neighbors: [],
-      players: {},
-      status: {
-        safe: false,
-        visited: false
-      }
-    };
-    state.floors[id] = floor;
+    state.floors[id] = $(["<li id='", id, "'></li>"].join(""));
   }
-  return floor;
+  return state.floors[id];
 }
 
 function drawFloors(state) {
   var floors = [];
-  var visit = function (id, occupied) {
-    var floor = getFloor(state, id);
-    floors.push(drawFloor(floor,
-        occupied ? ["occupied"] : []));
-    for (var i = 0; i < floor.neighbors.length; i++) {
-      visit(floor.neighbors[i]);
-    }
+  var visit = function (index, element) {
+    var floor = getFloor(state, element.id);
+    floors.push(floor);
+    floor.children("a").each(visit);
   };
   for (var i in state.players) {
-    visit(state.players[i].floor, true);
+    // Pretend to visit an <a> element with floor ID.
+    visit(null, {
+      id: state.players[i].parent()[0].id
+    });
   }
-  return floors.join(" ");
-}
-
-function drawFloor(floor, classes) {
-  for (var key in floor.status) {
-    if (floor.status[key]) {
-      classes.push(key);
-    }
-  }
-  return "<li id='" + floor.id + "' class='" + classes.join(" ") + "'></li>";
+  return floors;
 }
 
 function getIcon(icon) {
