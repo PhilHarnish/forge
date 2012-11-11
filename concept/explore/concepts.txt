@@ -12,10 +12,8 @@ Path finding
 * Camera
 * Ability to spot weaknesses (eg destructable terrain)
 
-
-General travel
+Travel equipment
 * Swimming
-** Diving
 ** Flipper
 ** Snorkel
 ** Wet suit
@@ -23,14 +21,6 @@ General travel
 ** Iron boots (for sinking)
 ** Floatation (for rising)
 ** Raft
-* Ground
-** Run-and-smash
-** Run-and-jump
-** Water walking
-* Air
-** Sky walking
-** Jumping
-** Gliding
 * Hazards
 ** Geiger counter
 ** Hazmat suit
@@ -40,6 +30,15 @@ General travel
 ** Insulated suits
 ** Lead suits
 ** Pressure suits
+
+General travel
+* Ground
+** Run-and-smash
+** Run-and-jump
+** Water crossing
+* Air
+** Jumping
+** Gliding
 * Vehicles / Mounts
 ** Railed
 ** Over-ground

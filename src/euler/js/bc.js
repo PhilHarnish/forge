@@ -1,5 +1,19 @@
 var _ = require("../../../third_party/underscore/underscore.js")._;
 
+/*
+ * Ruby VALUEs
+ * 0b...xxxxxxx1 fixnum
+ * 0b...00000010 true
+ * 0b...00000110 undef
+ * 0b...xxxx1110 symbol
+ *
+ * 0b...00000x00 RTEST
+ * 0b...00000000 false
+ * 0b...00000100 nil
+ *
+ * 0b...xxxxxx00 BUILTIN (nb: x > 1)
+ */
+
 var bc = function (n) {
   return bc._scrub(n);
 };

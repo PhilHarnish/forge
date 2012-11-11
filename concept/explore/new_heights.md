@@ -2,8 +2,7 @@
 ## Start
 * Solo
 * Hunter / gather
-* Land on a rooftop
-* Plug in NC
+* Start several stories up a building
 * Explore
 
 ## Midgame

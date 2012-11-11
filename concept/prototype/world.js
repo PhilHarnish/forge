@@ -5,7 +5,6 @@ var CACHE = false;
 
 $(function () {
   $("#restart-button").click(restart);
-  //restart();
 });
 
 var canvas;
