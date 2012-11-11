@@ -24,11 +24,13 @@ body {
 }
 #dropzone .safe {
   background-color: #eee;
-  -webkit-animation-name: safe-pulse;
+}
+#dropzone .occupied {
+  -webkit-animation-name: occupied-pulse;
   -webkit-animation-duration: 2s;
   -webkit-animation-iteration-count: infinite;
 }
-@-webkit-keyframes safe-pulse {
+@-webkit-keyframes occupied-pulse {
   from {
     box-shadow: 0 0 9px #eee;
   }
