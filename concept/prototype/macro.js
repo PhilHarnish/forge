@@ -76,17 +76,28 @@ function getFloor(state, id) {
 }
 
 function drawFloors(state) {
+  var visited = {};
   var floors = [];
   var visit = function (index, element) {
-    var floor = getFloor(state, element.id);
-    floors.push(floor);
-    floor.children("a").each(visit);
+    var id;
+    switch (element.tagName.toUpperCase()) {
+      case "P":
+        id = element.parentNode.id;
+        break;
+      case "A":
+        id = element.hash.split("#").pop();
+        break;
+    }
+    if (!visited[id]) {
+      visited[id] = true;
+      var floor = getFloor(state, id);
+      floors.push(floor);
+      floor.children("a").each(visit);
+    }
   };
   for (var i in state.players) {
-    // Pretend to visit an <a> element with floor ID.
-    visit(null, {
-      id: state.players[i].parent()[0].id
-    });
+    // NB: players[i] is a JQuery list with 1 element.
+    state.players[i].each(visit);
   }
   return floors;
 }
