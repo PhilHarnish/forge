@@ -63,7 +63,7 @@ function generateDoor(destination) {
 
 function getPlayer(state) {
   var id = "player" + state.prng.uint32();
-  state.players[id] = $(["<p id='", id, "'></p>"].join(""));
+  state.players[id] = $(["<p id='", id, "'>☃</p>"].join(""));
   return state.players[id];
 }
 
