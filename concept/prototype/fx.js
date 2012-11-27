@@ -1,5 +1,10 @@
 /* Navigation tabs. */
 var fxHandlers = {
+  "mutex": {
+    "click": function (e) {
+      mutex($(this), ".fx-mutex");
+    }
+  },
   "tab": {
     "click": function (e) {
       var tab = $(this);
@@ -10,17 +15,19 @@ var fxHandlers = {
       // Find <a href="#target"> element with #target id.
       var target = $(tab.attr("href"));
       if (target.length == 1) {
-        // Toggle parent tab active state.
-        parent.addClass("active");
-        parent.siblings().removeClass("active");
-        // Find sibling tab-panes.
-        target.addClass("active");
-        target.siblings(".tab-pane").removeClass("active");
+        // Set tab active states.
+        mutex(parent);
+        // Set tab-pane active states.
+        mutex(target, ".tab-pane");
       }
     }
   }
 };
 
+function mutex (el, match) {
+  el.addClass("active");
+  el.siblings(match).removeClass("active");
+}
 
 /* Setup handlers on body. */
 function registerFx(fxHandlers) {
@@ -37,7 +44,14 @@ function registerFx(fxHandlers) {
 }
 
 function handle(event) {
-  var classes = $(event.target).attr("class").split(" ");
+  var attr = $(event.target).attr("class");
+  if (!attr) {
+    return true;
+  }
+  var classes = attr.split(" ");
+  if (classes.indexOf("disabled") >= 0) {
+    return false;
+  }
   for (var i = 0; i < classes.length; i++) {
     var match = classes[i].split("fx-");
     if (match.length == 2 && !match[0] && match[1] in fxHandlers) {
@@ -47,6 +61,7 @@ function handle(event) {
       }
     }
   }
+  return true;
 }
 
 registerFx(fxHandlers);
