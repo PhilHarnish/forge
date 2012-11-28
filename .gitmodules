@@ -43,3 +43,6 @@
 [submodule "third_party/EaselJS"]
 	path = third_party/EaselJS
 	url = https://github.com/CreateJS/EaselJS.git
+[submodule "third_party/angular.js"]
+	path = third_party/angular.js
+	url = https://github.com/angular/angular.js.git
