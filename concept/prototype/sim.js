@@ -13,6 +13,10 @@ angular.module('simulation', []).
       otherwise({redirectTo:'/explore'});
   });
 
+function SimController($scope, $location) {
+  $scope.$location = $location;
+}
+
 function MeterController($scope) {
   $scope.meters = [
     {

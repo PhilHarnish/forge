@@ -13,6 +13,8 @@ var fxHandlers = {
         return;
       }
       // Set tab active states.
+      // TODO: This shouldn't be necessary. Angular doesn't seem to notice the
+      // changed path and won't redraw active class for <li>.
       mutex(parent);
     }
   }

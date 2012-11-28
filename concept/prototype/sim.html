@@ -18,7 +18,7 @@ body {
 }
 </style>
 </head>
-<body>
+<body ng-controller="SimController">
 
 <div ng-controller="MeterController">
   <div ng-repeat="meter in meters" class="progress progress-{{meter.css}}">
@@ -27,11 +27,9 @@ body {
 </div>
 
 <ul class="nav nav-tabs">
-  <li class="active">
-    <a href="#/explore" class="fx-tab">explore</a>
-  </li>
-  <li>
-    <a href="#/rest" class="fx-tab">rest</a>
+  <li ng-repeat="tab in ['explore', 'rest']"
+      ng-class="{active: $location.path() == '/{{tab}}'}">
+    <a href="#/{{tab}}" class="fx-tab">{{tab}}</a>
   </li>
 </ul>
 <div class="tab-content" ng-view>
