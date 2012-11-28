@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html ng-app="simulation">
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <title>Gameplay simulation</title>
@@ -13,19 +13,19 @@ body {
 .btn-group {
   margin-bottom: 18px;
 }
+.location-direction {
+  position: absolute;
+}
 </style>
 </head>
 <body>
 
-<div class="progress progress-info">
-  <div class="bar" style="width: 20%">health</div>
+<div ng-controller="MeterController">
+  <div ng-repeat="meter in meters" class="progress progress-{{meter.css}}">
+    <div class="bar" style="width: {{meter.value}}%">{{meter.name}}</div>
+  </div>
 </div>
-<div class="progress progress-success">
-  <div class="bar" style="width: 40%">hunger</div>
-</div>
-<div class="progress progress-warning">
-  <div class="bar" style="width: 60%">energy</div>
-</div>
+
 <ul class="nav nav-tabs">
   <li class="active">
     <a href="#explore" class="fx-tab">explore</a>
@@ -35,10 +35,11 @@ body {
   </li>
 </ul>
 <div class="tab-content">
-  <div class="tab-pane active" id="explore">
+  <div class="tab-pane active" id="explore" ng-controller="ExploreController">
     <div class="btn-group">
-      <button class="btn fx-mutex disabled">fight</button>
-      <button class="btn fx-mutex active">flight</button>
+      <button ng-repeat="action in actions"
+              ng-class="{active: action.active, disabled: action.disabled}"
+              class="btn fx-mutex">{{action.name}}</button>
     </div>
     <table class="table">
       <tbody>
@@ -46,52 +47,38 @@ body {
           <td>&nbsp;</td>
           <td colspan="3">new areas</td>
         </tr>
-        <tr>
+        <tr ng-repeat="location in locations">
           <td>
-            <input type="checkbox" value="">
+            <input type="checkbox"
+                   ng-class="{hide: !location.memorable}"
+                   value="">
           </td>
-          <td>base</td>
-          <td><span>&times;</span></td>
-          <td>0m</td>
-        </tr>
-        <tr>
+          <td>{{location.name}}</td>
           <td>
-            <input type="checkbox" value="">
+            <span ng-class="{hide: location.distance()}">&times;</span>
+            <span ng-class="{hide: !location.distance()}"
+                  ng-style="location.cssRotation()"
+                  class="location-direction">&uarr;</span>
           </td>
-          <td>locked door</td>
-          <td>&uarr;</td>
-          <td>10m</td>
-        </tr>
-        <tr>
-          <td>&nbsp;</td>
-          <td>hostile animal</td>
-          <td>&uarr;</td>
-          <td>10m</td>
+          <td>{{location.distance()}}m</td>
         </tr>
       </tbody>
     </table>
   </div>
-  <div class="tab-pane" id="rest">
+  <div class="tab-pane" id="rest" ng-controller="RestController">
     <div class="btn-group">
-      <button class="btn fx-mutex active">fortify</button>
-      <button class="btn fx-mutex">study</button>
-      <button class="btn fx-mutex">sleep</button>
+      <button ng-repeat="action in actions"
+              ng-class="{active: action.active, disabled: action.disabled}"
+              class="btn fx-mutex">{{action.name}}</button>
     </div>
     <table class="table">
       <tbody>
-        <tr>
+        <tr ng-repeat="item in items">
           <td>
-            <input type="checkbox" value="">
+            <input type="checkbox" ng-model="item.owned">
           </td>
-          <td>bat</td>
-          <td>1kg</td>
-        </tr>
-        <tr>
-          <td>
-            <input type="checkbox" value="">
-          </td>
-          <td>canned food</td>
-          <td>3kg</td>
+          <td>{{item.name}}</td>
+          <td>{{item.weight}}kg</td>
         </tr>
       </tbody>
     </table>
@@ -103,6 +90,7 @@ body {
 <script src="../../third_party/EaselJS/lib/easeljs-NEXT.min.js"></script>
 <script src="../../third_party/alea/Mash.js"></script>
 <script src="../../third_party/alea/Alea.js"></script>
+<script src="../../third_party/angular.js/build/angular.js"></script>
 <script src="fx.js"></script>
 <script src="sim.js"></script>
 </body>
