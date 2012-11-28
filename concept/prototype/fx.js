@@ -12,14 +12,8 @@ var fxHandlers = {
       if (parent.hasClass("active")) {
         return;
       }
-      // Find <a href="#target"> element with #target id.
-      var target = $(tab.attr("href"));
-      if (target.length == 1) {
-        // Set tab active states.
-        mutex(parent);
-        // Set tab-pane active states.
-        mutex(target, ".tab-pane");
-      }
+      // Set tab active states.
+      mutex(parent);
     }
   }
 };

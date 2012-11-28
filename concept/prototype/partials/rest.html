@@ -1,0 +1,18 @@
+<div class="tab-pane active" id="rest" ng-controller="RestController">
+  <div class="btn-group">
+    <button ng-repeat="action in actions"
+            ng-class="{active: action.active, disabled: action.disabled}"
+            class="btn fx-mutex">{{action.name}}</button>
+  </div>
+  <table class="table">
+    <tbody>
+      <tr ng-repeat="item in items">
+        <td>
+          <input type="checkbox" ng-model="item.owned">
+        </td>
+        <td>{{item.name}}</td>
+        <td>{{item.weight}}kg</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

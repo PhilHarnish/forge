@@ -1,5 +1,17 @@
 
-angular.module('simulation', []);
+angular.module('simulation', []).
+  config(function($routeProvider) {
+    $routeProvider.
+      when('/explore', {
+          controller: ExploreController,
+          templateUrl: 'partials/explore.html'
+      }).
+      when('/rest', {
+          controller: RestController,
+          templateUrl: 'partials/rest.html'
+      }).
+      otherwise({redirectTo:'/explore'});
+  });
 
 function MeterController($scope) {
   $scope.meters = [
