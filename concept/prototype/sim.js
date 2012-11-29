@@ -1,5 +1,5 @@
 
-angular.module('simulation', []).
+angular.module('simulation', ['player']).
   config(function($routeProvider) {
     $routeProvider.
       when('/explore', {
@@ -19,7 +19,15 @@ angular.module('simulation', []).
       }
     });
 
-function SimController($scope, $location) {
+function SimController($scope, $location, Player) {
+  $scope.player = Player.get({name: "philharnish"}, function (p) {
+    if (p.name) {
+      // Initialized.
+      return;
+    }
+    p.name = "philharnish";
+    p.$save();
+  });
   $scope.modeIs = function(mode) {
     return $location.path() == '/' + mode;
   };

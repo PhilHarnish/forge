@@ -19,7 +19,7 @@ body {
 </style>
 </head>
 <body ng-controller="SimController">
-
+<h1>{{player.name}}</h1>
 <div ng-controller="MeterController">
   <div ng-repeat="meter in meters" class="progress progress-{{meter.css}}">
     <div class="bar" style="width: {{meter.value}}%">{{meter.name}}</div>
@@ -41,7 +41,9 @@ body {
 <script src="../../third_party/alea/Mash.js"></script>
 <script src="../../third_party/alea/Alea.js"></script>
 <script src="../../third_party/angular.js/build/angular.js"></script>
+<script src="../../third_party/angular.js/build/angular-resource.js"></script>
 <script src="fx.js"></script>
 <script src="sim.js"></script>
+<script src="player.js"></script>
 </body>
 </html>
