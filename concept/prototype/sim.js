@@ -14,7 +14,9 @@ angular.module('simulation', []).
   });
 
 function SimController($scope, $location) {
-  $scope.$location = $location;
+  $scope.modeIs = function(mode) {
+    return $location.path() == '/' + mode;
+  };
 }
 
 function MeterController($scope) {

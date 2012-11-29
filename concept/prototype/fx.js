@@ -4,19 +4,6 @@ var fxHandlers = {
     "click": function (e) {
       mutex($(this), ".fx-mutex");
     }
-  },
-  "tab": {
-    "click": function (e) {
-      var tab = $(this);
-      var parent = tab.parent();
-      if (parent.hasClass("active")) {
-        return;
-      }
-      // Set tab active states.
-      // TODO: This shouldn't be necessary. Angular doesn't seem to notice the
-      // changed path and won't redraw active class for <li>.
-      mutex(parent);
-    }
   }
 };
 
