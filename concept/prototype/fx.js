@@ -1,10 +1,4 @@
-/* Navigation tabs. */
 var fxHandlers = {
-  "mutex": {
-    "click": function (e) {
-      mutex($(this), ".fx-mutex");
-    }
-  }
 };
 
 function mutex (el, match) {

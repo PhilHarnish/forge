@@ -29,7 +29,7 @@ body {
 <ul class="nav nav-tabs">
   <li ng-repeat="tab in ['explore', 'rest']"
       ng-class="{active: modeIs(tab)}">
-    <a href="#/{{tab}}" class="fx-tab">{{tab}}</a>
+    <a href="#/{{tab}}">{{tab}}</a>
   </li>
 </ul>
 <div class="tab-content" ng-view>

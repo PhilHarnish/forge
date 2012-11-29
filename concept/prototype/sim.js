@@ -50,14 +50,14 @@ function ExploreController($scope) {
     {
       name: "fight",
       disabled: true,
-      active: false
+      active: actionGetterSetter($scope)
     },
     {
       name: "flight",
-      disabled: false,
-      active: true
+      active: actionGetterSetter($scope)
     }
   ];
+  $scope.action = $scope.actions[1];
   var distance = function () {
     return this.x + this.y + this.z;
   };
@@ -104,17 +104,18 @@ function RestController($scope) {
   $scope.actions = [
     {
       name: "fortify",
-      active: true
+      active: actionGetterSetter($scope)
     },
     {
       name: "study",
-      active: false
+      active: actionGetterSetter($scope)
     },
     {
       name: "sleep",
-      active: false
+      active: actionGetterSetter($scope)
     }
   ];
+  $scope.action = $scope.actions[0];
   $scope.items = [
     {
       name: "bat",
@@ -127,4 +128,21 @@ function RestController($scope) {
       weight: 3
     }
   ];
+}
+
+function actionGetterSetter($scope) {
+  if (!$scope.hasOwnProperty("$actionGetterSetter")) {
+    $scope.$actionGetterSetter =
+        function (value) {
+          if (value === undefined) {
+            return $scope.action == this;
+          } else if (this.disabled) {
+            return;
+          } else if (value) {
+            $scope.action = this;
+          }
+          return value;
+        };
+  }
+  return $scope.$actionGetterSetter;
 }
