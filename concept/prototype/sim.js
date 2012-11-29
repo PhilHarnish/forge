@@ -11,7 +11,13 @@ angular.module('simulation', []).
           templateUrl: 'partials/rest.html'
       }).
       otherwise({redirectTo:'/explore'});
-  });
+  }).
+  directive('actionbar', function () {
+      return {
+        restrict: 'E',
+        templateUrl: 'partials/action_bar.html'
+      }
+    });
 
 function SimController($scope, $location) {
   $scope.modeIs = function(mode) {

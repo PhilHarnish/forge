@@ -1,10 +1,5 @@
 <div class="tab-pane active" id="explore" ng-controller="ExploreController">
-  <div class="btn-group">
-    <button ng-repeat="action in actions"
-            ng-style="{width: (100 / actions.length) + '%'}"
-            ng-class="{active: action.active, disabled: action.disabled}"
-            class="btn fx-mutex">{{action.name}}</button>
-  </div>
+  <actionbar />
   <table class="table">
     <tbody>
       <tr>
