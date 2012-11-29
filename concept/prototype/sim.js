@@ -20,12 +20,19 @@ angular.module('simulation', ['player']).
     });
 
 function SimController($scope, $location, Player) {
-  $scope.player = Player.get({name: "philharnish"}, function (p) {
+  $scope.player = Player.get({id: "50b6f69be4b0dbae32c8ece1"}, function (p) {
     if (p.name) {
       // Initialized.
       return;
     }
     p.name = "philharnish";
+    p.ui = {
+      mode: {
+        explore: "flight",
+        rest: "fortify"
+      }
+    };
+
     p.$save();
   });
   $scope.modeIs = function(mode) {
@@ -58,11 +65,11 @@ function ExploreController($scope) {
     {
       name: "fight",
       disabled: true,
-      active: actionGetterSetter($scope)
+      active: actionGetterSetter($scope, "explore")
     },
     {
       name: "flight",
-      active: actionGetterSetter($scope)
+      active: actionGetterSetter($scope, "explore")
     }
   ];
   $scope.action = $scope.actions[1];
@@ -112,15 +119,15 @@ function RestController($scope) {
   $scope.actions = [
     {
       name: "fortify",
-      active: actionGetterSetter($scope)
+      active: actionGetterSetter($scope, "rest")
     },
     {
       name: "study",
-      active: actionGetterSetter($scope)
+      active: actionGetterSetter($scope, "rest")
     },
     {
       name: "sleep",
-      active: actionGetterSetter($scope)
+      active: actionGetterSetter($scope, "rest")
     }
   ];
   $scope.action = $scope.actions[0];
@@ -138,7 +145,7 @@ function RestController($scope) {
   ];
 }
 
-function actionGetterSetter($scope) {
+function actionGetterSetter($scope, mode) {
   if (!$scope.hasOwnProperty("$actionGetterSetter")) {
     $scope.$actionGetterSetter =
         function (value) {
@@ -148,6 +155,8 @@ function actionGetterSetter($scope) {
             return;
           } else if (value) {
             $scope.action = this;
+            $scope.player.ui.mode[mode] = this.name;
+            $scope.player.update();
           }
           return value;
         };
