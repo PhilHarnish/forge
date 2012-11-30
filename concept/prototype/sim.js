@@ -1,5 +1,5 @@
 
-angular.module('simulation', ['location', 'player']).
+angular.module('simulation', ['location', 'player', 'game']).
   config(function($routeProvider) {
     $routeProvider.
       when('/explore', {
@@ -25,7 +25,7 @@ angular.module('simulation', ['location', 'player']).
     }
   });
 
-function SimController($scope, $location, $timeout, Player) {
+function SimController($scope, $location, $timeout, Player, Game) {
   $scope.player = Player.get({id: "50b6f69be4b0dbae32c8ece1"}, function (p) {
     if (p.name) {
       // Initialized.
@@ -49,53 +49,12 @@ function SimController($scope, $location, $timeout, Player) {
   $scope.modeIs = function(mode) {
     return $location.path() == '/' + mode;
   };
-  var start = new Date();
-  var update = function() {
-    gameLoop($scope, $location, $timeout, start, update);
+  $scope.game = new Game();
+  var tick = function () {
+    $scope.game.tick($scope, $location.path().slice(1));
+    $timeout(tick, 500);
   };
-  update();
-}
-
-function gameLoop($scope, $location, $timeout, start, update) {
-  $timeout(update, 500);
-  var delta = new Date() - start;
-  var future = new Date(start.valueOf() + delta * 24);
-  future.setSeconds(0);
-  $scope.time = future.toLocaleTimeString();
-  if (!$scope.player.initialized()) {
-    return;
-  }
-  switch ($location.path()) {
-    case '/explore':
-      explore($scope);
-      break;
-    case '/rest':
-      rest($scope);
-      break;
-  }
-  var stats = $scope.player.stats;
-  if (stats.hunger > 0) {
-    stats.hunger -= .05;
-  }
-  if (stats.health < 100) {
-    stats.health += .01;
-  }
-}
-
-function explore($scope) {
-  var stats = $scope.player.stats;
-  if (stats.energy > 0) {
-    stats.energy -= .02;
-  }
-}
-
-function rest($scope) {
-  var stats = $scope.player.stats;
-  var action = $scope.player.ui.mode.rest;
-  var energyDelta = action == "sleep" ? 1 : .01;
-  if (stats.energy < 100) {
-    stats.energy += energyDelta;
-  }
+  tick();
 }
 
 function MeterController($scope) {
