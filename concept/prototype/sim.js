@@ -72,7 +72,6 @@ function ExploreController($scope) {
       active: actionGetterSetter($scope, "explore")
     }
   ];
-  $scope.action = $scope.actions[1];
   var distance = function () {
     return this.x + this.y + this.z;
   };
@@ -130,7 +129,6 @@ function RestController($scope) {
       active: actionGetterSetter($scope, "rest")
     }
   ];
-  $scope.action = $scope.actions[0];
   $scope.items = [
     {
       name: "bat",
@@ -150,7 +148,8 @@ function actionGetterSetter($scope, mode) {
     $scope.$actionGetterSetter =
         function (value) {
           if (value === undefined) {
-            return $scope.action == this;
+            return $scope.player.ui &&
+                $scope.player.ui.mode[mode] == this.name;
           } else if (this.disabled) {
             return;
           } else if (value) {
