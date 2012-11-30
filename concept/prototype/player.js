@@ -16,6 +16,10 @@ angular.module('player', ['ngResource']).
           }
       );
 
+      Player.prototype.initialized = function() {
+        return !!this._id;
+      };
+
       Player.prototype.update = function(cb) {
         return Player.update({id: this._id.$oid},
             angular.extend({}, this, {_id:undefined}), cb);

@@ -50,14 +50,52 @@ function SimController($scope, $location, $timeout, Player) {
     return $location.path() == '/' + mode;
   };
   var start = new Date();
-  var update = function () {
-    var delta = new Date() - start;
-    var future = new Date(start.valueOf() + delta * 24);
-    future.setSeconds(0);
-    $scope.time = future.toLocaleTimeString();
-    $timeout(update, 500);
+  var update = function() {
+    gameLoop($scope, $location, $timeout, start, update);
   };
   update();
+}
+
+function gameLoop($scope, $location, $timeout, start, update) {
+  $timeout(update, 500);
+  var delta = new Date() - start;
+  var future = new Date(start.valueOf() + delta * 24);
+  future.setSeconds(0);
+  $scope.time = future.toLocaleTimeString();
+  if (!$scope.player.initialized()) {
+    return;
+  }
+  switch ($location.path()) {
+    case '/explore':
+      explore($scope);
+      break;
+    case '/rest':
+      rest($scope);
+      break;
+  }
+  var stats = $scope.player.stats;
+  if (stats.hunger > 0) {
+    stats.hunger -= .05;
+  }
+  if (stats.health < 100) {
+    stats.health += .01;
+  }
+}
+
+function explore($scope) {
+  var stats = $scope.player.stats;
+  if (stats.energy > 0) {
+    stats.energy -= .02;
+  }
+}
+
+function rest($scope) {
+  var stats = $scope.player.stats;
+  var action = $scope.player.ui.mode.rest;
+  var energyDelta = action == "sleep" ? 1 : .01;
+  if (stats.energy < 100) {
+    stats.energy += energyDelta;
+  }
 }
 
 function MeterController($scope) {
