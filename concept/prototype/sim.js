@@ -150,9 +150,7 @@ function actionGetterSetter($scope, mode) {
           if (value === undefined) {
             return $scope.player.ui &&
                 $scope.player.ui.mode[mode] == this.name;
-          } else if (this.disabled) {
-            return;
-          } else if (value) {
+          } else if (!this.disabled && value) {
             $scope.action = this;
             $scope.player.ui.mode[mode] = this.name;
             $scope.player.update();
