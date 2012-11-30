@@ -25,7 +25,7 @@ angular.module('simulation', ['location', 'player']).
     }
   });
 
-function SimController($scope, $location, Player) {
+function SimController($scope, $location, $timeout, Player) {
   $scope.player = Player.get({id: "50b6f69be4b0dbae32c8ece1"}, function (p) {
     if (p.name) {
       // Initialized.
@@ -49,6 +49,15 @@ function SimController($scope, $location, Player) {
   $scope.modeIs = function(mode) {
     return $location.path() == '/' + mode;
   };
+  var start = new Date();
+  var update = function () {
+    var delta = new Date() - start;
+    var future = new Date(start.valueOf() + delta * 24);
+    future.setSeconds(0);
+    $scope.time = future.toLocaleTimeString();
+    $timeout(update, 500);
+  };
+  update();
 }
 
 function MeterController($scope) {
