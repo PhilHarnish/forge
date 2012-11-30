@@ -1,26 +1,4 @@
 <div class="tab-pane active" id="explore" ng-controller="ExploreController">
   <actionbar />
-  <table class="table">
-    <tbody>
-      <tr>
-        <td>&nbsp;</td>
-        <td colspan="3">new areas</td>
-      </tr>
-      <tr ng-repeat="location in locations">
-        <td>
-          <input type="checkbox"
-                 ng-class="{hide: !location.memorable}"
-                 value="">
-        </td>
-        <td>{{location.name}}</td>
-        <td>
-          <span ng-class="{hide: location.distance()}">&times;</span>
-          <span ng-class="{hide: !location.distance()}"
-                ng-style="location.cssRotation()"
-                class="location-direction">&uarr;</span>
-        </td>
-        <td>{{location.distance()}}m</td>
-      </tr>
-    </tbody>
-  </table>
+  <locations />
 </div>

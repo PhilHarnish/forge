@@ -1,5 +1,5 @@
 
-angular.module('simulation', ['player']).
+angular.module('simulation', ['location', 'player']).
   config(function($routeProvider) {
     $routeProvider.
       when('/explore', {
@@ -15,9 +15,15 @@ angular.module('simulation', ['player']).
   directive('actionbar', function () {
       return {
         restrict: 'E',
-        templateUrl: 'partials/action_bar.html'
+        templateUrl: 'partials/actionbar.html'
       }
-    });
+  }).
+  directive('locations', function () {
+    return {
+      restrict: 'E',
+      templateUrl: 'partials/locations.html'
+    }
+  });
 
 function SimController($scope, $location, Player) {
   $scope.player = Player.get({id: "50b6f69be4b0dbae32c8ece1"}, function (p) {
@@ -72,46 +78,10 @@ function ExploreController($scope) {
       active: actionGetterSetter($scope, "explore")
     }
   ];
-  var distance = function () {
-    return this.x + this.y + this.z;
-  };
-  var cssRotation = function () {
-    var rotation = 33 * (this.x + this.y + this.z);
-    return {
-      "-webkit-transform": "rotate(" + rotation + "deg)",
-      "-moz-transform": "rotate(" + rotation + "deg)",
-      "transform": "rotate(" + rotation + "deg)"
-    };
-  };
-  $scope.locations = [
-    {
-      name: "base",
-      memorable: true,
-      distance: distance,
-      cssRotation: cssRotation,
-      x: 0,
-      y: 0,
-      z: 0
-    },
-    {
-      name: "locked door",
-      memorable: true,
-      distance: distance,
-      cssRotation: cssRotation,
-      x: 0,
-      y: 10,
-      z: 0
-    },
-    {
-      name: "hostile",
-      memorable: false,
-      distance: distance,
-      cssRotation: cssRotation,
-      x: 10,
-      y: 10,
-      z: 0
-    }
-  ];
+}
+
+function LocationsController($scope, Location) {
+  $scope.locations = Location.query();
 }
 
 function RestController($scope) {
