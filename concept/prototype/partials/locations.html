@@ -4,11 +4,12 @@
       <td>&nbsp;</td>
       <td colspan="3">new areas</td>
     </tr>
-    <tr ng-repeat="location in locations">
+    <tr ng-repeat="location in locations | orderBy:'distance()'">
       <td>
         <input type="checkbox"
-               ng-class="{hide: !location.memorable}"
-               value="">
+               ng-model="location.memorize"
+               ng-change="location.update()"
+               ng-class="{hide: !location.memorable}">
       </td>
       <td>{{location.name}}</td>
       <td>
