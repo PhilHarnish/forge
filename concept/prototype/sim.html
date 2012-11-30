@@ -19,10 +19,13 @@ body {
 </style>
 </head>
 <body ng-controller="SimController">
+
 <h1>{{player.name}}</h1>
+
 <div ng-controller="MeterController">
-  <div ng-repeat="meter in meters" class="progress progress-{{meter.css}}">
-    <div class="bar" style="width: {{meter.value}}%">{{meter.name}}</div>
+  <div ng-repeat="meter in meters"
+      class="progress progress-{{player.statCss(meter)}}">
+    <div class="bar" style="width: {{player.stats[meter]}}%">{{meter}}</div>
   </div>
 </div>
 

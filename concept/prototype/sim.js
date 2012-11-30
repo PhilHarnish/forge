@@ -32,6 +32,11 @@ function SimController($scope, $location, Player) {
       return;
     }
     p.name = "philharnish";
+    p.stats = {
+      health: 20,
+      hunger: 40,
+      energy: 60
+    };
     p.ui = {
       mode: {
         explore: "flight",
@@ -47,23 +52,7 @@ function SimController($scope, $location, Player) {
 }
 
 function MeterController($scope) {
-  $scope.meters = [
-    {
-      name: "health",
-      value: 20,
-      css: "info"
-    },
-    {
-      name: "hunger",
-      value: 40,
-      css: "success"
-    },
-    {
-      name: "energy",
-      value: 60,
-      css: "warning"
-    }
-  ];
+  $scope.meters = ["health", "hunger", "energy"];
 }
 
 function ExploreController($scope) {
