@@ -1,5 +1,5 @@
 
-angular.module('simulation', ['location', 'player', 'game']).
+angular.module('simulation', ['location', 'item', 'player', 'game']).
   config(function($routeProvider) {
     $routeProvider.
       when('/explore', {
@@ -17,6 +17,12 @@ angular.module('simulation', ['location', 'player', 'game']).
         restrict: 'E',
         templateUrl: 'partials/actionbar.html'
       }
+  }).
+  directive('items', function () {
+    return {
+      restrict: 'E',
+      templateUrl: 'partials/items.html'
+    }
   }).
   directive('locations', function () {
     return {
@@ -94,18 +100,10 @@ function RestController($scope) {
       active: actionGetterSetter($scope, "rest")
     }
   ];
-  $scope.items = [
-    {
-      name: "bat",
-      owned: true,
-      weight: 2
-    },
-    {
-      name: "canned food",
-      owned: true,
-      weight: 3
-    }
-  ];
+}
+
+function ItemsController($scope, Item) {
+  $scope.items = Item.query();
 }
 
 function actionGetterSetter($scope, mode) {
