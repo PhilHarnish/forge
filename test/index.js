@@ -25,6 +25,11 @@ function removeJasmineFrames(text) {
 
 exports.resetJasmineEnv = function () {
   jasmine.currentEnv_ = new jasmine.Env();
+  jasmine.currentEnv_.beforeEach(global.angular.mock.before);
+  jasmine.currentEnv_.afterEach(global.angular.mock.after);
+  jasmine.currentEnv_.it = function(description, func) {
+    jasmine.Env.prototype.it.call(this, description, inject(func));
+  };
   jasmine.getEnv().addReporter(new TerminalReporter({
       print: util.print,
       stackFilter: removeJasmineFrames
@@ -33,17 +38,35 @@ exports.resetJasmineEnv = function () {
 exports.jasmine = jasmine;
 
 // TODO(philharnish): Load angular as needed.
-var jsdom = require("jsdom");
-var fs = require("fs");
-var src = fs.readFileSync("../third_party/angular.js/build/angular.js").
-    toString();
-
-jsdom.env({
-  html: "<html><head></head><body></body></html>",
-  src: [src],
-  done: function (errors, window) {
-    // Hacky way to define `angular`.
-    global.angular = window.angular;
-    jasmine.getEnv().execute();
-  }
-});
+if (!global.angular) {
+  var jsdom = require("jsdom");
+  var fs = require("fs");
+  var angular =
+      fs.readFileSync("../third_party/angular.js/build/angular.js").
+      toString();
+  var mocks =
+      fs.readFileSync("../third_party/angular.js/build/angular-mocks.js").
+      toString();
+  var jasmineStr = [
+    ";window.jasmine = true;",
+    "var beforeEach = function (fn) {",
+    "  angular.mock.before = fn;",
+    "};",
+    "var afterEach = function (fn) {",
+    "  angular.mock.after = fn;",
+    "};"
+  ].join("");
+  jsdom.env({
+    html: "<html><head></head><body></body></html>",
+    src: [angular + jasmineStr + mocks],
+    done: function (errors, window) {
+      // Hacky way to define `angular`.
+      for (var key in window) {
+        if (window.hasOwnProperty(key) && !global.hasOwnProperty(key)) {
+          global[key] = window[key];
+        }
+      }
+      jasmine.getEnv().execute();
+    }
+  });
+}
