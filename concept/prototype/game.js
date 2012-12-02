@@ -1,4 +1,4 @@
-var tempFoodItems = 5;
+var DEBUG_TIME_MULTIPLE = 4;
 
 angular.module('game', []).
     factory('Game', function() {
@@ -6,7 +6,7 @@ angular.module('game', []).
       var MINUTE = 60 * SECOND;
       var HOUR = 60 * MINUTE;
       var DAY = 24 * HOUR; // Milliseconds in a day.
-      var DAY_MULTIPLIER = 24; // 1 hour = 24 hours.
+      var DAY_MULTIPLIER = 24 * DEBUG_TIME_MULTIPLE; // 1 hour = 24 hours.
       var SLEEP_NEEDED = 5 * HOUR;
       var MAX_WAKING_HOURS = 20 * HOUR; // Max time between sleeps.
       var MEAL = 25; // Meal value.
@@ -42,34 +42,68 @@ angular.module('game', []).
         var action = $scope.player.ui.mode[mode];
         this[mode]($scope, action, elapsed);
 
-        this.increment($scope, "hunger", HUNGER_RATE, elapsed);
         var stats = $scope.player.stats;
-        if (stats.hunger < 10 && tempFoodItems-- > 0) {
-          // TODO(philharnish): Implement food items.
-          this.increment($scope, "hunger", MEAL, 1);
-        }
+        increment(stats, "hunger", HUNGER_RATE, elapsed);
         if (stats.hunger <= 0) {
-          this.increment($scope, "health", PERISH_RATE, elapsed);
+          increment(stats, "health", PERISH_RATE, elapsed);
         } else if (stats.health < 100) {
-          this.increment($scope, "health", RECOVER_RATE, elapsed);
+          increment(stats, "health", RECOVER_RATE, elapsed);
         }
       };
 
       Game.prototype.explore = function($scope, action, elapsed) {
-        this.increment($scope, "energy", FATIGUE_RATE, elapsed);
+        var stats = $scope.player.stats;
+        increment(stats, "energy", FATIGUE_RATE, elapsed);
       };
 
       Game.prototype.rest = function($scope, action, elapsed) {
+        var stats = $scope.player.stats;
+        var items = $scope.items;
         if (action == "sleep") {
-          this.increment($scope, "energy", SLEEP_RATE, elapsed);
+          increment(stats, "energy", SLEEP_RATE, elapsed);
+        } else {
+          if (stats.hunger < 10) {
+            var eaten = 0;
+            console.log("Trying to eat from:", items);
+            do {
+              var itemIndex = findItemIndexWithProperty(items, "food");
+              if (itemIndex >= 0) {
+                consume(items, itemIndex, stats);
+              } else {
+                break;
+              }
+            } while (stats.hunger < 80 && eaten++ < 3);
+          }
         }
       };
 
-      Game.prototype.increment = function ($scope, stat, rate, elapsed) {
-        var stats = $scope.player.stats;
+      return Game;
+
+      function increment(stats, stat, rate, elapsed) {
         stats[stat] =
             Math.max(0, Math.min(stats[stat] + rate * elapsed, 100));
-      };
+      }
 
-      return Game;
+      function findItemIndexWithProperty(items, property) {
+        for (var i = 0; i < items.length; i++) {
+          var item = items[i];
+          if (!item.consumed && item.properties[property]) {
+            return i;
+          }
+        }
+        return -1;
+      }
+
+      function consume(items, index, stats) {
+        var item = items[index];
+        item.consumed = true;
+        item.owned = false;
+        for (var property in item.properties) {
+          switch (property) {
+            case "food":
+              increment(stats, "hunger", MEAL, 1);
+              break;
+          }
+        }
+      }
     });

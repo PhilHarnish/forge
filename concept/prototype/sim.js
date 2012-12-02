@@ -31,7 +31,8 @@ angular.module('simulation', ['location', 'item', 'player', 'game']).
     }
   });
 
-function SimController($scope, $location, $timeout, Player, Game) {
+function SimController($scope, $location, $timeout, Player, Game, Item) {
+  $scope.items = Item.query();
   $scope.player = Player.get({id: "50b6f69be4b0dbae32c8ece1"}, function (p) {
     if (p.name) {
       // Initialized.
@@ -103,7 +104,6 @@ function RestController($scope) {
 }
 
 function ItemsController($scope, Item) {
-  $scope.items = Item.query();
 }
 
 function actionGetterSetter($scope, mode) {
