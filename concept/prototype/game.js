@@ -44,6 +44,7 @@ angular.module('game', []).
 
         var stats = $scope.player.stats;
         increment(stats, "hunger", HUNGER_RATE, elapsed);
+        increment(stats, "energy", FATIGUE_RATE, elapsed);
         if (stats.hunger <= 0) {
           increment(stats, "health", PERISH_RATE, elapsed);
         } else if (stats.health < 100) {
@@ -53,7 +54,6 @@ angular.module('game', []).
 
       Game.prototype.explore = function($scope, action, elapsed) {
         var stats = $scope.player.stats;
-        increment(stats, "energy", FATIGUE_RATE, elapsed);
       };
 
       Game.prototype.rest = function($scope, action, elapsed) {
