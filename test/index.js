@@ -32,7 +32,18 @@ exports.resetJasmineEnv = function () {
 };
 exports.jasmine = jasmine;
 
-// Hacky way to execute tests after they are all defined.
-setTimeout(function () {
-  jasmine.getEnv().execute();
-}, 0);
+// TODO(philharnish): Load angular as needed.
+var jsdom = require("jsdom");
+var fs = require("fs");
+var src = fs.readFileSync("../third_party/angular.js/build/angular.js").
+    toString();
+
+jsdom.env({
+  html: "<html><head></head><body></body></html>",
+  src: [src],
+  done: function (errors, window) {
+    // Hacky way to define `angular`.
+    global.angular = window.angular;
+    jasmine.getEnv().execute();
+  }
+});
