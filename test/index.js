@@ -40,25 +40,16 @@ exports.jasmine = jasmine;
 // TODO(philharnish): Load angular as needed.
 if (!global.angular) {
   var jsdom = require("jsdom");
-  var fs = require("fs");
-  var angular =
-      fs.readFileSync("../third_party/angular.js/build/angular.js").
-      toString();
-  var mocks =
-      fs.readFileSync("../third_party/angular.js/build/angular-mocks.js").
-      toString();
-  var jasmineStr = [
-    ";window.jasmine = true;",
-    "var beforeEach = function (fn) {",
-    "  angular.mock.before = fn;",
-    "};",
-    "var afterEach = function (fn) {",
-    "  angular.mock.after = fn;",
-    "};"
-  ].join("");
   jsdom.env({
-    html: "<html><head></head><body></body></html>",
-    src: [angular + jasmineStr + mocks],
+    html: "<html><head>" +
+        "<base href='" + __dirname + "'>" +
+        "</head><body></body></html>",
+    scripts: [
+      "test/angularbootstrap.js",
+      "third_party/angular.js/build/angular.js",
+      "third_party/angular.js/build/angular-resource.js",
+      "third_party/angular.js/build/angular-mocks.js"],
+    src: [],
     done: function (errors, window) {
       // Hacky way to define `angular`.
       for (var key in window) {
