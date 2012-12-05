@@ -40,9 +40,7 @@ describe('MongolabEndpoint', function() {
       var resource = endpoint.get({id: 'ID'});
       expect(_.isEmpty(resource)).toBeTruthy();
       $httpBackend.flush();
-      for (var key in response) {
-        expect(resource[key]).toBe(response[key]);
-      }
+      expect(resource).toHave(response);
     });
   });
 });

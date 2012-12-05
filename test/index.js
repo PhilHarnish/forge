@@ -9,9 +9,10 @@ try {
   util = require("sys");
 }
 
-var j = require("jasmine-node/lib/jasmine-node"),
-    TerminalReporter = require("jasmine-node/lib/jasmine-node/reporter").
+var j = require("jasmine-node/lib/jasmine-node");
+var TerminalReporter = require("jasmine-node/lib/jasmine-node/reporter").
         TerminalReporter;
+var JasmineSink = require("./JasmineSink.js");
 
 function removeJasmineFrames(text) {
   var lines = [];
@@ -34,6 +35,9 @@ exports.resetJasmineEnv = function () {
       print: util.print,
       stackFilter: removeJasmineFrames
   }));
+  jasmine.currentEnv_.beforeEach(function () {
+    this.addMatchers(JasmineSink.matchers);
+  });
 };
 exports.jasmine = jasmine;
 
