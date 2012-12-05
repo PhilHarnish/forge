@@ -1,5 +1,4 @@
 var spec = require('../../../test');
-var _ = require("third_party/underscore/underscore.js");
 var MongolabEndpoint = require('sim/model/MongolabEndpoint.js');
 
 describe('MongolabEndpoint', function() {
@@ -38,7 +37,7 @@ describe('MongolabEndpoint', function() {
     it('should request IDs.', function() {
       $httpBackend.expectGET(request);
       var resource = endpoint.get({id: 'ID'});
-      expect(_.isEmpty(resource)).toBeTruthy();
+      expect(resource).toBeEmpty();
       $httpBackend.flush();
       expect(resource).toHave(response);
     });

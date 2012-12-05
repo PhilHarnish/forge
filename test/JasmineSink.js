@@ -1,5 +1,10 @@
+var _ = require("third_party/underscore/underscore.js");
+
 module.exports = {
   matchers: {
+    toBeEmpty: function () {
+      return _.isEmpty(this.actual);
+    },
     toHave: function (expected) {
       return objectIsSubset(this.actual, expected);
     }

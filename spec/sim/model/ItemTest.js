@@ -1,5 +1,4 @@
 var spec = require("../../../test");
-var _ = require("third_party/underscore/underscore.js");
 var MongolabEndpoint = require('sim/model/MongolabEndpoint.js');
 var Item = require("sim/model/Item.js");
 
@@ -32,7 +31,7 @@ describe("Item", function() {
     it('should request IDs.', function(Item) {
       $httpBackend.expectGET(request);
       var resource = Item.query();
-      expect(_.isEmpty(resource)).toBeTruthy();
+      expect(resource).toBeEmpty();
       $httpBackend.flush();
       expect(resource.length).toEqual(response.length);
       for (var i = 0; i < response.length; i++) {
