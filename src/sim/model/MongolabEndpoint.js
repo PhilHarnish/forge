@@ -1,4 +1,4 @@
-angular.module('model/MongolabEndpoint.js', ['ngResource']).
+angular.module('sim/model/MongolabEndpoint.js', ['ngResource']).
     factory('MongolabEndpoint', function($resource) {
       var MongolabEndpoint = function (path) {
         var Klass = $resource(MongolabEndpoint.BASE_URL + path,

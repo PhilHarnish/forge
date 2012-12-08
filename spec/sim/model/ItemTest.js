@@ -1,9 +1,7 @@
 var spec = require("../../../test");
-var MongolabEndpoint = require('sim/model/MongolabEndpoint.js');
-var Item = require("sim/model/Item.js");
 
 describe("Item", function() {
-  beforeEach(angular.mock.module('sim/db/Item.js'));
+  beforeEach(register('sim/model/Item.js'));
 
   describe('Mocked requests', function () {
     var $httpBackend;

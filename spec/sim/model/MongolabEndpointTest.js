@@ -1,8 +1,7 @@
 var spec = require('../../../test');
-var MongolabEndpoint = require('sim/model/MongolabEndpoint.js');
 
 describe('MongolabEndpoint', function() {
-  beforeEach(angular.mock.module('sim/db/MongolabEndpoint.js'));
+  beforeEach(register('sim/model/MongolabEndpoint.js'));
 
   it('should resolve MongolabEndpoint factory.', function(MongolabEndpoint) {
     expect(MongolabEndpoint).toBeTruthy();

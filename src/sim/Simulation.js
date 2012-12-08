@@ -1,6 +1,5 @@
-angular.module('Simulation.js', ['model/Item.js']).
+angular.module('sim/Simulation.js', ['sim/model/Item.js']).
   factory('Simulation', function() {
-      console.log("Factory method called.");
       return Simulation;
     });
 

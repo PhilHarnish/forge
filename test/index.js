@@ -65,3 +65,31 @@ if (!global.angular) {
     }
   });
 }
+
+global.register = function(name) {
+  // Save original angular module function and replace it.
+  var originalModuleFn = angular.module;
+  angular.module = loadModule;
+  // Load the module requested.
+  loadScript(name);
+  angular.module = originalModuleFn;
+  // Register module with angular.mock.
+  return angular.mock.module(name);
+
+  function loadModule(name, requires, configFn) {
+    var loadedModule = originalModuleFn(name, requires, configFn);
+    if (requires) {
+      // Load all dependent scripts.
+      for (var i = 0; i < requires.length; i++) {
+        if (requires[i].slice(-3) == ".js") {
+          loadScript(requires[i]);
+        }
+      }
+    }
+    return loadedModule;
+  }
+
+  function loadScript(src) {
+    require(src);
+  }
+};
