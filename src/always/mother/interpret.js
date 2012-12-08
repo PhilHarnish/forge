@@ -125,7 +125,7 @@ var _findMostEligible = function (goalAccept, left, right) {
       // Verify each key in right is in goalAccept. This ensures, for
       // example, that "nodejs=1" interpreters are only paired with
       // nodejs goals.
-      if (key in goalAccept && goalAccept[key] == right[key]) {
+      if (key in goalAccept && goalAccept[key] == rightAccept[key]) {
         rightKeyCount++;
       } else {
         return left;
