@@ -41,7 +41,11 @@ Resource.prototype = {
     this.contents = contents;
     var shaHash = crypto.createHash("sha1");
     shaHash.update(contents);
-    this.digest = shaHash.digest("hex");
+    var newDigest = shaHash.digest("hex");
+    if (newDigest == this.digest) {
+      return;
+    }
+    this.digest = newDigest;
     var references = {};
     references[this.digest] = 1;
     this.addReferences(references);

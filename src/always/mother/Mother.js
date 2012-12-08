@@ -17,12 +17,8 @@ var FILE_ID_REGEX = /(?:(?:[^/]+\/)*..?\/)*(.*)$/;
 Mother.prototype = {
   load: function (fileName) {
     var resource = this.resolve(fileName);
-    if (!resource.contents && !resource.writeLock) {
-      resource.writeLock = true;
-      this._getFileContents(resource.fileName, function (err, data) {
-        resource.writeLock = false;
-        resource.setContents(data.toString());
-      });
+    if (!resource.contents) {
+      this._reload(resource);
     }
   },
 
@@ -47,6 +43,16 @@ Mother.prototype = {
         that.load(path);
       }
     });
+  },
+
+  _reload: function (resource) {
+    if (!resource.writeLock) {
+      resource.writeLock = true;
+      this._getFileContents(resource.fileName, function (err, data) {
+        resource.writeLock = false;
+        resource.setContents(data.toString());
+      });
+    }
   },
 
   find: function (reference) {
@@ -131,16 +137,19 @@ Mother.prototype = {
       if (key != "atime" && curr[key].toString() != prev[key].toString()) {
         diff[key] = curr[key];
         same = false;
+        break;
       }
     } 
     for (key in prev) {
       if (key != "atime" && curr[key].toString() != prev[key].toString()) {
         diff[key] = prev[key];
         same = false;
+        break;
       }
     }
     if (!same) {
       // TODO: This seems like an awkward place to unload resources.
+      this._reload(resource);
       var affected = this.getAffected(resource);
       for (var f in affected) {
         revolver.unload(affected[f].fileName);
