@@ -1,4 +1,5 @@
-exports.items = [
+var Fixture = require("./Fixture.js");
+module.exports = Fixture.exports("items", [
   {
     "_id": {
       "$oid": "50bae6f9e4b0afba6ecc5a15"
@@ -21,4 +22,4 @@ exports.items = [
     "owned": true,
     "weight": 2
   }
-];
+]);
