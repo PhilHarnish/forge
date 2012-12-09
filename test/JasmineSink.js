@@ -6,7 +6,8 @@ module.exports = {
       return _.isEmpty(this.actual);
     },
     toHave: function (expected) {
-      return objectIsSubset(this.actual, expected);
+      return (expected in this.actual) ||
+          objectIsSubset(this.actual, expected);
     }
   }
 };
@@ -16,12 +17,15 @@ function objectIsSubset(a, b) {
     // Trivial case.
     return true;
   }
+  var hasEqualKeys = false;
   for (var key in b) {
     // Look for properties which b has but a doesn't.
-    if (b.hasOwnProperty(key) &&
-        (!a.hasOwnProperty(key) || !objectIsSubset(a[key], b[key]))) {
-      return false;
+    if (b.hasOwnProperty(key)) {
+      if (!a.hasOwnProperty(key) || !objectIsSubset(a[key], b[key])) {
+        return false;
+      }
+      hasEqualKeys = true;
     }
   }
-  return true;
+  return hasEqualKeys;
 }
