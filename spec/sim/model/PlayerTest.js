@@ -1,5 +1,5 @@
 var spec = require("../../../test");
-var players = require("./fixtures/sim-players.js").players;
+var players = require("./fixtures/sim-players.js");
 
 describe("Player", function() {
   beforeEach(register("sim/model/Player.js"));
@@ -9,27 +9,13 @@ describe("Player", function() {
   });
 
   describe("Mock requests", function () {
-    var $httpBackend;
-    var request;
-    var response = players[0];
+    beforeEach(players.mockRequests);
+    afterEach(players.verifyRequests);
 
-    beforeEach(inject(function($injector, MongolabEndpoint) {
-      request = MongolabEndpoint.BASE_URL + "sim-players/" +
-          response._id.$oid +
-          "?apiKey=" + MongolabEndpoint.DEFAULTS.apiKey;
-      $httpBackend = $injector.get("$httpBackend");
-      $httpBackend.
-          when("GET", request).
-          respond(response);
-    }));
-
-    afterEach(function() {
-      $httpBackend.verifyNoOutstandingExpectation();
-      $httpBackend.verifyNoOutstandingRequest();
-    });
-
-    it("should request IDs.", function(Player) {
-      $httpBackend.expectGET(request);
+    it("should request IDs.", function(Player, $httpBackend) {
+      var request = players.requests[0];
+      var response = players.responses[0];
+      players.expect("GET", request);
       var resource = Player.get({id: response._id.$oid});
       expect(resource).toBeEmpty();
       expect(resource.initialized()).toBeFalsy();
@@ -39,8 +25,10 @@ describe("Player", function() {
 
     describe("Mocked requests", function() {
       var resource;
-      beforeEach(inject(function(Player) {
-        $httpBackend.expectGET(request);
+      beforeEach(inject(function(Player, $httpBackend) {
+        var request = players.requests[0];
+        var response = players.responses[0];
+        players.expect("GET", request);
         resource = Player.get({id: response._id.$oid});
         $httpBackend.flush();
       }));

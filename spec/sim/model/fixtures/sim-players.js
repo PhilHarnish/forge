@@ -1,4 +1,5 @@
-exports.players = [
+var Fixture = require("./Fixture.js");
+module.exports = Fixture.exports("players", [
   {
     "_id":{
       "$oid": "50b6f69be4b0dbae32c8ece1"
@@ -16,4 +17,4 @@ exports.players = [
       }
     }
   }
-];
+]);

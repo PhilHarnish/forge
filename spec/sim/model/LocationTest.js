@@ -1,5 +1,5 @@
 var spec = require("../../../test");
-var locations = require("./fixtures/sim-locations.js").locations;
+var locations = require("./fixtures/sim-locations.js");
 
 describe("Location", function() {
   beforeEach(register("sim/model/Location.js"));
@@ -9,26 +9,12 @@ describe("Location", function() {
   });
 
   describe("Mock requests", function () {
-    var $httpBackend;
-    var request;
-    var response = locations;
+    beforeEach(locations.mockRequests);
+    afterEach(locations.verifyRequests);
 
-    beforeEach(inject(function($injector, MongolabEndpoint) {
-      request = MongolabEndpoint.BASE_URL + "sim-locations" +
-          "?apiKey=" + MongolabEndpoint.DEFAULTS.apiKey;
-      $httpBackend = $injector.get("$httpBackend");
-      $httpBackend.
-          when("GET", request).
-          respond(response);
-    }));
-
-    afterEach(function() {
-      $httpBackend.verifyNoOutstandingExpectation();
-      $httpBackend.verifyNoOutstandingRequest();
-    });
-
-    it("should request IDs.", function(Location) {
-      $httpBackend.expectGET(request);
+    it("should request IDs.", function(Location, $httpBackend) {
+      locations.expect("GET", locations.request);
+      var response = locations.response;
       var resource = Location.query();
       expect(resource).toBeEmpty();
       $httpBackend.flush();
@@ -40,13 +26,13 @@ describe("Location", function() {
 
     describe("Mocked requests", function() {
       var resources;
-      beforeEach(inject(function(Location) {
-        $httpBackend.expectGET(request);
+      beforeEach(inject(function(Location, $httpBackend) {
+        locations.expect("GET", locations.request);
         resources = Location.query();
         $httpBackend.flush();
       }));
 
-      it("should calculate distance.", function(Location) {
+      it("should calculate distance.", function() {
         expect(resources.length).toBeGreaterThan(0);
         var resource = resources[0];
         var offsets = [
