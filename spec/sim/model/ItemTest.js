@@ -1,5 +1,5 @@
 var spec = require("../../../test");
-var items = require("fixtures/sim-items.js").items;
+var items = require("./fixtures/sim-items.js").items;
 
 describe("Item", function() {
   beforeEach(register('sim/model/Item.js'));

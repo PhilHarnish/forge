@@ -1,4 +1,4 @@
-exports.items = [
+exports.locations = [
   {
     "_id":{
       "$oid":"50b82462e4b0afba6ecc54b7"
