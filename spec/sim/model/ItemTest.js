@@ -1,4 +1,5 @@
 var spec = require("../../../test");
+var items = require("./fixtures/items.js").items;
 
 describe("Item", function() {
   beforeEach(register('sim/model/Item.js'));
@@ -6,7 +7,7 @@ describe("Item", function() {
   describe('Mocked requests', function () {
     var $httpBackend;
     var request;
-    var response = [{name: 'item'}];
+    var response = items;
 
     beforeEach(inject(function($injector, MongolabEndpoint) {
       request = MongolabEndpoint.BASE_URL + 'sim-items' +
