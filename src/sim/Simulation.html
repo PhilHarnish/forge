@@ -9,7 +9,10 @@
 </head>
 <body>
 
-<h1>{{message}}</h1>
+<div ng-repeat="(stat, value) in status.stats"
+    ng-class="status.progressClass(stat)">
+  <div class="bar" style="width: {{value}}%">{{stat}}</div>
+</div>
 
 <script src="../../third_party/jquery/dist/jquery.js"></script>
 <script src="../../third_party/angular.js/build/angular.js"></script>
