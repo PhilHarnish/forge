@@ -1,5 +1,5 @@
-var Fixture = require("./Fixture.js");
-module.exports = Fixture.exports("items", [
+var MongolabFixture = require("./MongolabFixture.js");
+module.exports = MongolabFixture.exports("items", [
   {
     "_id": {
       "$oid": "50bae6f9e4b0afba6ecc5a15"
