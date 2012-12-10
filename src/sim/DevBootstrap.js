@@ -22,6 +22,7 @@
   var module = angular.module;
   var loading = {};
   var loadingCount = 0;
+  var timeout;
   // Override angular.module to detect needed dependencies and when those
   // dependencies have loaded.
   angular.module = function(name, requires, configFn) {
@@ -33,14 +34,18 @@
     if (requires) {
       for (var i = 0; i < requires.length; i++) {
         // Only attempt to load modules which appear to be files.
-        if (requires[i].slice(-3) == ".js") {
+        var dep = requires[i];
+        if (!(dep in loading) && dep.slice(-3) == ".js") {
           loading[requires[i]] = true;
           loadingCount++;
+          clearTimeout(timeout);
+          timeout = setTimeout(loadTimeout, 1000);
           loadScript(requires[i]);
         }
       }
     }
     if (!loadingCount && appElement && appModule) {
+      clearTimeout(timeout);
       // Need to wait for call to angular.module() to return so that the
       // subsequent call to "factory" can also complete.
       setTimeout(function () {
@@ -55,5 +60,10 @@
     var script = document.createElement("script");
     script.src = src.replace(/^sim\//, "");
     head.appendChild(script);
+  }
+
+  function loadTimeout() {
+    console.log("Failed to load", loadingCount, "resources");
+    console.log(loading);
   }
 })();

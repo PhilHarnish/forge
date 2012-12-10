@@ -13,9 +13,10 @@ describe('Simulation', function() {
   afterEach(players.verifyRequests);
 
   beforeEach(inject(function ($rootScope, $httpBackend, Simulation, Item,
-      Location, Player) {
+      Location, MongolabEndpoint, Player, Status) {
     scope = $rootScope.$new();
-    simulation = new Simulation(scope, Item, Location, Player);
+    simulation = new Simulation(scope, Item, Location, MongolabEndpoint, Player,
+        Status);
     $httpBackend.flush();
   }));
 
