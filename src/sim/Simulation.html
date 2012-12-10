@@ -14,6 +14,13 @@
   <div class="bar" style="width: {{value}}%">{{stat}}</div>
 </div>
 
+<ul class="nav nav-tabs">
+  <li ng-repeat="tab in tabs"
+      ng-class="{active: modeIs(tab)}">
+    <a href="#/{{tab}}">{{tab}}</a>
+  </li>
+</ul>
+
 <script src="../../third_party/jquery/dist/jquery.js"></script>
 <script src="../../third_party/angular.js/build/angular.js"></script>
 <script src="../../third_party/angular.js/build/angular-resource.js"></script>
