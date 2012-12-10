@@ -12,11 +12,11 @@ describe('Simulation', function() {
   beforeEach(locations.mockRequests);
   afterEach(players.verifyRequests);
 
-  beforeEach(inject(function ($rootScope, $httpBackend, Simulation, Item,
-      Location, MongolabEndpoint, Player, Status) {
+  beforeEach(inject(function ($rootScope, $httpBackend, Simulation,
+      $location, Item, Location, MongolabEndpoint, Player, Status) {
     scope = $rootScope.$new();
-    simulation = new Simulation(scope, Item, Location, MongolabEndpoint, Player,
-        Status);
+    simulation = new Simulation(scope, $location, Item, Location,
+        MongolabEndpoint, Player, Status);
     $httpBackend.flush();
   }));
 
