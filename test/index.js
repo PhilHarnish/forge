@@ -29,7 +29,11 @@ exports.resetJasmineEnv = function () {
   jasmine.currentEnv_.beforeEach(global.angular.mock.before);
   jasmine.currentEnv_.afterEach(global.angular.mock.after);
   jasmine.currentEnv_.it = function(description, func) {
-    jasmine.Env.prototype.it.call(this, description, inject(func));
+    if (func.length) {
+      jasmine.Env.prototype.it.call(this, description, inject(func));
+    } else {
+      jasmine.Env.prototype.it.call(this, description, func);
+    }
   };
   jasmine.getEnv().addReporter(new TerminalReporter({
       print: util.print,
