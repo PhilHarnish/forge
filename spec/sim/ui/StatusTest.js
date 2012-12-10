@@ -8,7 +8,7 @@ describe("Status", function() {
     expect(Status).toBeDefined();
   });
 
-  it("should get use default stats.", function(Status) {
+  it("should get default stats.", function(Status) {
     var stats = status.get();
     expect(stats).not.toBeEmpty();
     var s = new Status(stats);

@@ -3,7 +3,8 @@ angular.module('sim/ui/Status.js', []).
       var Status = function (stats) {
         this.stats = stats;
       };
-      Status.prototype.foo = function () {
+      Status.prototype.set = function (stats) {
+        this.stats = stats;
       };
       return Status;
     });
