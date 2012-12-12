@@ -8,9 +8,14 @@ module.exports = MongolabFixture.exports("players", [
     "name": "philharnish",
     "stats": status.get(),
     "ui": {
-      "mode": {
-        "explore": "flight",
-        "rest": "study"
+      "mode": "rest",
+      "modes": {
+        "explore": {
+          "activity": "flight"
+        },
+        "rest": {
+          "activity": "study"
+        }
       }
     }
   }

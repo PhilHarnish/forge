@@ -45,9 +45,14 @@ function SimController($scope, $location, $timeout, Player, Game, Item) {
       energy: 60
     };
     p.ui = {
-      mode: {
-        explore: "flight",
-        rest: "fortify"
+      mode: "rest",
+      modes: {
+        explore: {
+          activity: "flight"
+        },
+        rest: {
+          activity: "fortify"
+        }
       }
     };
 
@@ -112,10 +117,10 @@ function actionGetterSetter($scope, mode) {
         function (value) {
           if (value === undefined) {
             return $scope.player.ui &&
-                $scope.player.ui.mode[mode] == this.name;
+                $scope.player.ui.modes[mode].activity == this.name;
           } else if (!this.disabled && value) {
             $scope.action = this;
-            $scope.player.ui.mode[mode] = this.name;
+            $scope.player.ui.modes[mode].activity = this.name;
             $scope.player.update();
           }
           return value;
