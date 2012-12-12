@@ -21,4 +21,14 @@ function Simulation($scope, $location, Item, Location, MongolabEndpoint, Player,
       $scope.status.set($scope.player.stats);
     }
   });
+  $scope.$watch(
+      function () {
+        // Requires closure since $location.path must not take arguments
+        // and we'd rather have the last piece of the path regardless.
+        return $location.path().split("/").pop();
+      },
+      function (path) {
+        // Requires closure since setMode is not bound to player.
+        $scope.player.setMode(path);
+      });
 }
