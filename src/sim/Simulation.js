@@ -6,14 +6,6 @@ angular.module("sim/Simulation.js", [
     "sim/ui/Status.js"]).
     factory("Simulation", function() {
       return Simulation;
-    }).
-    config(function($routeProvider) {
-      $routeProvider.
-          when('/explore', {
-          }).
-          when('/rest', {
-          }).
-          otherwise({redirectTo:'/explore'});
     });
 
 // TODO(philharnish): Wrap object to avoid window pollution.
@@ -29,7 +21,4 @@ function Simulation($scope, $location, Item, Location, MongolabEndpoint, Player,
       $scope.status.set($scope.player.stats);
     }
   });
-  $scope.modeIs = function(tab) {
-    return $location.path() == '/' + tab;
-  };
 }

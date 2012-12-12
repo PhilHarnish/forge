@@ -16,8 +16,9 @@
 
 <ul class="nav nav-tabs">
   <li ng-repeat="tab in tabs"
-      ng-class="{active: modeIs(tab)}">
-    <a href="#/{{tab}}">{{tab}}</a>
+      ng-class="{active: player.modeIs(tab)}">
+    <a href="#/{{player.name}}/{{tab}}"
+       ng-click="player.setMode(tab)">{{tab}}</a>
   </li>
 </ul>
 
