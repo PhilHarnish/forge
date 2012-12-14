@@ -27,7 +27,10 @@
   // dependencies have loaded.
   angular.module = function(name, requires, configFn) {
     var loadedModule = module(name, requires, configFn);
-    if (loading[name]) {
+    if (!requires) {
+      // Merely asking for a reference to the module.
+      return loadedModule;
+    } else if (loading[name]) {
       loading[name] = false;
       loadingCount--;
     }
