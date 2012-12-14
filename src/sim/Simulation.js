@@ -9,7 +9,10 @@ angular.module("sim/Simulation.js", [
     });
 
 // TODO(philharnish): Wrap object to avoid window pollution.
-function Simulation($scope, $location, Item, Location, MongolabEndpoint, Player, Status) {
+// TODO(philharnish): See ngViewDirective for scope $destroy and creation
+// pattern.
+function Simulation($scope, $location, Item, Location, MongolabEndpoint, Player,
+    Status) {
   MongolabEndpoint.$scope = $scope;
   $scope.tabs = ["explore", "rest"];
   $scope.items = Item.query();
