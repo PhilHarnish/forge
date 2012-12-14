@@ -18,12 +18,6 @@ function Simulation($scope, $location, Item, Location, MongolabEndpoint, Player,
   $scope.items = Item.query();
   $scope.locations = Location.query();
   $scope.player = Player.get({id: "50b6f69be4b0dbae32c8ece1"});
-  $scope.status = new Status();
-  $scope.$watch("player.stats", function () {
-    if ($scope.player.initialized()) {
-      $scope.status.set($scope.player.stats);
-    }
-  });
   $scope.$watch(
       function () {
         // Requires closure since $location.path must not take arguments

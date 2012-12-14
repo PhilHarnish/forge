@@ -9,20 +9,16 @@
 </head>
 <body>
 
-<div ng-repeat="(stat, value) in status.stats"
-    ng-class="status.progressClass(stat)">
-  <div class="bar" style="width: {{value}}%">{{stat}}</div>
-</div>
+<status stats="player.stats"></status>
 
 <ul class="nav nav-tabs">
   <li ng-repeat="tab in tabs"
       ng-class="{active: player.modeIs(tab)}">
-    <a href="#/{{player.name}}/{{tab}}"
-       ng-click="player.setMode(tab)">{{tab}}</a>
+    <a href="#/{{player.name}}/{{tab}}">{{tab}}</a>
   </li>
 </ul>
 
-<div class="tab-content" ng-view>
+
 
 <script src="../../third_party/jquery/dist/jquery.js"></script>
 <script src="../../third_party/angular.js/build/angular.js"></script>

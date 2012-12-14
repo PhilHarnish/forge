@@ -1,0 +1,6 @@
+<div ng-controller="Status">
+  <div ng-repeat="(stat, value) in stats"
+      ng-class="progressClass(stat)">
+    <div class="bar" style="width: {{value}}%">{{stat}}</div>
+  </div>
+</div>
