@@ -3,6 +3,8 @@ angular.module("sim/Simulation.js", [
     "sim/model/Location.js",
     "sim/model/MongolabEndpoint.js",
     "sim/model/Player.js",
+    "sim/ui/Explore.js",
+    "sim/ui/Rest.js",
     "sim/ui/Status.js"]).
     factory("Simulation", function() {
       return Simulation;
