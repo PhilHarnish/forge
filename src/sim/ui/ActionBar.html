@@ -1,7 +1,8 @@
-<div class="btn-group">
+<div ng-controller="ActionBar"
+     class="btn-group">
   <button ng-repeat="action in actions"
           ng-style="{width: (100 / actions.length) + '%'}"
           ng-class="{active: action.active(), disabled: action.disabled}"
-          ng-click="action.active(true)"
+          ng-click="activate(action)"
           class="btn">{{action.name}}</button>
 </div>

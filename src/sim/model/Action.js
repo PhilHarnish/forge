@@ -6,7 +6,7 @@ angular.module("sim/model/Action.js", []).
         this.disabled = disabled;
       }
       Action.prototype.active = function (activate) {
-        if (activate !== undefined) {
+        if (activate !== undefined && !this.disabled) {
           this.active_ = activate;
         }
         return this.active_;
