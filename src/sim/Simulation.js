@@ -8,15 +8,12 @@ angular.module("sim/Simulation.js", [
       "sim/ui/Rest.js",
       "sim/ui/Status.js"
     ]).
-    factory("Simulation", function() {
-      return Simulation;
-    });
+    controller("Simulation", Simulation);
 
-// TODO(philharnish): Wrap object to avoid window pollution.
-// TODO(philharnish): See ngViewDirective for scope $destroy and creation
-// pattern.
-function Simulation($scope, $location, Item, Location, MongolabEndpoint, Player,
-    Status) {
+function Simulation($scope, $location, Item, Location, MongolabEndpoint,
+    Player) {
+  // TODO(philharnish): See ngViewDirective for scope $destroy and
+  // creation pattern.
   MongolabEndpoint.$scope = $scope;
   $scope.tabs = ["explore", "rest"];
   $scope.items = Item.query();

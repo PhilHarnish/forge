@@ -12,17 +12,13 @@ describe('Simulation', function() {
   beforeEach(locations.mockRequests);
   afterEach(players.verifyRequests);
 
-  beforeEach(inject(function ($rootScope, $httpBackend, Simulation,
-      $location, Item, Location, MongolabEndpoint, Player, Status) {
+  beforeEach(inject(function ($controller, $rootScope, $httpBackend) {
     scope = $rootScope.$new();
-    simulation = new Simulation(scope, $location, Item, Location,
-        MongolabEndpoint, Player, Status);
+    simulation = $controller("Simulation", {
+      "$scope": scope
+    });
     $httpBackend.flush();
   }));
-
-  it('should resolve Simulation factory.', function(Simulation) {
-    expect(Simulation).toBeTruthy();
-  });
 
   it('should initialize "items"', function() {
     expect(scope.items.length).toBeGreaterThan(0);

@@ -1,7 +1,5 @@
 angular.module("sim/ui/Status.js", []).
-    factory("Status", function() {
-      return Status;
-    });
+    controller("Status", Status);
 
 angular.module("sim/Simulation.js").
     directive("status", function () {

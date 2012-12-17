@@ -1,7 +1,5 @@
 angular.module("sim/ui/ActionBar.js", []).
-    factory("ActionBar", function() {
-      return ActionBar;
-    });
+    controller("ActionBar", ActionBar);
 
 angular.module("sim/Simulation.js").
     directive("actionbar", function () {
@@ -16,7 +14,6 @@ angular.module("sim/Simulation.js").
       }
     });
 
-// TODO(philharnish): Wrap object to avoid window pollution.
 function ActionBar($scope) {
   $scope.active = function (action) {
     if ($scope.player.initialized()) {
