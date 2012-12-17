@@ -20,7 +20,7 @@ angular.module("sim/Simulation.js").
 // TODO(philharnish): Wrap object to avoid window pollution.
 function Explore($scope, Action) {
   $scope.actions = [
-      new Action("fight", false, true),
-      new Action("flight", true)
+      new Action("fight", true),
+      new Action("flight")
   ];
 }

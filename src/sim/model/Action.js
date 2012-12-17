@@ -1,6 +1,6 @@
 angular.module("sim/model/Action.js", []).
     factory("Action", function() {
-      function Action(name, active, disabled) {
+      function Action(name, disabled) {
         this.name = name;
         this.disabled = disabled;
       }

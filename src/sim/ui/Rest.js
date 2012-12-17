@@ -20,7 +20,7 @@ angular.module("sim/Simulation.js").
 // TODO(philharnish): Wrap object to avoid window pollution.
 function Rest($scope, Action) {
   $scope.actions = [
-      new Action("fortify", true),
+      new Action("fortify"),
       new Action("study"),
       new Action("sleep")
   ];
