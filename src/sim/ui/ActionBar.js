@@ -7,18 +7,26 @@ angular.module("sim/Simulation.js").
     directive("actionbar", function () {
       return {
         restrict: "E",
+        scope: {
+          actions: "=",
+          mode: "=",
+          player: "="
+        },
         templateUrl: "ui/ActionBar.html"
       }
     });
 
 // TODO(philharnish): Wrap object to avoid window pollution.
 function ActionBar($scope) {
-  var lastActive = null;
-  $scope.activate = function (action) {
-    action.active(true);
-    if (lastActive && action.active()) {
-      lastActive.active(false);
+  $scope.active = function (action) {
+    if ($scope.player.initialized()) {
+      return $scope.mode.activity == action.name;
     }
-    lastActive = action;
+    return false;
+  };
+  $scope.activate = function (action) {
+    if (!action.disabled) {
+      $scope.mode.activity = action.name;
+    }
   };
 }
