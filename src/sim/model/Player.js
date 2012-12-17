@@ -22,5 +22,11 @@ angular.module('sim/model/Player.js', ['sim/model/MongolabEndpoint.js']).
         }
       };
 
+      Player.prototype.inventory = {
+        "has": function () {
+          return false;
+        }
+      };
+
       return Player;
     });

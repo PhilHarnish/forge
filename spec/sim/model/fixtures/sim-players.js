@@ -14,7 +14,7 @@ module.exports = MongolabFixture.exports("players", [
           "activity": "flight"
         },
         "rest": {
-          "activity": "study"
+          "activity": "fortify"
         }
       }
     }

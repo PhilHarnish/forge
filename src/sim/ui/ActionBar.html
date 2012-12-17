@@ -2,7 +2,7 @@
      class="btn-group">
   <button ng-repeat="action in actions"
           ng-style="{width: (100 / actions.length) + '%'}"
-          ng-class="{active: active(action), disabled: action.disabled}"
-          ng-click="activate(action)"
+          ng-class="classes(action)"
+          ng-click="action.active(true)"
           class="btn">{{action.name}}</button>
 </div>

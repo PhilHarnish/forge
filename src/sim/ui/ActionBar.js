@@ -15,15 +15,10 @@ angular.module("sim/Simulation.js").
     });
 
 function ActionBar($scope) {
-  $scope.active = function (action) {
-    if ($scope.player.initialized()) {
-      return $scope.mode.activity == action.name;
-    }
-    return false;
-  };
-  $scope.activate = function (action) {
-    if (!action.disabled) {
-      $scope.mode.activity = action.name;
+  $scope.classes = function (action) {
+    return {
+      active: action.active(),
+      disabled: !action.enabled()
     }
   };
 }
