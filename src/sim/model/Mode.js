@@ -8,15 +8,19 @@ function Mode(name, model) {
 }
 Mode.prototype.parseActionList = function (list) {
   var actions = [];
+  var map = {
+    list: actions
+  };
   for (var i = 0; i < list.length; i++) {
     var action = list[i];
-    actions.push({
+    map[action.name] = {
       name: action.name,
       active: activeFn(this, action.name),
       enabled: enabledFn(action)
-    });
+    };
+    actions.push(map[action.name]);
   }
-  return actions;
+  return map;
 
   function activeFn(self, action) {
     return function (value) {

@@ -17,11 +17,11 @@ angular.module("sim/Simulation.js").
     });
 
 function Rest($scope) {
-  this.scope = $scope;
    // TODO(philharnish): Watching for changes is not ideal.
   $scope.$watch("mode", function (mode) {
     if (mode) {
-      $scope.actions = mode.parseActionList(Rest.ACTION_LIST);
+      var map = mode.parseActionList(Rest.ACTION_LIST);
+      $scope.actions = map.list;
     }
   });
 }

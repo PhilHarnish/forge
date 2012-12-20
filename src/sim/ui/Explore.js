@@ -17,13 +17,18 @@ angular.module("sim/Simulation.js").
     });
 
 function Explore($scope) {
-  this.scope = $scope;
   // TODO(philharnish): Watching for changes is not ideal.
   $scope.$watch("mode", function (mode) {
     if (mode) {
-      $scope.actions = mode.parseActionList(Explore.ACTION_LIST);
+      var map = mode.parseActionList(Explore.ACTION_LIST);
+      $scope.actions = map.list;
+      map.fight.enabled = fightEnabled;
     }
   });
+
+  function fightEnabled() {
+    return $scope.player.inventory.has("weapon");
+  }
 }
 
 Explore.ACTION_LIST = [
