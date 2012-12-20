@@ -3,29 +3,32 @@ angular.module("sim/model/Mode.js", []).
       return Mode;
     });
 
-function Mode() {
+function Mode(name, model) {
+  this.activity = model.activity;
 }
 Mode.prototype.parseActionList = function (list) {
   var actions = [];
   for (var i = 0; i < list.length; i++) {
     var action = list[i];
     actions.push({
-      name: action,
-      active: bind(this, action, "Active"),
-      enabled: bind(this, action, "Enabled")
+      name: action.name,
+      active: activeFn(this, action.name),
+      enabled: enabledFn(action)
     });
   }
   return actions;
 
-  function bind(self, action, key) {
-    var name = action + key;
-    return function () {
-      if (angular.isFunction(self[name])) {
-        return self[name].apply(self, arguments);
+  function activeFn(self, action) {
+    return function (value) {
+      if (value === true) {
+        self.activity = action;
       }
-      return self[name] === undefined ?
-          true : self[name];
+      return self.activity == action;
+    };
+  }
+  function enabledFn(activity) {
+    return function () {
+      return activity.enabled !== false;
     };
   }
 };
-

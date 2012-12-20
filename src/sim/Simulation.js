@@ -10,11 +10,9 @@ angular.module("sim/Simulation.js", [
     ]).
     controller("Simulation", Simulation);
 
-function Simulation($scope, $location, Item, Location, MongolabEndpoint,
-    Player) {
+function Simulation($scope, $location, Item, Location, Player) {
   // TODO(philharnish): See ngViewDirective for scope $destroy and
   // creation pattern.
-  MongolabEndpoint.$scope = $scope;
   $scope.tabs = ["explore", "rest"];
   $scope.items = Item.query();
   $scope.locations = Location.query();

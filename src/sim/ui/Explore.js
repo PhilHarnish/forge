@@ -9,43 +9,29 @@ angular.module("sim/Simulation.js").
       return {
         restrict: "E",
         scope: {
+          mode: "=",
           player: "="
         },
         templateUrl: "ui/Explore.html"
       }
     });
 
-function Explore($scope, Mode) {
+function Explore($scope) {
   this.scope = $scope;
-  // TODO(philharnish): This method of extension is pretty weak.
-  angular.extend(this, Mode.prototype);
-  $scope.actions = this.parseActionList(Explore.ACTION_LIST);
+  // TODO(philharnish): Watching for changes is not ideal.
+  $scope.$watch("mode", function (mode) {
+    if (mode) {
+      $scope.actions = mode.parseActionList(Explore.ACTION_LIST);
+    }
+  });
 }
 
 Explore.ACTION_LIST = [
-  "fight",
-  "flight"
-];
-
-Explore.prototype = {
-  fightActive: function (active) {
-    if (active !== undefined && this.fightEnabled()) {
-      this.scope.player.ui.modes.explore.activity = "fight";
-      return true;
-    }
-    return this.scope.player.initialized() &&
-        this.scope.player.ui.modes.explore.activity == "fight";
+  {
+    name: "fight",
+    enabled: false
   },
-  fightEnabled: function () {
-    return this.scope.player.initialized() &&
-        this.scope.player.inventory.has("weapon");
-  },
-  flightActive: function (active) {
-    if (active !== undefined) {
-      this.scope.player.ui.modes.explore.activity = "flight";
-      return true;
-    }
-    return this.scope.player.initialized() &&
-        this.scope.player.ui.modes.explore.activity == "flight";
+  {
+    name: "flight"
   }
-};
+];

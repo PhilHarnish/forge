@@ -9,39 +9,28 @@ angular.module("sim/Simulation.js").
       return {
         restrict: "E",
         scope: {
+          mode: "=",
           player: "="
         },
         templateUrl: "ui/Rest.html"
       }
     });
 
-function Rest($scope, Mode) {
+function Rest($scope) {
   this.scope = $scope;
-  // TODO(philharnish): This method of extension is pretty weak.
-  angular.extend(this, Mode.prototype);
-  $scope.actions = this.parseActionList(Rest.ACTION_LIST);
+   // TODO(philharnish): Watching for changes is not ideal.
+  $scope.$watch("mode", function (mode) {
+    if (mode) {
+      $scope.actions = mode.parseActionList(Rest.ACTION_LIST);
+    }
+  });
 }
 
 Rest.ACTION_LIST = [
-  "fortify",
-  "sleep"
-];
-
-Rest.prototype = {
-  fortifyActive: function (active) {
-    if (active !== undefined && this.fightEnabled()) {
-      this.scope.player.ui.modes.rest.activity = "fortify";
-      return true;
-    }
-    return this.scope.player.initialized() &&
-        this.scope.player.ui.modes.rest.activity == "fortify";
+  {
+    name: "fortify"
   },
-  sleepActive: function (active) {
-    if (active !== undefined) {
-      this.scope.player.ui.modes.rest.activity = "sleep";
-      return true;
-    }
-    return this.scope.player.initialized() &&
-        this.scope.player.ui.modes.rest.activity == "sleep";
+  {
+    name: "sleep"
   }
-};
+];

@@ -1,12 +1,12 @@
-var spec = require('../../test');
+var spec = require("../../test");
 var items = require("./model/fixtures/sim-items.js");
 var locations = require("./model/fixtures/sim-locations.js");
 var players = require("./model/fixtures/sim-players.js");
 
-describe('Simulation', function() {
+describe("Simulation", function() {
   var simulation;
   var scope;
-  beforeEach(register('sim/Simulation.js'));
+  beforeEach(register("sim/Simulation.js"));
   beforeEach(items.mockRequests);
   beforeEach(players.mockRequests);
   beforeEach(locations.mockRequests);
@@ -20,15 +20,15 @@ describe('Simulation', function() {
     $httpBackend.flush();
   }));
 
-  it('should initialize "items"', function() {
+  it("should initialize 'items'", function() {
     expect(scope.items.length).toBeGreaterThan(0);
   });
 
-  it('should initialize "locations"', function() {
+  it("should initialize 'locations'", function() {
     expect(scope.locations.length).toBeGreaterThan(0);
   });
 
-  it('should initialize "player"', function() {
+  it("should initialize 'player'", function() {
     expect(scope.player.initialized()).toBeTruthy();
   });
 });
