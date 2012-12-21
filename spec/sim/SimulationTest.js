@@ -21,7 +21,7 @@ describe("Simulation", function() {
   }));
 
   it("should initialize 'items'", function() {
-    expect(scope.items.length).toBeGreaterThan(0);
+    expect(scope.player.inventory.items.length).toBeGreaterThan(0);
   });
 
   it("should initialize 'locations'", function() {

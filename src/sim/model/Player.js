@@ -1,8 +1,10 @@
 angular.module('sim/model/Player.js', [
+      'sim/model/Inventory.js',
+      'sim/model/Item.js',
       'sim/model/MongolabEndpoint.js',
       'sim/model/Ui.js'
     ]).
-    factory('Player', function(MongolabEndpoint, Ui) {
+    factory('Player', function(Inventory, Item, MongolabEndpoint, Ui) {
       var Player = MongolabEndpoint('sim-players/:id');
       var getFn = Player.get;
       Player.get = function(parameters) {
@@ -15,6 +17,7 @@ angular.module('sim/model/Player.js', [
 
       Player.prototype.onSuccess = function() {
         // Convert `this` to services.
+        this.inventory = new Inventory(Item.query());
         this.ui = new Ui(this.ui);
       };
 
@@ -24,12 +27,6 @@ angular.module('sim/model/Player.js', [
 
       Player.prototype.setMode = function(mode) {
         return this.initialized() && this.ui.setMode(mode);
-      };
-
-      Player.prototype.inventory = {
-        "has": function () {
-          return false;
-        }
       };
 
       return Player;

@@ -10,11 +10,10 @@ angular.module("sim/Simulation.js", [
     ]).
     controller("Simulation", Simulation);
 
-function Simulation($scope, $location, Item, Location, Player) {
+function Simulation($scope, $location, Location, Player) {
   // TODO(philharnish): See ngViewDirective for scope $destroy and
   // creation pattern.
   $scope.tabs = ["explore", "rest"];
-  $scope.items = Item.query();
   $scope.locations = Location.query();
   $scope.player = Player.get({id: "50b6f69be4b0dbae32c8ece1"});
   $scope.$watch(

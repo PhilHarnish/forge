@@ -1,4 +1,5 @@
 var spec = require("../../../test");
+var items = require("./fixtures/sim-items.js");
 var players = require("./fixtures/sim-players.js");
 
 describe("Player", function() {
@@ -9,6 +10,7 @@ describe("Player", function() {
   });
 
   describe("Mock requests", function () {
+    beforeEach(items.mockRequests);
     beforeEach(players.mockRequests);
     afterEach(players.verifyRequests);
 
