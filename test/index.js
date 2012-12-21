@@ -17,7 +17,7 @@ var JasmineSink = require("./JasmineSink.js");
 function removeJasmineFrames(text) {
   var lines = [];
   text.split(/\n/).forEach(function(line) {
-    if (line.indexOf("jasmine-2.0.0.rc1.js") == -1) {
+    if (line.indexOf("jasmine-node/jasmine-") == -1) {
       lines.push(line);
     }
   });
