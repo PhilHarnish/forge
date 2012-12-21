@@ -33,8 +33,7 @@ function Explore($scope) {
 
 Explore.ACTION_LIST = [
   {
-    name: "fight",
-    enabled: false
+    name: "fight"
   },
   {
     name: "flight"

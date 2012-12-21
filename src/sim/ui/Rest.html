@@ -1,7 +1,6 @@
 <div ng-controller="Rest"
-     ng-class="{active: player.modeIs('rest')}"
+     ng-class="{active: player.mode() == 'rest'}"
      class="tab-pane">
   <actionbar actions="actions"
-             mode="player.ui.modes.rest"
              player="player" />
 </div>

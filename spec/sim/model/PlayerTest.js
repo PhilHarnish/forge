@@ -5,10 +5,6 @@ var players = require("./fixtures/sim-players.js");
 describe("Player", function() {
   beforeEach(register("sim/model/Player.js"));
 
-  it("should have an Player endpoint.", function(Player) {
-    expect(Player).toHave("get");
-  });
-
   describe("Mock requests", function () {
     beforeEach(items.mockRequests);
     beforeEach(players.mockRequests);
@@ -18,8 +14,8 @@ describe("Player", function() {
       var request = players.requests[0];
       var response = players.responses[0];
       players.expect("GET", request);
-      var resource = Player.get({id: response._id.$oid});
-      expect(resource).toBeEmpty();
+      var resource = new Player(response._id.$oid);
+      expect(resource.data).toBeEmpty();
       expect(resource.initialized()).toBeFalsy();
       $httpBackend.flush();
       expect(resource.initialized()).toBeTruthy();
@@ -31,7 +27,7 @@ describe("Player", function() {
         var request = players.requests[0];
         var response = players.responses[0];
         players.expect("GET", request);
-        resource = Player.get({id: response._id.$oid});
+        resource = new Player(response._id.$oid);
         $httpBackend.flush();
       }));
 

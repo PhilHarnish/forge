@@ -9,12 +9,12 @@
 </head>
 <body>
 
-<status stats="player.stats"></status>
+<status stats="player.stats()"></status>
 
 <ul class="nav nav-tabs">
   <li ng-repeat="tab in tabs"
-      ng-class="{active: player.modeIs(tab)}">
-    <a href="#/{{player.name}}/{{tab}}">{{tab}}</a>
+      ng-class="{active: player.mode() == tab}">
+    <a href="#/{{player.name()}}/{{tab}}">{{tab}}</a>
   </li>
 </ul>
 

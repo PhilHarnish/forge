@@ -7,7 +7,6 @@ angular.module("sim/Simulation.js").
         restrict: "E",
         scope: {
           actions: "=",
-          mode: "=",
           player: "="
         },
         templateUrl: "ui/ActionBar.html"
