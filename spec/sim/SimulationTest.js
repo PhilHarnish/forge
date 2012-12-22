@@ -25,7 +25,7 @@ describe("Simulation", function() {
   });
 
   it("should initialize 'locations'", function() {
-    expect(scope.locations.length).toBeGreaterThan(0);
+    expect(scope.player.travelLog.locations.length).toBeGreaterThan(0);
   });
 
   it("should initialize 'player'", function() {

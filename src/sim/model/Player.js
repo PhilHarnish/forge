@@ -1,15 +1,17 @@
 angular.module('sim/model/Player.js', [
       'sim/model/Inventory.js',
-      'sim/model/Item.js',
       'sim/model/MongolabEndpoint.js',
+      'sim/model/TravelLog.js',
       'sim/model/Ui.js'
     ]).
-    factory('Player', function(Inventory, Item, MongolabEndpoint, Ui) {
+    factory('Player', function(Inventory, MongolabEndpoint,
+        TravelLog, Ui) {
       var PlayerEndpoint = MongolabEndpoint('sim-players/:id');
       var Player = function (id) {
         this.data = PlayerEndpoint.get({"id": id},
             angular.bind(this, this.onSuccess));
-        this.inventory = new Inventory(Item.query());
+        this.inventory = new Inventory(id);
+        this.travelLog = new TravelLog(id);
         this.ui = new Ui();
       };
 

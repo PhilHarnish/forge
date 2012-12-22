@@ -1,7 +1,4 @@
 angular.module("sim/Simulation.js", [
-      "sim/model/Item.js",
-      "sim/model/Location.js",
-      "sim/model/MongolabEndpoint.js",
       "sim/model/Player.js",
       "sim/ui/ActionBar.js",
       "sim/ui/Explore.js",
@@ -10,11 +7,10 @@ angular.module("sim/Simulation.js", [
     ]).
     controller("Simulation", Simulation);
 
-function Simulation($scope, $location, Location, Player) {
+function Simulation($scope, $location, Player) {
   // TODO(philharnish): See ngViewDirective for scope $destroy and
   // creation pattern.
   $scope.tabs = ["explore", "rest"];
-  $scope.locations = Location.query();
   $scope.player = new Player("50b6f69be4b0dbae32c8ece1");
   $scope.$watch(
       function () {
