@@ -10,6 +10,7 @@ angular.module('sim/model/Player.js', [
         this.data = PlayerEndpoint.get({"id": id},
             angular.bind(this, this.onSuccess));
         this.inventory = new Inventory(Item.query());
+        this.ui = new Ui();
       };
 
       Player.prototype.initialized = function() {
@@ -18,16 +19,11 @@ angular.module('sim/model/Player.js', [
 
       Player.prototype.onSuccess = function() {
         // Convert `this` to services.
-        this.ui = new Ui(this.data.ui);
+        this.ui.update(this.data.ui);
       };
 
       Player.prototype.mode = function(mode) {
-        if (!this.initialized()) {
-          return false;
-        } else if (mode !== undefined) {
-          this.ui.setMode(mode);
-        }
-        return this.ui.mode;
+        return this.ui && this.ui.mode(mode);
       };
 
       Player.prototype.name = function () {
