@@ -16,7 +16,6 @@ function Simulation($scope, $location, Location, Player) {
   $scope.tabs = ["explore", "rest"];
   $scope.locations = Location.query();
   $scope.player = new Player("50b6f69be4b0dbae32c8ece1");
-  window.player = $scope.player;
   $scope.$watch(
       function () {
         // Requires closure since $location.path must not take arguments
@@ -25,6 +24,6 @@ function Simulation($scope, $location, Location, Player) {
       },
       function (path) {
         // Requires closure since setMode is not bound to player.
-        $scope.player.mode(path);
+        $scope.player.ui.mode(path);
       });
 }

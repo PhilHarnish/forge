@@ -22,10 +22,6 @@ angular.module('sim/model/Player.js', [
         this.ui.update(this.data.ui);
       };
 
-      Player.prototype.mode = function(mode) {
-        return this.ui && this.ui.mode(mode);
-      };
-
       Player.prototype.name = function () {
         return this.data.name;
       };

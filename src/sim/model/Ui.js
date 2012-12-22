@@ -14,7 +14,7 @@ angular.module("sim/model/Ui.js", [
         }
       };
       Ui.prototype.mode = function (mode) {
-        if (mode !== undefined) {
+        if (mode !== undefined && mode in this.modes) {
           this.data.mode = mode;
         }
         return this.data.mode;
