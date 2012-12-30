@@ -1,6 +1,20 @@
-angular.module("sim/model/Inventory.js", [
+angular.module("sim/Simulation.js").
+    directive("inventory", function () {
+      return {
+        restrict: "E",
+        scope: {
+          inventory: "="
+        },
+        templateUrl: "ui/Inventory.html"
+      }
+    });
+
+angular.module("sim/ui/Inventory.js", [
       "sim/model/Item.js"
     ]).
+    controller("Inventory", function($scope) {
+      $scope.items = $scope.inventory.items;
+    }).
     factory("Inventory", function(Item) {
       // TODO(philharnish): Restrict inventory by player ID.
       function Inventory(id) {

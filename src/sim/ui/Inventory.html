@@ -1,0 +1,13 @@
+<table class="table" ng-controller="Inventory">
+  <tbody>
+    <tr ng-repeat="item in items" ng-class="{consumed: item.consumed}">
+      <td>
+        <input type="checkbox"
+               ng-model="item.owned"
+               ng-class="{hide: item.consumed}">
+      </td>
+      <td>{{item.name}}</td>
+      <td>{{item.weight}}kg</td>
+    </tr>
+  </tbody>
+</table>

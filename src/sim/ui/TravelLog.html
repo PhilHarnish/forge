@@ -1,0 +1,25 @@
+<table class="table" ng-controller="TravelLog">
+  <tbody>
+    <tr>
+      <td>&nbsp;</td>
+      <td colspan="3">new areas</td>
+    </tr>
+    <tr ng-repeat="location in locations">
+      <td>
+        <input id="{{location.id()}}-memorize"
+               type="checkbox"
+               ng-model="location.memorize"
+               ng-change="location.update()"
+               ng-class="{hide: !location.memorable}">
+      </td>
+      <td><label for="{{location.id()}}-memorize">{{location.name}}</label></td>
+      <td>
+        <span ng-style="directionStyle(location)"
+              class="location-direction">
+          {{directionText(location)}}
+        </span>
+      </td>
+      <td>{{location.distance(player.data)}}m</td>
+    </tr>
+  </tbody>
+</table>
