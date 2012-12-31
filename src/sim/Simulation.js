@@ -13,13 +13,14 @@ function Simulation($scope, $location, Player) {
   $scope.tabs = ["explore", "rest"];
   $scope.player = new Player("50b6f69be4b0dbae32c8ece1");
   $scope.$watch(
-      function () {
-        // Requires closure since $location.path must not take arguments
-        // and we'd rather have the last piece of the path regardless.
-        return $location.path().split("/").pop();
+      function() {
+        // Wait until player is initialized before setting the mode.
+        return $scope.player.initialized() &&
+            $location.path().split("/").pop();
       },
-      function (path) {
-        // Requires closure since setMode is not bound to player.
-        $scope.player.ui.mode(path);
+      function(path) {
+        if (path) {
+          $scope.player.ui.mode(path);
+        }
       });
 }
