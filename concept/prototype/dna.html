@@ -1,0 +1,26 @@
+<!doctype html>
+<html ng-app="DnaPrototype.js" ng-controller="DnaPrototype">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <title>dna encoding prototypes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="../../third_party/bootstrap/docs/assets/css/bootstrap.css"
+        rel="stylesheet">
+  <style>
+  </style>
+</head>
+<body>
+
+<ul class="nav nav-tabs">
+  <li ng-repeat="tab in tabs"
+      ng-class="{active: mode == tab}">
+    <a href="#/{{tab}}">{{tab}}</a>
+  </li>
+</ul>
+
+<script src="../../third_party/jquery/dist/jquery.js"></script>
+<script src="../../third_party/angular.js/build/angular.js"></script>
+<script src="../../third_party/angular.js/build/angular-resource.js"></script>
+<script src="../../src/sim/DevBootstrap.js"></script>
+</body>
+</html>
