@@ -7,6 +7,15 @@
   <link href="../../third_party/bootstrap/docs/assets/css/bootstrap.css"
         rel="stylesheet">
   <style>
+.tab-pane {
+  box-sizing: border-box;
+  position: absolute;
+  top: 42px;
+  bottom: 0;
+  width: 100%;
+  border-top: 0;
+  padding: .5em;
+}
   </style>
 </head>
 <body>
@@ -14,9 +23,17 @@
 <ul class="nav nav-tabs">
   <li ng-repeat="tab in tabs"
       ng-class="{active: mode == tab}">
-    <a href="#/{{tab}}">{{tab}}</a>
+    <a href="#/{{tab}}"><label for="/{{tab}}">{{tab}}</label></a>
   </li>
 </ul>
+
+<div class="tab-content">
+<textarea ng-repeat="(tab, value) in data"
+          id="/{{tab}}"
+          class="tab-pane"
+          ng-model="data[tab]"
+          ng-class="{active: mode == tab}"></textarea>
+</div>
 
 <script src="../../third_party/jquery/dist/jquery.js"></script>
 <script src="../../third_party/angular.js/build/angular.js"></script>
