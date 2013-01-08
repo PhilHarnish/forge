@@ -28,11 +28,20 @@
 </ul>
 
 <div class="tab-content">
-<textarea ng-repeat="(tab, value) in data"
-          id="/{{tab}}"
+<textarea id="/yaml"
           class="tab-pane"
-          ng-model="data[tab]"
-          ng-class="{active: mode == tab}"></textarea>
+          ng-model="data.yaml"
+          ng-class="{active: mode == 'yaml'}"></textarea>
+
+<textarea id="/value"
+          class="tab-pane"
+          ng-model="data.value"
+          ng-class="{active: mode == 'value'}"></textarea>
+
+<textarea id="/encoding"
+          class="tab-pane"
+          ng-model="data.encoding"
+          ng-class="{active: mode == 'encoding'}"></textarea>
 </div>
 
 <script src="../../third_party/jquery/dist/jquery.js"></script>
