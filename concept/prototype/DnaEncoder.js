@@ -96,8 +96,8 @@ DnaEncoder.prototype.getBfsEncoding = function () {
       if (node.value > maxValue) {
         console.log("ERROR VALUE TOO LARGE", size, node);
       }
-      bits = (bits << size) | node.value;
-      outgoing = (outgoing << 1) | Boolean(node.children.length);
+      bits |= node.value << (size * i);
+      outgoing |= Boolean(node.children.length) << i;
     }
     result.push(DnaEncoder.BASE64[bits]);
     result.push(DnaEncoder.BASE64[outgoing]);
