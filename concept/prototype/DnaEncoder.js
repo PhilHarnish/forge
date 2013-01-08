@@ -57,12 +57,23 @@ DnaEncoder.prototype.setValue = function(str) {
     };
     frame.push(node);
   }
-  console.log(stack[0]);
-  this.parsed = str;
+  this.parsed = stack[0];
 };
 
 DnaEncoder.prototype.getValue = function() {
-  return this.parsed.toString();
+  function recurse(value, result, depth) {
+    for (var i = 0; i < value.length; i++) {
+      var node = value[i];
+      var name = node.name ? ": " + node.name : "";
+      var indentation = new Array(depth + 1).join(" ");
+      result.push(indentation + node.value + name);
+      if (node.children.length) {
+        recurse(node.children, result, depth + 1);
+      }
+    }
+    return result;
+  }
+  return recurse(this.parsed, [], 0).join("\n");
 };
 
 DnaEncoder.prototype.getEncoding = function() {
