@@ -4,13 +4,13 @@ angular.module("DnaPrototype.js", [
     controller("DnaPrototype", DnaPrototype);
 
 function DnaPrototype($scope, $location, DnaEncoder) {
-  $scope.tabs = ["yaml", "value", "encoding"];
+  $scope.tabs = ["model", "value", "encoding"];
   $scope.data = {
-    "yaml": "",
+    "model": "",
     "value": [1, 1, 1, 1, 1, 1].join("\n"),
     "encoding": ""
   };
-  $scope.encoder = new DnaEncoder();
+  var encoder = new DnaEncoder();
   $scope.$watch(
       function() {
         // Wait until player is initialized before setting the mode.
@@ -21,11 +21,12 @@ function DnaPrototype($scope, $location, DnaEncoder) {
           $location.path("/value");
         } else {
           if ($scope.mode == "value") {
-            $scope.encoder.setValue($scope.data.value);
-            $scope.data.encoding = $scope.encoder.getEncoding();
-          } else if ($scope.mode == "yaml") {
-            $scope.encoder.setModel($scope.data.yaml);
-            $scope.data.encoding = $scope.encoder.getEncoding();
+            encoder.setValue($scope.data.value);
+            $scope.data.value = encoder.getValue();
+            $scope.data.encoding = encoder.getEncoding();
+          } else if ($scope.mode == "model") {
+            encoder.setModel($scope.data.model);
+            $scope.data.encoding = encoder.getEncoding();
           }
           $scope.mode = path;
         }
