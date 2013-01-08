@@ -20,7 +20,7 @@ function DnaPrototype($scope, $location, DnaEncoder) {
         if (!path || !(path in $scope.data)) {
           $location.path("/value");
         } else {
-          if ($scope.mode == "value") {
+          if (!$scope.mode || $scope.mode == "value") {
             encoder.setValue($scope.data.value);
             $scope.data.value = encoder.getValue();
             $scope.data.encoding = encoder.getEncoding();
