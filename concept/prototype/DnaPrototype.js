@@ -5,7 +5,9 @@ angular.module("DnaPrototype.js", [
 
 function DnaPrototype($scope, $location, DnaEncoder) {
   $scope.tabs = ["model", "value", "encoding"];
-  $scope.data = {
+  $scope.data = "data" in localStorage ?
+      JSON.parse(localStorage.getItem("data")) :
+  {
     "model": "",
     "value": [1, 1, 1, 1, 1, 1].join("\n"),
     "encoding": ""
@@ -30,5 +32,7 @@ function DnaPrototype($scope, $location, DnaEncoder) {
           }
           $scope.mode = path;
         }
+        // Store data in local storage for later.
+        localStorage.setItem("data", JSON.stringify($scope.data));
       });
 }
