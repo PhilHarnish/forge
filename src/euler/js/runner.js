@@ -1,7 +1,7 @@
 var _ = require("../../../third_party/underscore/underscore.js")._;
 var bc = require("./bc.js").bc;
 
-var problems = ["debruijn"];
+var problems = ["mush_list"];
 
 _(problems).each(function (i) {
   console.log();
