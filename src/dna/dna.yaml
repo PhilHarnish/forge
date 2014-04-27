@@ -1,0 +1,61 @@
+---
+
+terran: &terran
+  undefined
+
+zerg: &zerg
+  undefined
+
+protoss: &protoss
+  undefined
+
+element: &element
+  electric:
+    undefined
+  fire:
+    undefined
+  ice:
+    undefined
+
+status: &status
+  health:
+    stomach:
+      sink: *sink
+    poison:
+      delayed onset
+      damage over time
+      mixing effects to _cause_ poison
+
+sink: &sink
+  fades over time
+
+effacy: &effacy
+  delta:
+    draining vs absorbing
+  storage:
+    e.g. storage, charge capacity, water/food
+
+edible:
+  can be poisonous
+  can be cooked
+  can be nutritious
+
+skill: &skill
+  effacy: *effacy
+  mastery: 0
+
+skills:
+  diving: *skill
+  swimming: *skill
+  running: *skill
+  jumping: *skill
+
+# Delayed outcomes? Eg, poison. Requires entanglement.
+
+# Some "bits" fade over time. Consider:
+# A + B = poison; alone, OK
+# Eat 10 units of A, wait for 25% digested.
+# Eat 5 units of B.
+# Result: 7.5 of A, 5 of B, poisoned until A+B digested.
+
+# Treating symptoms? Cures? Vaccines? Tollerances?
