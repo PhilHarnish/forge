@@ -1,5 +1,5 @@
 package go_euler
 
 const (
-  WAT = 1
+	WAT = 1
 )
