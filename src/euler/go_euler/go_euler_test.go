@@ -9,19 +9,37 @@ import (
 
 var _ = Describe("GoEuler",
 	func() {
-		Describe("Fibonacci", func() {
-			It("exports Fibonacci correctly",
-				func() {
-					Expect(Fibonacci).NotTo(BeNil())
-				})
+		Describe("Factor",
+			func() {
+				It("factors prime numbers",
+					func() {
+						f := Factor(3)
+						Expect(f()).To(Equal(3))
+						Expect(f()).To(Equal(0))
+					})
+				It("factors composite numbers",
+					func() {
+						f := Factor(10)
+						Expect(f()).To(Equal(2))
+						Expect(f()).To(Equal(5))
+						Expect(f()).To(Equal(0))
+					})
+			})
 
-			It("returns expected values",
-				func() {
-					f := Fibonacci()
-					Expect(f()).To(Equal(1))
-					Expect(f()).To(Equal(2))
-					Expect(f()).To(Equal(3))
-					Expect(f()).To(Equal(5))
-				})
-		})
+		Describe("Fibonacci",
+			func() {
+				It("exports Fibonacci correctly",
+					func() {
+						Expect(Fibonacci).NotTo(BeNil())
+					})
+
+				It("returns expected values",
+					func() {
+						f := Fibonacci()
+						Expect(f()).To(Equal(1))
+						Expect(f()).To(Equal(2))
+						Expect(f()).To(Equal(3))
+						Expect(f()).To(Equal(5))
+					})
+			})
 	})
