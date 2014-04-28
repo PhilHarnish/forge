@@ -14,15 +14,20 @@ var _ = Describe("GoEuler",
 				It("factors prime numbers",
 					func() {
 						f := Factor(3)
-						Expect(f()).To(Equal(3))
-						Expect(f()).To(Equal(0))
+						Expect(<-f).To(Equal(3))
+						Eventually(f).Should(BeClosed())
 					})
 				It("factors composite numbers",
 					func() {
 						f := Factor(10)
-						Expect(f()).To(Equal(2))
-						Expect(f()).To(Equal(5))
-						Expect(f()).To(Equal(0))
+						Expect([]int{<-f, <-f}).To(Equal([]int{2, 5}))
+						Eventually(f).Should(BeClosed())
+					})
+				It("factors numbers with duplicate composites",
+					func() {
+						f := Factor(16)
+						Expect([]int{<-f, <-f, <-f, <-f}).To(Equal([]int{2, 2, 2, 2}))
+						Eventually(f).Should(BeClosed())
 					})
 			})
 
@@ -36,10 +41,7 @@ var _ = Describe("GoEuler",
 				It("returns expected values",
 					func() {
 						f := Fibonacci()
-						Expect(f()).To(Equal(1))
-						Expect(f()).To(Equal(2))
-						Expect(f()).To(Equal(3))
-						Expect(f()).To(Equal(5))
+						Expect([]int{<-f, <-f, <-f, <-f}).To(Equal([]int{1, 2, 3, 5}))
 					})
 			})
 	})

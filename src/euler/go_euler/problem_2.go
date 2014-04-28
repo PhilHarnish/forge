@@ -5,14 +5,14 @@ package go_euler
 // -> 2 + 8 + 34 + ...
 func Problem2(ceil int) int {
 	sum := 0
-	f := Fibonacci()
+	c := Fibonacci()
 
-	next := f()
+	next := <-c
 	for next < ceil {
 		if next%2 == 0 {
 			sum += next
 		}
-		next = f()
+		next = <-c
 	}
 
 	return sum
