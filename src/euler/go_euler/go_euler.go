@@ -1,5 +1,14 @@
 package go_euler
 
+import (
+	"fmt"
+	"github.com/onsi/ginkgo"
+)
+
+func Debug(f string, args ...interface{}) {
+	fmt.Fprintf(ginkgo.GinkgoWriter, f+"\n", args...)
+}
+
 func Factor(n int) chan int {
 	c := make(chan int)
 	go factor(n, c)
