@@ -5,8 +5,8 @@ import (
 	"github.com/onsi/ginkgo"
 )
 
-func Debug(f string, args ...interface{}) {
-	fmt.Fprintf(ginkgo.GinkgoWriter, f+"\n", args...)
+func Debug(args ...interface{}) {
+	fmt.Fprintln(ginkgo.GinkgoWriter, args...)
 }
 
 func Factor(n int) chan int {
