@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Problem4",
+var _ = Describe("Problem5",
 	func() {
 		It("should handle given example",
 			func() {
