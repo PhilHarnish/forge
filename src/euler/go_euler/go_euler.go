@@ -40,3 +40,37 @@ func fibonacci(c chan int) {
 		c <- next
 	}
 }
+
+func Nth(c chan int, i int) int {
+	for ; i > 1; i-- {
+		<-c
+	}
+	return <-c
+}
+
+func Primes() chan int {
+	// 2, 3, 5, 7, 11, 13, 15...
+	src := make(chan int)
+	out := make(chan int)
+	go source(src)
+	go filter(src, out, 2)
+	return out
+}
+
+func source(c chan int) {
+	for i := 2; ; i++ {
+		c <- i
+	}
+}
+
+func filter(in chan int, out chan int, divisor int) {
+	next := <-in
+	out <- next
+	filtered := make(chan int)
+	go filter(filtered, out, next)
+	for i := range in {
+		if i%divisor != 0 {
+			filtered <- i
+		}
+	}
+}

@@ -44,4 +44,38 @@ var _ = Describe("GoEuler",
 						Expect([]int{<-f, <-f, <-f, <-f}).To(Equal([]int{1, 2, 3, 5}))
 					})
 			})
+
+		Describe("Nth",
+			func() {
+				It("exports Nth correctly",
+					func() {
+						Expect(Nth).NotTo(BeNil())
+					})
+
+				It("returns the Nth item in a channel",
+					func() {
+						c := Fibonacci()
+						Expect(Nth(c, 4)).To(Equal(5))
+					})
+			})
+
+		Describe("Primes",
+			func() {
+				It("exports Primes correctly",
+					func() {
+						Expect(Primes).NotTo(BeNil())
+					})
+
+				It("returns small primes",
+					func() {
+						f := Primes()
+						Expect([]int{<-f, <-f, <-f, <-f}).To(Equal([]int{2, 3, 5, 7}))
+					})
+
+				It("returns larger primes",
+					func() {
+						f := Primes()
+						Expect(Nth(f, 6)).To(Equal(13))
+					})
+			})
 	})
