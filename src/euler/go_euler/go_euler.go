@@ -3,6 +3,8 @@ package go_euler
 import (
 	"fmt"
 	"github.com/onsi/ginkgo"
+	"math"
+	"sync"
 )
 
 func Debug(args ...interface{}) {
@@ -48,29 +50,55 @@ func Nth(c chan int, i int) int {
 	return <-c
 }
 
+var knownPrimes []int = []int{2, 3}
+var primesRwLock sync.RWMutex
+var generateLock sync.Mutex
+
 func Primes() chan int {
 	// 2, 3, 5, 7, 11, 13, 15...
-	src := make(chan int)
-	out := make(chan int)
-	go source(src)
-	go filter(src, out, 2)
-	return out
+	c := make(chan int)
+	go primes(c)
+	return c
 }
 
-func source(c chan int) {
-	for i := 2; ; i++ {
-		c <- i
+func primes(c chan int) {
+	for i := 0; ; i++ {
+		if i >= len(knownPrimes) {
+			generatePrime(i)
+		}
+		c <- knownPrimes[i]
 	}
 }
 
-func filter(in chan int, out chan int, divisor int) {
-	next := <-in
-	out <- next
-	filtered := make(chan int)
-	go filter(filtered, out, next)
-	for i := range in {
-		if i%divisor != 0 {
-			filtered <- i
+func generatePrime(next int) {
+	generateLock.Lock()
+	defer generateLock.Unlock()
+	// Generate the next prime starting where we left off.
+	lastPrimeIndex := len(knownPrimes)
+	test := knownPrimes[lastPrimeIndex-1]
+	for i := lastPrimeIndex; i <= next; {
+		test += 2
+		if IsPrime(test) {
+			primesRwLock.Lock()
+			knownPrimes = append(knownPrimes, test)
+			i++
+			primesRwLock.Unlock()
 		}
 	}
+}
+
+func IsPrime(n int) bool {
+	primesRwLock.RLock()
+	defer primesRwLock.RUnlock()
+	end := int(math.Sqrt(float64(n)))
+	for i := 0; i < len(knownPrimes); i++ {
+		prime := knownPrimes[i]
+		if n%prime == 0 {
+			return false
+		} else if prime > end {
+			return true
+		}
+	}
+	// TODO(philharnish): Generate needed primes.
+	panic(fmt.Sprintf("Unable to check primality for %d", n))
 }
