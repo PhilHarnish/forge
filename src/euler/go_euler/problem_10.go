@@ -7,5 +7,6 @@ func Problem10(n int) int {
 	for next := <-f; next < n; next = <-f {
 		sum += next
 	}
+	go GeneratePrime(n)
 	return sum
 }

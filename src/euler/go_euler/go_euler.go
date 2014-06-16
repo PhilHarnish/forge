@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/onsi/ginkgo"
 	"math"
-	"sync"
 )
 
 func Debug(args ...interface{}) {
@@ -51,8 +50,8 @@ func Nth(c chan int, i int) int {
 }
 
 var knownPrimes []int = []int{2, 3}
-var primesRwLock sync.RWMutex
-var generateLock sync.Mutex
+//var primesRwLock sync.RWMutex
+//var generateLock sync.Mutex
 
 func Primes() chan int {
 	// 2, 3, 5, 7, 11, 13, 15...
@@ -64,32 +63,37 @@ func Primes() chan int {
 func primes(c chan int) {
 	for i := 0; ; i++ {
 		if i >= len(knownPrimes) {
-			generatePrime(i)
+			GeneratePrime(i)
 		}
 		c <- knownPrimes[i]
 	}
 }
 
+func GeneratePrime(ceil int) {
+	generatePrime(ceil)
+	// primesSieve(ceil) is available in primes_sieve.go.
+}
+
 func generatePrime(next int) {
-	generateLock.Lock()
-	defer generateLock.Unlock()
+	//generateLock.Lock()
+	//defer generateLock.Unlock()
 	// Generate the next prime starting where we left off.
 	lastPrimeIndex := len(knownPrimes)
 	test := knownPrimes[lastPrimeIndex-1]
 	for i := lastPrimeIndex; i <= next; {
 		test += 2
 		if IsPrime(test) {
-			primesRwLock.Lock()
+			//primesRwLock.Lock()
 			knownPrimes = append(knownPrimes, test)
 			i++
-			primesRwLock.Unlock()
+			//primesRwLock.Unlock()
 		}
 	}
 }
 
 func IsPrime(n int) bool {
-	primesRwLock.RLock()
-	defer primesRwLock.RUnlock()
+	//primesRwLock.RLock()
+	//defer primesRwLock.RUnlock()
 	end := int(math.Sqrt(float64(n)))
 	for i := 0; i < len(knownPrimes); i++ {
 		prime := knownPrimes[i]

@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Problem6",
+var _ = Describe("Problem10",
 	func() {
 		It("should handle given example",
 			func() {
@@ -15,6 +15,8 @@ var _ = Describe("Problem6",
 
 		It("should handle problem asked",
 			func() {
-				Expect(Problem10(2000000)).To(Equal(142913828922))
+				//Expect(Problem10(2000000)).To(Equal(142913828922))
+				Expect(Problem10(500000)).To(Equal(9914236195))
+				Expect(Problem10(500000)).To(Equal(9914236195))
 			})
 	})
