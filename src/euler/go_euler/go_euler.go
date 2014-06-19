@@ -3,6 +3,7 @@ package go_euler
 import (
 	"fmt"
 	"github.com/onsi/ginkgo"
+	"sync"
 )
 
 func ChainMultiply(in chan int, len int) chan int {
@@ -34,6 +35,14 @@ func chainMultiply(in chan int, out chan int, len int) {
 		out <- product
 	}
 	close(out)
+}
+
+func ChannelLength(c chan int) int {
+	i := 0
+	for _, ok := <-c; ok; _, ok = <-c {
+		i++
+	}
+	return i
 }
 
 func Debug(args ...interface{}) {
@@ -72,6 +81,33 @@ func fibonacci(c chan int) {
 	}
 }
 
+// See: http://blog.golang.org/pipelines.
+func Merge(in ...chan int) chan int {
+	var wg sync.WaitGroup
+	wg.Add(len(in))
+	out := make(chan int)
+
+	// Start an output goroutine for each input channel in in. output
+	// copies values from c to out until c is closed, then calls wg.Done.
+	output := func(c chan int) {
+		for n := range c {
+			out <- n
+		}
+		wg.Done()
+	}
+	for _, c := range in {
+		go output(c)
+	}
+
+	// Start a goroutine to close out once all the output goroutines are
+	// done. This must start after the wg.Add call.
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+	return out
+}
+
 func Max(in chan int) int {
 	max := 0
 	for n := range in {
@@ -101,4 +137,21 @@ func primes(c chan int) {
 		// Implemented in primes_sieve.go.
 		c <- GetPrime(i)
 	}
+}
+
+func Range(start, end int, args ...int) chan int {
+	c := make(chan int)
+	increment := 1
+	if len(args) == 1 {
+		increment = args[0]
+	}
+	go rangeSend(c, start, end, increment)
+	return c
+}
+
+func rangeSend(c chan int, start, end, increment int) {
+	for ; start < end; start += increment {
+		c <- start
+	}
+	close(c)
 }
