@@ -5,6 +5,37 @@ import (
 	"github.com/onsi/ginkgo"
 )
 
+func ChainMultiply(in chan int, len int) chan int {
+	out := make(chan int)
+	go chainMultiply(in, out, len)
+	return out
+}
+
+func chainMultiply(in chan int, out chan int, len int) {
+	product := 1
+	chain := make([]int, len)
+	chainIndex := 0
+	chainLength := 0
+	for n := range in {
+		if n == 0 {
+			chainIndex = 0
+			chainLength = 0
+			product = 1
+		} else {
+			if chainLength == len {
+				product /= chain[chainIndex]
+			} else {
+				chainLength++
+			}
+			chain[chainIndex] = n
+			chainIndex = (chainIndex + 1) % len
+			product *= n
+		}
+		out <- product
+	}
+	close(out)
+}
+
 func Debug(args ...interface{}) {
 	fmt.Fprintln(ginkgo.GinkgoWriter, args...)
 }
@@ -39,37 +70,6 @@ func fibonacci(c chan int) {
 		last, next = next, last+next
 		c <- next
 	}
-}
-
-func ChainMultiply(in chan int, len int) chan int {
-	out := make(chan int)
-	go chainMultiply(in, out, len)
-	return out
-}
-
-func chainMultiply(in chan int, out chan int, len int) {
-	product := 1
-	chain := make([]int, len)
-	chainIndex := 0
-	chainLength := 0
-	for n := range in {
-		if n == 0 {
-			chainIndex = 0
-			chainLength = 0
-			product = 1
-		} else {
-			if chainLength == len {
-				product /= chain[chainIndex]
-			} else {
-				chainLength++
-			}
-			chain[chainIndex] = n
-			chainIndex = (chainIndex + 1) % len
-			product *= n
-		}
-		out <- product
-	}
-	close(out)
 }
 
 func Max(in chan int) int {
