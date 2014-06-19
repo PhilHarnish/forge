@@ -12,7 +12,7 @@ type Composite struct {
 	Prime int
 }
 
-type CompositeHeap []Composite
+type CompositeHeap []*Composite
 
 func (h CompositeHeap) Len() int           { return len(h) }
 func (h CompositeHeap) Less(i, j int) bool { return h[i].Pos < h[j].Pos }
@@ -21,7 +21,7 @@ func (h CompositeHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
 func (h *CompositeHeap) Push(x interface{}) {
 	// Push and Pop use pointer receivers because they modify the slice's length,
 	// not just its contents.
-	*h = append(*h, x.(Composite))
+	*h = append(*h, x.(*Composite))
 }
 
 func (h *CompositeHeap) Pop() interface{} {
@@ -33,8 +33,9 @@ func (h *CompositeHeap) Pop() interface{} {
 }
 
 var compositeHeap *CompositeHeap = &CompositeHeap{
-	// Composite{4, 2} is not needed because even numbers are skipped.
-	Composite{9, 3},
+	// Not needed because even numbers are skipped:
+	// &Composite{4, 2},
+	&Composite{9, 3},
 }
 
 var knownPrimes []int = []int{2, 3}
@@ -82,7 +83,7 @@ func GetPrime(ceil int) int {
 	for i := largestPrime + 2; len(knownPrimes) <= ceil; i += 2 {
 		for i > min.Pos {
 			// Increase the multiple and fix the entry.
-			(*compositeHeap)[0].Pos += min.Prime
+			min.Pos += min.Prime
 			heap.Fix(compositeHeap, 0)
 			// Look at the new lowest composite.
 			min = (*compositeHeap)[0]
@@ -93,8 +94,7 @@ func GetPrime(ceil int) int {
 			primesRwLock.Lock()
 			knownPrimes = append(knownPrimes, i)
 			primesRwLock.Unlock()
-			next := Composite{i * i, i}
-			heap.Push(compositeHeap, next)
+			heap.Push(compositeHeap, &Composite{i * i, i})
 		}
 	}
 	return knownPrimes[ceil]
