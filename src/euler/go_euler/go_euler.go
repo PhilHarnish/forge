@@ -3,6 +3,8 @@ package go_euler
 import (
 	"fmt"
 	"github.com/onsi/ginkgo"
+	"math"
+	"sort"
 	"sync"
 )
 
@@ -45,8 +47,57 @@ func ChannelLength(c chan int) int {
 	return i
 }
 
+func Collect(c chan int) []int {
+	result := []int{}
+	for i := range c {
+		result = append(result, i)
+	}
+	return result
+}
+
 func Debug(args ...interface{}) {
 	fmt.Fprintln(ginkgo.GinkgoWriter, args...)
+}
+
+func Divisors(n int) chan int {
+	c := make(chan int)
+	go divisors(n, c)
+	return c
+}
+
+func divisors(n int, out chan int) {
+	factors := Collect(Factor(n))
+	if len(factors) == 0 {
+		out <- 1
+		close(out)
+		return
+	}
+	products := make(chan int, 2<<uint(len(factors)))
+	divisorPowerSet(factors, 0, 1, products)
+	close(products)
+	c := Collect(products)
+	sort.Ints(c)
+	last := 0
+	for _, i := range c {
+		if last != i {
+			last = i
+			out <- i
+		}
+	}
+	close(out)
+}
+
+func divisorPowerSet(factors []int, index int, product int, out chan int) {
+	without := product
+	with := product * factors[index]
+	index++
+	if index < len(factors) {
+		divisorPowerSet(factors, index, without, out)
+		divisorPowerSet(factors, index, with, out)
+	} else {
+		out <- without
+		out <- with
+	}
 }
 
 func Factor(n int) chan int {
@@ -56,12 +107,18 @@ func Factor(n int) chan int {
 }
 
 func factor(n int, c chan int) {
-	for i := 2; i <= n; i++ {
-		if n%i == 0 {
+	ceil := int(math.Sqrt(float64(n)))
+	for i := range Primes() {
+		for n%i == 0 {
 			n /= i
 			c <- i
-			i = 1 // Repeat loop from beginning.
 		}
+		if i > ceil {
+			break
+		}
+	}
+	if n > 1 {
+		c <- n
 	}
 	close(c)
 }

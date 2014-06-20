@@ -16,7 +16,7 @@ var _ = Describe("GoEuler",
 						c := make(chan int)
 						close(c)
 						products := ChainMultiply(c, 4)
-						_, ok := <- products
+						_, ok := <-products
 						Expect(ok).To(Equal(false))
 					})
 
@@ -31,7 +31,7 @@ var _ = Describe("GoEuler",
 						p := ChainMultiply(Range(-2, 3), 4)
 						Expect([]int{<-p, <-p}).To(Equal([]int{-2, 2}))
 						// 0 in input has undocumented output so throw it away.
-						<- p
+						<-p
 						Expect([]int{<-p, <-p}).To(Equal([]int{1, 2}))
 					})
 			})
@@ -54,27 +54,70 @@ var _ = Describe("GoEuler",
 					})
 			})
 
+		Describe("Collect",
+			func() {
+				It("collects empty channels",
+					func() {
+						s := make(chan int)
+						close(s)
+						c := Collect(s)
+						Expect(len(c)).To(Equal(0))
+						Expect(c).To(Equal([]int{}))
+					})
+
+				It("collects from channels",
+					func() {
+						c := Collect(Range(0, 5))
+						Expect(len(c)).To(Equal(5))
+						Expect(c).To(Equal([]int{0, 1, 2, 3, 4}))
+					})
+			})
+
+		Describe("Divisors",
+			func() {
+				It("returns 1 divisor for '1'",
+					func() {
+						d := Divisors(1)
+						Expect(<-d).To(Equal(1))
+						_, ok := <-d
+						Expect(ok).To(Equal(false))
+					})
+
+				It("returns 2 divisors for primes",
+					func() {
+						d := Divisors(13)
+						Expect(<-d).To(Equal(1))
+						Expect(<-d).To(Equal(13))
+						_, ok := <-d
+						Expect(ok).To(Equal(false))
+					})
+
+				It("handles many divisors",
+					func() {
+						d := Divisors(12)
+						Expect(Collect(d)).To(Equal(
+							[]int{1, 2, 3, 4, 6, 12}))
+					})
+			})
+
 		Describe("Factor",
 			func() {
 				It("factors prime numbers",
 					func() {
 						f := Factor(3)
-						Expect(<-f).To(Equal(3))
-						Eventually(f).Should(BeClosed())
+						Expect(Collect(f)).To(Equal([]int{3}))
 					})
 
 				It("factors composite numbers",
 					func() {
 						f := Factor(10)
-						Expect([]int{<-f, <-f}).To(Equal([]int{2, 5}))
-						Eventually(f).Should(BeClosed())
+						Expect(Collect(f)).To(Equal([]int{2, 5}))
 					})
 
 				It("factors numbers with duplicate composites",
 					func() {
 						f := Factor(16)
-						Expect([]int{<-f, <-f, <-f, <-f}).To(Equal([]int{2, 2, 2, 2}))
-						Eventually(f).Should(BeClosed())
+						Expect(Collect(f)).To(Equal([]int{2, 2, 2, 2}))
 					})
 			})
 
