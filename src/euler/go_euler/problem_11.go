@@ -11,10 +11,10 @@ func Problem11(input *[][]int, length int) int {
 		{{1, 0}, {0, 1}},  // Rows first. Increment col on wrap.
 		{{0, 1}, {1, 0}},  // Cols first. Increment row on wrap.
 		{{1, 1}, {1, 0}},  // South-east diagonal. Move +1 col on wrap.
-		{{-1, 1}, {1, 0}},  // South-west diagonal. Move +1 col on wrap.
+		{{-1, 1}, {1, 0}}, // South-west diagonal. Move +1 col on wrap.
 	}
 	// Sentinel channel for merging.
-  products := make(chan int)
+	products := make(chan int)
 	close(products)
 	for _, direction := range directions {
 		stream := make(chan int)
