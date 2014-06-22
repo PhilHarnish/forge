@@ -26,5 +26,5 @@ var _ = Describe("Problem14",
 						output := Problem14(1000000)
 						Expect(output).To(Equal(837799))
 					})
-			}, 15)
+			}, 50)
 	})
