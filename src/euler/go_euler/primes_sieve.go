@@ -33,12 +33,21 @@ func (h *CompositeHeap) Pop() interface{} {
 }
 
 var compositeHeap *CompositeHeap = &CompositeHeap{
-	// Not needed because even numbers are skipped:
+	// Not needed because these factors are skipped:
 	// &Composite{4, 2},
-	&Composite{9, 3},
+	// &Composite{9, 3},
+	// &Composite{15, 5},
+	// &Composite{14, 7},
+	&Composite{22, 11},
 }
 
-var knownPrimes []int = []int{2, 3}
+var knownPrimes []int = []int{2, 3, 5, 7, 11}
+var wheel []int = []int{
+	2, 4, 2, 4, 6, 2, 6, 4, 2, 4, 6, 6, 2, 6, 4, 2, 6, 4, 6, 8, 4, 2, 4, 2, 4, 8,
+	6, 4, 6, 2, 4, 6, 2, 6, 6, 4, 2, 4, 6, 2, 6, 4, 2, 4, 2, 10, 2, 10,
+}
+var wheelIndex int = 0
+var lastPos int = 11
 var primesRwLock sync.RWMutex
 var generateLock sync.Mutex
 
@@ -77,24 +86,23 @@ func GetPrime(ceil int) int {
 	defer generateLock.Unlock()
 
 	min := (*compositeHeap)[0]
-	// No lock needed; knownPrimes is append only and GC won't remove value until
-	// we release pointer.
-	largestPrime := knownPrimes[len(knownPrimes)-1]
-	for i := largestPrime + 2; len(knownPrimes) <= ceil; i += 2 {
-		for i > min.Pos {
+	for len(knownPrimes) <= ceil {
+		lastPos += wheel[wheelIndex]
+		wheelIndex = (wheelIndex + 1) % len(wheel)
+		for lastPos > min.Pos {
 			// Increase the multiple and fix the entry.
 			min.Pos += min.Prime
 			heap.Fix(compositeHeap, 0)
 			// Look at the new lowest composite.
 			min = (*compositeHeap)[0]
 		}
-		if i < min.Pos {
+		if lastPos < min.Pos {
 			// Eg: i == 3, i < 4. Insert new prime 3 as {3*3, 3}.
 			// When another prime (eg, 7) is discovered, do the same.
 			primesRwLock.Lock()
-			knownPrimes = append(knownPrimes, i)
+			knownPrimes = append(knownPrimes, lastPos)
 			primesRwLock.Unlock()
-			heap.Push(compositeHeap, &Composite{i * i, i})
+			heap.Push(compositeHeap, &Composite{lastPos * lastPos, lastPos})
 		}
 	}
 	return knownPrimes[ceil]

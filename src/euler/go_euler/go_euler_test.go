@@ -177,6 +177,7 @@ var _ = Describe("GoEuler",
 					func() {
 						f := Primes()
 						Expect(Nth(f, 6)).To(Equal(13))
+						Expect([]int{<-f, <-f, <-f, <-f}).To(Equal([]int{17, 19, 23, 29}))
 					})
 			})
 	})
