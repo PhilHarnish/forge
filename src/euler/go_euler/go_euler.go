@@ -123,6 +123,15 @@ func factor(n int, c chan int) {
 	close(c)
 }
 
+func Factorial(n int) int {
+	result := n
+	for n > 1 {
+		n--
+		result *= n
+	}
+	return result
+}
+
 func Fibonacci() chan int {
 	c := make(chan int)
 	go fibonacci(c)

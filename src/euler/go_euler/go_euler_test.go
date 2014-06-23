@@ -121,6 +121,19 @@ var _ = Describe("GoEuler",
 					})
 			})
 
+		Describe("Factorial",
+			func() {
+				It("returns small results",
+					func() {
+						Expect(Factorial(4)).To(Equal(4 * 3 * 2))
+					})
+
+				It("returns large results",
+					func() {
+						Expect(Factorial(10)).To(Equal(3628800))
+					})
+			})
+
 		Describe("Fibonacci",
 			func() {
 				It("exports Fibonacci correctly",
