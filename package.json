@@ -18,5 +18,8 @@
   "bugs": {
     "url": "https://github.com/PhilHarnish/forge/issues"
   },
-  "homepage": "https://github.com/PhilHarnish/forge"
+  "homepage": "https://github.com/PhilHarnish/forge",
+  "devDependencies": {
+    "gulp-jasmine": "^2.0.1"
+  }
 }
