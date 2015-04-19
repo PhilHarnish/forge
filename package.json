@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/PhilHarnish/forge",
   "devDependencies": {
+    "gulp": "^3.8.11",
     "gulp-jasmine": "^2.0.1"
   }
 }
