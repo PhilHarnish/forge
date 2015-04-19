@@ -1,0 +1,22 @@
+{
+  "name": "forge",
+  "version": "1.0.0",
+  "description": "Playground for small projects.",
+  "main": "src/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "gulp specs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PhilHarnish/forge.git"
+  },
+  "author": "Phil Harnish <philharnish@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/PhilHarnish/forge/issues"
+  },
+  "homepage": "https://github.com/PhilHarnish/forge"
+}
