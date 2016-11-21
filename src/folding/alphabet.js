@@ -1,9 +1,9 @@
 // Base alphabet.
 const ALPHABET_STD = [
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-    '       IH    ZO     C  XKN',
-    'VE GB DHI   WNO   S  AMX Z',
-    '  U    IH Y  ZO        X N'
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  '       IH    ZO     C  XKN',
+  'VE GB DHI   WNO   S  AMX Z',
+  '  U    IH Y  ZO        X N'
 ];
 
 // BE shared with MW.
