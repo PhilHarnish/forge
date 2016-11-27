@@ -24,7 +24,7 @@ describe('string', () => {
     const LEET = string.mapAscii('let', '137');
 
     it('should be a no-op for empty strings', () => {
-      expect(string.translate('', '', '')).toEqual('');
+      expect(string.translate('', NO_OP)).toEqual('');
     });
 
     it('should be a no-op for empty translations', () => {
