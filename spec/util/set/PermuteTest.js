@@ -34,6 +34,17 @@ describe('Permute', () => {
       expect(sample.hasNext()).toEqual(false);
     });
 
+    it('seek back to beginning for seek(0)', () => {
+      const first = sample.next();
+      sample.seek(0);
+      expect(sample.next()).toEqual(first);
+    });
+
+    it('should not seek invalid values', () => {
+      expect(() => { sample.seek(-1) }).toThrow();
+      expect(() => { sample.seek(1000) }).toThrow();
+    });
+
     it('should throw once input is exhausted', () => {
       sample.next();
       sample.next();
@@ -64,11 +75,11 @@ describe('Permute', () => {
       expect(sample.canAdvance()).toEqual(false);
     });
 
-    it('advance should eventually throw', () => {
+    it('advance should eventually return false', () => {
       for (let i = 1; i < sample.size; i++) {
-        sample.advance();
+        expect(sample.advance()).toEqual(true);
       }
-      expect(() => { sample.advance() }).toThrow(jasmine.any(RangeError));
+      expect(sample.advance()).toEqual(false);
     });
 
     it('should produce unique outputs', () => {

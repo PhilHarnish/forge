@@ -3,7 +3,8 @@
 class Permute {
   /**
    * Given an array of values, produce results in lexical order.
-   * @param {Array<*>} list Input to permute.
+   * @param {Array<T>} list Input to permute.
+   * @template T
    */
   constructor(list) {
     this.original_ = Array.from(list);
@@ -32,7 +33,8 @@ class Permute {
     return this.index < this.list.length;
   }
 
-  next()  {
+  /** @return <T> */
+  next() {
     // 0123, <advance>, 0132, <advance>, 0213, <advance>, 0231, <advance>, ...
     if (this.index >= this.list.length) {
       throw new RangeError('Input list exhausted');
@@ -40,6 +42,13 @@ class Permute {
     const result = this.list[this.index];
     this.index++;
     return result;
+  }
+
+  seek(index) {
+    if (index < 0 || index >= this.list.length) {
+      throw new RangeError('Unable to seek past list length');
+    }
+    this.index = index;
   }
 
   canAdvance() {
@@ -69,13 +78,13 @@ class Permute {
         this.permutePosition = 0;
         // Swap performed.
         this.permutations++;
-        return;
+        return true;
       } else {
         this.state[this.permutePosition] = 0;
         this.permutePosition += 1;
       }
     }
-    throw new RangeError('Permute list exhausted');
+    return false;
   }
 }
 
