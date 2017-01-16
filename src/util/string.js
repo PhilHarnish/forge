@@ -26,4 +26,22 @@ module.exports = {
     }
     return result.join('');
   },
+
+  rotate(source, degrees) {
+    let result = source.split('\n');
+    let rotated;
+    while (degrees > 0) {
+      rotated = [];
+      degrees -= 90;
+      for (let column = 0; column < result[0].length; column++) {
+        const line = [];
+        for (let row = result.length - 1; row >= 0; row--) {
+          line.push(result[row][column]);
+        }
+        rotated.push(line.join(''));
+      }
+      result = rotated;
+    }
+    return result.join('\n');
+  },
 };
