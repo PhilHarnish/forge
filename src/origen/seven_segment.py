@@ -1,11 +1,30 @@
-from collections import defaultdict
 from collections import namedtuple
 
 Glyph = namedtuple('Glyph', ['ascii', 'segments'])
 
+
+def load(s):
+  lines = s.split('\n')
+  acc = []
+  result = {}
+  def maybe_flush(acc):
+    if not acc:
+      return
+    segment = parse('\n'.join(acc))
+    result[segment.ascii] = segment
+    del acc[:]  # Mutate "acc" in place (vs global + reassign).
+
+  for line in lines:
+    if line.startswith('>'):
+      maybe_flush(acc)
+    acc.append(line)
+  maybe_flush(acc)
+  return result
+
+
 def parse(s):
   lines = s.split('\n')
-  ascii, lines = lines[0], lines[1:]
+  ascii, lines = lines[0].lstrip('>'), lines[1:]
   segments = _initialize_segments(lines)
   y = 0
   for idx, line in enumerate(lines):
