@@ -27,20 +27,50 @@ def _test(letter):
   return letter[0].strip('[]'), letter[1:]
 
 
+with description('Glyphs'):
+
+  with it('should construct without errors'):
+    word = seven_segment.Glyphs('Test', [''])
+    expect(word.name).to(equal('Test'))
+
+  with it('should handle equality for Glyphs with identical segments'):
+    dash1 = seven_segment.Glyphs('dash1', ['###'])
+    dash2 = seven_segment.Glyphs('dash2', ['###'])
+    pipe = seven_segment.Glyphs('pipe', ['#'] * 3)
+    expect(dash1).to(equal(dash2))
+    expect(dash1).to_not(equal(pipe))
+
+  with it('should merge glyphs'):
+    dash = seven_segment.Glyphs('_', ['', '', '###'])
+    pipe = seven_segment.Glyphs('|', ['#'] * 3)
+    expected = seven_segment.Glyphs('L', ['#'] * 2 + ['###'])
+    expect(dash | pipe).to(equal(expected))
+
+  with it('should concatenate full glyphs'):
+    dash = seven_segment.Glyphs('dash', ['###'])
+    expected = seven_segment.Glyphs('dash dash', ['### ###'])
+    expect(dash + dash).to(equal(expected))
+
+  with it('should concatenate partial glyphs'):
+    dash = seven_segment.Glyphs('|', ['#'] * 3)
+    expected = seven_segment.Glyphs('| |', ['# #'] * 3)
+    expect(dash + dash).to(equal(expected))
+
+
 with description('parse'):
 
   with it('parses simple input'):
-    letter = seven_segment.Glyph(*_test(_DASH))
+    letter = seven_segment.Glyphs(*_test(_DASH))
     expect(letter.name).to(equal('-'))
     expect(letter.segments).to(equal([0, 1, 0]))
 
   with it('parses fixed width text'):
-    letter = seven_segment.Glyph(*_test(_A))
+    letter = seven_segment.Glyphs(*_test(_A))
     expect(letter.name).to(equal('a'))
     expect(letter.segments).to(equal([2, 7, 3]))
 
   with it('parses input with blank lines'):
-    letter = seven_segment.Glyph(*_test(_C))
+    letter = seven_segment.Glyphs(*_test(_C))
     expect(letter.name).to(equal('c'))
     expect(letter.segments).to(equal([2, 6, 0]))
 
