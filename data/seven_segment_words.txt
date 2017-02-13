@@ -1,3 +1,4 @@
+[ALL]
 a
 i
 as
