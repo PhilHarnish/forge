@@ -1,30 +1,18 @@
-from collections import namedtuple
+from src.origen import data
 
-Glyph = namedtuple('Glyph', ['ascii', 'segments'])
+class Glyph(object):
 
-
-def load(s):
-  lines = s.split('\n')
-  acc = []
-  result = {}
-  def maybe_flush(acc):
-    if not acc:
-      return
-    segment = parse('\n'.join(acc))
-    result[segment.ascii] = segment
-    del acc[:]  # Mutate "acc" in place (vs global + reassign).
-
-  for line in lines:
-    if line.startswith('['):
-      maybe_flush(acc)
-    acc.append(line)
-  maybe_flush(acc)
-  return result
+  def __init__(self, name, lines):
+    self.name = name
+    self.lines = lines
+    self.segments = _parse(lines)
 
 
-def parse(s):
-  lines = s.split('\n')
-  ascii, lines = lines[0].strip('[]'), lines[1:]
+def load(lines):
+  return data.load_lines(lines, Glyph)
+
+
+def _parse(lines):
   segments = _initialize_segments(lines)
   y = 0
   for idx, line in enumerate(lines):
@@ -38,7 +26,7 @@ def parse(s):
         segments[x] |= 1 << y
       x += 2
     y += idx % 2  # Increase by one every 2 rows.
-  return Glyph(ascii, segments)
+  return segments
 
 
 def _initialize_segments(lines):

@@ -3,7 +3,7 @@ from src.origen import seven_segment
 
 _DASH = """[-]
 ###
-"""
+""".split('\n')
 
 _A = """[a]
 ###
@@ -11,29 +11,37 @@ _A = """[a]
 ###
 # #
 ###
-"""
+""".split('\n')
+
 _C = """[c]
 
 
 ###
 #
 ###
-"""
+""".split('\n')
+
+
+def _test(letter):
+  # Perform operations normally handled by "data" module.
+  return letter[0].strip('[]'), letter[1:]
+
 
 with description('parse'):
+
   with it('parses simple input'):
-    letter = seven_segment.parse(_DASH)
-    expect(letter.ascii).to(equal('-'))
+    letter = seven_segment.Glyph(*_test(_DASH))
+    expect(letter.name).to(equal('-'))
     expect(letter.segments).to(equal([0, 1, 0]))
 
   with it('parses fixed width text'):
-    letter = seven_segment.parse(_A)
-    expect(letter.ascii).to(equal('a'))
+    letter = seven_segment.Glyph(*_test(_A))
+    expect(letter.name).to(equal('a'))
     expect(letter.segments).to(equal([2, 7, 3]))
 
   with it('parses input with blank lines'):
-    letter = seven_segment.parse(_C)
-    expect(letter.ascii).to(equal('c'))
+    letter = seven_segment.Glyph(*_test(_C))
+    expect(letter.name).to(equal('c'))
     expect(letter.segments).to(equal([2, 6, 0]))
 
 
@@ -43,6 +51,6 @@ with description('load'):
     expect(alphabet).to(have_key('-'))
 
   with it('handles multiple lines'):
-    input = '\n'.join([_DASH, _A, _C])
+    input = _DASH + _A + _C
     alphabet = seven_segment.load(input)
     expect(alphabet).to(have_keys('-', 'a', 'c'))
