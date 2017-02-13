@@ -1,18 +1,18 @@
 from expects import *
 from src.origen import seven_segment
 
-_DASH = """>-
+_DASH = """[-]
 ###
 """
 
-_A = """>a
+_A = """[a]
 ###
   #
 ###
 # #
 ###
 """
-_C = """>c
+_C = """[c]
 
 
 ###

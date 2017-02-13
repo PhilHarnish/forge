@@ -15,7 +15,7 @@ def load(s):
     del acc[:]  # Mutate "acc" in place (vs global + reassign).
 
   for line in lines:
-    if line.startswith('>'):
+    if line.startswith('['):
       maybe_flush(acc)
     acc.append(line)
   maybe_flush(acc)
@@ -24,7 +24,7 @@ def load(s):
 
 def parse(s):
   lines = s.split('\n')
-  ascii, lines = lines[0].lstrip('>'), lines[1:]
+  ascii, lines = lines[0].strip('[]'), lines[1:]
   segments = _initialize_segments(lines)
   y = 0
   for idx, line in enumerate(lines):
