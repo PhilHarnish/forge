@@ -15,7 +15,7 @@ class Glyphs(object):
     return all([a == b for a, b in zip(self.segments, other.segments)])
 
   def __or__(self, other):
-    glyphs = Glyphs('%s|%s' % (self.name, other.name), [])
+    glyphs = Glyphs('(%s|%s)' % (self.name, other.name), [])
     # Bitwise OR any overlapping segments.
     merged = [a | b for a, b in zip(self.segments, other.segments)]
     # Append any remaining segments.
@@ -25,12 +25,22 @@ class Glyphs(object):
     return glyphs
 
   def __add__(self, other):
-    glyphs = Glyphs('%s+%s' % (self.name, other.name), [])
+    glyphs = Glyphs('(%s+%s)' % (self.name, other.name), [])
     if len(self.segments) % 2:
       spacer = [0]
     else:
       spacer = []
     glyphs.segments = self.segments + spacer + other.segments
+    return glyphs
+
+  def __lshift__(self, other):
+    glyphs = Glyphs('(%s<<%s)' % (self.name, other), [])
+    glyphs.segments = self.segments[2 * other:]
+    return glyphs
+
+  def __rshift__(self, other):
+    glyphs = Glyphs('(%s>>%s)' % (self.name, other), [])
+    glyphs.segments = [0]*(2*other) + self.segments
     return glyphs
 
   def __str__(self):

@@ -56,6 +56,21 @@ with description('Glyphs'):
     expected = seven_segment.Glyphs('| |', ['# #'] * 3)
     expect(dash + dash).to(equal(expected))
 
+  with it('should erase segments if shifted away'):
+    bar = seven_segment.Glyphs('|', ['#'] * 3)
+    empty = seven_segment.Glyphs('', [])
+    expect(bar << 1).to(equal(empty))
+
+  with it('should shift left'):
+    bars = seven_segment.Glyphs('| |', ['# #'] * 3)
+    bar = seven_segment.Glyphs('|', ['#'] * 3)
+    expect(bars << 1).to(equal(bar))
+
+  with it('should shift right'):
+    bar = seven_segment.Glyphs('|', ['#'] * 3)
+    right_bar = seven_segment.Glyphs('  |', ['  #'] * 3)
+    expect(bar >> 1).to(equal(right_bar))
+
 
 with description('parse'):
 
