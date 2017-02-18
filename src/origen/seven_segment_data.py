@@ -9,5 +9,5 @@ class WordList(list):
     self.name = name
 
 
-ALPHABET = data.load('data/seven_segment_alphabet.txt', seven_segment.Glyph)
+ALPHABET = data.load('data/seven_segment_alphabet.txt', seven_segment.Glyphs)
 ACCESS_WORDS = data.load('data/seven_segment_access_words.txt', WordList)
