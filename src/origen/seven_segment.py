@@ -65,4 +65,4 @@ def _initialize_segments(lines):
   """Returns list([0, ...n]) for n = max length in lines."""
   if lines:
     return [0] * max([len(line) for line in lines])
-  return 0
+  return []
