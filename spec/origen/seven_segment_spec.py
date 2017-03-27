@@ -71,6 +71,10 @@ with description('Glyphs'):
     right_bar = seven_segment.Glyphs('  |', ['  #'] * 3)
     expect(bar >> 1).to(equal(right_bar))
 
+  with it('should return len()'):
+    dash = seven_segment.Glyphs('-', ['###'])
+    expect(len(dash)).to(equal(3))
+
 
 with description('parse'):
 

@@ -1,6 +1,7 @@
 from src.origen import data
 
 class Glyphs(object):
+  # TODO: Extend list.
 
   def __init__(self, name, lines):
     self.name = name
@@ -8,11 +9,17 @@ class Glyphs(object):
     self.segments = _parse(lines)
 
   def __eq__(self, other):
-    if not issubclass(type(other), Glyphs):
+    if not isinstance(other, Glyphs):
       return False
     if len(self.segments) != len(other.segments):
       return False
     return all([a == b for a, b in zip(self.segments, other.segments)])
+
+  def __contains__(self, other):
+    """Lazy compare using strings."""
+    big = ','.join([str(s) for s in self.segments])
+    small = ','.join([str(s) for s in other.segments])
+    return small in big
 
   def __or__(self, other):
     glyphs = Glyphs('(%s|%s)' % (self.name, other.name), [])
@@ -42,6 +49,9 @@ class Glyphs(object):
     glyphs = Glyphs('(%s>>%s)' % (self.name, other), [])
     glyphs.segments = [0]*(2*other) + self.segments
     return glyphs
+
+  def __len__(self):
+    return len(self.segments)
 
   def __str__(self):
     return '[%s]\n%s' % (self.name, self.segments)
