@@ -1,5 +1,3 @@
-import sqlite3
-
 from expects import *
 from src.data import crossword
 
