@@ -19,6 +19,7 @@ def identify(src):
     ordered[k] = v
   return ordered
 
+
 def init():
   register(crossword_problem.CrosswordProblem)
 
