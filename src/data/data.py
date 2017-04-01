@@ -31,6 +31,9 @@ def load_lines(lines, cls):
   return result
 
 
-def _read_lines(project_path):
-  abs_path = os.path.join(_base_path, project_path)
-  return open(abs_path).readlines()
+def open_project_path(path, **kwargs):
+  return open(project_path(path), **kwargs)
+
+
+def _read_lines(path):
+  return open_project_path(path).readlines()
