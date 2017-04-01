@@ -1,8 +1,9 @@
 _PROBLEM_TYPES = set()
 
 class Problem(object):
-  def __init__(self, src):
-    self.src = src
+  def __init__(self, name, lines):
+    self.name = name
+    self.lines = lines
 
 def register(cls):
   _PROBLEM_TYPES.add(cls)

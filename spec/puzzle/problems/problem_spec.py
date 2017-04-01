@@ -4,7 +4,7 @@ from src.puzzle.problems import problem
 
 with description('Problem'):
   with it('instantiates'):
-    expect(problem.Problem('')).not_to(be_none)
+    expect(problem.Problem('example', [''])).not_to(be_none)
 
 with description('register'):
   with after.each:
