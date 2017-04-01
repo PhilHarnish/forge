@@ -1,4 +1,5 @@
-from src.origen import data
+import data
+from src.data import data
 
 class Glyphs(object):
   # TODO: Extend list.

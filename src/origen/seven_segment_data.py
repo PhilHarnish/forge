@@ -1,6 +1,6 @@
 import re
 
-from src.origen import data
+from src.data import data
 from src.origen import seven_segment
 
 

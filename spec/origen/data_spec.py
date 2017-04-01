@@ -1,11 +1,11 @@
 import collections
 
 from expects import *
-from src.origen import data
+from src.data import data
 
 _TestClass = collections.namedtuple('_TestClass', ['name', 'lines'])
 
-with describe('load_lines'):
+with description('load_lines'):
   with it('loads empty input without errors'):
     result = data.load_lines([], _TestClass)
     expect(result).to(be_empty)
