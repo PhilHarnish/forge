@@ -1,5 +1,6 @@
 from expects import *
 
+from src.puzzle.problems import crossword_problem
 from src.puzzle.problems import problem
 from src.puzzle.heuristics import analyze
 
@@ -57,3 +58,15 @@ with description('identify'):
           (ExampleProblemOnes, .75),
           (ExampleProblemZeroes, .25),
       )))
+
+  with context('all supported problems'):
+    with before.all:
+      analyze.init()
+
+    with after.all:
+      analyze.reset()
+
+    with it('identifies crossword examples'):
+      identified = analyze.identify('A type of puzzle (9)')
+      expect(identified).to(have_key(crossword_problem.CrosswordProblem))
+      expect(identified[crossword_problem.CrosswordProblem]).to(equal(1))
