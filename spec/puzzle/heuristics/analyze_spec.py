@@ -16,20 +16,32 @@ class ExampleProblemOnes(problem.Problem):
     return src.count('1') / len(src)
 
 
+with description('register'):
+  with after.each:
+    analyze.reset()
+
+  with it('registers types'):
+    class Example(object):
+      pass
+    analyze.register(Example)
+    expect(analyze.problem_types()).to(equal({Example}))
+
+
 with description('identify'):
   with it('is a no-op without problem types registered'):
     expect(analyze.identify('')).to(be_empty)
 
   with context('ExampleProblem'):
     with before.all:
-      problem.register(ExampleProblemZeroes)
-      problem.register(ExampleProblemOnes)
+      analyze.register(ExampleProblemZeroes)
+      analyze.register(ExampleProblemOnes)
 
     with after.all:
-      problem.unregister_all()
+      analyze.reset()
 
     with it('matches unambiguous results'):
       result = analyze.identify('0000')
+      expect(result).to(have_key(ExampleProblemZeroes))
       expect(result).to(equal({ExampleProblemZeroes: 1}))
 
     with it('match ambiguous results'):
