@@ -27,8 +27,8 @@ with description('db'):
     global cursor
     conn = crossword.init(':memory:')
     cursor = conn.cursor()
-    crossword.add(cursor, 'blue', 1, ['color', 'emotion'])
-    crossword.add(cursor, 'orange', 2, ['color', 'fruit'])
+    crossword.add(cursor, 'blue', 1, {'color': 1, 'emotion': 1})
+    crossword.add(cursor, 'orange', 2, {'color': 1, 'fruit': 1})
     conn.commit()
 
   with it('returns empty results for garbage'):

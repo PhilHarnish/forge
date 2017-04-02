@@ -16,32 +16,21 @@ def _prune_keywords(keywords):
   top = sorted(
       keywords.items(), key=lambda i: i[1], reverse=True
   )[:MAX_KEYWORDS]
-  results = []
+  results = {}
   for keyword, count in top:
     ALL_SEEN[keyword] += count
-    results.append(keyword)
+    results[keyword] = count
     if keyword.endswith('s') and len(keyword) > 1:
       # Singularize, just in case. (This won't always produce real words.)
-      results.append(keyword[:-1])
+      results[keyword[:-1]] = count
   return results
 
-conn = sqlite3.connect(data.project_path('data/crossword.sqlite'))
+conn = crossword.init('data/crossword.sqlite')
 c = conn.cursor()
-# Erase previous table.
-c.execute('DROP TABLE IF EXISTS clues')
-# Create table.
-c.execute("""
-CREATE TABLE clues (
-  solution TEXT PRIMARY KEY,
-  usages INT,
-  keywords TEXT
-)
-""")
-conn.commit()
 
 def _insert(solution, usages, keywords):
   try:
-    crossword.add(c, solution, usages, sorted(_prune_keywords(keywords)))
+    crossword.add(c, solution, usages, _prune_keywords(keywords))
   except (sqlite3.OperationalError, sqlite3.IntegrityError):
     conn.commit()
     conn.close()
