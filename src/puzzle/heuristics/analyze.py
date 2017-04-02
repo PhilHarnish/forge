@@ -1,25 +1,30 @@
 import collections
 
-from src.puzzle.problems import problem
 from src.puzzle.problems import crossword_problem
 
 
 _PROBLEM_TYPES = set()
 
 
-def identify(src):
+def identify(line):
   scores = {}
   for t in _PROBLEM_TYPES:
-    score = t.score(src)
+    score = t.score(line)
     if score:
-      scores[t] = t.score(src)
+      scores[t] = t.score(line)
   # Return sorted values, highest first.
   return collections.OrderedDict(
       sorted(scores.items(), key=lambda x: x[1], reverse=True))
 
 
-def init():
+def identify_all(lines):
+  return map(identify, lines)
+
+
+def init(lines=None):
   register(crossword_problem.CrosswordProblem)
+  if lines:
+    identify_all(lines)
 
 
 def reset():
