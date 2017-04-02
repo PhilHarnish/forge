@@ -28,13 +28,13 @@ def clue_keywords(clue):
   return results
 
 
-def _connect(db):
-  return sqlite3.connect(db)
+def connect(db):
+  conn = sqlite3.connect(db)
+  return (conn, conn.cursor())
 
 
 def init(db):
-  conn = _connect(db)
-  cursor = conn.cursor()
+  conn, cursor = connect(db)
   # Erase previous table.
   cursor.execute('DROP TABLE IF EXISTS clues')
   # Create table.

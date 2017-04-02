@@ -1,4 +1,6 @@
 import collections
+from unittest import mock
+
 from expects import *
 
 from src.data import data
@@ -26,3 +28,17 @@ with description('CrosswordProblem'):
         collections.namedtuple('fixture', 'name lines'))
     for line in fixtures['crossword_clues'].lines:
       expect(crossword_problem.CrosswordProblem.score(line)).to(be_above(.5))
+
+  with context('constraints'):
+    with it('constrains to fixed lengths'):
+      problem = crossword_problem.CrosswordProblem('ex', ['example (3)'])
+      problem._solve = mock.Mock(return_value={'a': 1, 'aa': .75, 'aaa': .5})
+      expect(problem.solutions()).to(equal({'aaa': .5}))
+
+  with context('solutions'):
+    with it('queries for crossword solutions'):
+      problem = crossword_problem.CrosswordProblem(
+          'ex',
+          ['Puzzle (7)'])
+      solutions = problem.solutions()
+      expect(solutions).to(equal(None))
