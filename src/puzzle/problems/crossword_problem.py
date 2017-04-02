@@ -36,14 +36,20 @@ class CrosswordProblem(problem.Problem):
     return self._cursor
 
   def _solve(self):
-    results = crossword.query(self._get_cursor(), ''.join(self.lines))
+    clue = ''.join(self.lines)
+    clue_keywords = crossword.clue_keywords(clue)
+    results = crossword.query(self._get_cursor(), clue)
+    max_frequency = max([f for _, f, _ in results])
     ranked = []
     for (solution, frequency, keywords) in results:
-      rank = self._rank(solution)
+      score = 0.0
+      for keyword in clue_keywords:
+        # Increase score by how often the keyword appeared in other clues.
+        score += keywords[keyword] / frequency
+      # Normalize score based on how many keywords were considered.
+      score /= len(clue_keywords)
+      rank = score * frequency / max_frequency
       if rank:
         ranked.append((solution, rank))
     return collections.OrderedDict(
         sorted(ranked, key=lambda x: x[1], reverse=True))
-
-  def _rank(self, solution):
-    return 1

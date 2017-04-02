@@ -50,21 +50,6 @@ def init(db):
   return conn
 
 
-def _format_keywords(keywords):
-  return '[%s]' % ']['.join(sorted(keywords))
-
-
-def _format_keywords_query(keywords):
-  return '[%s(' % '(%['.join(sorted(keywords))
-
-
-def _format_keyword_counts(keywords):
-  parts = []
-  for kvp in keywords.items():
-    parts.append('%s(%s)' % kvp)
-  return _format_keywords(parts)
-
-
 def add(cursor, solution, usages, keywords):
   cmd = 'INSERT INTO clues VALUES (?, ?, ?)'
   try:
@@ -83,6 +68,30 @@ def query(cursor, clue):
   """
   like = '%' + _format_keywords_query(clue_keywords(clue)) + '%'
   for solution, usages, keywords in cursor.execute(cmd, (like,)):
-    keywords = clue_keywords(keywords)
+    keywords = _query_keywords(keywords)
     results.append((solution, usages, keywords))
   return results
+
+
+def _format_keywords(keywords):
+  return '[%s]' % ']['.join(sorted(keywords))
+
+
+def _format_keywords_query(keywords):
+  return '[%s(' % '(%['.join(sorted(keywords))
+
+
+def _format_keyword_counts(keywords):
+  parts = []
+  for kvp in keywords.items():
+    parts.append('%s(%s)' % kvp)
+  return _format_keywords(parts)
+
+
+def _query_keywords(keywords):
+  parts = keywords.strip('][').split('][')
+  keywords = {}
+  for part in parts:
+    k, v = part.rstrip(')').split('(')
+    keywords[k] = int(v)
+  return keywords

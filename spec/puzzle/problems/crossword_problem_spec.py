@@ -39,6 +39,9 @@ with description('CrosswordProblem'):
     with it('queries for crossword solutions'):
       problem = crossword_problem.CrosswordProblem(
           'ex',
-          ['Puzzle (7)'])
+          ['Ask a question (5)'])
       solutions = problem.solutions()
-      expect(solutions).to(equal(None))
+      for solution, weight in solutions.items():
+        expect(solution).to(equal('query'))
+        expect(weight).to(be_above(0))
+        break
