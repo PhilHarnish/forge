@@ -41,7 +41,6 @@ with description('CrosswordProblem'):
           'ex',
           ['Ask a question (5)'])
       solutions = problem.solutions()
-      for solution, weight in solutions.items():
-        expect(solution).to(equal('query'))
-        expect(weight).to(be_above(0))
-        break
+      solution, weight = solutions.first()
+      expect(solution).to(equal('query'))
+      expect(weight).to(be_above(0))

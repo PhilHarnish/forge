@@ -1,4 +1,4 @@
-import collections
+from src.data import meta
 
 
 class Problem(object):
@@ -15,7 +15,7 @@ class Problem(object):
 
   def solutions(self):
     if self._solutions is None:
-      self._solutions = collections.OrderedDict(
+      self._solutions = meta.Meta(
           (k, v) for k, v in self._solve().items() if all(
               [fn(k, v) for fn in self._constraints]
           )
