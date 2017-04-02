@@ -75,7 +75,6 @@ def add(cursor, solution, usages, keywords):
 
 
 def query(cursor, clue):
-  # TODO: Handle inexact matches.
   results = []
   cmd = """
     SELECT solution, usages, keywords

@@ -29,6 +29,7 @@ with description('db'):
     cursor = conn.cursor()
     crossword.add(cursor, 'blue', 1, {'color': 1, 'emotion': 1})
     crossword.add(cursor, 'orange', 2, {'color': 1, 'fruit': 1})
+    crossword.add(cursor, 'green', 2, {'color': 1, 'envy': 1, 'money': 1})
     conn.commit()
 
   with it('returns empty results for garbage'):
@@ -38,3 +39,8 @@ with description('db'):
     results = crossword.query(cursor, 'color or emotion')
     expect(results).not_to(be_empty)
     expect(results[0]).to(contain('blue'))
+
+  with it('accepts partial matches'):
+    results = crossword.query(cursor, 'color of money')
+    expect(results).not_to(be_empty)
+    expect(results[0]).to(contain('green'))
