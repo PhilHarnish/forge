@@ -1,5 +1,4 @@
-import collections
-
+from src.data import meta
 from src.puzzle.problems import crossword_problem
 
 
@@ -7,14 +6,12 @@ _PROBLEM_TYPES = set()
 
 
 def identify(line):
-  scores = {}
+  scores = meta.Meta()
   for t in _PROBLEM_TYPES:
     score = t.score(line)
     if score:
       scores[t] = t.score(line)
-  # Return sorted values, highest first.
-  return collections.OrderedDict(
-      sorted(scores.items(), key=lambda x: x[1], reverse=True))
+  return scores
 
 
 def identify_all(lines):
