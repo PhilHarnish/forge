@@ -10,6 +10,10 @@ class Meta(collections.OrderedDict):
     super(Meta, self).__setitem__(key, value, *args, **kwargs)
     self._ordered = False
 
+  def items(self):
+    self._reorder()
+    return super(Meta, self).items()
+
   def first(self):
     self._reorder()
     for k, v in self.items():
