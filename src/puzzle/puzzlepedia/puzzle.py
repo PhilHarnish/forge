@@ -4,7 +4,15 @@ from src.puzzle.heuristics import analyze
 class Puzzle(object):
   def __init__(self, source):
     self._meta_problems = []
-    lines = [line for line in source.split('\n') if line]
+    if isinstance(source, str):
+      lines = [line for line in source.split('\n') if line]
+    elif isinstance(source, list):
+      lines = source
+    elif isinstance(source, Puzzle):
+      lines = source.solutions()
+    else:
+      raise NotImplementedError(
+          'Puzzle source type %s unsupported' % type(source))
     for i, line in enumerate(lines):
       meta_problem = analyze.identify(line)
       self._meta_problems.append(_reify(meta_problem, '#%s' % i, [line]))
@@ -14,6 +22,9 @@ class Puzzle(object):
 
   def solutions(self):
     return [p.active.solution for p in self._meta_problems]
+
+  def get_next_stage(self):
+    return Puzzle(self)
 
 
 def _reify(meta_problem, name, lines):
