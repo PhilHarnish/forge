@@ -1,8 +1,8 @@
 from expects import *
 
+from src.puzzle.heuristics import analyze
 from src.puzzle.problems import crossword_problem
 from src.puzzle.problems import problem
-from src.puzzle.heuristics import analyze
 
 
 class ExampleProblemZeroes(problem.Problem):

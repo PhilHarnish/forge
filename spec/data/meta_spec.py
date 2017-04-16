@@ -1,5 +1,3 @@
-import collections
-
 from expects import *
 from src.data import meta
 
