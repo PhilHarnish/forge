@@ -23,7 +23,8 @@ class CrosswordProblem(problem.Problem):
         break
 
   @staticmethod
-  def score(src):
+  def score(lines):
+    src = '\n'.join(lines)
     # TODO: Look for common crossword expressions.
     if _CROSSWORD_REGEX.match(src):
       return 1

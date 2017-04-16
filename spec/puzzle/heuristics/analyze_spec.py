@@ -7,13 +7,15 @@ from src.puzzle.problems import problem
 
 class ExampleProblemZeroes(problem.Problem):
   @staticmethod
-  def score(src):
+  def score(lines):
+    src = '\n'.join(lines)
     return src.count('0') / len(src)
 
 
 class ExampleProblemOnes(problem.Problem):
   @staticmethod
-  def score(src):
+  def score(lines):
+    src = '\n'.join(lines)
     return src.count('1') / len(src)
 
 
@@ -41,19 +43,19 @@ with description('identify'):
       analyze.reset()
 
     with it('matches unambiguous results'):
-      result = analyze.identify('0000')
+      result = analyze.identify(['0000'])
       expect(result).to(have_key(ExampleProblemZeroes))
       expect(result).to(equal({ExampleProblemZeroes: 1}))
 
     with it('match ambiguous results'):
-      result = analyze.identify('0011')
+      result = analyze.identify(['0011'])
       expect(result).to(equal({
         ExampleProblemZeroes: .5,
         ExampleProblemOnes: .5,
       }))
 
     with it('match order results'):
-      result = analyze.identify('0111')
+      result = analyze.identify(['0111'])
       expect(tuple(result.items())).to(equal((
           (ExampleProblemOnes, .75),
           (ExampleProblemZeroes, .25),
@@ -67,6 +69,6 @@ with description('identify'):
       analyze.reset()
 
     with it('identifies crossword examples'):
-      identified = analyze.identify('A type of puzzle (9)')
+      identified = analyze.identify(['A type of puzzle (9)'])
       expect(identified).to(have_key(crossword_problem.CrosswordProblem))
       expect(identified[crossword_problem.CrosswordProblem]).to(equal(1))

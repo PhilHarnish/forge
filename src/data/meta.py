@@ -24,6 +24,11 @@ class Meta(collections.OrderedDict):
     for first in self:
       return first
 
+  def magnitude(self):
+    self._reorder()
+    for first in self:
+      return self[first]
+
   def _reorder(self):
     if self._ordered:
       return

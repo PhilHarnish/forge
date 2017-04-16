@@ -5,19 +5,25 @@ from src.puzzle.problems import crossword_problem
 _PROBLEM_TYPES = set()
 
 
-def identify(line):
+def identify(lines):
   scores = meta.Meta()
   for t in _PROBLEM_TYPES:
-    score = t.score(line)
+    score = t.score(lines)
     if score:
-      scores[t] = t.score(line)
+      scores[t] = score
   return scores
 
 
-def identify_lines(lines):
+def identify_problems(lines):
   results = []
+  acc = []
   for line in lines:
-    results.append((identify(line), [line]))
+    acc.append(line)
+    identified = identify(acc)
+    if identified.magnitude() > 0:
+      results.append((identified, acc))
+      # Make a new accumulator; last was given to results.
+      acc = []
   return results
 
 

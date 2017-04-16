@@ -8,8 +8,8 @@ from src.puzzle.puzzlepedia import puzzle
 
 class TestProblem(problem.Problem):
   @staticmethod
-  def score(src):
-    del src
+  def score(lines):
+    del lines
     return 0.9
 
   def _solve(self):
@@ -18,8 +18,8 @@ class TestProblem(problem.Problem):
 
 class WeakMatchProblem(problem.Problem):
   @staticmethod
-  def score(src):
-    del src
+  def score(lines):
+    del lines
     return 0.1
 
   def _solve(self):
@@ -28,7 +28,8 @@ class WeakMatchProblem(problem.Problem):
 
 class MetaProblem(problem.Problem):
   @staticmethod
-  def score(src):
+  def score(lines):
+    src = '\n'.join(lines)
     if src.startswith('meta:'):
       return 1
     return 0
