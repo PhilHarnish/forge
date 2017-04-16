@@ -11,6 +11,10 @@ with description('CrosswordProblem'):
   with it('ignores empty and garbage input'):
     expect(crossword_problem.CrosswordProblem.score([''])).to(equal(0))
 
+  with it('rejects multiple lines'):
+    expect(crossword_problem.CrosswordProblem.score(
+        ['A quick brown', 'fox', 'jumps over the lazy dog'])).to(equal(0))
+
   with it('scores 1 word very low'):
     expect(crossword_problem.CrosswordProblem.score(['$#!7'])).to(be_below(.25))
 

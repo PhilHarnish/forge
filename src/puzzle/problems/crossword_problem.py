@@ -24,7 +24,9 @@ class CrosswordProblem(problem.Problem):
 
   @staticmethod
   def score(lines):
-    src = '\n'.join(lines)
+    if len(lines) > 1:
+      return 0
+    src = lines[0]
     # TODO: Look for common crossword expressions.
     if _CROSSWORD_REGEX.match(src):
       return 1
