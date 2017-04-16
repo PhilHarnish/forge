@@ -8,6 +8,14 @@ class Problem(object):
     self._solutions = None
     self._constraints = []
 
+  @property
+  def kind(self):
+    return str(type(self)).strip("'<>").split('.').pop()
+
+  @property
+  def solution(self):
+    return self.solutions().peek()
+
   def constrain(self, fn):
     self._constraints.append(fn)
     # Invalidate solutions.
