@@ -28,7 +28,7 @@ class CrosswordProblem(problem.Problem):
     if _CROSSWORD_REGEX.match(src):
       return 1
     # Something with a lot of words *might* be a crossword clue.
-    return max(0, 0.5 * (min(5, len(src.split())) / 5))
+    return max(0.0, 0.5 * (min(5, len(src.split())) / 5))
 
   def _get_cursor(self):
     if self._cursor is None:
