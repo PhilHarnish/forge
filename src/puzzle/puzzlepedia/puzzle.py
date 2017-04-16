@@ -13,9 +13,8 @@ class Puzzle(object):
     else:
       raise NotImplementedError(
           'Puzzle source type %s unsupported' % type(source))
-    for i, line in enumerate(lines):
-      meta_problem = analyze.identify(line)
-      self._meta_problems.append(_reify(meta_problem, '#%s' % i, [line]))
+    for i, (meta_problem, consumed) in enumerate(analyze.identify_lines(lines)):
+      self._meta_problems.append(_reify(meta_problem, '#%s' % i, consumed))
 
   def problems(self):
     return [p.active for p in self._meta_problems]

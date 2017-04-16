@@ -14,6 +14,13 @@ def identify(line):
   return scores
 
 
+def identify_lines(lines):
+  results = []
+  for line in lines:
+    results.append((identify(line), [line]))
+  return results
+
+
 def init():
   if _PROBLEM_TYPES:
     return
