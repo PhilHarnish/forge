@@ -14,14 +14,10 @@ def identify(line):
   return scores
 
 
-def identify_all(lines):
-  return map(identify, lines)
-
-
-def init(lines=None):
+def init():
+  if _PROBLEM_TYPES:
+    return
   register(crossword_problem.CrosswordProblem)
-  if lines:
-    identify_all(lines)
 
 
 def reset():
