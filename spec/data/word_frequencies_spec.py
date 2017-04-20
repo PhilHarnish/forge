@@ -53,21 +53,3 @@ with description('word_frequencies'):
       # f...
       ['for',  5933321709],
     ]))
-
-with description('benchmarks'):
-  with before.each:
-    word_frequencies._DATA = None
-
-  with it('measures the time for loading in Cython'):
-    fn = lambda: word_frequencies.trie(word_frequencies._CythonTrie)
-    print('Cython load time:', timeit.timeit(fn, number=1))
-    expect(word_frequencies.trie()).to(have_len(333333))
-    fn = lambda: list(word_frequencies.trie().iteritems())
-    print('Cython iterate:', timeit.timeit(fn, number=5))
-
-  with it('measures the time for loading in Swig'):
-    fn = lambda: word_frequencies.trie(word_frequencies._SwigTrie)
-    print('Swig load time:', timeit.timeit(fn, number=1))
-    expect(word_frequencies.trie()).to(have_len(333333))
-    fn = lambda: list(word_frequencies.trie().iteritems())
-    print('Swig iterate:', timeit.timeit(fn, number=5))
