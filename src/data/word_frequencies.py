@@ -8,28 +8,33 @@ import marisa_trie
 
 from src.data import data
 
-_DATA = None
+
+class Trie(marisa_trie.BytesTrie):
+  def __getitem__(self, key):
+    items = super(Trie, self).__getitem__(key)
+    return [int.from_bytes(i, 'little') for i in items]
 
 
-def trie():
-  global _DATA
-  if not _DATA:
-    _DATA = _load()
-  return _DATA
-
-
-def _load():
+def load(input):
   arg = []
   weights = []
-  for i, line in enumerate(data.open_project_path('data/count_1w.txt')):
-    word, weight = line.split()
-    word, weight = word, int(weight) or 1
+  for word, weight in input:
     arg.append((word, _as_bytes(weight)))
     weights.append(float(weight))
-  return marisa_trie.BytesTrie(
+  return Trie(
         arg=arg,
         order=marisa_trie.WEIGHT_ORDER,
         weights=weights)
+
+
+def load_from_file(f):
+  return load(_parse_file(f))
+
+
+def _parse_file(f):
+  for line in data.open_project_path(f):
+    word, weight = line.split()
+    yield word, int(weight) or 1
 
 
 def _as_bytes(weight):
