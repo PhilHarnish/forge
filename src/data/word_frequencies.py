@@ -3,6 +3,7 @@
 Intended to be used with data from  http://norvig.com/ngrams which is from:
   https://research.googleblog.com/2006/08/all-our-n-gram-are-belong-to-you.html
 """
+import functools
 
 import marisa_trie
 
@@ -27,6 +28,7 @@ def load(input):
         weights=weights)
 
 
+@functools.lru_cache(1)
 def load_from_file(f):
   return load(_parse_file(f))
 

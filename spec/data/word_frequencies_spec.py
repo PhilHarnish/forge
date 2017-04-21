@@ -31,6 +31,16 @@ with description('word_frequencies'):
   with it('loads'):
     expect(word_frequencies.load_from_file('test')).to(have_len(10))
 
+  with it('memoizes one file result'):
+    with patch.object(word_frequencies, 'load') as mock_load:
+      expect(mock_load.call_count).to(equal(0))
+      word_frequencies.load_from_file('example1')
+      expect(mock_load.call_count).to(equal(1))
+      word_frequencies.load_from_file('example1')
+      expect(mock_load.call_count).to(equal(1))
+      word_frequencies.load_from_file('example2')
+      expect(mock_load.call_count).to(equal(2))
+
   with it('should have results'):
     t = word_frequencies.load_from_file('test')
     results = []
