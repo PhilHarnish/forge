@@ -64,34 +64,3 @@ with description('word_frequencies'):
       # f...
       ['for',  5933321709],
     ]))
-
-  with context('letters'):
-    with it('should match every letter'):
-      trie = tries.letters()
-      for c in 'abcdefghijklmnopqrstuvwxyz':
-        expect(c in trie).to(be_true)
-
-    with it('should weight a > i > all other letters'):
-      trie = tries.letters()
-      a = trie['a']
-      i = trie['i']
-      expect(a).to(be_above(i))
-      for c in 'bcdefghjklmnopqrstuvwxyz':
-        expect(trie[c]).to(be_below(a))
-        expect(trie[c]).to(be_below(i))
-
-  with context('ambiguous sentences'):
-    with it('should include letters'):
-      trie = tries.ambiguous()
-      for c in 'abcdefghijklmnopqrstuvwxyz':
-        expect(c in trie).to(be_true)
-
-    with it('should prefix match ambiguous prefixes'):
-      # superbowlwarplanefireshipsnapshotscrapbookisnowhere
-      trie = tries.ambiguous()
-      expect(set(trie.keys('super'))).to(contain(
-          'super', 'superb', 'superbowl'))
-      expect(set(trie.keys('war'))).to(contain(
-          'warplane', 'warplanes', 'war', 'warp'))
-      expect(set(trie.keys('snap'))).to(contain(
-          'snaps', 'snapshots', 'snap', 'snapshot'))
