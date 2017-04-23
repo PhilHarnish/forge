@@ -9,7 +9,7 @@ BA_PREFIX_TRIE = word_frequencies.load(
     zip(('bad', 'bag', 'ban', 'bar', 'bat'), [1]*5))
 
 
-with description('acrostic'):
+with _description('acrostic'):
   with it('uses a mock trie'):
     a = acrostic.Acrostic(['a'], tries.letters())
     expect(len(a._trie)).to(be_below(100))

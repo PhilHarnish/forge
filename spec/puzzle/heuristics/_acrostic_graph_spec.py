@@ -1,15 +1,15 @@
-import mock
 from expects import *
 
-from src.data import word_frequencies
-from src.puzzle.heuristics import _acrostic_graph
-from spec.data.fixtures import tries
+if False:  # Disabled; this implementation was not pursued.
+  from src.data import word_frequencies
+  from src.puzzle.heuristics import _acrostic_graph
+  from spec.data.fixtures import tries
 
-BA_PREFIX_TRIE = word_frequencies.load(
-    zip(('bad', 'bag', 'ban', 'bar', 'bat'), [1]*5))
+  BA_PREFIX_TRIE = word_frequencies.load(
+      zip(('bad', 'bag', 'ban', 'bar', 'bat'), [1]*5))
 
 
-with description('_AcrosticGraph'):
+with _description('_AcrosticGraph'):
   with it('yields multi-character solutions'):
     a = _acrostic_graph._AcrosticGraph(list('bag'), BA_PREFIX_TRIE)
     expect(list(a)).to(contain('bag'))
