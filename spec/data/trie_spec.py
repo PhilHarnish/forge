@@ -43,6 +43,28 @@ with description('trie'):
           ('the', 23135851162), ('to', 12136980858), ('that', 3400031103)
         ]))
 
+    with description('walk'):
+      with it('returns nothing for garbage input'):
+        expect(self.subject.walk(['@'])).to(be_empty)
+
+      with it('returns 1 letter results when given matching letter'):
+        expect(self.subject.walk(['a'])).to(equal([('a', 9081174698)]))
+
+      with it('returns 2 letter results when given alphabet x2'):
+        expect(self.subject.walk(
+            ['abcdefghijklmnopqrstuvwxyz'] * 2,
+        )).to(equal([
+          ('of', 13151942776), ('to', 12136980858), ('in', 8469404971),
+          ('is', 4705743816), ('on', 3750423199)
+        ]))
+
+      with it('returns specific matches when given constraints'):
+        expect(self.subject.walk([
+          set('answer'),
+          set('anything'),
+          set('matched'),
+        ])).to(equal([('and', 12997637966)]))
+
   with context('letters'):
     with before.each:
       self.subject = tries.letters()

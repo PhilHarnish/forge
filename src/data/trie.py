@@ -1,3 +1,5 @@
+import re
+
 from src.data import meta
 
 
@@ -21,3 +23,11 @@ class Trie(meta.Meta):
       (key, weight) for key, weight in result if key.startswith(prefix) and (
           len(key) < l or key[l] in seek)
     ]
+
+  def walk(self, seek_sets):
+    """Returns solutions matching `seek_sets`, ordered from high to low."""
+    # Convert seek_sets into a regular expression.
+    matcher = re.compile('^[%s]$' % ']['.join([
+      ''.join(s) for s in seek_sets
+    ]))
+    return [(key, value) for key, value in self.items() if matcher.match(key)]
