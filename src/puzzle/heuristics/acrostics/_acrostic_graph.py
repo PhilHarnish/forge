@@ -1,8 +1,9 @@
 import networkx
 
-from src.puzzle.heuristics import acrostic
+from puzzle.heuristics.acrostics import _naive_acrostic
 
-class _AcrosticGraph(acrostic.Acrostic):
+
+class _AcrosticGraph(_naive_acrostic.Acrostic):
   """Model for list of words and random walks through those words.
 
   Some notes on complexity:
