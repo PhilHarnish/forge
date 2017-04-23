@@ -1,6 +1,6 @@
 from spec.mamba import *
 from spec.data.fixtures import tries
-from src.data import trie
+from src.data import _marisa_trie
 
 _TEST_DATA = [
     ('the', 23135851162),
@@ -18,7 +18,7 @@ _TEST_DATA = [
 with description('trie'):
   with context('test data'):
     with before.each:
-      self.subject = trie.Trie(_TEST_DATA)
+      self.subject = _marisa_trie.Trie(_TEST_DATA)
 
     with it('instantiates'):
       expect(self.subject).to(have_len(len(_TEST_DATA)))
@@ -30,7 +30,7 @@ with description('trie'):
 
   with context('letters'):
     with before.each:
-      self.subject = tries.letters()
+      self.subject = _marisa_trie.Trie(tries.letters().items())
 
     with it('should match every letter'):
       for c in 'abcdefghijklmnopqrstuvwxyz':
@@ -46,7 +46,7 @@ with description('trie'):
 
   with context('ambiguous sentences'):
     with before.each:
-      self.subject = tries.ambiguous()
+      self.subject = _marisa_trie.Trie(tries.ambiguous().items())
 
     with it('should include letters'):
       for c in 'abcdefghijklmnopqrstuvwxyz':
