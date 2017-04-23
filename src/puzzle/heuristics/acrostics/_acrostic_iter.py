@@ -21,7 +21,7 @@ class Acrostic(acrostic.BaseAcrostic):
     results = set()
     def _visit(words, i):
       next = i + 1
-      if next >= l:
+      if next >= l:  # End of list.
         for c in words[i]:
           acc[i] = c
           word = ''.join(acc)
@@ -34,7 +34,7 @@ class Acrostic(acrostic.BaseAcrostic):
           acc[i] = c
           # Assume trie has words which start with every letter and so
           # i == 0 is never skipped. Otherwise, check prefixes.
-          if i and not self._trie.has_keys_with_prefix(''.join(acc[:next])):
+          if i and not self._trie.items(''.join(acc[:next])):
             continue
           for result in _visit(words, next):
             yield result  # Up the trampoline.
