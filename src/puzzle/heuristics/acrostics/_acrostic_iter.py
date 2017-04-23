@@ -1,6 +1,6 @@
 from rx import Observable
 
-from src.puzzle.heuristics import acrostic
+from puzzle.heuristics import acrostic
 
 class Acrostic(acrostic.BaseAcrostic):
   """Simple Acrostic solver.

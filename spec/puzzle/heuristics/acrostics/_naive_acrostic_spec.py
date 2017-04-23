@@ -1,9 +1,9 @@
 import mock
-from expects import *
+from spec.mamba import *
 
 from puzzle.heuristics.acrostics import _naive_acrostic
 from spec.data.fixtures import tries
-from src.data import word_frequencies
+from data import word_frequencies
 
 BA_PREFIX_TRIE = word_frequencies.load(
     zip(('bad', 'bag', 'ban', 'bar', 'bat'), [1]*5))

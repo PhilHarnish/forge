@@ -1,5 +1,5 @@
-from expects import *
-from src.data import crossword
+from spec.mamba import *
+from data import crossword
 
 
 with description('clue_keywords'):

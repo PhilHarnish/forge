@@ -1,6 +1,6 @@
 import re
 
-from src.data import meta
+from data import meta
 
 
 class Trie(meta.Meta):

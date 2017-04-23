@@ -1,5 +1,5 @@
-from expects import *
-from src.data import meta
+from spec.mamba import *
+from data import meta
 
 with description('Meta'):
   with it('instantiates'):

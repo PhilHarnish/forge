@@ -1,8 +1,8 @@
-from expects import *
+from spec.mamba import *
 
-from src.puzzle.heuristics import analyze
-from src.puzzle.problems import crossword_problem
-from src.puzzle.problems import problem
+from puzzle.heuristics import analyze
+from puzzle.problems import crossword_problem
+from puzzle.problems import problem
 
 
 class ExampleProblemZeroes(problem.Problem):

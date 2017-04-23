@@ -1,5 +1,5 @@
-from src.data import meta
-from src.puzzle.heuristics import analyze
+from data import meta
+from puzzle.heuristics import analyze
 
 class Puzzle(object):
   def __init__(self, source):

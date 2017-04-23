@@ -2,8 +2,8 @@ import collections
 from unittest import mock
 
 from spec.mamba import *
-from src.data import data
-from src.puzzle.problems import crossword_problem
+from data import data
+from puzzle.problems import crossword_problem
 
 
 with description('CrosswordProblem'):

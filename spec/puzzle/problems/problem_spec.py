@@ -1,7 +1,7 @@
-from expects import *
+from spec.mamba import *
 from unittest import mock
 
-from src.puzzle.problems import problem
+from puzzle.problems import problem
 
 with description('Problem'):
   with it('instantiates'):

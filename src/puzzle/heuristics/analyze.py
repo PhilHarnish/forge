@@ -1,5 +1,5 @@
-from src.data import meta
-from src.puzzle.problems import crossword_problem
+from data import meta
+from puzzle.problems import crossword_problem
 
 
 _PROBLEM_TYPES = set()

@@ -1,8 +1,8 @@
 import collections
 import re
 
-from src.data import crossword
-from src.puzzle.problems import problem
+from data import crossword
+from puzzle.problems import problem
 
 _CROSSWORD_REGEX = re.compile(r'^.*\(([\d\s,|]+)\)$')
 _INTS = re.compile(r'(\d+)')

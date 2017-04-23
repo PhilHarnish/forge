@@ -1,8 +1,8 @@
 import mock
-from expects import *
+from spec.mamba import *
 
-from src.data import word_frequencies
-from src.puzzle.heuristics import acrostic
+from data import word_frequencies
+from puzzle.heuristics import acrostic
 from spec.data.fixtures import tries
 
 BA_PREFIX_TRIE = word_frequencies.load(

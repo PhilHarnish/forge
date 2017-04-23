@@ -1,6 +1,6 @@
 from spec.data.fixtures import tries
 from spec.mamba import *
-from src.data import trie
+from data import trie
 
 
 _TEST_DATA = [

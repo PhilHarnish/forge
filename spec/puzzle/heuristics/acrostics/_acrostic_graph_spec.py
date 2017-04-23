@@ -1,7 +1,7 @@
 from spec.mamba import *
 
 if False:  # Disabled; this implementation was not pursued.
-  from src.data import word_frequencies
+  from data import word_frequencies
   from puzzle.heuristics.acrostics import _acrostic_graph
   from spec.data.fixtures import tries
 

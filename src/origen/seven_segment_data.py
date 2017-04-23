@@ -1,7 +1,7 @@
 import re
 
-from src.data import data
-from src.origen import seven_segment
+from data import data
+from origen import seven_segment
 
 
 class WordList(dict):

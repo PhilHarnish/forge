@@ -1,6 +1,6 @@
 import functools
 
-from src.data import word_frequencies
+from data import word_frequencies
 
 @functools.lru_cache()
 def letters():

@@ -1,4 +1,4 @@
-from src.data import meta
+from data import meta
 
 
 class Problem(object):

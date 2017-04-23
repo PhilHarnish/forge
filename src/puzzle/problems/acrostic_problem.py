@@ -1,6 +1,6 @@
 import statistics
 
-from src.puzzle.problems import problem
+from puzzle.problems import problem
 
 class AcrosticProblem(problem.Problem):
   @staticmethod

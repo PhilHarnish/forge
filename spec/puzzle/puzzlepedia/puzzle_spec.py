@@ -1,9 +1,9 @@
 import textwrap
-from expects import *
+from spec.mamba import *
 
-from src.puzzle.heuristics import analyze
-from src.puzzle.problems import problem
-from src.puzzle.puzzlepedia import puzzle
+from puzzle.heuristics import analyze
+from puzzle.problems import problem
+from puzzle.puzzlepedia import puzzle
 
 
 class TestProblem(problem.Problem):

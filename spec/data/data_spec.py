@@ -1,7 +1,7 @@
 import collections
 
-from expects import *
-from src.data import data
+from spec.mamba import *
+from data import data
 
 _TestClass = collections.namedtuple('_TestClass', ['name', 'lines'])
 

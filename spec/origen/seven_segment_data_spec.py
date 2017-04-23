@@ -1,5 +1,5 @@
-from expects import *
-from src.origen import seven_segment_data
+from spec.mamba import *
+from origen import seven_segment_data
 
 
 with description('alphabet'):

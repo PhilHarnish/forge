@@ -1,5 +1,5 @@
-from expects import *
-from src.origen import seven_segment
+from spec.mamba import *
+from origen import seven_segment
 
 _DASH = """[-]
 ###

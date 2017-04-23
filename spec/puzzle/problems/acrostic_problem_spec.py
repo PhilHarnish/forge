@@ -1,6 +1,6 @@
-from expects import *
+from spec.mamba import *
 
-from src.puzzle.problems import acrostic_problem
+from puzzle.problems import acrostic_problem
 
 
 with description('AcrosticProblem'):

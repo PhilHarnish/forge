@@ -6,8 +6,8 @@ Intended to be used with data from  http://norvig.com/ngrams which is from:
 import functools
 
 
-from src.data import data
-from src.data import trie
+from data import data
+from data import trie
 
 
 def load(input):

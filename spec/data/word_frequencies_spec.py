@@ -3,7 +3,7 @@ import textwrap
 from mock import patch
 
 from spec.mamba import *
-from src.data import word_frequencies
+from data import word_frequencies
 
 patcher = patch.object(word_frequencies.data, 'open_project_path')
 _SMALL_FILE = textwrap.dedent("""

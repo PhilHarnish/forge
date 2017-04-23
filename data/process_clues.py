@@ -2,8 +2,8 @@
 import collections
 import sqlite3
 
-from src.data import crossword
-from src.data import data
+from data import crossword
+from data import data
 
 STOP_WORD = '~'  # Appears after z.
 MAX_KEYWORDS = 50

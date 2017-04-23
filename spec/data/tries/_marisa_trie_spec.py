@@ -2,7 +2,7 @@ from spec.data.fixtures import tries
 from spec.mamba import *
 
 if False:
-  from src.data.tries import _marisa_trie
+  from data.tries import _marisa_trie
 
 _TEST_DATA = [
     ('the', 23135851162),
