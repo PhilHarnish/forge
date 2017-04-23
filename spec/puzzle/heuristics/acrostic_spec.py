@@ -5,28 +5,21 @@ from src.data import word_frequencies
 from src.puzzle.heuristics import acrostic
 from spec.data.fixtures import tries
 
-load_words_patcher = mock.patch.object(word_frequencies, 'load')
 BA_PREFIX_TRIE = word_frequencies.load(
     zip(('bad', 'bag', 'ban', 'bar', 'bat'), [1]*5))
 
 
 with description('acrostic'):
-  with before.all:
-    load_words_patcher.start().return_value = tries.ambiguous()
-
-  with after.all:
-    load_words_patcher.stop()
-
   with it('uses a mock trie'):
-    a = acrostic.Acrostic(['a'])
+    a = acrostic.Acrostic(['a'], tries.letters())
     expect(len(a._trie)).to(be_below(100))
 
   with it('yields simple solutions'):
-    a = acrostic.Acrostic(['a'])
+    a = acrostic.Acrostic(['a'], tries.letters())
     expect(list(a)).to(contain('a'))
 
   with it('is observable'):
-    a = acrostic.Acrostic(['a'])
+    a = acrostic.Acrostic(['a'], tries.letters())
     subs = mock.Mock()
     a.subscribe(subs)
     expect(subs.on_next.call_args).to(equal(mock.call('a')))
@@ -45,7 +38,7 @@ with description('acrostic'):
 
   with context('benchmark'):
     with it('finds simple solutions quickly'):
-      a = acrostic.Acrostic(['a'])
+      a = acrostic.Acrostic(['a'], tries.letters())
       expect(list(a)).to(contain('a'))
       expect(a.cost).to(equal(1))
 

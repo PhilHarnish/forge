@@ -1,10 +1,13 @@
 from rx import Observable
-from src.data import word_frequencies
 
 class Acrostic(object):
-  def __init__(self, words, trie=None):
+  """Simple Acrostic solver.
+
+  Lacks the ability to solve for multi-word solutions.
+  """
+  def __init__(self, words, trie):
     self._words = [set(word) for word in words]
-    self._trie = trie or word_frequencies.load_from_file('data/count_1w.txt')
+    self._trie = trie
     self._source = Observable.from_(self)
     self.subscribe = self._source.subscribe
     self.cost = 0
