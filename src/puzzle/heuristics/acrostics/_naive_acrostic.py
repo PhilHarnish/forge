@@ -1,6 +1,8 @@
 from rx import Observable
 
-class Acrostic(object):
+from src.puzzle.heuristics import acrostic
+
+class Acrostic(acrostic.BaseAcrostic):
   """Simple Acrostic solver.
 
   Lacks the ability to solve for multi-word solutions.
