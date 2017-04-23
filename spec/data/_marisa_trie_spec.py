@@ -1,6 +1,8 @@
 from spec.mamba import *
 from spec.data.fixtures import tries
-from src.data import _marisa_trie
+
+if False:
+  from src.data import _marisa_trie
 
 _TEST_DATA = [
     ('the', 23135851162),
@@ -15,7 +17,7 @@ _TEST_DATA = [
     ('that', 3400031103),
 ]
 
-with description('trie'):
+with _description('trie'):
   with context('test data'):
     with before.each:
       self.subject = _marisa_trie.Trie(_TEST_DATA)
