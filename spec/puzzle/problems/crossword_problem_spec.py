@@ -1,8 +1,7 @@
 import collections
 from unittest import mock
 
-from expects import *
-
+from spec.mamba import *
 from src.data import data
 from src.puzzle.problems import crossword_problem
 
@@ -33,13 +32,13 @@ with description('CrosswordProblem'):
     for line in fixtures['crossword_clues'].lines:
       expect(crossword_problem.CrosswordProblem.score([line])).to(be_above(.5))
 
-  with context('constraints'):
+  with description('constraints'):
     with it('constrains to fixed lengths'):
       problem = crossword_problem.CrosswordProblem('ex', ['example (3)'])
       problem._solve = mock.Mock(return_value={'a': 1, 'aa': .75, 'aaa': .5})
       expect(problem.solutions()).to(equal({'aaa': .5}))
 
-  with context('solutions'):
+  with _description('solutions'):
     with it('queries for crossword solutions'):
       problem = crossword_problem.CrosswordProblem(
           'ex',
