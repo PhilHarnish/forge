@@ -1,7 +1,6 @@
-from expects import *
-
-from src.data import trie
+from spec.mamba import *
 from spec.data.fixtures import tries
+from src.data import trie
 
 _TEST_DATA = [
     ('the', 23135851162),
@@ -17,43 +16,47 @@ _TEST_DATA = [
 ]
 
 with description('trie'):
-  with it('instantiates'):
-    t = trie.Trie(_TEST_DATA)
-    expect(t).to(have_len(len(_TEST_DATA)))
+  with context('test data'):
+    with before.each:
+      self.subject = trie.Trie(_TEST_DATA)
 
-  with it('has recall'):
-    t = trie.Trie(_TEST_DATA)
-    for key, weight in _TEST_DATA:
-      expect(key in t).to(be_true)
-      expect(t[key]).to(equal(weight))
+    with it('instantiates'):
+      expect(self.subject).to(have_len(len(_TEST_DATA)))
+
+    with it('has recall'):
+      for key, weight in _TEST_DATA:
+        expect(key in self.subject).to(be_true)
+        expect(self.subject[key]).to(equal(weight))
 
   with context('letters'):
+    with before.each:
+      self.subject = tries.letters()
+
     with it('should match every letter'):
-      t = tries.letters()
       for c in 'abcdefghijklmnopqrstuvwxyz':
-        expect(c in t).to(be_true)
+        expect(c in self.subject).to(be_true)
 
     with it('should weight a > i > all other letters'):
-      t = tries.letters()
-      a = t['a']
-      i = t['i']
+      a = self.subject['a']
+      i = self.subject['i']
       expect(a).to(be_above(i))
       for c in 'bcdefghjklmnopqrstuvwxyz':
-        expect(t[c]).to(be_below(a))
-        expect(t[c]).to(be_below(i))
+        expect(self.subject[c]).to(be_below(a))
+        expect(self.subject[c]).to(be_below(i))
 
   with context('ambiguous sentences'):
+    with before.each:
+      self.subject = tries.ambiguous()
+
     with it('should include letters'):
-      t = tries.ambiguous()
       for c in 'abcdefghijklmnopqrstuvwxyz':
-        expect(c in t).to(be_true)
+        expect(c in self.subject).to(be_true)
 
     with it('should prefix match ambiguous prefixes'):
       # superbowlwarplanefireshipsnapshotscrapbookisnowhere
-      t = tries.ambiguous()
-      expect(set(t.keys('super'))).to(contain(
+      expect(set(self.subject.keys('super'))).to(contain(
           'super', 'superb', 'superbowl'))
-      expect(set(t.keys('war'))).to(contain(
+      expect(set(self.subject.keys('war'))).to(contain(
           'warplane', 'warplanes', 'war', 'warp'))
-      expect(set(t.keys('snap'))).to(contain(
+      expect(set(self.subject.keys('snap'))).to(contain(
           'snaps', 'snapshots', 'snap', 'snapshot'))
