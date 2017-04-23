@@ -29,9 +29,23 @@ with description('trie'):
         expect(key in self.subject).to(be_true)
         expect(self.subject[key]).to(equal(weight))
 
+    with description('items'):
+      with it('all results'):
+        expect(self.subject.items()).to(have_len(len(_TEST_DATA)))
+
+      with it('prefix results'):
+        expect(self.subject.items('th')).to(equal([
+          ('the', 23135851162), ('that', 3400031103)
+        ]))
+
+      with it('prefix + seek results'):
+        expect(self.subject.items('t', 'ho')).to(equal([
+          ('the', 23135851162), ('to', 12136980858), ('that', 3400031103)
+        ]))
+
   with context('letters'):
     with before.each:
-      self.subject = trie.Trie(tries.letters().items())
+      self.subject = tries.letters()
 
     with it('should match every letter'):
       for c in 'abcdefghijklmnopqrstuvwxyz':
@@ -47,7 +61,7 @@ with description('trie'):
 
   with context('ambiguous sentences'):
     with before.each:
-      self.subject = trie.Trie(tries.ambiguous().items())
+      self.subject = tries.ambiguous()
 
     with it('should include letters'):
       for c in 'abcdefghijklmnopqrstuvwxyz':

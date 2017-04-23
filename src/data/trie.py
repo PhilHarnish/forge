@@ -9,3 +9,15 @@ class Trie(meta.Meta):
     if prefix:
       return [key for key in self if key.startswith(prefix)]
     return iter(self)
+
+  def items(self, prefix=None, seek=None):
+    result = super(Trie, self).items()
+    if not seek:
+      if prefix:
+        return [kvp for kvp in result if kvp[0].startswith(prefix)]
+      return result
+    l = len(prefix)
+    return [
+      (key, weight) for key, weight in result if key.startswith(prefix) and (
+          len(key) < l or key[l] in seek)
+    ]
