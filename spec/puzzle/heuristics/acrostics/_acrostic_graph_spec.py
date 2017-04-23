@@ -1,8 +1,8 @@
-from expects import *
+from spec.mamba import *
 
 if False:  # Disabled; this implementation was not pursued.
   from src.data import word_frequencies
-  from src.puzzle.heuristics import _acrostic_graph
+  from puzzle.heuristics.acrostics import _acrostic_graph
   from spec.data.fixtures import tries
 
   BA_PREFIX_TRIE = word_frequencies.load(
