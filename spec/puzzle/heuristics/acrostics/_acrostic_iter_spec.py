@@ -59,7 +59,7 @@ with description('acrostic'):
       ], BA_PREFIX_TRIE)
       expect(list(a)).not_to(contain('baa', 'bab', 'bac', 'bae', 'baf'))
       expect(list(a)).to(contain('bag'))
-      expect(a.cost()).to(be_above(1))
+      expect(a.cost()).to(be_above_or_equal(1))
       expect(a.cost()).to(be_below(10))
 
     with it('skips invalid prefixes'):
