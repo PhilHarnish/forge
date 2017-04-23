@@ -27,7 +27,12 @@ class Trie(meta.Meta):
   def walk(self, seek_sets):
     """Returns solutions matching `seek_sets`, ordered from high to low."""
     # Convert seek_sets into a regular expression.
-    matcher = re.compile('^[%s]$' % ']['.join([
-      ''.join(s) for s in seek_sets
+    regex = matcher = re.compile(''.join([
+      '^',
+      '[%s]' % ''.join(seek_sets[0]),
+    ] + [
+      '($|[%s])' % ''.join(s) for s in seek_sets[1:]
+    ] + [
+      '$'
     ]))
     return [(key, value) for key, value in self.items() if matcher.match(key)]

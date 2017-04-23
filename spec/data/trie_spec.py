@@ -50,12 +50,13 @@ with description('trie'):
       with it('returns 1 letter results when given matching letter'):
         expect(self.subject.walk(['a'])).to(equal([('a', 9081174698)]))
 
-      with it('returns 2 letter results when given alphabet x2'):
+      with it('returns 1 and 2 letter results when given alphabet x2'):
         expect(self.subject.walk(
             ['abcdefghijklmnopqrstuvwxyz'] * 2,
         )).to(equal([
-          ('of', 13151942776), ('to', 12136980858), ('in', 8469404971),
-          ('is', 4705743816), ('on', 3750423199)
+          ('of', 13151942776), ('to', 12136980858),
+          ('a', 9081174698),
+          ('in', 8469404971), ('is', 4705743816), ('on', 3750423199)
         ]))
 
       with it('returns specific matches when given constraints'):
@@ -63,7 +64,7 @@ with description('trie'):
           set('answer'),
           set('anything'),
           set('matched'),
-        ])).to(equal([('and', 12997637966)]))
+        ])).to(equal([('and', 12997637966), ('a', 9081174698)]))
 
   with context('letters'):
     with before.each:
