@@ -10,10 +10,10 @@ class Acrostic(object):
     self._trie = trie
     self._source = Observable.from_(self)
     self.subscribe = self._source.subscribe
-    self.cost = 0
+    self._cost = 0
 
   def __iter__(self):
-    self.cost = 0
+    self._cost = 0
     l = len(self._words)
     acc = [''] * l
     results = set()
@@ -23,7 +23,7 @@ class Acrostic(object):
         for c in words[i]:
           acc[i] = c
           word = ''.join(acc)
-          self.cost += 1
+          self._cost += 1
           if word in self._trie and word not in results:
             results.add(word)
             yield word
@@ -37,3 +37,6 @@ class Acrostic(object):
           for result in _visit(words, next):
             yield result  # Up the trampoline.
     return _visit(self._words, 0)
+
+  def cost(self):
+    return self._cost

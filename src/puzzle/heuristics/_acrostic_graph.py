@@ -1,3 +1,5 @@
+import networkx
+
 from src.puzzle.heuristics import acrostic
 
 class _AcrosticGraph(acrostic.Acrostic):
@@ -41,3 +43,43 @@ class _AcrosticGraph(acrostic.Acrostic):
 
   def __init__(self, words, trie=None):
     super(_AcrosticGraph, self).__init__(words, trie)
+    g = _Graph()
+    last = '^'
+    for word in self._words:
+      for a in last:
+        for b in word:
+          g.add_edge(a, b, weight=1)
+      last = word
+    for c in last:
+      g.add_edge(c, '$', weight=0)
+    self._graph = g
+
+  def __iter__(self):
+    for path in networkx.shortest_simple_paths(self._graph, '^', '$', 'weight'):
+      result = []
+      for node in path:
+        if node == '^':
+          continue
+        elif node == '$':
+          yield ''.join(result)
+        else:
+          result.append(node)
+
+  def cost(self):
+    return self._graph.number_of_edges()
+
+class _Graph(networkx.DiGraph):
+  """Model object for all nodes and edges in a graph.
+
+  Node naming convention:
+  - self['a'] is a node which starts phrases which begin with prefix "a".
+    These phrases have length N, the number of words.
+  - self['ai'] is likewise a node which starts phrases beginning with "ai".
+    These also have length N.
+  - self['_i'] is a node which starts all N-1 length phrases.
+  - self['a']['ai'] is an edge from a -> ai.
+  - self['ai']['aid'] is an edge from ai -> aid.
+  - ('a', 'ai', 'aid') is a path from a -> ai -> aid = "aid".
+  - ('a', '_i', '_id') is a path from a -> _i -> _id = "a id".
+  """
+  pass

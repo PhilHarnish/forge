@@ -40,7 +40,7 @@ with description('acrostic'):
     with it('finds simple solutions quickly'):
       a = acrostic.Acrostic(['a'], tries.letters())
       expect(list(a)).to(contain('a'))
-      expect(a.cost).to(equal(1))
+      expect(a.cost()).to(equal(1))
 
     with it('ignores duplicate characters'):
       a = acrostic.Acrostic([
@@ -49,7 +49,7 @@ with description('acrostic'):
         'g',
       ], BA_PREFIX_TRIE)
       expect(list(a)).to(contain('bag'))
-      expect(a.cost).to(equal(1))
+      expect(a.cost()).to(equal(1))
 
     with it('ignores invalid words'):
       a = acrostic.Acrostic([
@@ -59,8 +59,8 @@ with description('acrostic'):
       ], BA_PREFIX_TRIE)
       expect(list(a)).not_to(contain('baa', 'bab', 'bac', 'bae', 'baf'))
       expect(list(a)).to(contain('bag'))
-      expect(a.cost).to(be_above(1))
-      expect(a.cost).to(be_below(10))
+      expect(a.cost()).to(be_above(1))
+      expect(a.cost()).to(be_below(10))
 
     with it('skips invalid prefixes'):
       a = acrostic.Acrostic([
@@ -69,4 +69,4 @@ with description('acrostic'):
         'g',
       ], BA_PREFIX_TRIE)
       expect(list(a)).to(contain('bag'))
-      expect(a.cost).to(be_below(10))
+      expect(a.cost()).to(be_below(10))
