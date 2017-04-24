@@ -98,3 +98,19 @@ with description('acrostic'):
         second = next(iter(a))
         expect(first).to(equal(second))
         expect(mock.call_count).to(be_below(10))
+
+    with it('crazy expensive'):
+      words = [
+        'champion', 'nitpick', 'conspiracy', 'windpipe', 'epinephrine',
+        'philanthropic', 'sierpinski', 'mississippi', 'pilaf', 'vulpine',
+        'spinach', 'pinochet', 'porcupine', 'megapixels', 'australopithecus',
+        'sharpie', 'intrepid', 'insipid', 'robespierre'
+      ]
+      a = _acrostic_iter.Acrostic(words, tries.everything())
+      limit = 1000000
+      for i, answer in enumerate(a):
+        if answer.startswith('answer') or i % (limit / 10) == 0:
+          print(answer)
+        if i > limit:
+          print('tried %s' % i)
+          break

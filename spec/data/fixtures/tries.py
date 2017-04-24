@@ -14,6 +14,12 @@ def ambiguous():
   return word_frequencies.load(_AMBIGUOUS_DATA)
 
 
+@functools.lru_cache()
+def everything():
+  """This should only be used during prototyping. Very slow."""
+  return word_frequencies.load_from_file('data/count_1w.txt')
+
+
 _LETTERS = list(zip('abcdefghijklmnopqrstuvwxyz', [
   9081174698, 419765694, 596623239, 361493758, 593086170, 297285731,  # abcdef.
   227771642, 220523502, 3086225277, 180739802, 195647953, 252900442,  # ghijkl.
