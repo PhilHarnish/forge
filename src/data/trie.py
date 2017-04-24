@@ -1,9 +1,14 @@
+import functools
 import re
 
 from data import meta
 
 
 class Trie(meta.Meta):
+  def __init__(self, data):
+    super(Trie, self).__init__(data)
+    self._ordered = True  # Input data was already sorted.
+
   def has_keys_with_prefix(self, prefix):
     return any([key.startswith(prefix) for key in self])
 
@@ -27,12 +32,16 @@ class Trie(meta.Meta):
   def walk(self, seek_sets):
     """Returns solutions matching `seek_sets`, ordered from high to low."""
     # Convert seek_sets into a regular expression.
-    regex = matcher = re.compile(''.join([
-      '^',
-      '[%s]' % ''.join(seek_sets[0]),
-    ] + [
-      '($|[%s])' % ''.join(s) for s in seek_sets[1:]
-    ] + [
-      '$'
-    ]))
+    matcher = _regexp(seek_sets)
     return [(key, value) for key, value in self.items() if matcher.match(key)]
+
+functools.lru_cache(maxsize=1)
+def _regexp(seek_sets):
+  return re.compile(''.join([
+    '^',
+    '[%s]' % ''.join(seek_sets[0]),
+  ] + [
+    '($|[%s])' % ''.join(s) for s in seek_sets[1:]
+  ] + [
+    '$'
+  ]))
