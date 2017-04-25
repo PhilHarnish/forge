@@ -3,12 +3,18 @@ import collections
 
 class Meta(collections.OrderedDict):
   def __init__(self, *args, **kwargs):
+    self._smallest = float('inf')
+    self._ordered = True
     super(Meta, self).__init__(*args, **kwargs)
-    self._ordered = False
 
   def __setitem__(self, key, value, *args, **kwargs):
+    if key in self and self[key] == value:
+      raise AssertionError('Redundant assignment')
+    if value > self._smallest:
+      self._ordered = False
+    else:
+      self._smallest = value
     super(Meta, self).__setitem__(key, value, *args, **kwargs)
-    self._ordered = False
 
   def items(self):
     self._reorder()
