@@ -15,7 +15,6 @@ class Trie(collections.OrderedDict):
       self._smallest = value
     super(Trie, self).__setitem__(key, value, *args, **kwargs)
 
-
   def has_keys_with_prefix(self, prefix):
     return any([key.startswith(prefix) for key in self])
 
@@ -40,7 +39,9 @@ class Trie(collections.OrderedDict):
     """Returns solutions matching `seek_sets`, ordered from high to low."""
     # Convert seek_sets into a regular expression.
     matcher = _regexp(seek_sets)
-    return [(key, value) for key, value in self.items() if matcher.match(key)]
+    for key, value in self.items():
+      if matcher.match(key):
+        yield (key, value)
 
 functools.lru_cache(maxsize=1)
 def _regexp(seek_sets):
