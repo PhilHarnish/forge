@@ -9,7 +9,7 @@ from puzzle.heuristics.acrostics import _acrostic_iter
 from data import word_frequencies
 
 BA_PREFIX_TRIE = word_frequencies.load(
-    zip(('bad', 'bag', 'ban', 'bar', 'bat'), range(1, 6)))
+    reversed(list(zip(('bad', 'bag', 'ban', 'bar', 'bat'), range(1, 6)))))
 
 
 with description('acrostic'):

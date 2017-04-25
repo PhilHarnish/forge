@@ -1,13 +1,20 @@
+import collections
 import functools
 import re
 
-from data import meta
 
-
-class Trie(meta.Meta):
+class Trie(collections.OrderedDict):
   def __init__(self, data):
+    self._smallest = float('inf')
     super(Trie, self).__init__(data)
-    self._ordered = True  # Input data was already sorted.
+
+  def __setitem__(self, key, value, *args, **kwargs):
+    if value > self._smallest:
+      raise AssertionError('Items must be added to trie in descending order.')
+    else:
+      self._smallest = value
+    super(Trie, self).__setitem__(key, value, *args, **kwargs)
+
 
   def has_keys_with_prefix(self, prefix):
     return any([key.startswith(prefix) for key in self])
