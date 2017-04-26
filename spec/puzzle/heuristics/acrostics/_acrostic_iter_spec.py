@@ -13,7 +13,7 @@ BA_PREFIX_TRIE = word_frequencies.load(
 
 
 with description('acrostic'):
-  with description('basics'):
+  with _description('basics'):
     with it('uses a mock trie'):
       a = _acrostic_iter.Acrostic(['a'], tries.letters())
       expect(len(a._trie)).to(be_below(100))
@@ -40,7 +40,7 @@ with description('acrostic'):
       a = _acrostic_iter.Acrostic(list('ba') + ['dgnrt'], BA_PREFIX_TRIE)
       expect(list(a)).to(contain('bad', 'bag', 'ban', 'bar', 'bat'))
 
-  with description('_iter_phrases'):
+  with _description('_iter_phrases'):
     with before.all:
       self.subject = _acrostic_iter.Acrostic(['a'], tries.letters())
 
@@ -79,7 +79,7 @@ with description('acrostic'):
           [('bat', 5), ('bar', 4), ('ban', 3), ('bag', 2), ('bad', 1)]
       ))
 
-  with context('when given ambiguous input text'):
+  with _context('when given ambiguous input text'):
     with it('finds multiple words'):
       a = _acrostic_iter.Acrostic(list('superbowl'), tries.ambiguous())
       expect(list(a)).to(contain('super bowl', 'superb owl', 'superbowl'))
@@ -99,6 +99,7 @@ with description('acrostic'):
         expect(first).to(equal(second))
         expect(mock.call_count).to(be_below(10))
 
+  with description('testing'):
     with it('crazy expensive'):
       words = [
         'champion', 'nitpick', 'conspiracy', 'windpipe', 'epinephrine',
@@ -108,9 +109,35 @@ with description('acrostic'):
       ]
       a = _acrostic_iter.Acrostic(words, tries.everything())
       limit = 1000000
-      for i, answer in enumerate(a):
+      for i, (answer, weight) in enumerate(a.items()):
         if answer.startswith('answer') or i % (limit / 10) == 0:
-          print(answer)
+          print(answer, weight)
         if i > limit:
           print('tried %s' % i)
           break
+      """ 4/24
+      a to incipient each rss 120548796
+      a to incipient opps eii 153396
+      a to incipient eipe rni 59329
+      a to incipient ipps epe 174519
+      a to incipient cmss ede 290375
+      a to incipient csts rsr 175192
+      a to incipient opca dsr 752124
+      a to incipient cisr tnp 87249
+      a to incipient ilos dps 1290835
+      a to pntemplates cs tio 770193
+      a to perempuan usps tio 770193
+
+      4/25 + early break in walk when scores are low
+      a to incipient each rss 120548796
+      a to incipient iste eie 57198
+      a to incipient cmss dss 1995347
+      a to incipient imia rsi 697477
+      a to incipient osrs eip 398559
+      a to perempuan peas tpe 275152
+      a to perempuan imcs nss 990710
+      a to perempuan caar ens 717319
+      a to perempuan usea tns 523866
+      a to perempuan epra pii 512601
+      a to dicipline imps psi 6101411
+      """
