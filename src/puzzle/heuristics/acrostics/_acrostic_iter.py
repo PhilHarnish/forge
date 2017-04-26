@@ -31,6 +31,9 @@ class Acrostic(acrostic.BaseAcrostic):
     for phrase, weight in self._walk_phrase_graph_from(0, []):
       yield phrase
 
+  def items(self):
+    return iter(self._walk_phrase_graph_from(0, []))
+
   def _walk_phrase_graph_from(self, pos, acc):
     target = self._solution_len
     for phrase, weight in self._phrases_at(pos):
