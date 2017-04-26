@@ -1,6 +1,5 @@
 import heapq
 
-import itertools
 from rx import Observable
 
 from data import meta
@@ -14,8 +13,6 @@ _TARGET_WORD_LEN = 4
 #   (64649558 + 4705743816 + 46688059 + 495684) /
 #   len(''.join('answer is flat expanse'.split())) = 253556690.36842105
 _TARGET_WORD_SCORE_RATE = 200000000
-
-counter = itertools.count()
 
 class Acrostic(acrostic.BaseAcrostic):
   """Acrostic solver."""
@@ -43,8 +40,7 @@ class Acrostic(acrostic.BaseAcrostic):
     return iter(self._walk_phrase_graph_from(0, [], 0))
 
   def _walk_dijkstra(self, phrase_graph, ignore_nodes, ignore_edges):
-    fringe = []
-    buffer = []
+    fringe = _Queue()  # TODO: Inline.
     while fringe:
       fringe.pop()
 
@@ -78,11 +74,7 @@ class Acrostic(acrostic.BaseAcrostic):
     # phrases_at[0] has words of length 1, etc.
     phrases_at = self._phrase_graph[pos]
     # Exhaust known phrases first.
-    if next(counter) % 2 == 0:
-      fn = self._iter_phrases_old
-    else:
-      fn = self._iter_phrases_new
-    for phrase in fn(phrases_at):
+    for phrase in self._iter_phrases(phrases_at):
       yield phrase
     # Then find more.
     for phrase in self._walk(pos):
@@ -98,26 +90,7 @@ class Acrostic(acrostic.BaseAcrostic):
       length_l_phrases[phrase] = weight
       yield phrase, weight
 
-  def _iter_phrases_new(self, phrases):
-    q = _Queue()
-    for pos, l in phrases.items():
-      best_items = iter(l.items())
-      next_best_tuple = next(best_items, _EMPTY)
-      if next_best_tuple is not _EMPTY:
-        _, weight = next_best_tuple
-        q.push(1/weight, (next_best_tuple, best_items))
-    while len(q):
-      next_best_tuple, best_items = q.get_min()
-      yield next_best_tuple
-      next_best_tuple = next(best_items, _EMPTY)
-      if next_best_tuple is _EMPTY:
-        q.pop()
-      else:
-        _, weight = next_best_tuple
-        q.replace_min(1/weight, (next_best_tuple, best_items))
-
-
-  def _iter_phrases_old(self, phrases):
+  def _iter_phrases(self, phrases):
     best_phrases = []
     cache = []
     for pos, l in phrases.items():
