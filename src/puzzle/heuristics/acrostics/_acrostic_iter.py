@@ -1,5 +1,6 @@
 import heapq
 
+import itertools
 from rx import Observable
 
 from data import meta
@@ -13,6 +14,8 @@ _TARGET_WORD_LEN = 4
 #   (64649558 + 4705743816 + 46688059 + 495684) /
 #   len(''.join('answer is flat expanse'.split())) = 253556690.36842105
 _TARGET_WORD_SCORE_RATE = 200000000
+
+counter = itertools.count()
 
 class Acrostic(acrostic.BaseAcrostic):
   """Acrostic solver."""
@@ -38,6 +41,12 @@ class Acrostic(acrostic.BaseAcrostic):
 
   def items(self):
     return iter(self._walk_phrase_graph_from(0, [], 0))
+
+  def _walk_dijkstra(self, phrase_graph, ignore_nodes, ignore_edges):
+    fringe = []
+    buffer = []
+    while fringe:
+      fringe.pop()
 
   def _walk_phrase_graph_from(self, pos, acc, acc_weight):
     target = self._solution_len
@@ -69,7 +78,11 @@ class Acrostic(acrostic.BaseAcrostic):
     # phrases_at[0] has words of length 1, etc.
     phrases_at = self._phrase_graph[pos]
     # Exhaust known phrases first.
-    for phrase in self._iter_phrases(phrases_at):
+    if next(counter) % 2 == 0:
+      fn = self._iter_phrases_old
+    else:
+      fn = self._iter_phrases_new
+    for phrase in fn(phrases_at):
       yield phrase
     # Then find more.
     for phrase in self._walk(pos):
@@ -85,8 +98,26 @@ class Acrostic(acrostic.BaseAcrostic):
       length_l_phrases[phrase] = weight
       yield phrase, weight
 
-  def _iter_phrases(self, phrases):
-    # Exhaust known phrases first.
+  def _iter_phrases_new(self, phrases):
+    q = _Queue()
+    for pos, l in phrases.items():
+      best_items = iter(l.items())
+      next_best_tuple = next(best_items, _EMPTY)
+      if next_best_tuple is not _EMPTY:
+        _, weight = next_best_tuple
+        q.push(1/weight, (next_best_tuple, best_items))
+    while len(q):
+      next_best_tuple, best_items = q.get_min()
+      yield next_best_tuple
+      next_best_tuple = next(best_items, _EMPTY)
+      if next_best_tuple is _EMPTY:
+        q.pop()
+      else:
+        _, weight = next_best_tuple
+        q.replace_min(1/weight, (next_best_tuple, best_items))
+
+
+  def _iter_phrases_old(self, phrases):
     best_phrases = []
     cache = []
     for pos, l in phrases.items():
@@ -109,3 +140,38 @@ class Acrostic(acrostic.BaseAcrostic):
         item, weight = next_best_tuple
         cache[cache_id] = (next_best_tuple, best_items)
         heapq.heapreplace(best_phrases, (1/weight, cache_id))
+
+
+class _Queue(object):
+  def __init__(self):
+    self._queue = []
+    self._pool = []
+    self._free_positions = []
+
+  def __len__(self):
+    return len(self._queue)
+
+  def push(self, cost, o):
+    if self._free_positions:
+      idx = self._free_positions.pop()
+      self._pool[idx] = o
+    else:
+      idx = len(self._pool)
+      self._pool.append(o)
+    heapq.heappush(self._queue, (cost, idx))
+
+  def get_min(self):
+    _, min_idx = self._queue[0]
+    return self._pool[min_idx]
+
+  def pop(self, index=None):
+    _, idx = heapq.heappop(self._queue)
+    result = self._pool[idx]
+    self._pool[idx] = None
+    self._free_positions.append(idx)
+    return result
+
+  def replace_min(self, cost, o):
+    _, min_idx = self._queue[0]  # Peek at min for idx.
+    self._pool[min_idx] = o  # Reuse that idx.
+    heapq.heapreplace(self._queue, (cost, min_idx))
