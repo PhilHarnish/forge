@@ -8,6 +8,11 @@ from puzzle.heuristics import acrostic
 _EMPTY = (None, 0)
 # Try to average 3 letters per word.
 _TARGET_WORD_LEN = 4
+# Target score per letter.
+# Emperically determined from 1 sample:
+#   (64649558 + 4705743816 + 46688059 + 495684) /
+#   len(''.join('answer is flat expanse'.split())) = 253556690.36842105
+_TARGET_WORD_SCORE_RATE = 200000000
 
 class Acrostic(acrostic.BaseAcrostic):
   """Acrostic solver."""
@@ -28,32 +33,37 @@ class Acrostic(acrostic.BaseAcrostic):
     ]
 
   def __iter__(self):
-    for phrase, weight in self._walk_phrase_graph_from(0, []):
+    for phrase, weight in self._walk_phrase_graph_from(0, [], 0):
       yield phrase
 
   def items(self):
-    return iter(self._walk_phrase_graph_from(0, []))
+    return iter(self._walk_phrase_graph_from(0, [], 0))
 
-  def _walk_phrase_graph_from(self, pos, acc):
+  def _walk_phrase_graph_from(self, pos, acc, acc_weight):
     target = self._solution_len
     for phrase, weight in self._phrases_at(pos):
       phrase_len = len(phrase)
       acc.append(phrase)
       pos += phrase_len
+      acc_weight += weight
+      acc_len = len(acc)
+      word_score_rate = float(acc_weight) / pos
       if pos < target:
-        acc_len = len(acc)
-        interesting = (
-          (acc_len < 4) or (pos / acc_len >= _TARGET_WORD_LEN))
+        interesting = (acc_len < 3) or (pos / acc_len >= _TARGET_WORD_LEN)
         if interesting:
-          for result in self._walk_phrase_graph_from(pos, acc):
+          for result in self._walk_phrase_graph_from(pos, acc, acc_weight):
             # Forward any findings from recursive calls up the trampoline.
             yield result
       elif pos == target:
-        yield ' '.join(acc), weight
+        yield ' '.join(acc), acc_weight
       else:
         raise Exception('Desired length exceeded.')
       pos -= phrase_len
+      acc_weight -= weight
       acc.pop()
+      if word_score_rate < _TARGET_WORD_SCORE_RATE:
+        # Interesting words for this position have been exhausted.
+        break
 
   def _phrases_at(self, pos):
     # phrases_at[0] has words of length 1, etc.
@@ -68,7 +78,10 @@ class Acrostic(acrostic.BaseAcrostic):
   def _walk(self, pos):
     phrases_at = self._phrase_graph[pos]
     for phrase, weight in self._walks[pos]:
-      length_l_phrases = phrases_at.setdefault(len(phrase), meta.Meta())
+      l = len(phrase)
+      if l not in phrases_at:
+        phrases_at[l] = meta.Meta()
+      length_l_phrases = phrases_at[l]
       length_l_phrases[phrase] = weight
       yield phrase, weight
 
