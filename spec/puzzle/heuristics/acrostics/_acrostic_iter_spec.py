@@ -9,11 +9,13 @@ from puzzle.heuristics.acrostics import _acrostic_iter
 from data import word_frequencies
 
 BA_PREFIX_TRIE = word_frequencies.load(
-    reversed(list(zip(('bad', 'bag', 'ban', 'bar', 'bat'), range(1, 6)))))
+    reversed(list(zip(
+        ('bad', 'bag', 'ban', 'bar', 'bat'),
+        range(10**9, 10**9 + 6)))))
 
 
 with description('acrostic'):
-  with _description('basics'):
+  with description('basics'):
     with it('uses a mock trie'):
       a = _acrostic_iter.Acrostic(['a'], tries.letters())
       expect(len(a._trie)).to(be_below(100))
@@ -40,7 +42,7 @@ with description('acrostic'):
       a = _acrostic_iter.Acrostic(list('ba') + ['dgnrt'], BA_PREFIX_TRIE)
       expect(list(a)).to(contain('bad', 'bag', 'ban', 'bar', 'bat'))
 
-  with _description('_iter_phrases'):
+  with description('_iter_phrases'):
     with before.all:
       self.subject = _acrostic_iter.Acrostic(['a'], tries.letters())
 
@@ -75,11 +77,19 @@ with description('acrostic'):
     with it('is used to cache results from previous walks'):
       a = _acrostic_iter.Acrostic(list('ba') + ['dgnrt'], BA_PREFIX_TRIE)
       expect(list(a)).to(contain('bad', 'bag', 'ban', 'bar', 'bat'))
-      expect(list(a._phrase_graph[0][3].items())).to(equal(
-          [('bat', 5), ('bar', 4), ('ban', 3), ('bag', 2), ('bad', 1)]
-      ))
+      expect(list(a._phrase_graph[0][3].items())).to(equal([
+        ('bat', 1000000004), ('bar', 1000000003), ('ban', 1000000002),
+        ('bag', 1000000001), ('bad', 1000000000),
+      ]))
 
-  with _context('when given ambiguous input text'):
+  with context('when given ambiguous input text'):
+    with before.each:
+      self.patch = patch.object(_acrostic_iter, '_TARGET_WORD_SCORE_RATE', 1)
+      self.patch.start()
+
+    with after.each:
+      self.patch.stop()
+
     with it('finds multiple words'):
       a = _acrostic_iter.Acrostic(list('superbowl'), tries.ambiguous())
       expect(list(a)).to(contain('super bowl', 'superb owl', 'superbowl'))
@@ -99,7 +109,7 @@ with description('acrostic'):
         expect(first).to(equal(second))
         expect(mock.call_count).to(be_below(10))
 
-  with description('testing'):
+  with _description('testing'):
     with it('crazy expensive'):
       words = [
         'champion', 'nitpick', 'conspiracy', 'windpipe', 'epinephrine',
