@@ -30,7 +30,8 @@ with description('CrosswordProblem'):
         'data/puzzle_fixtures.txt',
         collections.namedtuple('fixture', 'name lines'))
     for line in fixtures['crossword_clues'].lines:
-      expect(crossword_problem.CrosswordProblem.score([line])).to(be_above(.5))
+      expect(call(crossword_problem.CrosswordProblem.score, [line])).to(
+          be_above(.5))
 
   with description('constraints'):
     with it('constrains to fixed lengths'):
