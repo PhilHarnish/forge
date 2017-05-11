@@ -40,9 +40,21 @@ class Acrostic(acrostic.BaseAcrostic):
     return iter(self._walk_phrase_graph_from(0, [], 0))
 
   def _walk_dijkstra(self, phrase_graph, ignore_nodes, ignore_edges):
-    fringe = _Queue()  # TODO: Inline.
-    while fringe:
-      fringe.pop()
+    fringe = _Heap()  # TODO: Inline per findings from commit 47a736f.
+    acc = []
+    phrase_iters = [
+      self._phrases_at(i) for i in range(0, self._solution_len)
+    ]
+    next_phrase = next(phrase_iters[0], None)
+    if next_phrase:
+      weight, phrase = next_phrase
+      fringe.push(1/weight, (weight, phrase, 0))
+    while len(fringe):
+      weight, phrase, src_pos = fringe.pop()
+      dst_pos = src_pos + len(phrase)
+      # Consider paths from phrase to
+      # Find reasonable destinations from this phrase.
+      dsts = phrase_iters[dst_pos]
 
   def _walk_phrase_graph_from(self, pos, acc, acc_weight):
     target = self._solution_len
@@ -115,14 +127,14 @@ class Acrostic(acrostic.BaseAcrostic):
         heapq.heapreplace(best_phrases, (1/weight, cache_id))
 
 
-class _Queue(object):
+class _Heap(object):
   def __init__(self):
-    self._queue = []
+    self._heap = []
     self._pool = []
     self._free_positions = []
 
   def __len__(self):
-    return len(self._queue)
+    return len(self._heap)
 
   def push(self, cost, o):
     if self._free_positions:
@@ -131,20 +143,20 @@ class _Queue(object):
     else:
       idx = len(self._pool)
       self._pool.append(o)
-    heapq.heappush(self._queue, (cost, idx))
+    heapq.heappush(self._heap, (cost, idx))
 
   def get_min(self):
-    _, min_idx = self._queue[0]
+    _, min_idx = self._heap[0]
     return self._pool[min_idx]
 
-  def pop(self, index=None):
-    _, idx = heapq.heappop(self._queue)
+  def pop(self):
+    _, idx = heapq.heappop(self._heap)
     result = self._pool[idx]
     self._pool[idx] = None
     self._free_positions.append(idx)
     return result
 
   def replace_min(self, cost, o):
-    _, min_idx = self._queue[0]  # Peek at min for idx.
+    _, min_idx = self._heap[0]  # Peek at min for idx.
     self._pool[min_idx] = o  # Reuse that idx.
-    heapq.heapreplace(self._queue, (cost, min_idx))
+    heapq.heapreplace(self._heap, (cost, min_idx))
