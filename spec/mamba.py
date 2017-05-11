@@ -21,6 +21,22 @@ before = Hook()
 after = Hook()
 
 # Custom expects.
+class be_between(matchers.Matcher):
+  def __init__(self, low, high):
+    self._low = low
+    self._high = high
+
+  def _match(self, subject):
+    return subject > self._low and subject < self._high, ['asadf']
+
+  def _failure_message(self, subject, *args):
+    return self._failure_message_negated(subject, *args).replace(' not ', ' ')
+
+  def _failure_message_negated(self, subject, *args):
+    return 'expected: %s not to be between %s and %s' % (
+      subject, self._low, self._high)
+
+
 class call(object):
   def __init__(self, fn, *args, **kwargs):
     self._fn = fn
