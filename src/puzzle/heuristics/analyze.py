@@ -1,6 +1,6 @@
 from data import meta
 from puzzle.problems import crossword_problem
-
+from puzzle.problems import anagram_problem
 
 _PROBLEM_TYPES = set()
 
@@ -30,6 +30,7 @@ def identify_problems(lines):
 def init():
   if _PROBLEM_TYPES:
     return
+  register(anagram_problem.AnagramProblem)
   register(crossword_problem.CrosswordProblem)
 
 

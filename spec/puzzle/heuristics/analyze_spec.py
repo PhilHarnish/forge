@@ -1,6 +1,7 @@
 from spec.mamba import *
 
 from puzzle.heuristics import analyze
+from puzzle.problems import anagram_problem
 from puzzle.problems import crossword_problem
 from puzzle.problems import problem
 
@@ -72,3 +73,8 @@ with description('identify'):
       identified = analyze.identify(['A type of puzzle (9)'])
       expect(identified).to(have_key(crossword_problem.CrosswordProblem))
       expect(identified[crossword_problem.CrosswordProblem]).to(equal(1))
+
+    with it('identifies anagrams'):
+      identified = analyze.identify(['snap'])
+      expect(identified).to(have_key(anagram_problem.AnagramProblem))
+      expect(identified[anagram_problem.AnagramProblem]).to(equal(1))
