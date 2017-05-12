@@ -39,6 +39,8 @@ class CrosswordProblem(problem.Problem):
     clue_keywords = crossword.clue_keywords(clue)
     cursor = warehouse.get('/phrases/crossword/cursor')
     results = crossword.query(cursor, clue)
+    if not results:
+      return {}
     max_frequency = max([f for _, f, _ in results])
     ranked = []
     for (solution, frequency, keywords) in results:
