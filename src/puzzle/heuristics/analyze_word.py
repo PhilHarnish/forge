@@ -14,6 +14,7 @@ def init_trie(src):
 
 
 def reset():
+  global _TRIE, _ANAGRAM_INDEX, _FREQS
   _TRIE = None
   _ANAGRAM_INDEX = None
   _FREQS = None
