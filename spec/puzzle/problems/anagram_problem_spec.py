@@ -27,4 +27,4 @@ with description('AnagramProblem'):
       self.subject = anagram_problem.AnagramProblem('example', ['snap'])
 
     with it('solves anagrams'):
-      expect(list(self.subject.solutions())).to(equal(['snap', 'naps']))
+      expect(sorted(list(self.subject.solutions()))).to(equal(['naps', 'snap']))
