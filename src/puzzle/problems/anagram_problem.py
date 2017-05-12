@@ -16,9 +16,9 @@ class AnagramProblem(problem.Problem):
 
   def _solve(self):
     index = warehouse.get('/words/unigram/anagram_index')
-    results = collections.OrderedDict()
     if self.lines[0] not in index:
-      return results
+      return {}
+    results = collections.OrderedDict()
     for index, word in reversed(list(enumerate(index[self.lines[0]]))):
       # TODO: Use frequency for score.
       results[word] = index + 1
