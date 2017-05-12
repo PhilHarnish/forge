@@ -1,9 +1,11 @@
 import collections
 from unittest import mock
 
-from spec.mamba import *
+from data import crossword
 from data import data
+from data import warehouse
 from puzzle.problems import crossword_problem
+from spec.mamba import *
 
 
 with description('CrosswordProblem'):
@@ -39,7 +41,7 @@ with description('CrosswordProblem'):
       problem._solve = mock.Mock(return_value={'a': 1, 'aa': .75, 'aaa': .5})
       expect(problem.solutions()).to(equal({'aaa': .5}))
 
-  with _description('solutions'):
+  with description('solutions'):
     with it('queries for crossword solutions'):
       problem = crossword_problem.CrosswordProblem(
           'ex',

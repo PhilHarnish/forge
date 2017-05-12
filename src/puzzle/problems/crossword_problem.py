@@ -2,6 +2,7 @@ import collections
 import re
 
 from data import crossword
+from data import warehouse
 from puzzle.problems import problem
 
 _CROSSWORD_REGEX = re.compile(r'^.*\(([\d\s,|]+)\)$')
@@ -33,15 +34,11 @@ class CrosswordProblem(problem.Problem):
     # Something with a lot of words *might* be a crossword clue.
     return max(0.0, 0.5 * (min(5, len(src.split())) / 5))
 
-  def _get_cursor(self):
-    if self._cursor is None:
-      self._conn, self._cursor = crossword.connect('data/crossword.sqlite')
-    return self._cursor
-
   def _solve(self):
     clue = ''.join(self.lines)
     clue_keywords = crossword.clue_keywords(clue)
-    results = crossword.query(self._get_cursor(), clue)
+    cursor = warehouse.get('/phrases/crossword/cursor')
+    results = crossword.query(cursor, clue)
     max_frequency = max([f for _, f, _ in results])
     ranked = []
     for (solution, frequency, keywords) in results:

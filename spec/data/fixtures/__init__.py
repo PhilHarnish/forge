@@ -11,7 +11,9 @@ def _get_unigram_trie():
 
 def _get_crossword():
   connection = crossword.init(':memory:')
-  return connection, connection.cursor()
+  cursor = connection.cursor()
+  crossword.add(cursor, 'query', 1, {'ask': 1, 'question': 1})
+  return connection, cursor
 
 def _get_crossword_connection():
   connection, cursor = warehouse.get('/phrases/crossword')
