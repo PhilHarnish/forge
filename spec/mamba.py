@@ -51,7 +51,11 @@ class call(object):
     ] + [
       '%s=%s' % (key, repr(value)) for key, value in self._kwargs.items()
     ])
-    return '%s(%s)' % (self._fn.__name__, args)
+    if self._value is None:
+      suffix = ''
+    else:
+      suffix = ' == %s' % repr(self._value)
+    return '%s(%s)%s' % (self._fn.__name__, args, suffix)
 
   def __ge__(self, other):
     # NB: self._value.__gt__(other) will not work for [int] >= [float].

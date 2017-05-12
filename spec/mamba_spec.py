@@ -9,13 +9,13 @@ with description('mamba test helper'):
 
     with it('reprs functions with simple args'):
       def example(a, b):
-        pass
-      expect(repr(call(example, 1, 2))).to(equal('example(1, 2)'))
+        return a + b
+      expect(repr(call(example, 1, 2))).to(equal('example(1, 2) == 3'))
 
     with it('reprs functions with kwargs'):
       def example(a, b=None):
-        pass
-      expect(repr(call(example, 1, b=2))).to(equal('example(1, b=2)'))
+        return a + b
+      expect(repr(call(example, 1, b=2))).to(equal('example(1, b=2) == 3'))
 
     with context('operator overloading'):
       with before.each:
