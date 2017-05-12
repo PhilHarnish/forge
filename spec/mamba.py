@@ -37,13 +37,21 @@ class be_between(matchers.Matcher):
       subject, self._low, self._high)
 
 
+# Sentinel object for undefined values.
+_NOT_SET = {}
+
 class call(object):
   def __init__(self, fn, *args, **kwargs):
     self._fn = fn
     self._args = args
     self._kwargs = kwargs
-    value = fn(*args, **kwargs)
-    self._value = value
+    self._cached_value = _NOT_SET
+
+  @property
+  def _value(self):
+    if self._cached_value is _NOT_SET:
+      self._cached_value = self._fn(*self._args, **self._kwargs)
+    return self._cached_value
 
   def __repr__(self):
     args = ', '.join([
@@ -84,3 +92,11 @@ def _make_method(name):
   return method
 for method in ['__eq__']:
   setattr(call, method, _make_method(method))
+
+
+class calling(call):
+  """Returns an object which has yet-to-be called."""
+  def __call__(self, *args, **kwargs):
+    if args or kwargs:
+      raise NotImplementedError()
+    return self._value

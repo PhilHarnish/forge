@@ -32,6 +32,19 @@ with description('mamba test helper'):
         expect(call(self.int_fn)).to(be_below_or_equal(1))
         expect(call(self.int_fn)).to(be_below(1.5))
 
+  with description('calling'):
+    with before.all:
+      def bomb():
+        raise NotImplementedError()
+      self.bomb = bomb
+
+    with it('should not execute function when instantiated'):
+      expect(self.bomb).to(raise_error)
+      expect(lambda: calling(self.bomb)).not_to(raise_error)
+
+    with it('should execute function when matcher runs'):
+      expect(calling(self.bomb)).to(raise_error)
+
   with description('be_between'):
     with it('should accept numbers between high and low'):
       expect(1).to(be_between(0, 2))
