@@ -29,8 +29,10 @@ def score_anagram(word):
     return 0
   results = index[word]
   if len(results) > 1:
-    return True
-  return word not in results
+    return 1
+  if word in results:
+    return 0  # Input word == anagram word.
+  return 1  # New word found.
 
 
 def score_cryptogram(word):
