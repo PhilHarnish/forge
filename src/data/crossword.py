@@ -1,6 +1,8 @@
 import re
 import sqlite3
 
+from data import data
+
 _WHITESPACE_RE = re.compile(r'\s*[-_,]\s*')
 _REMOVE_RE = re.compile(r'(\(\d+\)|[^\w\s])')
 _IGNORED = frozenset([
@@ -30,7 +32,7 @@ def clue_keywords(clue):
 
 
 def connect(db):
-  conn = sqlite3.connect(db)
+  conn = sqlite3.connect(data.project_path(db))
   return (conn, conn.cursor())
 
 
