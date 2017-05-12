@@ -6,12 +6,6 @@ from puzzle.problems import anagram_problem
 
 
 with description('AnagramProblem'):
-  with before.all:
-    analyze_word.init_trie(tries.ambiguous())
-
-  with after.all:
-    analyze_word.reset()
-
   with it('ignores empty and garbage input'):
     expect(anagram_problem.AnagramProblem.score([''])).to(equal(0))
 

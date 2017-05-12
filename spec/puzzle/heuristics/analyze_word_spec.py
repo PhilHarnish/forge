@@ -5,12 +5,6 @@ from puzzle.heuristics import analyze_word
 
 
 with description('analyze_word'):
-  with before.all:
-    analyze_word.init_trie(tries.ambiguous())
-
-  with after.all:
-    analyze_word.reset()
-
   with description('score_word'):
     with it('rejects empty input'):
       expect(analyze_word.score_word('')).to(equal(0))
