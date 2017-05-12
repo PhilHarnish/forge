@@ -1,5 +1,6 @@
 import collections
 
+from data import warehouse
 from puzzle.heuristics import analyze_word
 from puzzle.problems import problem
 
@@ -14,7 +15,7 @@ class AnagramProblem(problem.Problem):
     return analyze_word.score_anagram(lines[0])
 
   def _solve(self):
-    index = analyze_word.get_anagram_index()
+    index = warehouse.get('/words/unigram/anagram_index')
     results = collections.OrderedDict()
     if self.lines[0] not in index:
       return results
