@@ -27,9 +27,12 @@ with description('analyze_word'):
     with it('rejects words which only anagram to themselves'):
       expect(call(analyze_word.score_anagram, 'bowl')).to(equal(0))
 
-    with it('accepts words which only anagram to multiple words'):
+    with it('accepts words which anagram to multiple words'):
       expect(call(analyze_word.score_anagram, 'snap')).to(equal(1))
       expect(call(analyze_word.score_anagram, 'naps')).to(equal(1))
+
+    with it('accepts words which anagram to something else'):
+      expect(call(analyze_word.score_anagram, 'lowb')).to(equal(1))
 
   with description('score_cryptogram'):
     with it('rejects the same things score_word would'):

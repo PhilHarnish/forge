@@ -27,7 +27,10 @@ def score_anagram(word):
   index = warehouse.get('/words/unigram/anagram_index')
   if word not in index:
     return 0
-  return len(index[word]) > 1
+  results = index[word]
+  if len(results) > 1:
+    return True
+  return word not in results
 
 
 def score_cryptogram(word):
