@@ -1,5 +1,3 @@
-from mock.mock import patch
-
 from spec.data.fixtures import tries
 from spec.mamba import *
 
@@ -10,7 +8,7 @@ with description('analyze_word'):
   with before.all:
     analyze_word.init_trie(tries.ambiguous())
 
-  with description('score'):
+  with description('score_word'):
     with it('rejects empty input'):
       expect(analyze_word.score_word('')).to(equal(0))
 
@@ -22,4 +20,16 @@ with description('analyze_word'):
         expect(call(analyze_word.score_word, word)).to(equal(1))
 
     with it('scores probable words between (0, 1)'):
-      expect(analyze_word.score_word('probable')).to(be_between(0, 1))
+      expect(call(analyze_word.score_word, 'probable')).to(be_between(0, 1))
+
+  with description('score_anagram'):
+    with it('rejects the same things score word would'):
+      expect(call(analyze_word.score_anagram, '')).to(equal(0))
+      expect(call(analyze_word.score_anagram, '$#!7')).to(equal(0))
+
+    with it('rejects words which only anagram to themselves'):
+      expect(call(analyze_word.score_anagram, 'bowl')).to(equal(0))
+
+    with it('accepts words which only anagram to multiple words'):
+      expect(call(analyze_word.score_anagram, 'snap')).to(equal(1))
+      expect(call(analyze_word.score_anagram, 'naps')).to(equal(1))
