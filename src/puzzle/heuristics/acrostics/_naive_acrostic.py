@@ -1,15 +1,16 @@
 from rx import Observable
 
-from puzzle.heuristics import acrostic
+from puzzle.heuristics import _base_acrostic
 
-class Acrostic(acrostic.BaseAcrostic):
+
+class Acrostic(_base_acrostic.BaseAcrostic):
   """Simple Acrostic solver.
 
   Lacks the ability to solve for multi-word solutions.
   """
-  def __init__(self, words, trie):
-    self._words = [set(word) for word in words]
-    self._trie = trie
+
+  def __init__(self, words, trie=None):
+    super(Acrostic, self).__init__(words, trie)
     self._source = Observable.from_(self)
     self.subscribe = self._source.subscribe
     self._cost = 0

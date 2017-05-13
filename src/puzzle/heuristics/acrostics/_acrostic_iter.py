@@ -2,8 +2,8 @@ import heapq
 
 from rx import Observable
 
+import puzzle.heuristics._base_acrostic
 from data import meta
-from puzzle.heuristics import acrostic
 
 _EMPTY = (None, 0)
 # Try to average 3 letters per word.
@@ -14,7 +14,8 @@ _TARGET_WORD_LEN = 4
 #   len(''.join('answer is flat expanse'.split())) = 253556690.36842105
 _TARGET_WORD_SCORE_RATE = 200000000
 
-class Acrostic(acrostic.BaseAcrostic):
+
+class Acrostic(puzzle.heuristics._base_acrostic.BaseAcrostic):
   """Acrostic solver."""
 
   def __init__(self, words, trie):
