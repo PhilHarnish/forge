@@ -1,12 +1,15 @@
 from rx import subjects
 
-from data import meta
+from data import observable_meta
 from puzzle.heuristics import analyze
+from puzzle.puzzlepedia import solution_stream
 
 
-class Puzzle(object):
-  def __init__(self, source):
+class Puzzle(subjects.Subject):
+  def __init__(self, name, source):
+    super(Puzzle, self).__init__()
     self._meta_problems = []
+    self._child_streams = []
     if isinstance(source, str):
       lines = [line for line in source.split('\n') if line]
     elif isinstance(source, list):
@@ -18,8 +21,13 @@ class Puzzle(object):
           'Puzzle source type %s unsupported' % type(source))
     for i, (meta_problem, consumed) in enumerate(
         analyze.identify_problems(lines)):
-      self._meta_problems.append(_reify(meta_problem, '#%s' % i, consumed))
-    self._observable = subjects.Subject()
+      problem = _reify(meta_problem, '#%s' % i, consumed)
+      self._meta_problems.append(problem)
+      self._child_streams.append(solution_stream.SolutionStream(
+          str(i), problem))
+    self._observable = solution_stream.SolutionStream(
+        name, observable_meta.ObservableMeta(), self._child_streams)
+    self._observable.subscribe(self)
 
   def problem(self, index):
     return self._meta_problems[index]
@@ -30,11 +38,8 @@ class Puzzle(object):
   def solutions(self):
     return [p.solution for p in self._meta_problems]
 
-  def subscribe(self, observer):
-    self._observable.subscribe(observer)
-
   def get_next_stage(self):
-    return Puzzle(self)
+    return Puzzle('meta', self)
 
 
 def _reify(meta_problem, name, lines):
@@ -44,7 +49,7 @@ def _reify(meta_problem, name, lines):
   return result
 
 
-class _MetaProblem(meta.Meta):
+class _MetaProblem(observable_meta.ObservableMeta):
   # Sentinel value for 'no solution found'.
   _NO_SOLUTION = {}
 
@@ -52,7 +57,6 @@ class _MetaProblem(meta.Meta):
     super(_MetaProblem, self).__init__()
     self._active = None
     self._solution = self._NO_SOLUTION
-    self._observable = subjects.Subject()
 
   @property
   def active(self):
@@ -69,8 +73,4 @@ class _MetaProblem(meta.Meta):
     if self._solution == value:
       return
     self._solution = value
-    self._observable.on_next(self)
-
-  def subscribe(self, observer):
-    self._observable.subscribe(observer)
-    observer.on_next(self)
+    self._changed()
