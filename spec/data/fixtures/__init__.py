@@ -1,5 +1,4 @@
-from data import anagram_index, crossword
-from data import warehouse
+from data import anagram_index, crossword, warehouse
 from spec.data.fixtures import tries
 
 
@@ -7,7 +6,7 @@ def _get_unigram_anagram_index():
   return anagram_index.AnagramIndex(warehouse.get('/words/unigram/trie'))
 
 def _get_unigram_trie():
-  return tries.ambiguous()
+  return tries.kitchen_sink()
 
 def _get_crossword():
   connection = crossword.init(':memory:')

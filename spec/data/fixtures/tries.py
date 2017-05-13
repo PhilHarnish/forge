@@ -2,6 +2,7 @@ import functools
 
 from data import word_frequencies
 
+
 @functools.lru_cache()
 def letters():
   """All alphabet characters and their frequencies."""
@@ -12,6 +13,12 @@ def letters():
 def ambiguous():
   """A set of words which, when combined, form numerous ambiguous sentences."""
   return word_frequencies.load(_AMBIGUOUS_DATA)
+
+
+@functools.lru_cache()
+def kitchen_sink():
+  """Combines all of the test data."""
+  return word_frequencies.load(_KITCHEN_SINK_DATA)
 
 
 @functools.lru_cache()
@@ -49,3 +56,13 @@ _AMBIGUOUS_DATA = sorted([
   ('nowhere', 5582367),
   ('now', 611387736), ('here', 639711198),
 ] + _LETTERS, key=lambda x: x[1], reverse=True)
+
+_LEETSPEAK_DATA = sorted([
+  ('dead', 48384167),
+  ('deadbeef', 10000),  # Unknown, technically.
+], key=lambda x: x[1], reverse=True)
+
+# All of the above.
+_KITCHEN_SINK_DATA = sorted(
+    _AMBIGUOUS_DATA + _LEETSPEAK_DATA,
+    key=lambda x: x[1], reverse=True)
