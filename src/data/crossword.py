@@ -32,7 +32,9 @@ def clue_keywords(clue):
 
 
 def connect(db):
-  conn = sqlite3.connect(data.project_path(db))
+  if not db.startswith(':'):
+    db = data.project_path(db)
+  conn = sqlite3.connect(db)
   return (conn, conn.cursor())
 
 
