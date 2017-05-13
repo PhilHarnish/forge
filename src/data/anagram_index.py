@@ -1,13 +1,11 @@
 import collections
-import functools
-import re
 
 
 class AnagramIndex(dict):
   def __init__(self, data):
-    indexed = collections.defaultdict(set)
+    indexed = collections.defaultdict(list)
     for key in data:
-      indexed[''.join(sorted(key))].add(key)
+      indexed[''.join(sorted(key))].append(key)
     super(AnagramIndex, self).__init__(indexed)
 
   def __setitem__(self, key, value):

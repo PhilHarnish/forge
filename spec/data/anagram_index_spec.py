@@ -16,4 +16,4 @@ with description('anagram_index'):
     expect(self.subject).to(have_key('wlo'))
 
   with it('returns multiple matches'):
-    expect(self.subject['snap']).to(equal({'snap', 'naps'}))
+    expect(self.subject['snap']).to(equal(['snap', 'naps']))

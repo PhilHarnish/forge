@@ -19,7 +19,7 @@ class AnagramProblem(problem.Problem):
     if self.lines[0] not in index:
       return {}
     results = collections.OrderedDict()
-    for index, word in reversed(list(enumerate(index[self.lines[0]]))):
+    for index, word in enumerate(index[self.lines[0]]):
       # TODO: Use frequency for score.
-      results[word] = index + 1
+      results[word] = 1 / (index + 1)
     return results

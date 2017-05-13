@@ -1,9 +1,5 @@
-from puzzle.heuristics import analyze_word
-from spec.data.fixtures import tries
-from spec.mamba import *
-
 from puzzle.problems import anagram_problem
-
+from spec.mamba import *
 
 with description('AnagramProblem'):
   with it('ignores empty and garbage input'):
@@ -21,4 +17,7 @@ with description('AnagramProblem'):
       self.subject = anagram_problem.AnagramProblem('example', ['snap'])
 
     with it('solves anagrams'):
-      expect(sorted(list(self.subject.solutions()))).to(equal(['naps', 'snap']))
+      expect(list(self.subject.solutions().items())).to(equal([
+        ('snap', 1.0),
+        ('naps', 0.5),
+      ]))
