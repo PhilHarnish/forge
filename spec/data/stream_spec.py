@@ -11,7 +11,7 @@ with description('stream'):
     s = stream.Stream()
     expect(calling(s.subscribe, mock.Mock())).not_to(raise_error)
 
-  with it('publishes to subscrbers'):
+  with it('publishes to subscribers'):
     s = stream.Stream()
     observer = mock.Mock()
     s.subscribe(observer)
