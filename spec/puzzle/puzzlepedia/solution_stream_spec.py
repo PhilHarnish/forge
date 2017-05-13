@@ -27,3 +27,31 @@ with description('solution_stream'):
       self.solutions['solution'] = 1337
       expect(observer.on_next.call_args).to(equal(mock.call(
           ('1', self.solutions))))
+
+  with context('with nesting'):
+    with before.each:
+      self.children = [
+        observable_meta.ObservableMeta(),
+        observable_meta.ObservableMeta(),
+      ]
+      self.streams = [
+        solution_stream.SolutionStream(str(i), meta) for i, meta in enumerate(
+            self.children)
+      ]
+      self.parent_meta = observable_meta.ObservableMeta()
+      self.parent = solution_stream.SolutionStream(
+          'parent', self.parent_meta, self.streams)
+
+    with it('publishes events from parent'):
+      observer = mock.Mock()
+      self.parent.subscribe(observer)
+      self.parent_meta['solution'] = 1337
+      expect(observer.on_next.call_args).to(equal(mock.call(
+          ('parent', self.parent_meta))))
+
+    with it('publishes events from children'):
+      observer = mock.Mock()
+      self.parent.subscribe(observer)
+      self.children[0]['solution'] = 1337
+      expect(observer.on_next.call_args).to(equal(mock.call(
+          ('parent.0', self.children[0]))))
