@@ -37,3 +37,6 @@ class Problem(object):
       dict Dict mapping solution to score.
     """
     raise NotImplementedError()
+
+  def __repr__(self):
+    return '%s()' % self.__class__.__name__
