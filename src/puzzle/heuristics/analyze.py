@@ -1,6 +1,5 @@
 from data import meta
-from puzzle.problems import crossword_problem
-from puzzle.problems import anagram_problem
+from puzzle.problems import anagram_problem, crossword_problem
 
 _PROBLEM_TYPES = set()
 
@@ -20,7 +19,7 @@ def identify_problems(lines):
   for line in lines:
     acc.append(line)
     identified = identify(acc)
-    if identified.magnitude() > 0:
+    if identified and identified.magnitude() > 0:
       results.append((identified, acc))
       # Make a new accumulator; last was given to results.
       acc = []
