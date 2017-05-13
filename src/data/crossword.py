@@ -4,7 +4,7 @@ import sqlite3
 from data import data
 
 _WHITESPACE_RE = re.compile(r'\s*[-_,]\s*')
-_REMOVE_RE = re.compile(r'(\(\d+\)|[^\w\s])')
+_REMOVE_RE = re.compile(r'(\([\d\s,|]+\)|[^\w\s])')
 _IGNORED = frozenset([
   'a', 'as', 'abbr', 'agcy', 'and',
   'for',

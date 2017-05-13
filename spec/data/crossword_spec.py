@@ -1,7 +1,5 @@
+from data import crossword, warehouse
 from spec.mamba import *
-from data import crossword
-from data import warehouse
-
 
 with description('clue_keywords'):
   with it('removes garbage characters'):
@@ -10,8 +8,15 @@ with description('clue_keywords'):
   with it('removes common words'):
     expect(crossword.clue_keywords('for eg that abbr for the org')).to(be_empty)
 
-  with it('removes (\d+)'):
+  with it('removes (11)'):
     expect(crossword.clue_keywords('(11)')).to(be_empty)
+
+  with it('removes (3, 4)'):
+    expect(crossword.clue_keywords('(3, 4)')).to(be_empty)
+    expect(crossword.clue_keywords('(3,4)')).to(be_empty)
+
+  with it('removes (3|4)'):
+    expect(crossword.clue_keywords('(3|4)')).to(be_empty)
 
   with it('ignores 1 character words'):
     expect(crossword.clue_keywords('a b c d e')).to(be_empty)
