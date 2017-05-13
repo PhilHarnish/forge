@@ -1,8 +1,8 @@
-import rx
+from rx import subjects
 
 from data import meta
-from data import stream
 from puzzle.heuristics import analyze
+
 
 class Puzzle(object):
   def __init__(self, source):
@@ -19,7 +19,7 @@ class Puzzle(object):
     for i, (meta_problem, consumed) in enumerate(
         analyze.identify_problems(lines)):
       self._meta_problems.append(_reify(meta_problem, '#%s' % i, consumed))
-    self._observable = stream.Stream()
+    self._observable = subjects.Subject()
 
   def problem(self, index):
     return self._meta_problems[index]
@@ -52,7 +52,7 @@ class _MetaProblem(meta.Meta):
     super(_MetaProblem, self).__init__()
     self._active = None
     self._solution = self._NO_SOLUTION
-    self._observable = stream.Stream()
+    self._observable = subjects.Subject()
 
   @property
   def active(self):
@@ -69,7 +69,7 @@ class _MetaProblem(meta.Meta):
     if self._solution == value:
       return
     self._solution = value
-    self._observable.publish_value(self)
+    self._observable.on_next(self)
 
   def subscribe(self, observer):
     self._observable.subscribe(observer)

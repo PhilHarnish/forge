@@ -15,6 +15,7 @@ class Meta(collections.OrderedDict):
     else:
       self._smallest = value
     super(Meta, self).__setitem__(key, value, *args, **kwargs)
+    self._changed()
 
   def items(self):
     self._reorder()
@@ -42,3 +43,6 @@ class Meta(collections.OrderedDict):
     for k, v in order:
       self.move_to_end(k)
     self._ordered = True
+
+  def _changed(self):
+    pass

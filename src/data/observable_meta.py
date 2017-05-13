@@ -1,13 +1,15 @@
-from data import meta, stream
+from rx import subjects
+
+from data import meta
 
 
 class ObservableMeta(meta.Meta):
   def __init__(self, *args, **kwargs):
     super(ObservableMeta, self).__init__(*args, **kwargs)
-    self._stream = stream.Stream()
+    self.subject = subjects.Subject()
 
   def subscribe(self, observer):
-    self._stream.subscribe(observer)
+    self.subject.subscribe(observer)
 
   def _changed(self):
-    self._stream.publish_value(self)
+    self.subject.on_next(self)
