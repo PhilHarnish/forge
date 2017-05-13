@@ -10,8 +10,6 @@ _INTS = re.compile(r'(\d+)')
 class CrosswordProblem(problem.Problem):
   def __init__(self, name, lines):
     super(CrosswordProblem, self).__init__(name, lines)
-    self._conn = None
-    self._cursor = None
     for line in lines:
       for match in _CROSSWORD_REGEX.finditer(line):
         lengths = _INTS.findall(match.group(1))
