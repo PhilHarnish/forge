@@ -1,12 +1,9 @@
 import collections
 from unittest import mock
 
-from data import crossword
 from data import data
-from data import warehouse
 from puzzle.problems import crossword_problem
 from spec.mamba import *
-
 
 with description('CrosswordProblem'):
   with it('ignores empty and garbage input'):
@@ -40,6 +37,24 @@ with description('CrosswordProblem'):
       problem = crossword_problem.CrosswordProblem('ex', ['example (3)'])
       problem._solve = mock.Mock(return_value={'a': 1, 'aa': .75, 'aaa': .5})
       expect(problem.solutions()).to(equal({'aaa': .5}))
+
+    with it('constrains multi-word answers to fixed lengths'):
+      problem = crossword_problem.CrosswordProblem('ex', ['example (3, 2)'])
+      problem._solve = mock.Mock(return_value={
+        'a': 1, 'aa': .75, 'aaa': .5,
+        'abb': .25, 'aabb': .2, 'aaabb': .1,
+      })
+      expect(problem.solutions()).to(equal({'aaabb': .1}))
+
+    with it('constrains ambiguous answers to minimum lengths'):
+      problem = crossword_problem.CrosswordProblem('ex', ['example (3|1)'])
+      problem._solve = mock.Mock(return_value={
+        'a': 1, 'aa': .75, 'aaa': .5,
+        'abb': .25, 'aabb': .2, 'aaabb': .1,
+      })
+      expect(problem.solutions()).to(equal({
+        'aabb': .2, 'aaabb': .1,
+      }))
 
   with description('solutions'):
     with it('queries for crossword solutions'):

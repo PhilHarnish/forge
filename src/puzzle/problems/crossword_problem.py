@@ -1,8 +1,7 @@
 import collections
 import re
 
-from data import crossword
-from data import warehouse
+from data import crossword, warehouse
 from puzzle.problems import problem
 
 _CROSSWORD_REGEX = re.compile(r'^.*\(([\d\s,|]+)\)$')
@@ -20,7 +19,10 @@ class CrosswordProblem(problem.Problem):
           self.constrain(lambda x, _: len(x) == int(lengths[0]))
         else:
           target = sum(map(int, lengths))
-          self.constrain(lambda x, _: len(x) >= target)
+          if '|' in line:
+            self.constrain(lambda x, _: len(x) >= target)
+          else:
+            self.constrain(lambda x, _: len(x) == target)
         break
 
   @staticmethod
