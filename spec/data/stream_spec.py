@@ -1,9 +1,7 @@
 import mock
 
-from spec.mamba import *
-
 from data import stream
-
+from spec.mamba import *
 
 with description('stream'):
   with it('instantiates without errors'):
