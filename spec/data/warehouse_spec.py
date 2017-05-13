@@ -1,8 +1,7 @@
 from mock.mock import patch
 
-from spec.mamba import *
-
 from data import warehouse
+from spec.mamba import *
 
 with description('warehouse'):
   with before.all:
@@ -41,3 +40,22 @@ with description('warehouse'):
     with it('should register data'):
       warehouse.register('/some/path', self.source)
       expect(call(warehouse.get, '/some/path')).to(equal(self.value))
+
+  with description('save and restore'):
+    with it('should clear the state when saved'):
+      warehouse.register('/some/path', 1)
+      warehouse.save()
+      expect(calling(warehouse.get, '/some/path')).to(raise_error(KeyError))
+
+    with it('should allow new changes'):
+      warehouse.save()
+      warehouse.register('/some/path', 2)
+      expect(calling(warehouse.get, '/some/path')).not_to(raise_error(KeyError))
+
+    with it('should allow restore old values'):
+      warehouse.register('/some/path', 1)
+      warehouse.save()
+      warehouse.register('/some/path', 2)
+      expect(call(warehouse.get, '/some/path')).to(equal(2))
+      warehouse.restore()
+      expect(call(warehouse.get, '/some/path')).to(equal(1))

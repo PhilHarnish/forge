@@ -1,4 +1,5 @@
 _DATA = {}
+_HISTORY = []
 
 def register(path, value):
   if path in _DATA:
@@ -18,3 +19,14 @@ def init():
 
 def reset():
   _DATA.clear()
+
+
+def save():
+  global _DATA
+  _HISTORY.append(_DATA)
+  _DATA = {}
+
+
+def restore():
+  global _DATA
+  _DATA = _HISTORY.pop()
