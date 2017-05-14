@@ -30,6 +30,60 @@ def _get_digits_in_base(n, b):
   return list(reversed(digits or [0]))
 
 
+def _run_length(digits, max_length):
+  """Returns [digit, n_seen], ... for input digits."""
+  active = [digits[0], 0]
+  result = [active]
+  for digit in digits:
+    if digit == active[0]:
+      active[1] += 1
+      if active[1] > max_length:
+        return []  # Invalid.
+    else:
+      active = [digit, 1]
+      result.append(active)
+  return result
+
+
+# Heuristics.
+def _hexspeak(digits, min_digit, max_digit):
+  if max_digit > 15:
+    return
+  as_letters = []
+  for digit in digits:
+    letters = _HEX_ALPHABET[digit]
+    if not letters:
+      return
+    as_letters.append(letters)
+  for solution in acrostic.Acrostic(as_letters):
+    yield solution, 1
+
+
+def _t9(digits, min_digit, max_digit):
+  if min_digit < 2:
+    return
+  if max_digit > 9:
+    return
+  as_letters = []
+  for digit, length in _run_length(digits, 4):
+    offset = length - 1  # 1 based -> 0 based.
+    try:
+      if length > len(_T9_DICT[digit]):
+        return
+      as_letters.append(_T9_DICT[digit][offset])
+    except:
+      print(digit, length)
+      return
+  if not as_letters:
+    return
+  for solution in acrostic.Acrostic(as_letters):
+    yield solution, 1
+
+
+# Install.
+_HEURISTICS.extend([_hexspeak, _t9])
+
+# Data.
 _HEX_ALPHABET = [
   'o',  # 0.
   'l',  # 1.
@@ -49,19 +103,15 @@ _HEX_ALPHABET = [
   'f',  # F.
 ]
 
-
-def _hexspeak(digits, min_digit, max_digit):
-  if max_digit > 15:
-    return
-  as_letters = []
-  for digit in digits:
-    letters = _HEX_ALPHABET[digit]
-    if not letters:
-      return
-    as_letters.append(letters)
-  for solution in acrostic.Acrostic(as_letters):
-    yield solution, 1
-  return
-
-
-_HEURISTICS.append(_hexspeak)
+_T9_DICT = [
+  None,  # 0.
+  None,  # 1.
+  'abc',  # 2.
+  'def',  # 3.
+  'ghi',  # 4.
+  'jkl',  # 5.
+  'mno',  # 6.
+  'pqrs',  # 7.
+  'tuv',  # 8.
+  'wxyz',  # 9.
+]
