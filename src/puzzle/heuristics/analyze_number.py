@@ -135,6 +135,18 @@ def _hexspeak(digits, min_digit, max_digit):
     yield solution, 1
 
 
+def _lexicographical_ordering(digits, min_digit, max_digit):
+  if min_digit != 0:
+    return
+  elif max_digit > 5:
+    # Number of lexographic orderings for 0..5 is already quite high.
+    return
+  elif len(digits) % max_digit != 0:
+    # Should be possible to chunk digits into max_digit chunks.
+    return
+
+
+
 def _morse(digits, min_digit, max_digit):
   """Use 0, 1, 2 for morse. Sadly, there is no universal standard."""
   del min_digit

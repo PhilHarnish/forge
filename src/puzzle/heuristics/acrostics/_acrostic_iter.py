@@ -72,7 +72,8 @@ class Acrostic(_base_acrostic.BaseAcrostic):
             # Forward any findings from recursive calls up the trampoline.
             yield result
       elif pos == target:
-        yield ' '.join(acc), acc_weight
+        if len(acc) < target:  # Reject solutions composed of split letters.
+          yield ' '.join(acc), acc_weight
       else:
         raise Exception('Desired length exceeded.')
       pos -= phrase_len

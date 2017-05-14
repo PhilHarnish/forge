@@ -3,10 +3,10 @@ import collections
 import mock
 from mock.mock import patch
 
-from spec.mamba import *
-from spec.data.fixtures import tries
-from puzzle.heuristics.acrostics import _acrostic_iter
 from data import word_frequencies
+from puzzle.heuristics.acrostics import _acrostic_iter
+from spec.data.fixtures import tries
+from spec.mamba import *
 
 BA_PREFIX_TRIE = word_frequencies.load(
     reversed(list(zip(
@@ -17,18 +17,18 @@ BA_PREFIX_TRIE = word_frequencies.load(
 with description('acrostic'):
   with description('basics'):
     with it('uses a mock trie'):
-      a = _acrostic_iter.Acrostic(['a'], tries.letters())
+      a = _acrostic_iter.Acrostic(['is'])
       expect(len(a._trie)).to(be_below(100))
 
     with it('yields simple solutions'):
-      a = _acrostic_iter.Acrostic(['a'], tries.letters())
-      expect(list(a)).to(contain('a'))
+      a = _acrostic_iter.Acrostic('is')
+      expect(list(a)).to(contain('is'))
 
     with it('is observable'):
-      a = _acrostic_iter.Acrostic(['a'], tries.letters())
+      a = _acrostic_iter.Acrostic('is')
       subs = mock.Mock()
       a.subscribe(subs)
-      expect(subs.on_next.call_args).to(equal(mock.call('a')))
+      expect(subs.on_next.call_args).to(equal(mock.call('is')))
 
     with it('yields multi-character solutions'):
       a = _acrostic_iter.Acrostic(list('bag'), BA_PREFIX_TRIE)
@@ -44,7 +44,7 @@ with description('acrostic'):
 
   with description('_iter_phrases'):
     with before.all:
-      self.subject = _acrostic_iter.Acrostic(['a'], tries.letters())
+      self.subject = _acrostic_iter.Acrostic(['a'])
 
     with it('yields nothing for empty input'):
       phrases = self.subject._iter_phrases({})
