@@ -56,6 +56,9 @@ with description('analyze_number'):
     with it('ignores empty input'):
       expect(analyze_number.solutions(0)).to(be_empty)
 
+    with it('solves braille'):
+      expect(next(analyze_number.solutions(135024560123))).to(equal(('owl', 1)))
+
     with it('understands hexspeak'):
       expect(next(analyze_number.solutions(0xDEAD))).to(equal(('dead', 1)))
 

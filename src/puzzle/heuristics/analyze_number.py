@@ -1,4 +1,4 @@
-from data.alphabets import braille
+from data.alphabets import braille, leet, t9
 from puzzle.heuristics import acrostic
 
 _BASE_HIGH_PRIORITY = [
@@ -7,7 +7,7 @@ _BASE_HIGH_PRIORITY = [
 _BASE_PRIORITY = _BASE_HIGH_PRIORITY + [
   i for i in range(2, 40) if i not in _BASE_HIGH_PRIORITY
 ]
-_HEURISTICS = []
+_HEURISTICS = []  # Updated at end.
 
 
 def solutions(n):
@@ -83,7 +83,7 @@ def _hexspeak(digits, min_digit, max_digit):
     return
   as_letters = []
   for digit in digits:
-    letters = _HEX_ALPHABET[digit]
+    letters = leet.HEX_ALPHABET[digit]
     if not letters:
       return
     as_letters.append(letters)
@@ -118,7 +118,7 @@ def _phone_number(digits, min_digit, max_digit):
   for digit in digits[skip:]:
     if digit < 2:
       return
-    as_letters.append(_T9_DICT[digit])
+    as_letters.append(t9.KEYS[digit])
   for solution in acrostic.Acrostic(as_letters):
     yield prefix + solution, 1
 
@@ -133,9 +133,9 @@ def _t9(digits, min_digit, max_digit):
   for digit, length in _run_length(digits, 4):
     offset = length - 1  # 1 based -> 0 based.
     try:
-      if length > len(_T9_DICT[digit]):
+      if length > len(t9.KEYS[digit]):
         return
-      as_letters.append(_T9_DICT[digit][offset])
+      as_letters.append(t9.KEYS[digit][offset])
     except:
       print(digit, length)
       return
@@ -146,37 +146,4 @@ def _t9(digits, min_digit, max_digit):
 
 
 # Install.
-_HEURISTICS.extend([_hexspeak, _phone_number, _t9])
-
-# Data.
-_HEX_ALPHABET = [
-  'o',  # 0.
-  'l',  # 1.
-  'z',  # 2.
-  'e',  # 3.
-  'a',  # 4.
-  's',  # 5.
-  'b',  # 6.
-  't',  # 7.
-  'b',  # 8.
-  '',  # 9.
-  'a',  # A.
-  'b',  # B.
-  'c',  # C.
-  'd',  # D.
-  'e',  # E.
-  'f',  # F.
-]
-
-_T9_DICT = [
-  None,  # 0.
-  None,  # 1.
-  'abc',  # 2.
-  'def',  # 3.
-  'ghi',  # 4.
-  'jkl',  # 5.
-  'mno',  # 6.
-  'pqrs',  # 7.
-  'tuv',  # 8.
-  'wxyz',  # 9.
-]
+_HEURISTICS.extend([_braille, _hexspeak, _phone_number, _t9])
