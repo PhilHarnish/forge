@@ -1,4 +1,4 @@
-ALPHABET = [
+BITFIELD_ALPHABET = [
   ' ',  # 0: ⠀ </>
   'a',  # 1: ⠁ 1
   ',',  # 2: ⠂ 2
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     return ''.join(acc) or '</>'
 
 
-  print('ALPHABET = [')
+  print('BITFIELD_ALPHABET = [')
   for i in range(0, 2 ** 6):
     print('  %s,  # %s: %s %s' % (
       repr(_braille_letter(i)), i, chr(0x2800 + i), _bits(i)))

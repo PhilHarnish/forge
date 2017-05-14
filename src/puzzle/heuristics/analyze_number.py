@@ -63,10 +63,10 @@ def _braille(digits, min_digit, max_digit):
   last = 0
   for digit in digits + [0]:
     if digit == 0:
-      if braille.ALPHABET[acc] is None:
+      if braille.BITFIELD_ALPHABET[acc] is None:
         # Found an invalid character.
         return
-      as_letters.append(braille.ALPHABET[acc])
+      as_letters.append(braille.BITFIELD_ALPHABET[acc])
       acc = 0
     elif digit <= last:
       # Digits must always increase.
@@ -89,6 +89,10 @@ def _hexspeak(digits, min_digit, max_digit):
     as_letters.append(letters)
   for solution in acrostic.Acrostic(as_letters):
     yield solution, 1
+
+
+def _morse(digits, min_digit, max_digit):
+  """Use 0, 1, 2 for morse. Sadly, there is no universal standard."""
 
 
 def _phone_number(digits, min_digit, max_digit):
