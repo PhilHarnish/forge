@@ -59,6 +59,37 @@ def _hexspeak(digits, min_digit, max_digit):
     yield solution, 1
 
 
+def _phone_number(digits, min_digit, max_digit):
+  n_digits = len(digits)
+  if max_digit > 9:  # Not decimal.
+    return
+  elif n_digits not in (7, 10, 11):  # 1-XXX-YYY-ZZZZ.
+    # Not a phone number.
+    return
+  elif n_digits == 7:  # YYY-ZZZZ.
+    skip = 0
+  elif n_digits == 10:  # XXX-YYY-ZZZZ.
+    if digits[0:3] == [8, 0, 0]:
+      skip = 3
+    else:
+      skip = 0
+  elif digits[0] == 1:  # 1-XXX-YYY-ZZZZ.
+    if digits[1:4] == [8, 0, 0]:
+      skip = 4
+    else:
+      skip = 1
+  else:  # >1 leading digit.
+    return
+  as_letters = []
+  prefix = ''.join([str(i) for i in digits[0:skip]])
+  for digit in digits[skip:]:
+    if digit < 2:
+      return
+    as_letters.append(_T9_DICT[digit])
+  for solution in acrostic.Acrostic(as_letters):
+    yield prefix + solution, 1
+
+
 def _t9(digits, min_digit, max_digit):
   if min_digit < 2:
     return
@@ -81,7 +112,7 @@ def _t9(digits, min_digit, max_digit):
 
 
 # Install.
-_HEURISTICS.extend([_hexspeak, _t9])
+_HEURISTICS.extend([_hexspeak, _phone_number, _t9])
 
 # Data.
 _HEX_ALPHABET = [
