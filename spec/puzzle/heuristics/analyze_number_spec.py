@@ -75,6 +75,22 @@ with description('analyze_number'):
       expect(self.first(analyze_number._phone_number, 18006694373)).to(
           equal(('1800nowhere', 1)))
 
+  with description('positional'):
+    with it('rejects short positional numbers'):
+      expect(self.run(analyze_number._positional, 3)).to(be_empty)
+
+    with it('rejects positional with duplicated numbers'):
+      expect(self.run(
+          analyze_number._positional,
+          12345678901234567890123456,
+      )).to(be_empty)
+
+    with it('accepts positional'):
+      expect(self.first(
+          analyze_number._positional,
+          23100000000000000000000000,
+      )).to(equal(('cab', 1)))
+
   with description('runlength'):
     with it('rejects random input'):
       expect(self.run(analyze_number._runlength, 651322333143)).to(be_empty)
@@ -109,6 +125,10 @@ with description('analyze_number'):
 
     with it('solves morse'):
       expect(next(analyze_number.solutions(222012201211))).to(equal(('owl', 1)))
+
+    with it('solves positional'):
+      expect(next(analyze_number.solutions(23100000000000000000000000))).to(
+          equal(('cab', 1)))
 
     with it('solves hexspeak'):
       expect(next(analyze_number.solutions(0xDEAD))).to(equal(('dead', 1)))

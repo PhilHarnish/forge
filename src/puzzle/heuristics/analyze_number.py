@@ -181,6 +181,32 @@ def _phone_number(digits, min_digit, max_digit):
     yield prefix + solution, 1
 
 
+def _positional(digits, min_digit, max_digit):
+  del min_digit
+  if len(digits) != 26:
+    return
+  if max_digit > 10:
+    return
+  word_map = {}
+  offset = ord('a')
+  for i, digit in enumerate(digits):
+    if not digit:
+      continue
+    if digit in word_map:
+      return
+    word_map[digit] = chr(i + offset)
+  as_letters = []
+  cursor = 1
+  while cursor in word_map:
+    as_letters.append(word_map[cursor])
+    del word_map[cursor]
+    cursor += 1
+  if word_map:
+    return  # Not all letters were used.
+  for solution in acrostic.Acrostic(as_letters):
+    yield solution, 1
+
+
 def _runlength(digits, min_digit, max_digit):
   del min_digit, max_digit
   chunks = _run_length(digits, 26)
@@ -235,5 +261,5 @@ def _t9(digits, min_digit, max_digit):
 # Install.
 _HEURISTICS.extend([
   _alphabet, _ascii_nibbles, _braille, _hexspeak, _morse, _phone_number,
-  _runlength, _t9,
+  _positional, _runlength, _t9,
 ])
