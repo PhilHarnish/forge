@@ -1,4 +1,4 @@
-from data.alphabets import braille, leet, t9
+from data.alphabets import braille, leet, morse, t9
 from puzzle.heuristics import acrostic
 
 _BASE_HIGH_PRIORITY = [
@@ -93,6 +93,16 @@ def _hexspeak(digits, min_digit, max_digit):
 
 def _morse(digits, min_digit, max_digit):
   """Use 0, 1, 2 for morse. Sadly, there is no universal standard."""
+  del min_digit
+  if max_digit > 2:
+    return
+  word = ''.join([str(i) for i in digits])
+  for translation in morse.TRANSLATION_TABLES:
+    translated = morse.translate(word.translate(translation))
+    if translated is None:
+      continue
+    for solution in acrostic.Acrostic(translated):
+      yield solution, 1
 
 
 def _phone_number(digits, min_digit, max_digit):
@@ -150,4 +160,4 @@ def _t9(digits, min_digit, max_digit):
 
 
 # Install.
-_HEURISTICS.extend([_braille, _hexspeak, _phone_number, _t9])
+_HEURISTICS.extend([_braille, _hexspeak, _morse, _phone_number, _t9])

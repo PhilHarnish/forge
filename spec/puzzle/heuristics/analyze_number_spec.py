@@ -31,6 +31,19 @@ with description('analyze_number'):
       expect(self.first(analyze_number._hexspeak, 0xDEAD, 16)).to(
           equal(('dead', 1)))
 
+  with description('morse'):
+    with it('rejects invalid sequences'):
+      expect(self.run(analyze_number._morse, 22222222)).to(be_empty)
+
+    with it('accepts ambiguous sequences'):
+      owls = [
+        222012201211,  # 012 = ' .-'
+        111021102122,  # 012 = ' -.'
+        111201120100,  # 012 = '-. '
+      ]
+      for owl in owls:
+        expect(self.first(analyze_number._morse, owl)).to(equal(('owl', 1)))
+
   with description('phone numbers'):
     with it('rejects invalid numbers'):
       samples = [
@@ -59,7 +72,10 @@ with description('analyze_number'):
     with it('solves braille'):
       expect(next(analyze_number.solutions(135024560123))).to(equal(('owl', 1)))
 
-    with it('understands hexspeak'):
+    with it('solves morse'):
+      expect(next(analyze_number.solutions(222012201211))).to(equal(('owl', 1)))
+
+    with it('solves hexspeak'):
       expect(next(analyze_number.solutions(0xDEAD))).to(equal(('dead', 1)))
 
     with it('solves t9'):
