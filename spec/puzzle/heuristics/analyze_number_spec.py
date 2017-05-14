@@ -73,7 +73,11 @@ with description('analyze_number'):
 
     with it('accepts phone numbers'):
       expect(self.first(analyze_number._phone_number, 18006694373)).to(
-          equal(('1800nowhere', 1)))
+          be_one_of(
+              ('1800nowhere', 1),
+              ('1800no where', 1),
+              ('1800now here', 1),
+          ))
 
   with description('positional'):
     with it('rejects short positional numbers'):
