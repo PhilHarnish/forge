@@ -30,7 +30,7 @@ class be_between(matchers.Matcher):
     self._high = high
 
   def _match(self, subject):
-    return subject > self._low and subject < self._high, ['asadf']
+    return subject > self._low and subject < self._high, []
 
   def _failure_message(self, subject, *args):
     return self._failure_message_negated(subject, *args).replace(' not ', ' ')
@@ -38,6 +38,14 @@ class be_between(matchers.Matcher):
   def _failure_message_negated(self, subject, *args):
     return 'expected: %s not to be between %s and %s' % (
       subject, self._low, self._high)
+
+
+class be_one_of(matchers.Matcher):
+  def __init__(self, *args):
+    self._options = args
+
+  def _match(self, subject):
+    return subject in self._options, [repr(option) for option in self._options]
 
 
 # Sentinel object for undefined values.

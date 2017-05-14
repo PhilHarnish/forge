@@ -52,3 +52,15 @@ with description('mamba test helper'):
     with it('should reject numbers matching high or low'):
       expect(0).not_to(be_between(0, 1))
       expect(1).not_to(be_between(0, 1))
+
+  with description('be_one_of'):
+    with it('should accept a single option'):
+      expect(1).to(be_one_of(1))
+
+    with it('should mismatches'):
+      expect(0).not_to(be_one_of(1))
+
+    with it('should accept from a list'):
+      expect(0).to(be_one_of(*range(3)))
+      expect(1).to(be_one_of(*range(3)))
+      expect(2).to(be_one_of(*range(3)))
