@@ -5,13 +5,13 @@ from expects import matchers
 self = {}
 
 def description(desc):
-  pass
+  del desc
 
 def context(desc):
-  pass
+  del desc
 
 def it(desc):
-  pass
+  del desc
 
 class Hook(object):
   all = None
@@ -20,7 +20,10 @@ class Hook(object):
 before = Hook()
 after = Hook()
 
-# Custom expects.
+# Expects.
+if False:
+  expect('no-op')  # Ensures import is not removed.
+
 class be_between(matchers.Matcher):
   def __init__(self, low, high):
     self._low = low
@@ -64,6 +67,10 @@ class call(object):
     else:
       suffix = ' == %s' % repr(self._value)
     return '%s(%s)%s' % (self._fn.__name__, args, suffix)
+
+  def __iter__(self):
+    for v in self._value:
+      yield v
 
   def __ge__(self, other):
     # NB: self._value.__gt__(other) will not work for [int] >= [float].
