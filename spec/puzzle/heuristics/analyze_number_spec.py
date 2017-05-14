@@ -11,17 +11,20 @@ with description('analyze_number'):
         yield result
 
 
-    self.run = lambda fn, n, base=10: call(run, fn, n, base)
-
-
     def first(fn, n, base):
       return next(run(fn, n, base))
 
 
+    self.run = lambda fn, n, base=10: call(run, fn, n, base)
     self.first = lambda fn, n, base=10: call(first, fn, n, base)
 
-  with it('ignores empty input'):
-    expect(analyze_number.solutions(0)).to(be_empty)
+  with description('braille'):
+    with it('rejects decreasing input'):
+      expect(self.run(analyze_number._braille, 6543)).to(be_empty)
+
+    with it('accepts increasing input'):
+      expect(self.first(analyze_number._braille, 135024560123)).to(
+          equal(('owl', 1)))
 
   with description('hex'):
     with it('understands hexspeak'):
@@ -47,9 +50,12 @@ with description('analyze_number'):
       expect(self.first(analyze_number._t9, 6669555)).to(equal(('owl', 1)))
 
     with it('rejects invalid t9'):
-      expect(list(self.run(analyze_number._t9, 666666))).to(equal([]))
+      expect(self.run(analyze_number._t9, 666666)).to(be_empty)
 
   with description('solutions'):
+    with it('ignores empty input'):
+      expect(analyze_number.solutions(0)).to(be_empty)
+
     with it('understands hexspeak'):
       expect(next(analyze_number.solutions(0xDEAD))).to(equal(('dead', 1)))
 

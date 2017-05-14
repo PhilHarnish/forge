@@ -1,3 +1,4 @@
+from data.alphabets import braille
 from puzzle.heuristics import acrostic
 
 _BASE_HIGH_PRIORITY = [
@@ -46,7 +47,38 @@ def _run_length(digits, max_length):
 
 
 # Heuristics.
+def _braille(digits, min_digit, max_digit):
+  """Braille.
+  
+  Increasing sequences of 1..6 specify raised dots (in column-major order, as
+  standard for Braille), separated by 0s.
+  """
+  del min_digit
+  if max_digit > 6:
+    return
+  elif digits[0] == 0:
+    return
+  as_letters = []
+  acc = 0
+  last = 0
+  for digit in digits + [0]:
+    if digit == 0:
+      if braille.ALPHABET[acc] is None:
+        # Found an invalid character.
+        return
+      as_letters.append(braille.ALPHABET[acc])
+      acc = 0
+    elif digit <= last:
+      # Digits must always increase.
+      return
+    else:
+      acc |= 1 << (digit - 1)
+    last = digit
+  for solution in acrostic.Acrostic(as_letters):
+    yield solution, 1
+
 def _hexspeak(digits, min_digit, max_digit):
+  del min_digit
   if max_digit > 15:
     return
   as_letters = []
@@ -60,6 +92,7 @@ def _hexspeak(digits, min_digit, max_digit):
 
 
 def _phone_number(digits, min_digit, max_digit):
+  del min_digit
   n_digits = len(digits)
   if max_digit > 9:  # Not decimal.
     return
@@ -91,6 +124,7 @@ def _phone_number(digits, min_digit, max_digit):
 
 
 def _t9(digits, min_digit, max_digit):
+  """Presses on phone keypad."""
   if min_digit < 2:
     return
   if max_digit > 9:
