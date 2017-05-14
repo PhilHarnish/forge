@@ -47,6 +47,50 @@ def _run_length(digits, max_length):
 
 
 # Heuristics.
+def _alphabet(digits, min_digit, max_digit):
+  if min_digit == 0:
+    return
+  if max_digit > 26:
+    return
+  as_letters = []
+  offset = ord('a') - 1
+  for digit in digits:
+    as_letters.append(chr(offset + digit))
+  for solution in acrostic.Acrostic(as_letters):
+    yield solution, 1
+
+
+def _ascii_nibbles(digits, min_digit, max_digit):
+  del min_digit
+  if max_digit > 16:  # NB: Galactic included 16 as a delimiter.
+    return
+  if max_digit == 16:
+    # Verify every 3rd digit is a delimiter.
+    for i in range(2, len(digits), 3):
+      if digits[i] != 16:
+        return
+    step = 3
+  else:
+    step = 2
+    # Verify digits is an even number.
+    if len(digits) % 2:
+      return
+  as_letters = []
+  for digit in range(0, len(digits), step):
+    try:
+      left, right = digits[digit], digits[digit + 1]
+    except:
+      print(digit, step)
+    if left == 16 or right == 16:
+      return
+    c = chr(left << 4 | right)
+    if not c.isalpha():
+      return
+    as_letters.append(c.lower())
+  for solution in acrostic.Acrostic(as_letters):
+    yield solution, 1
+
+
 def _braille(digits, min_digit, max_digit):
   """Braille.
   
@@ -160,4 +204,6 @@ def _t9(digits, min_digit, max_digit):
 
 
 # Install.
-_HEURISTICS.extend([_braille, _hexspeak, _morse, _phone_number, _t9])
+_HEURISTICS.extend([
+  _alphabet, _ascii_nibbles, _braille, _hexspeak, _morse, _phone_number, _t9
+])

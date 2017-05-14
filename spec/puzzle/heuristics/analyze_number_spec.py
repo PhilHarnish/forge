@@ -18,6 +18,23 @@ with description('analyze_number'):
     self.run = lambda fn, n, base=10: call(run, fn, n, base)
     self.first = lambda fn, n, base=10: call(first, fn, n, base)
 
+  with description('alphabet'):
+    with it('rejects invalid input'):
+      expect(self.run(analyze_number._alphabet, 101)).to(be_empty)
+
+    with it('accepts input'):
+      expect(self.first(analyze_number._alphabet, 312)).to(equal(('cab', 1)))
+
+  with description('ascii_nibbles'):
+    with it('accepts input'):
+      expect(self.first(analyze_number._ascii_nibbles, 0x6f776c, 16)).to(
+          equal(('owl', 1)))
+
+    with it('accepts delimited input'):
+      expect(next(analyze_number._ascii_nibbles([
+        0x6, 0xf, 16, 0x7, 0x7, 16, 0x6, 0xc,
+      ], 6, 16))).to(equal(('owl', 1)))
+
   with description('braille'):
     with it('rejects decreasing input'):
       expect(self.run(analyze_number._braille, 6543)).to(be_empty)
@@ -68,6 +85,12 @@ with description('analyze_number'):
   with description('solutions'):
     with it('ignores empty input'):
       expect(analyze_number.solutions(0)).to(be_empty)
+
+    with it('solves alphabet'):
+      expect(next(analyze_number.solutions(312))).to(equal(('cab', 1)))
+
+    with it('solves ascii nibbles'):
+      expect(next(analyze_number.solutions(0x6f776c))).to(equal(('owl', 1)))
 
     with it('solves braille'):
       expect(next(analyze_number.solutions(135024560123))).to(equal(('owl', 1)))

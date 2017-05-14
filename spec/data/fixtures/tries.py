@@ -62,7 +62,12 @@ _LEETSPEAK_DATA = sorted([
   ('deadbeef', 10000),  # Unknown, technically.
 ], key=lambda x: x[1], reverse=True)
 
+_BASIC_DATA = sorted([
+  ('cat', 46839855),
+  ('cab', 9268943),
+], key=lambda x: x[1], reverse=True)
+
 # All of the above.
 _KITCHEN_SINK_DATA = sorted(
-    _AMBIGUOUS_DATA + _LEETSPEAK_DATA,
+    _AMBIGUOUS_DATA + _LEETSPEAK_DATA + _BASIC_DATA,
     key=lambda x: x[1], reverse=True)
