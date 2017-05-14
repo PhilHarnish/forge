@@ -2,8 +2,8 @@ import heapq
 
 from rx import Observable
 
-import puzzle.heuristics._base_acrostic
 from data import meta
+from puzzle.heuristics import _base_acrostic
 
 _EMPTY = (None, 0)
 # Try to average 3 letters per word.
@@ -15,13 +15,12 @@ _TARGET_WORD_LEN = 4
 _TARGET_WORD_SCORE_RATE = 200000000
 
 
-class Acrostic(puzzle.heuristics._base_acrostic.BaseAcrostic):
+class Acrostic(_base_acrostic.BaseAcrostic):
   """Acrostic solver."""
 
-  def __init__(self, words, trie):
-    self._words = [set(word) for word in words]
+  def __init__(self, words, trie=None):
+    super(Acrostic, self).__init__(words, trie)
     self._solution_len = len(words)
-    self._trie = trie
     self._source = Observable.from_(self)
     self.subscribe = self._source.subscribe
     # Since we can assume there will be 1 letter phrases for every letter
