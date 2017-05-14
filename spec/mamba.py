@@ -72,6 +72,9 @@ class call(object):
     for v in self._value:
       yield v
 
+  def __next__(self):
+    return next(self._value)
+
   def __ge__(self, other):
     # NB: self._value.__gt__(other) will not work for [int] >= [float].
     return self._value >= other
