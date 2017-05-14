@@ -181,6 +181,35 @@ def _phone_number(digits, min_digit, max_digit):
     yield prefix + solution, 1
 
 
+def _runlength(digits, min_digit, max_digit):
+  del min_digit, max_digit
+  chunks = _run_length(digits, 26)
+  if len(chunks) < 3:
+    return
+  # Determine if this is delimited.
+  if len(chunks) > 3:
+    step = 2  # Assume it is.
+    delimiter = chunks[1][0]
+    for i in range(1, len(chunks), 2):
+      digit, length = chunks[i]
+      if length == 1 and digit != delimiter:
+        step = 1  # Verified not delimited.
+        break
+  else:
+    step = 1
+  longest = 0
+  offset = ord('a') - 1
+  as_letters = []
+  for i in range(0, len(chunks), step):
+    digit, length = chunks[i]
+    longest = max(longest, length)
+    as_letters.append(chr(offset + length))
+  if len(as_letters) < 3 or longest < 3:
+    return
+  for solution in acrostic.Acrostic(as_letters):
+    yield solution, 1
+
+
 def _t9(digits, min_digit, max_digit):
   """Presses on phone keypad."""
   if min_digit < 2:
@@ -205,5 +234,6 @@ def _t9(digits, min_digit, max_digit):
 
 # Install.
 _HEURISTICS.extend([
-  _alphabet, _ascii_nibbles, _braille, _hexspeak, _morse, _phone_number, _t9
+  _alphabet, _ascii_nibbles, _braille, _hexspeak, _morse, _phone_number,
+  _runlength, _t9,
 ])

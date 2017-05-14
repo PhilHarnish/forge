@@ -75,6 +75,18 @@ with description('analyze_number'):
       expect(self.first(analyze_number._phone_number, 18006694373)).to(
           equal(('1800nowhere', 1)))
 
+  with description('runlength'):
+    with it('rejects random input'):
+      expect(self.run(analyze_number._runlength, 651322333143)).to(be_empty)
+
+    with it('accepts input'):
+      expect(self.first(analyze_number._runlength, 111022)).to(
+          equal(('cab', 1)))
+
+    with it('accepts delimited input'):
+      expect(self.first(analyze_number._runlength, 11101011)).to(
+          equal(('cab', 1)))
+
   with description('t9'):
     with it('accepts t9'):
       expect(self.first(analyze_number._t9, 6669555)).to(equal(('owl', 1)))
@@ -100,6 +112,9 @@ with description('analyze_number'):
 
     with it('solves hexspeak'):
       expect(next(analyze_number.solutions(0xDEAD))).to(equal(('dead', 1)))
+
+    with it('solves runlength'):
+      expect(next(analyze_number.solutions(11101011))).to(equal(('cab', 1)))
 
     with it('solves t9'):
       expect(next(analyze_number.solutions(6669555))).to(equal(('owl', 1)))
