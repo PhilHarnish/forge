@@ -48,6 +48,22 @@ with description('analyze_number'):
       expect(self.first(analyze_number._hexspeak, 0xDEAD, 16)).to(
           equal(('dead', 1)))
 
+  with description('lexicographical ordering'):
+    with it('rejects input with incorrect length'):
+      expect(self.run(analyze_number._lexicographical_ordering, 10101)).to(
+          be_empty)
+
+    with it('rejects repeated input'):
+      expect(self.run(analyze_number._lexicographical_ordering, 1011)).to(
+          be_empty)
+
+    with it('accepts lexicographical ordering'):
+      # Ordering: 012, 021, 102, 120, 201, 210.
+      # Alphabet:   a,   b,   c,   d,   e,   f.
+      expect(self.first(
+          analyze_number._lexicographical_ordering, 102012021)).to(
+          equal(('cab', 1)))
+
   with description('morse'):
     with it('rejects invalid sequences'):
       expect(self.run(analyze_number._morse, 22222222)).to(be_empty)
@@ -136,6 +152,9 @@ with description('analyze_number'):
 
     with it('solves hexspeak'):
       expect(next(analyze_number.solutions(0xDEAD))).to(equal(('dead', 1)))
+
+    with it('solves lexicographical ordering'):
+      expect(next(analyze_number.solutions(102012021))).to(equal(('cab', 1)))
 
     with it('solves runlength'):
       expect(next(analyze_number.solutions(11101011))).to(equal(('cab', 1)))

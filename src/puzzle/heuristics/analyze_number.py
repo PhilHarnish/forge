@@ -1,3 +1,5 @@
+import math
+
 from data.alphabets import braille, leet, morse, t9
 from puzzle.heuristics import acrostic
 
@@ -121,6 +123,7 @@ def _braille(digits, min_digit, max_digit):
   for solution in acrostic.Acrostic(as_letters):
     yield solution, 1
 
+
 def _hexspeak(digits, min_digit, max_digit):
   del min_digit
   if max_digit > 15:
@@ -141,10 +144,28 @@ def _lexicographical_ordering(digits, min_digit, max_digit):
   elif max_digit > 5:
     # Number of lexographic orderings for 0..5 is already quite high.
     return
-  elif len(digits) % max_digit != 0:
+  # Read out numbers in batches of (max_digit-1).
+  chunk_size = max_digit + 1
+  if len(digits) % chunk_size != 0:
     # Should be possible to chunk digits into max_digit chunks.
     return
-
+  as_letters = []
+  offset = ord('a')
+  for i in range(0, len(digits), chunk_size):
+    remaining = list(range(chunk_size))  # Create a list of [0..max_digit)...
+    acc = 0
+    for j in range(chunk_size):  # ...and start extracting.
+      cursor = digits[i + j]
+      if cursor not in remaining:
+        # Sequence is invalid. We've encountered a duplicate digit.
+        return
+      position = remaining.index(cursor)
+      # When 3/3 are left, a leading 2 is 2*1 into the sequence.
+      acc += position * math.factorial(len(remaining) - 1)
+      remaining.pop(position)
+    as_letters.append(chr(acc + offset))
+  for solution in acrostic.Acrostic(as_letters):
+    yield solution, 1
 
 
 def _morse(digits, min_digit, max_digit):
@@ -272,6 +293,6 @@ def _t9(digits, min_digit, max_digit):
 
 # Install.
 _HEURISTICS.extend([
-  _alphabet, _ascii_nibbles, _braille, _hexspeak, _morse, _phone_number,
-  _positional, _runlength, _t9,
+  _alphabet, _ascii_nibbles, _braille, _hexspeak, _lexicographical_ordering,
+  _morse, _phone_number, _positional, _runlength, _t9,
 ])
