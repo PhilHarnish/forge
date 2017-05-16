@@ -1,6 +1,6 @@
 import math
 
-from data.alphabets import braille, leet, morse, t9
+from data.alphabets import braille, keyboard_intersection, leet, morse, t9
 from puzzle.heuristics import acrostic
 
 _BASE_HIGH_PRIORITY = [
@@ -134,6 +134,21 @@ def _hexspeak(digits, min_digit, max_digit):
     if not letters:
       return
     as_letters.append(letters)
+  for solution in acrostic.Acrostic(as_letters):
+    yield solution, 1
+
+
+def _keyboard_intersection(digits, min_digit, max_digit):
+  del min_digit, max_digit
+  if len(digits) % 2 != 0:
+    return
+  as_letters = []
+  for i in range(0, len(digits), 2):
+    left, right = digits[i], digits[i + 1]
+    key = str(left) + str(right)
+    if key not in keyboard_intersection.LOOKUP:
+      return
+    as_letters.append(keyboard_intersection.LOOKUP[key])
   for solution in acrostic.Acrostic(as_letters):
     yield solution, 1
 
@@ -293,6 +308,7 @@ def _t9(digits, min_digit, max_digit):
 
 # Install.
 _HEURISTICS.extend([
-  _alphabet, _ascii_nibbles, _braille, _hexspeak, _lexicographical_ordering,
-  _morse, _phone_number, _positional, _runlength, _t9,
+  _alphabet, _ascii_nibbles, _braille, _hexspeak, _keyboard_intersection,
+  _lexicographical_ordering, _morse, _phone_number, _positional, _runlength,
+  _t9,
 ])

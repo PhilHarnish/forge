@@ -48,6 +48,14 @@ with description('analyze_number'):
       expect(self.first(analyze_number._hexspeak, 0xDEAD, 16)).to(
           equal(('dead', 1)))
 
+  with description('keyboard intersection'):
+    with it('rejects odd digit counts'):
+      expect(self.run(analyze_number._keyboard_intersection, 101)).to(be_empty)
+
+    with it('accepts valid input'):
+      expect(self.first(analyze_number._keyboard_intersection, 361358)).to(
+          equal(('cab', 1)))
+
   with description('lexicographical ordering'):
     with it('rejects input with incorrect length'):
       expect(self.run(analyze_number._lexicographical_ordering, 10101)).to(
@@ -152,6 +160,9 @@ with description('analyze_number'):
 
     with it('solves hexspeak'):
       expect(next(analyze_number.solutions(0xDEAD))).to(equal(('dead', 1)))
+
+    with it('solves keyboard intersection'):
+      expect(next(analyze_number.solutions(361358))).to(equal(('cab', 1)))
 
     with it('solves lexicographical ordering'):
       expect(next(analyze_number.solutions(102012021))).to(equal(('cab', 1)))
