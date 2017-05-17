@@ -4,7 +4,7 @@ from data.alphabets import braille, keyboard_intersection, leet, morse, t9
 from puzzle.heuristics import acrostic
 
 _BASE_HIGH_PRIORITY = [
-  10, 16, 2, 26,
+  10, 16, 2, 26, 36,
 ]
 _BASE_PRIORITY = _BASE_HIGH_PRIORITY + [
   i for i in range(2, 40) if i not in _BASE_HIGH_PRIORITY
@@ -89,6 +89,20 @@ def _ascii_nibbles(digits, min_digit, max_digit):
     if not c.isalpha():
       return
     as_letters.append(c.lower())
+  for solution in acrostic.Acrostic(as_letters):
+    yield solution, 1
+
+
+def _base_n(digits, min_digit, max_digit):
+  """Convert digits to letters assuming baseN (eg hex has A-F)."""
+  if min_digit < 10:
+    return
+  if max_digit > 36:
+    return
+  offset = ord('a') - 10  # Assume 0-9 are reserved for digits.
+  as_letters = []
+  for digit in digits:
+    as_letters.append(chr(digit + offset))
   for solution in acrostic.Acrostic(as_letters):
     yield solution, 1
 

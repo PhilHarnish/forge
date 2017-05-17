@@ -35,6 +35,19 @@ with description('analyze_number'):
         0x6, 0xf, 16, 0x7, 0x7, 16, 0x6, 0xc,
       ], 6, 16))).to(equal(('owl', 1)))
 
+  with description('base_n'):
+    with it('rejects invalid input'):
+      expect(self.run(analyze_number._base_n, 100)).to(be_empty)
+
+    with it('accepts hex input (A-F)'):
+      expect(self.first(analyze_number._base_n, 0xCAB, 16)).to(
+          equal(('cab', 1)))
+
+    with it('accepts higher base values (A-Z)'):
+      expect(next(analyze_number._base_n([
+        14 + 10, 22 + 10, 11 + 10
+      ], 22, 32))).to(equal(('owl', 1)))
+
   with description('braille'):
     with it('rejects decreasing input'):
       expect(self.run(analyze_number._braille, 6543)).to(be_empty)
@@ -147,6 +160,9 @@ with description('analyze_number'):
 
     with it('solves ascii nibbles'):
       expect(next(analyze_number.solutions(0x6f776c))).to(equal(('owl', 1)))
+
+    with it('solves base 36'):
+      expect(next(analyze_number.solutions(0xCAB))).to(equal(('cab', 1)))
 
     with it('solves braille'):
       expect(next(analyze_number.solutions(135024560123))).to(equal(('owl', 1)))
