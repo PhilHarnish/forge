@@ -31,10 +31,10 @@ class Trie(collections.OrderedDict):
       while searching and pos < l:
         searching = False
         target = prefix[pos]
-        for dst_c, weight, children in cursor:
+        for dst_c, weight, terminal, *children in cursor:
           if dst_c == target:
-            searching = True
             pos += 1
+            searching = True
             cursor = children
             break
       return pos == l
@@ -75,16 +75,30 @@ class Trie(collections.OrderedDict):
     while searching and pos < l:
       searching = False
       target = word[pos]
-      for dst_c, _, children in cursor:
+      for row in cursor:
+        dst_c, _, terminal, *children = row
         if dst_c == target:
-          searching = True
           pos += 1
-          cursor = children
+          if pos == l:
+            # Exhausted input; this spells something now.
+            row[2] = True
+            return
+          elif children:
+            # More children to consider.
+            searching = True
+            cursor = children
+          else:
+            # Exhausted trie. Add in-place.
+            cursor = row
           break
+    end = len(word) - 1
     for i in range(pos, len(word)):
-      children = []
-      cursor.append((word[i], weight, children))
-      cursor = children
+      if i == end:
+        cursor.append([word[i], weight, True])
+      else:
+        new_cursor = [word[i], weight, False]
+        cursor.append(new_cursor)
+        cursor = new_cursor
 
 
 functools.lru_cache(maxsize=1)
