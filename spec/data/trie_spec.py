@@ -1,7 +1,6 @@
+from data import trie
 from spec.data.fixtures import tries
 from spec.mamba import *
-from data import trie
-
 
 _TEST_DATA = [
     ('the', 23135851162),
@@ -42,6 +41,20 @@ with description('trie'):
         expect(self.subject.items('t', 'ho')).to(equal([
           ('the', 23135851162), ('to', 12136980858), ('that', 3400031103)
         ]))
+
+    with description('has_keys_with_prefix'):
+      with before.each:
+        self.subject = tries.ambiguous()
+
+      with it('rejects garbage prefixes'):
+        expect(self.subject.has_keys_with_prefix('fsdfasa')).to(be_false)
+
+      with it('matches valid prefixes'):
+        expect(call(self.subject.has_keys_with_prefix, 'super')).to(equal(True))
+        expect(call(self.subject.has_keys_with_prefix, 'superb')).to(
+            equal(True))
+        expect(call(self.subject.has_keys_with_prefix, 'superbowl')).to(
+            equal(True))
 
     with description('walk'):
       with it('returns nothing for garbage input'):
