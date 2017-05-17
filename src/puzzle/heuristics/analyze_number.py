@@ -22,7 +22,6 @@ def solutions(n):
     for heuristic in _HEURISTICS:
       for result in heuristic(digits, min_digit, max_digit):
         yield result
-  return
 
 
 def _get_digits_in_base(n, b):
@@ -79,10 +78,7 @@ def _ascii_nibbles(digits, min_digit, max_digit):
       return
   as_letters = []
   for digit in range(0, len(digits), step):
-    try:
-      left, right = digits[digit], digits[digit + 1]
-    except:
-      print(digit, step)
+    left, right = digits[digit], digits[digit + 1]
     if left == 16 or right == 16:
       return
     c = chr(left << 4 | right)
@@ -312,7 +308,6 @@ def _t9(digits, min_digit, max_digit):
         return
       as_letters.append(t9.KEYS[digit][offset])
     except:
-      print(digit, length)
       return
   if not as_letters:
     return
