@@ -1,5 +1,5 @@
 from data import meta
-from puzzle.problems import anagram_problem, crossword_problem
+from puzzle.problems import anagram_problem, crossword_problem, number_problem
 
 _PROBLEM_TYPES = set()
 
@@ -31,6 +31,7 @@ def init():
     return
   register(anagram_problem.AnagramProblem)
   register(crossword_problem.CrosswordProblem)
+  register(number_problem.NumberProblem)
 
 
 def reset():

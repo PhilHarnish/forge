@@ -30,3 +30,13 @@ with description('NumberProblem'):
     expect(number_problem.NumberProblem.score(['1234'])).to(be_above(
         number_problem.NumberProblem.score(['123'])
     ))
+
+  with description('solutions'):
+    with it('solves simple problems'):
+      problem = number_problem.NumberProblem(
+          'ex',
+          ['0xCAB'])
+      solutions = problem.solutions()
+      solution, weight = solutions.first()
+      expect(solution).to(equal('cab'))
+      expect(weight).to(be_above(0))

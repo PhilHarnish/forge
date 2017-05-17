@@ -1,5 +1,6 @@
 import sys
 
+from puzzle.heuristics import analyze_number
 from puzzle.problems import problem
 
 
@@ -24,7 +25,11 @@ class NumberProblem(problem.Problem):
     return max(sys.float_info.epsilon, min(parsed / 0xAAAA, 1))
 
   def _solve(self):
-    return {}
+    # TODO: Much optimization needed here.
+    result = {}
+    for solution, weight in analyze_number.solutions(self._value):
+      result[solution] = weight
+    return result
 
 
 def _parse(src):
