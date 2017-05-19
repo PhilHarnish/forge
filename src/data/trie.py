@@ -28,11 +28,6 @@ class Trie(collections.OrderedDict):
     else:
       return any([key.startswith(prefix) for key in self])
 
-  def keys(self, prefix=''):
-    if prefix:
-      return [key for key in self if key.startswith(prefix)]
-    return iter(self)
-
   def _find_prefix(self, prefix):
     l = len(prefix)
     pos = 0

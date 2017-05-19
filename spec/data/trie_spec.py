@@ -92,12 +92,3 @@ with description('trie'):
     with it('should include letters'):
       for c in 'abcdefghijklmnopqrstuvwxyz':
         expect(c in self.subject).to(be_true)
-
-    with it('should prefix match ambiguous prefixes'):
-      # superbowlwarplanefireshipsnapshotscrapbookisnowhere
-      expect(set(self.subject.keys('super'))).to(contain(
-          'super', 'superb', 'superbowl'))
-      expect(set(self.subject.keys('war'))).to(contain(
-          'warplane', 'warplanes', 'war', 'warp'))
-      expect(set(self.subject.keys('snap'))).to(contain(
-          'snaps', 'snapshots', 'snap', 'snapshot'))
