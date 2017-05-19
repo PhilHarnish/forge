@@ -24,20 +24,7 @@ class Trie(collections.OrderedDict):
 
   def has_keys_with_prefix(self, prefix):
     if _REAL_TRIE:
-      l = len(prefix)
-      pos = 0
-      cursor = self._index
-      searching = True
-      while searching and pos < l:
-        searching = False
-        target = prefix[pos]
-        for dst_c, weight, terminal, *children in cursor:
-          if dst_c == target:
-            pos += 1
-            searching = True
-            cursor = children
-            break
-      return pos == l
+      return self._find_prefix(prefix) is not None
     else:
       return any([key.startswith(prefix) for key in self])
 
@@ -46,17 +33,29 @@ class Trie(collections.OrderedDict):
       return [key for key in self if key.startswith(prefix)]
     return iter(self)
 
-  def items(self, prefix=None, seek=None):
-    result = super(Trie, self).items()
-    if not seek:
-      if prefix:
-        return [kvp for kvp in result if kvp[0].startswith(prefix)]
-      return result
+  def _find_prefix(self, prefix):
     l = len(prefix)
-    return [
-      (key, weight) for key, weight in result if key.startswith(prefix) and (
-          len(key) < l or key[l] in seek)
-    ]
+    pos = 0
+    cursor = self._index
+    searching = True
+    while searching and pos < l:
+      searching = False
+      target = prefix[pos]
+      for row in cursor:
+        if len(row) == 3:
+          dst_c, _, _ = row
+          children = None
+        else:
+          dst_c, _, _, *children = row
+        if dst_c == target:
+          pos += 1
+          if children:
+            searching = True
+            cursor = children
+          break
+    if pos == l:
+      return cursor
+    return None
 
   def walk(self, seek_sets):
     """Returns solutions matching `seek_sets`, ordered from high to low."""
@@ -76,7 +75,11 @@ class Trie(collections.OrderedDict):
       searching = False
       target = word[pos]
       for row in cursor:
-        dst_c, _, terminal, *children = row
+        if len(row) == 2:
+          dst_c, _, terminal = row
+          children = None
+        else:
+          dst_c, _, terminal, *children = row
         if dst_c == target:
           pos += 1
           if pos == l:

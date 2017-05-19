@@ -32,16 +32,6 @@ with description('trie'):
       with it('all results'):
         expect(self.subject.items()).to(have_len(len(_TEST_DATA)))
 
-      with it('prefix results'):
-        expect(self.subject.items('th')).to(equal([
-          ('the', 23135851162), ('that', 3400031103)
-        ]))
-
-      with it('prefix + seek results'):
-        expect(self.subject.items('t', 'ho')).to(equal([
-          ('the', 23135851162), ('to', 12136980858), ('that', 3400031103)
-        ]))
-
     with description('has_keys_with_prefix'):
       with before.each:
         self.subject = tries.ambiguous()
