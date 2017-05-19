@@ -71,10 +71,10 @@ class Trie(collections.OrderedDict):
       target = word[pos]
       for row in cursor:
         if len(row) == 2:
-          dst_c, _, terminal = row
+          dst_c, _, _ = row
           children = None
         else:
-          dst_c, _, terminal, *children = row
+          dst_c, _, _, *children = row
         if dst_c == target:
           pos += 1
           if pos == l:
@@ -92,9 +92,9 @@ class Trie(collections.OrderedDict):
     end = len(word) - 1
     for i in range(pos, len(word)):
       if i == end:
-        cursor.append([word[i], weight, True])
+        cursor.append([word[i], weight, weight])
       else:
-        new_cursor = [word[i], weight, False]
+        new_cursor = [word[i], weight, 0]
         cursor.append(new_cursor)
         cursor = new_cursor
 
