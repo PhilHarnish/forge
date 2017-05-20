@@ -1,9 +1,5 @@
 import collections
-import functools
 import heapq
-import re
-
-_REAL_TRIE = True
 
 
 class Trie(collections.OrderedDict):
@@ -20,14 +16,10 @@ class Trie(collections.OrderedDict):
       self._smallest = value
     super(Trie, self).__setitem__(key, value, *args, **kwargs)
     # TODO: Prevent redundant adds?
-    if _REAL_TRIE:
-      self._add_to_index(key, value)
+    self._add_to_index(key, value)
 
   def has_keys_with_prefix(self, prefix):
-    if _REAL_TRIE:
-      return self._find_prefix(prefix) is not None
-    else:
-      return any([key.startswith(prefix) for key in self])
+    return self._find_prefix(prefix) is not None
 
   def _find_prefix(self, prefix):
     l = len(prefix)
@@ -55,47 +47,40 @@ class Trie(collections.OrderedDict):
 
   def walk(self, seek_sets):
     """Returns solutions matching `seek_sets`, ordered from high to low."""
-    if not _REAL_TRIE:
-      # Convert seek_sets into a regular expression.
-      matcher = _regexp(seek_sets)
-      for key, value in self.items():
-        if matcher.match(key):
-          yield (key, value)
-    else:
-      # TODO: Inline per findings from commit 47a736f.
-      fringe = _MaxHeap()
-      solutions = _MaxHeap()
-      acc = []
-      fringe.push(float('inf'), (acc, self._index))
-      stop_seek_pos = len(seek_sets) - 1
-      while len(fringe):
-        fringe_score = fringe.best_weight()  # Already normalized.
-        acc, children = fringe.pop()
-        pos = len(acc)
-        seeking = seek_sets[pos]
-        for row in children:
-          if len(row) == 3:
-            c, magnitude, match_weight = row
-            next_children = None
-          else:
-            c, magnitude, match_weight, *next_children = row
-          if c not in seeking:
-            continue
-          acc.append(c)
-          if match_weight:
-            solutions.push(match_weight, ''.join(acc))
-          if next_children and pos < stop_seek_pos:
-            fringe.push(magnitude, (acc[:], next_children))
-          acc.pop()
-        while len(solutions) and solutions.best_weight() >= fringe_score:
-          solution_weight = solutions.best_weight()
-          yield solutions.pop(), solution_weight
-      while len(solutions):
+    # TODO: Inline per findings from commit 47a736f.
+    fringe = _MaxHeap()
+    solutions = _MaxHeap()
+    acc = []
+    fringe.push(float('inf'), (acc, self._index))
+    stop_seek_pos = len(seek_sets) - 1
+    while len(fringe):
+      fringe_score = fringe.best_weight()  # Already normalized.
+      acc, children = fringe.pop()
+      pos = len(acc)
+      seeking = seek_sets[pos]
+      for row in children:
+        if len(row) == 3:
+          c, magnitude, match_weight = row
+          next_children = None
+        else:
+          c, magnitude, match_weight, *next_children = row
+        if c not in seeking:
+          continue
+        acc.append(c)
+        if match_weight:
+          solutions.push(match_weight, ''.join(acc))
+        if next_children and pos < stop_seek_pos:
+          fringe.push(magnitude, (acc[:], next_children))
+        acc.pop()
+      while len(solutions) and solutions.best_weight() >= fringe_score:
         solution_weight = solutions.best_weight()
         yield solutions.pop(), solution_weight
+    while len(solutions):
+      solution_weight = solutions.best_weight()
+      yield solutions.pop(), solution_weight
 
-        # print('Max fringe size was: %s' % len(fringe._pool))
-        # print('Max solution buffer size was: %s' % len(solutions._pool))
+      # print('Max fringe size was: %s' % len(fringe._pool))
+      # print('Max solution buffer size was: %s' % len(solutions._pool))
 
 
   def _add_to_index(self, word, weight):
@@ -135,18 +120,6 @@ class Trie(collections.OrderedDict):
         new_cursor = [word[i], weight, 0]
         add_to_cursor.append(new_cursor)
         add_to_cursor = new_cursor
-
-
-functools.lru_cache(maxsize=1)
-def _regexp(seek_sets):
-  return re.compile(''.join([
-    '^',
-    '[%s]' % ''.join(seek_sets[0]),
-  ] + [
-    '($|[%s])' % ''.join(s) for s in seek_sets[1:]
-  ] + [
-    '$'
-  ]))
 
 
 class _MaxHeap(object):
