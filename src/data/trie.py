@@ -4,11 +4,26 @@ import heapq
 class Trie(object):
   def __init__(self, data):
     self._smallest = float('inf')
+    self._largest = 0
     # Trie's index (highest value characters first).
     self._index = {}
     self._len = 0
+    values = []
     for key, value in data:
-      self[key] = value
+      if not self._largest:
+        self._largest = value
+      if value > self._smallest:
+        raise AssertionError(
+            'Items must be added to trie in descending order.')
+      else:
+        self._smallest = value
+      self._add_to_index(key, value)
+      values.append(value)
+    num_values = len(values)
+    if num_values % 2:
+      self._median = (values[num_values // 2 + 1])
+    else:
+      self._median = (values[num_values // 2 - 1] + values[num_values // 2]) / 2
 
   def __contains__(self, key):
     result = self._find_prefix(key)
@@ -16,13 +31,6 @@ class Trie(object):
 
   def __len__(self):
     return self._len
-
-  def __setitem__(self, key, value, *args, **kwargs):
-    if value > self._smallest:
-      raise AssertionError('Items must be added to trie in descending order.')
-    else:
-      self._smallest = value
-    self._add_to_index(key, value)
 
   def __getitem__(self, key):
     result = self._find_prefix(key)
@@ -46,6 +54,12 @@ class Trie(object):
     if pos == l:
       return cursor
     return None
+
+  def magnitude(self):
+    return self._largest
+
+  def median(self):
+    return self._median
 
   def walk(self, seek_sets):
     """Returns solutions matching `seek_sets`, ordered from high to low."""

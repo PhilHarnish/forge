@@ -1,4 +1,5 @@
 import pickle
+import statistics
 
 from data import trie
 from spec.data.fixtures import tries
@@ -29,6 +30,14 @@ with description('trie'):
       for key, weight in _TEST_DATA:
         expect(key in self.subject).to(be_true)
         expect(self.subject[key]).to(equal(weight))
+
+    with it('reports max value'):
+      expect(self.subject.magnitude()).to(equal(max(i[1] for i in _TEST_DATA)))
+
+    with it('reports median value'):
+      expect(self.subject.median()).to(equal(
+          statistics.median(i[1] for i in _TEST_DATA)
+      ))
 
     with description('items'):
       with it('all results'):
