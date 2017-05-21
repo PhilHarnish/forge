@@ -30,7 +30,7 @@ with description('trie'):
 
     with description('items'):
       with it('all results'):
-        expect(self.subject.items()).to(have_len(len(_TEST_DATA)))
+        expect(self.subject).to(have_len(len(_TEST_DATA)))
 
     with description('has_keys_with_prefix'):
       with before.each:
