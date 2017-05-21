@@ -1,8 +1,5 @@
-from spec.data.fixtures import tries
-from spec.mamba import *
-
 from puzzle.heuristics import analyze_word
-
+from spec.mamba import *
 
 with description('analyze_word'):
   with description('score_word'):
@@ -13,7 +10,7 @@ with description('analyze_word'):
       expect(analyze_word.score_word('$#!7')).to(equal(0))
 
     with it('favors known words'):
-      for word in tries.ambiguous():
+      for word in ('superbowl', 'super', 'bowl', 'superb', 'owl'):
         expect(call(analyze_word.score_word, word)).to(equal(1))
 
     with it('scores probable words between (0, 1)'):
