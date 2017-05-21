@@ -42,7 +42,7 @@ def init():
   warehouse.register('/phrases/crossword/cursor', _get_crossword_cursor)
   warehouse.register('/words/unigram', _get_unigram)
   warehouse.register('/words/unigram/anagram_index', _get_unigram_anagram_index)
-  warehouse.register('/words/unigram/trie', _get_unigram_trie)
+  warehouse.register('/words/unigram/trie', _get_unigram_trie, pickle=True)
 
 
 def reset():
