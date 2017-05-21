@@ -5,9 +5,7 @@ Intended to be used with data from  http://norvig.com/ngrams which is from:
 """
 import functools
 
-
-from data import data
-from data import trie
+from data import data, trie
 
 
 def load(input):
@@ -16,10 +14,10 @@ def load(input):
 
 @functools.lru_cache(1)
 def load_from_file(f):
-  return load(_parse_file(f))
+  return load(parse_file(f))
 
 
-def _parse_file(f):
+def parse_file(f):
   for line in data.open_project_path(f):
     word, weight = line.split()
     yield word, int(weight) or 1
