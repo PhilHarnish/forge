@@ -84,7 +84,6 @@ class Trie(object):
       print('Max fringe size was: %s' % len(fringe._pool))
 
   def _add_to_index(self, word, weight):
-    # TODO: This takes ~5 seconds to initialize with massive data.
     l = len(word)
     cursor = self._index
     pos = 0
