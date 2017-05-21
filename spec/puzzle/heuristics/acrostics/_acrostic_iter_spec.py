@@ -1,10 +1,10 @@
 import collections
 
-import mock
 from mock.mock import patch
 
-from data import word_frequencies
+from data import warehouse, word_frequencies
 from puzzle.heuristics.acrostics import _acrostic_iter
+from puzzle.puzzlepedia import prod_config
 from spec.data.fixtures import tries
 from spec.mamba import *
 
@@ -109,15 +109,36 @@ with description('acrostic'):
         expect(first).to(equal(second))
         expect(mock.call_count).to(be_below(10))
 
-  with _description('testing'):
-    with it('crazy expensive'):
+  with _description('real data'):
+    with before.all:
+      warehouse.save()
+      prod_config.init()
+
+    with after.all:
+      prod_config.reset()
+      warehouse.restore()
+
+    with it('finds simple words'):
+      a = _acrostic_iter.Acrostic('cab')
+      expected = [
+        'c ab',
+        'ca b',
+        'cab',
+      ]
+      for i, (answer, weight) in enumerate(a.items()):
+        expect('#%s = %s @ %s' % (i, answer, weight)).to(equal(
+            '#%s = %s @ %s' % (i, expected[i], weight)
+        ))
+      expect(a.items()).to(have_len(len(expected)))
+
+    with _it('crazy expensive'):
       words = [
         'champion', 'nitpick', 'conspiracy', 'windpipe', 'epinephrine',
         'philanthropic', 'sierpinski', 'mississippi', 'pilaf', 'vulpine',
         'spinach', 'pinochet', 'porcupine', 'megapixels', 'australopithecus',
         'sharpie', 'intrepid', 'insipid', 'robespierre'
       ]
-      a = _acrostic_iter.Acrostic(words, tries.everything())
+      a = _acrostic_iter.Acrostic(words)
       limit = 1000000
       for i, (answer, weight) in enumerate(a.items()):
         if answer.startswith('answer') or i % (limit / 10) == 0:

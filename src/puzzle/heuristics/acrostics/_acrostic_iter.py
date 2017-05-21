@@ -37,30 +37,14 @@ class Acrostic(_base_acrostic.BaseAcrostic):
       yield phrase
 
   def items(self):
-    return iter(self._walk_phrase_graph_from(0, [], 0))
-
-  def _walk_dijkstra(self, phrase_graph, ignore_nodes, ignore_edges):
-    fringe = _Heap()  # TODO: Inline per findings from commit 47a736f.
-    acc = []
-    phrase_iters = [
-      self._phrases_at(i) for i in range(0, self._solution_len)
-    ]
-    next_phrase = next(phrase_iters[0], None)
-    if next_phrase:
-      weight, phrase = next_phrase
-      fringe.push(1/weight, (weight, phrase, 0))
-    while len(fringe):
-      weight, phrase, src_pos = fringe.pop()
-      dst_pos = src_pos + len(phrase)
-      # Consider paths from phrase to
-      # Find reasonable destinations from this phrase.
-      dsts = phrase_iters[dst_pos]
+    for phrase, weight in self._walk_phrase_graph_from(0, [], 0):
+      yield phrase, weight
 
   def _walk_phrase_graph_from(self, pos, acc, acc_weight):
     target = self._solution_len
     for phrase, weight in self._phrases_at(pos):
       phrase_len = len(phrase)
-      acc.append(phrase)
+      acc.append((phrase, weight))
       pos += phrase_len
       acc_weight += weight
       acc_len = len(acc)
@@ -73,15 +57,13 @@ class Acrostic(_base_acrostic.BaseAcrostic):
             yield result
       elif pos == target:
         if len(acc) < target:  # Reject solutions composed of split letters.
-          yield ' '.join(acc), acc_weight
+          scored = _scored_solution(self._trie.median(), acc)
+          yield scored
       else:
         raise Exception('Desired length exceeded.')
       pos -= phrase_len
       acc_weight -= weight
       acc.pop()
-      if word_score_rate < _TARGET_WORD_SCORE_RATE:
-        # Interesting words for this position have been exhausted.
-        break
 
   def _phrases_at(self, pos):
     # phrases_at[0] has words of length 1, etc.
@@ -128,36 +110,13 @@ class Acrostic(_base_acrostic.BaseAcrostic):
         heapq.heapreplace(best_phrases, (1/weight, cache_id))
 
 
-class _Heap(object):
-  def __init__(self):
-    self._heap = []
-    self._pool = []
-    self._free_positions = []
-
-  def __len__(self):
-    return len(self._heap)
-
-  def push(self, cost, o):
-    if self._free_positions:
-      idx = self._free_positions.pop()
-      self._pool[idx] = o
-    else:
-      idx = len(self._pool)
-      self._pool.append(o)
-    heapq.heappush(self._heap, (cost, idx))
-
-  def get_min(self):
-    _, min_idx = self._heap[0]
-    return self._pool[min_idx]
-
-  def pop(self):
-    _, idx = heapq.heappop(self._heap)
-    result = self._pool[idx]
-    self._pool[idx] = None
-    self._free_positions.append(idx)
-    return result
-
-  def replace_min(self, cost, o):
-    _, min_idx = self._heap[0]  # Peek at min for idx.
-    self._pool[min_idx] = o  # Reuse that idx.
-    heapq.heapreplace(self._heap, (cost, min_idx))
+def _scored_solution(target_score, acc):
+  words = ' '.join(i[0] for i in acc)
+  min_weight = min(i[1] for i in acc)
+  num_words = len(acc)
+  weighted_score = (min_weight / num_words) / target_score
+  result = (
+    words,
+    min(1, weighted_score)
+  )
+  return result
