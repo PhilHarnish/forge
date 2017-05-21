@@ -86,8 +86,10 @@ class Trie(object):
       solution_weight = solutions.best_weight()
       yield solutions.pop(), solution_weight
 
-      # print('Max fringe size was: %s' % len(fringe._pool))
-      # print('Max solution buffer size was: %s' % len(solutions._pool))
+    if len(fringe._pool) > 10 or len(solutions._pool) > 10:
+      print('WARNING')
+      print('Max fringe size was: %s' % len(fringe._pool))
+      print('Max solution buffer size was: %s' % len(solutions._pool))
 
   def _add_to_index(self, word, weight):
     # TODO: This takes ~5 seconds to initialize with massive data.
