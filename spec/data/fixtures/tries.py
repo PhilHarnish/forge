@@ -21,6 +21,10 @@ def kitchen_sink():
   return word_frequencies.load(_KITCHEN_SINK_DATA)
 
 
+def kitchen_sink_data():
+  return _KITCHEN_SINK_DATA
+
+
 @functools.lru_cache()
 def everything():
   """This should only be used during prototyping. Very slow."""
