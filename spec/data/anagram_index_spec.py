@@ -1,9 +1,13 @@
-from data import anagram_index, warehouse
+import collections
+
+from data import anagram_index
+from spec.data.fixtures import tries
 from spec.mamba import *
 
 with description('anagram_index'):
   with before.all:
-    self.subject = anagram_index.AnagramIndex(warehouse.get('/words/unigram'))
+    words = collections.OrderedDict(tries.kitchen_sink_data())
+    self.subject = anagram_index.AnagramIndex(words)
 
   with it('instantiates'):
     expect(len(self.subject)).to(be_above(0))
