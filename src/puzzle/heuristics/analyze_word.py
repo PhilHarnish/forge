@@ -8,7 +8,7 @@ _WORD_REGEX = re.compile(r'^\w+$', re.IGNORECASE)
 def score_word(word):
   if not _valid(word):
     return False
-  if word in warehouse.get('/words/unigram/trie'):
+  if word in warehouse.get('/words/unigram'):
     return 1
   return .1
 
