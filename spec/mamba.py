@@ -1,3 +1,4 @@
+import mock
 from expects import *
 from expects import matchers
 
@@ -48,6 +49,33 @@ class be_one_of(matchers.Matcher):
     return subject in self._options, [repr(option) for option in self._options]
 
 
+class _have_been_called(matchers.Matcher):
+  def __init__(self, *args, **kwargs):
+    self._args = args
+    self._kwargs = kwargs
+
+  def __call__(self, *args, **kwargs):
+    return _have_been_called(*args, **kwargs)
+
+  def _match(self, subject):
+    if self._args or self._kwargs:
+      result = subject.call_args == mock.call(*self._args, **self._kwargs)
+    else:
+      result = subject.called
+    return result, [str(c) for c in subject.call_args_list]
+
+  def _failure_message(self, subject, *args):
+    return self._failure_message_negated(subject, *args).replace(' not ', ' ')
+
+  def _failure_message_negated(self, subject, *args):
+    return 'expected: %s(%s) not to have been called' % (
+      subject, _fmt_args(self._args, self._kwargs))
+
+
+have_been_called = _have_been_called()
+have_been_called_with = _have_been_called()
+
+
 # Sentinel object for undefined values.
 _NOT_SET = {}
 
@@ -65,11 +93,7 @@ class call(object):
     return self._cached_value
 
   def __repr__(self):
-    args = ', '.join([
-      repr(arg) for arg in self._args
-    ] + [
-      '%s=%s' % (key, repr(value)) for key, value in self._kwargs.items()
-    ])
+    args = _fmt_args(self._args, self._kwargs)
     if self._value is None:
       suffix = ''
     else:
@@ -118,3 +142,12 @@ class calling(call):
     if args or kwargs:
       raise NotImplementedError()
     return self._value
+
+
+def _fmt_args(args, kwargs):
+  return ', '.join([
+                     repr(arg) for arg in args
+                   ] + [
+                     '%s=%s' % (key, repr(value)) for key, value in
+                     kwargs.items()
+                   ])

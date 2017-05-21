@@ -64,3 +64,25 @@ with description('mamba test helper'):
       expect(0).to(be_one_of(*range(3)))
       expect(1).to(be_one_of(*range(3)))
       expect(2).to(be_one_of(*range(3)))
+
+  with description('mocks'):
+    with before.each:
+      self.subject = mock.Mock(name='mamba_mock')
+
+    with it('should observe non-calls'):
+      expect(self.subject).not_to(have_been_called)
+
+    with it('should allow specifying args for non-calls'):
+      expect(self.subject).not_to(have_been_called_with('asdf'))
+
+    with it('should detect calls'):
+      self.subject(1, key='value')
+      expect(self.subject).to(have_been_called)
+
+    with it('should detect calls with args'):
+      self.subject(1, key='value')
+      expect(self.subject).to(have_been_called_with(1, key='value'))
+
+    with it('should handle negation'):
+      self.subject(1, key='value')
+      expect(self.subject).not_to(have_been_called_with(2, key='other'))
