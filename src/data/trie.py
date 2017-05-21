@@ -51,7 +51,7 @@ class Trie(object):
     """Returns solutions matching `seek_sets`, ordered from high to low."""
     # TODO: Inline per findings from commit 47a736f.
     fringe = _MaxHeap()
-    solutions = _MaxHeap()
+    solutions = []
     acc = []
     fringe.push(float('inf'), (acc, self._index))
     stop_seek_pos = len(seek_sets) - 1
@@ -68,21 +68,20 @@ class Trie(object):
         magnitude = next_children['max_weight']
         match_weight = next_children['match_weight']
         if match_weight:
-          solutions.push(match_weight, ''.join(acc))
+          heapq.heappush(solutions, (-match_weight, ''.join(acc)))
         if len(next_children) > 2 and pos < stop_seek_pos:
           fringe.push(magnitude, (acc[:], next_children))
         acc.pop()
-      while len(solutions) and solutions.best_weight() >= fringe_score:
-        solution_weight = solutions.best_weight()
-        yield solutions.pop(), solution_weight
+      while len(solutions) and -solutions[0][0] >= fringe_score:
+        solution_weight, solution_word = heapq.heappop(solutions)
+        yield solution_word, -solution_weight
     while len(solutions):
-      solution_weight = solutions.best_weight()
-      yield solutions.pop(), solution_weight
+      solution_weight, solution_word = heapq.heappop(solutions)
+      yield solution_word, -solution_weight
 
-    if len(fringe._pool) > 10 or len(solutions._pool) > 10:
+    if len(fringe._pool) > 10:
       print('WARNING')
       print('Max fringe size was: %s' % len(fringe._pool))
-      print('Max solution buffer size was: %s' % len(solutions._pool))
 
   def _add_to_index(self, word, weight):
     # TODO: This takes ~5 seconds to initialize with massive data.
@@ -142,10 +141,6 @@ class _MaxHeap(object):
       self._pool.append(o)
     heapq.heappush(self._heap, (-cost, idx))
 
-  def get_min(self):
-    _, min_idx = self._heap[0]
-    return self._pool[min_idx]
-
   def best_weight(self):
     return -self._heap[0][0]
 
@@ -155,8 +150,3 @@ class _MaxHeap(object):
     self._pool[idx] = None
     self._free_positions.append(idx)
     return result
-
-  def replace_min(self, cost, o):
-    _, min_idx = self._heap[0]  # Peek at min for idx.
-    self._pool[min_idx] = o  # Reuse that idx.
-    heapq.heapreplace(self._heap, (-cost, min_idx))
