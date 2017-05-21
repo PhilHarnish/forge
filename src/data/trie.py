@@ -37,21 +37,14 @@ class Trie(object):
     l = len(prefix)
     pos = 0
     cursor = self._index
-    searching = True
-    result = cursor
-    while searching and pos < l:
-      searching = False
+    while pos < l:
       target = prefix[pos]
       if target not in cursor:
-        return None
-      children = cursor[target]
-      result = children
+        break
+      cursor = cursor[target]
       pos += 1
-      if len(children) > 2:
-        searching = True
-        cursor = children
     if pos == l:
-      return result
+      return cursor
     return None
 
   def walk(self, seek_sets):
