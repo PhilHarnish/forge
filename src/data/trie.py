@@ -5,14 +5,14 @@ class Trie(object):
   def __init__(self, data):
     self._smallest = float('inf')
     # Trie's index (highest value characters first).
-    self._index = []
+    self._index = {}
     self._len = 0
     for key, value in data:
       self[key] = value
 
   def __contains__(self, key):
     result = self._find_prefix(key)
-    return result is not None and result[2] > 0
+    return result is not None and result['match_weight'] > 0
 
   def __len__(self):
     return self._len
@@ -26,9 +26,9 @@ class Trie(object):
 
   def __getitem__(self, key):
     result = self._find_prefix(key)
-    if result is None or result[2] == 0:
+    if result is None or result['match_weight'] == 0:
       raise KeyError('%s not in Trie' % key)
-    return result[2]
+    return result['match_weight']
 
   def has_keys_with_prefix(self, prefix):
     return self._find_prefix(prefix) is not None
@@ -42,19 +42,14 @@ class Trie(object):
     while searching and pos < l:
       searching = False
       target = prefix[pos]
-      for row in cursor:
-        if len(row) == 3:
-          dst_c, _, _ = row
-          children = None
-        else:
-          dst_c, _, _, *children = row
-        if dst_c == target:
-          result = row
-          pos += 1
-          if children:
-            searching = True
-            cursor = children
-          break
+      if target not in cursor:
+        return None
+      children = cursor[target]
+      result = children
+      pos += 1
+      if len(children) > 2:
+        searching = True
+        cursor = children
     if pos == l:
       return result
     return None
@@ -69,21 +64,19 @@ class Trie(object):
     stop_seek_pos = len(seek_sets) - 1
     while len(fringe):
       fringe_score = fringe.best_weight()  # Already normalized.
-      acc, children = fringe.pop()
+      acc, cursor = fringe.pop()
       pos = len(acc)
       seeking = seek_sets[pos]
-      for row in children:
-        if len(row) == 3:
-          c, magnitude, match_weight = row
-          next_children = None
-        else:
-          c, magnitude, match_weight, *next_children = row
-        if c not in seeking:
+      for c in seeking:
+        if c not in cursor:
           continue
+        next_children = cursor[c]
+        magnitude = next_children['max_weight']
+        match_weight = next_children['match_weight']
         acc.append(c)
         if match_weight:
           solutions.push(match_weight, ''.join(acc))
-        if next_children and pos < stop_seek_pos:
+        if len(next_children) > 2 and pos < stop_seek_pos:
           fringe.push(magnitude, (acc[:], next_children))
         acc.pop()
       while len(solutions) and solutions.best_weight() >= fringe_score:
@@ -106,36 +99,37 @@ class Trie(object):
     while searching and pos < l:
       searching = False
       target = word[pos]
-      for row in cursor:
-        if len(row) == 3:
-          dst_c, _, match_weight = row
-          children = None
-        else:
-          dst_c, _, match_weight, *children = row
-        if dst_c == target:
-          pos += 1
-          if pos == l:
-            if match_weight:
-              # Duplicate addition.
-              raise KeyError('%s already added' % word)
-            # Exhausted input; this spells something now.
-            row[2] = weight
-            self._len += 1
-            return
-          elif children:
-            # More children to consider.
-            searching = True
-            cursor = children
-          # Update location to add word to.
-          add_to_cursor = row
-          break
+      if target in cursor:
+        dst = cursor[target]
+        match_weight = dst['match_weight']
+        pos += 1
+        if pos == l:
+          if match_weight:
+            # Duplicate addition.
+            raise KeyError('%s already added' % word)
+          # Exhausted input; this spells something now.
+          dst['match_weight'] = weight
+          self._len += 1
+          return
+        elif len(dst) > 2:
+          # More children to consider.
+          searching = True
+          cursor = dst
+        # Update location to add word to.
+        add_to_cursor = dst
     end = len(word) - 1
     for i in range(pos, len(word)):
       if i == end:
-        add_to_cursor.append([word[i], weight, weight])
+        add_to_cursor[word[i]] = {
+          'max_weight': weight,
+          'match_weight': weight,
+        }
       else:
-        new_cursor = [word[i], weight, 0]
-        add_to_cursor.append(new_cursor)
+        new_cursor = {
+          'max_weight': weight,
+          'match_weight': 0,
+        }
+        add_to_cursor[word[i]] = new_cursor
         add_to_cursor = new_cursor
     self._len += 1
 
