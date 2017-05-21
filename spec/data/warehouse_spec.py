@@ -1,3 +1,6 @@
+import os
+import pickle
+
 from mock.mock import patch
 
 from data import warehouse
@@ -59,3 +62,49 @@ with description('warehouse'):
       expect(call(warehouse.get, '/some/path')).to(equal(2))
       warehouse.restore()
       expect(call(warehouse.get, '/some/path')).to(equal(1))
+
+  with description('pickle cache'):
+    with before.each:
+      self.getter = mock.Mock(return_value={'key': 'value'})
+      self.pickle_dump = patch.object(pickle, 'dump', mock.Mock())
+      self.pickle_dump_stub = self.pickle_dump.start()
+      self.pickle_load = patch.object(pickle, 'load', return_value={
+        'key': 'from pkl'
+      })
+      self.pickle_load_stub = self.pickle_load.start()
+      self.path_exists = patch.object(os.path, 'exists', return_value=False)
+      self.path_exists_stub = self.path_exists.start()
+      self.warehouse_open = patch.object(
+          warehouse, 'open', side_effect=lambda path, *args: path)
+      self.warehouse_open.start()
+
+    with after.each:
+      self.pickle_dump.stop()
+      self.pickle_load.stop()
+      self.path_exists.stop()
+      self.warehouse_open.stop()
+
+    with it('should allow registering with a pickle cache'):
+      expect(calling(warehouse.register, 'path', self.getter, True)).not_to(
+          raise_error)
+
+    with it('should look for pkl files in data/ dir'):
+      warehouse.register('path', self.getter, True)
+      expect(call(warehouse.get, 'path')).to(equal({'key': 'value'}))
+      expect(self.path_exists_stub.call_args[0][0]).to(
+          end_with('/data/path.pkl'))
+
+    with it('should call getter and save if no pkl is present'):
+      warehouse.register('path', self.getter, True)
+      expect(call(warehouse.get, 'path')).to(equal({'key': 'value'}))
+      expect(self.getter).to(have_been_called)
+      expect(self.pickle_dump_stub).to(have_been_called)
+      expect(self.pickle_dump_stub.call_args[0][1]).to(
+          end_with('/data/path.pkl'))
+
+    with it('should use pkl if present'):
+      warehouse.register('path', self.getter, True)
+      self.path_exists_stub.return_value = True
+      expect(call(warehouse.get, 'path')).to(equal({'key': 'from pkl'}))
+      expect(self.getter).not_to(have_been_called)
+      expect(self.pickle_load_stub).to(have_been_called)
