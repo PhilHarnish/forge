@@ -1,10 +1,9 @@
-from data import anagram_index
-from spec.data.fixtures import tries
+from data import anagram_index, warehouse
 from spec.mamba import *
 
 with description('anagram_index'):
   with before.all:
-    self.subject = anagram_index.AnagramIndex(tries.ambiguous())
+    self.subject = anagram_index.AnagramIndex(warehouse.get('/words/unigram'))
 
   with it('instantiates'):
     expect(len(self.subject)).to(be_above(0))
