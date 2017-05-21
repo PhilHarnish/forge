@@ -56,17 +56,17 @@ class Trie(object):
     fringe.push(float('inf'), (acc, self._index))
     stop_seek_pos = len(seek_sets) - 1
     while len(fringe):
-      fringe_score = fringe.best_weight()  # Already normalized.
+      fringe_score = fringe.best_weight()
       acc, cursor = fringe.pop()
       pos = len(acc)
       seeking = seek_sets[pos]
       for c in seeking:
         if c not in cursor:
           continue
+        acc.append(c)
         next_children = cursor[c]
         magnitude = next_children['max_weight']
         match_weight = next_children['match_weight']
-        acc.append(c)
         if match_weight:
           solutions.push(match_weight, ''.join(acc))
         if len(next_children) > 2 and pos < stop_seek_pos:
@@ -89,33 +89,28 @@ class Trie(object):
     l = len(word)
     cursor = self._index
     pos = 0
-    searching = True
-    add_to_cursor = cursor
-    while searching and pos < l:
-      searching = False
+    while pos < l:
       target = word[pos]
-      if target in cursor:
-        dst = cursor[target]
-        match_weight = dst['match_weight']
-        pos += 1
-        if pos == l:
-          if match_weight:
-            # Duplicate addition.
-            raise KeyError('%s already added' % word)
-          # Exhausted input; this spells something now.
-          dst['match_weight'] = weight
-          self._len += 1
-          return
-        elif len(dst) > 2:
-          # More children to consider.
-          searching = True
-          cursor = dst
-        # Update location to add word to.
-        add_to_cursor = dst
+      if target not in cursor:
+        break
+      cursor = cursor[target]
+      match_weight = cursor['match_weight']
+      pos += 1
+      if pos == l:
+        if match_weight:
+          # Duplicate addition.
+          raise KeyError('%s already added' % word)
+        # Exhausted input; this spells something now.
+        cursor['match_weight'] = weight
+        self._len += 1
+        return
+      elif len(cursor) <= 2:
+        break  # End of Trie.
+    # Add remaining characters.
     end = len(word) - 1
     for i in range(pos, len(word)):
       if i == end:
-        add_to_cursor[word[i]] = {
+        cursor[word[i]] = {
           'max_weight': weight,
           'match_weight': weight,
         }
@@ -124,8 +119,8 @@ class Trie(object):
           'max_weight': weight,
           'match_weight': 0,
         }
-        add_to_cursor[word[i]] = new_cursor
-        add_to_cursor = new_cursor
+        cursor[word[i]] = new_cursor
+        cursor = new_cursor
     self._len += 1
 
 
