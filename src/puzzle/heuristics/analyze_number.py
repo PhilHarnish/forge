@@ -24,6 +24,11 @@ def solutions(n):
         yield result
 
 
+def _solutions_for_letters(letters):
+  for solution in acrostic.Acrostic(letters).items():
+    yield solution
+
+
 def _get_digits_in_base(n, b):
   digits = []
   while n:
@@ -57,8 +62,8 @@ def _alphabet(digits, min_digit, max_digit):
   offset = ord('a') - 1
   for digit in digits:
     as_letters.append(chr(offset + digit))
-  for solution in acrostic.Acrostic(as_letters):
-    yield solution, 1
+  for solution in _solutions_for_letters(as_letters):
+    yield solution
 
 
 def _ascii_nibbles(digits, min_digit, max_digit):
@@ -85,8 +90,8 @@ def _ascii_nibbles(digits, min_digit, max_digit):
     if not c.isalpha():
       return
     as_letters.append(c.lower())
-  for solution in acrostic.Acrostic(as_letters):
-    yield solution, 1
+  for solution in _solutions_for_letters(as_letters):
+    yield solution
 
 
 def _base_n(digits, min_digit, max_digit):
@@ -99,8 +104,8 @@ def _base_n(digits, min_digit, max_digit):
   as_letters = []
   for digit in digits:
     as_letters.append(chr(digit + offset))
-  for solution in acrostic.Acrostic(as_letters):
-    yield solution, 1
+  for solution in _solutions_for_letters(as_letters):
+    yield solution
 
 
 def _braille(digits, min_digit, max_digit):
@@ -130,8 +135,8 @@ def _braille(digits, min_digit, max_digit):
     else:
       acc |= 1 << (digit - 1)
     last = digit
-  for solution in acrostic.Acrostic(as_letters):
-    yield solution, 1
+  for solution in _solutions_for_letters(as_letters):
+    yield solution
 
 
 def _hexspeak(digits, min_digit, max_digit):
@@ -144,8 +149,8 @@ def _hexspeak(digits, min_digit, max_digit):
     if not letters:
       return
     as_letters.append(letters)
-  for solution in acrostic.Acrostic(as_letters):
-    yield solution, 1
+  for solution in _solutions_for_letters(as_letters):
+    yield solution
 
 
 def _keyboard_intersection(digits, min_digit, max_digit):
@@ -159,8 +164,8 @@ def _keyboard_intersection(digits, min_digit, max_digit):
     if key not in keyboard_intersection.LOOKUP:
       return
     as_letters.append(keyboard_intersection.LOOKUP[key])
-  for solution in acrostic.Acrostic(as_letters):
-    yield solution, 1
+  for solution in _solutions_for_letters(as_letters):
+    yield solution
 
 
 def _lexicographical_ordering(digits, min_digit, max_digit):
@@ -189,8 +194,8 @@ def _lexicographical_ordering(digits, min_digit, max_digit):
       acc += position * math.factorial(len(remaining) - 1)
       remaining.pop(position)
     as_letters.append(chr(acc + offset))
-  for solution in acrostic.Acrostic(as_letters):
-    yield solution, 1
+  for solution in _solutions_for_letters(as_letters):
+    yield solution
 
 
 def _morse(digits, min_digit, max_digit):
@@ -203,8 +208,8 @@ def _morse(digits, min_digit, max_digit):
     translated = morse.translate(word.translate(translation))
     if translated is None:
       continue
-    for solution in acrostic.Acrostic(translated):
-      yield solution, 1
+    for solution in _solutions_for_letters(translated):
+      yield solution
 
 
 def _phone_number(digits, min_digit, max_digit):
@@ -235,8 +240,8 @@ def _phone_number(digits, min_digit, max_digit):
     if digit < 2:
       return
     as_letters.append(t9.KEYS[digit])
-  for solution in acrostic.Acrostic(as_letters):
-    yield prefix + solution, 1
+  for word, score in _solutions_for_letters(as_letters):
+    yield prefix + word, score
 
 
 def _positional(digits, min_digit, max_digit):
@@ -261,8 +266,8 @@ def _positional(digits, min_digit, max_digit):
     cursor += 1
   if word_map:
     return  # Not all letters were used.
-  for solution in acrostic.Acrostic(as_letters):
-    yield solution, 1
+  for solution in _solutions_for_letters(as_letters):
+    yield solution
 
 
 def _runlength(digits, min_digit, max_digit):
@@ -290,8 +295,8 @@ def _runlength(digits, min_digit, max_digit):
     as_letters.append(chr(offset + length))
   if len(as_letters) < 3 or longest < 3:
     return
-  for solution in acrostic.Acrostic(as_letters):
-    yield solution, 1
+  for solution in _solutions_for_letters(as_letters):
+    yield solution
 
 
 def _t9(digits, min_digit, max_digit):
@@ -311,8 +316,8 @@ def _t9(digits, min_digit, max_digit):
       return
   if not as_letters:
     return
-  for solution in acrostic.Acrostic(as_letters):
-    yield solution, 1
+  for solution in _solutions_for_letters(as_letters):
+    yield solution
 
 
 # Install.

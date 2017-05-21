@@ -12,7 +12,7 @@ with description('analyze_number'):
 
 
     def first(fn, n, base):
-      return next(run(fn, n, base))
+      return next(run(fn, n, base))[0]
 
 
     self.run = lambda fn, n, base=10: call(run, fn, n, base)
@@ -23,43 +23,40 @@ with description('analyze_number'):
       expect(self.run(analyze_number._alphabet, 101)).to(be_empty)
 
     with it('accepts input'):
-      expect(self.first(analyze_number._alphabet, 312)).to(equal(('cab', 1)))
+      expect(self.first(analyze_number._alphabet, 312)).to(equal('cab'))
 
   with description('ascii_nibbles'):
     with it('accepts input'):
       expect(self.first(analyze_number._ascii_nibbles, 0x6f776c, 16)).to(
-          equal(('owl', 1)))
+          equal('owl'))
 
     with it('accepts delimited input'):
       expect(next(analyze_number._ascii_nibbles([
         0x6, 0xf, 16, 0x7, 0x7, 16, 0x6, 0xc,
-      ], 6, 16))).to(equal(('owl', 1)))
+      ], 6, 16))[0]).to(equal('owl'))
 
   with description('base_n'):
     with it('rejects invalid input'):
       expect(self.run(analyze_number._base_n, 100)).to(be_empty)
 
     with it('accepts hex input (A-F)'):
-      expect(self.first(analyze_number._base_n, 0xCAB, 16)).to(
-          equal(('cab', 1)))
+      expect(self.first(analyze_number._base_n, 0xCAB, 16)).to(equal('cab'))
 
     with it('accepts higher base values (A-Z)'):
       expect(next(analyze_number._base_n([
         14 + 10, 22 + 10, 11 + 10
-      ], 22, 32))).to(equal(('owl', 1)))
+      ], 22, 32))[0]).to(equal('owl'))
 
   with description('braille'):
     with it('rejects decreasing input'):
       expect(self.run(analyze_number._braille, 6543)).to(be_empty)
 
     with it('accepts increasing input'):
-      expect(self.first(analyze_number._braille, 135024560123)).to(
-          equal(('owl', 1)))
+      expect(self.first(analyze_number._braille, 135024560123)).to(equal('owl'))
 
   with description('hex'):
     with it('understands hexspeak'):
-      expect(self.first(analyze_number._hexspeak, 0xDEAD, 16)).to(
-          equal(('dead', 1)))
+      expect(self.first(analyze_number._hexspeak, 0xDEAD, 16)).to(equal('dead'))
 
   with description('keyboard intersection'):
     with it('rejects odd digit counts'):
@@ -67,7 +64,7 @@ with description('analyze_number'):
 
     with it('accepts valid input'):
       expect(self.first(analyze_number._keyboard_intersection, 361358)).to(
-          equal(('cab', 1)))
+          equal('cab'))
 
   with description('lexicographical ordering'):
     with it('rejects input with incorrect length'):
@@ -82,8 +79,7 @@ with description('analyze_number'):
       # Ordering: 012, 021, 102, 120, 201, 210.
       # Alphabet:   a,   b,   c,   d,   e,   f.
       expect(self.first(
-          analyze_number._lexicographical_ordering, 102012021)).to(
-          equal(('cab', 1)))
+          analyze_number._lexicographical_ordering, 102012021)).to(equal('cab'))
 
   with description('morse'):
     with it('rejects invalid sequences'):
@@ -96,7 +92,7 @@ with description('analyze_number'):
         111201120100,  # 012 = '-. '
       ]
       for owl in owls:
-        expect(self.first(analyze_number._morse, owl)).to(equal(('owl', 1)))
+        expect(self.first(analyze_number._morse, owl)).to(equal('owl'))
 
   with description('phone numbers'):
     with it('rejects invalid numbers'):
@@ -111,9 +107,9 @@ with description('analyze_number'):
     with it('accepts phone numbers'):
       expect(self.first(analyze_number._phone_number, 18006694373)).to(
           be_one_of(
-              ('1800nowhere', 1),
-              ('1800no where', 1),
-              ('1800now here', 1),
+              '1800nowhere',
+              '1800no where',
+              '1800now here',
           ))
 
   with description('positional'):
@@ -130,61 +126,65 @@ with description('analyze_number'):
       expect(self.first(
           analyze_number._positional,
           23100000000000000000000000,
-      )).to(equal(('cab', 1)))
+      )).to(equal('cab'))
 
   with description('runlength'):
     with it('rejects random input'):
       expect(self.run(analyze_number._runlength, 651322333143)).to(be_empty)
 
     with it('accepts input'):
-      expect(self.first(analyze_number._runlength, 111022)).to(
-          equal(('cab', 1)))
+      expect(self.first(analyze_number._runlength, 111022)).to(equal('cab'))
 
     with it('accepts delimited input'):
-      expect(self.first(analyze_number._runlength, 11101011)).to(
-          equal(('cab', 1)))
+      expect(self.first(analyze_number._runlength, 11101011)).to(equal('cab'))
 
   with description('t9'):
     with it('accepts t9'):
-      expect(self.first(analyze_number._t9, 6669555)).to(equal(('owl', 1)))
+      expect(self.first(analyze_number._t9, 6669555)).to(equal('owl'))
 
     with it('rejects invalid t9'):
       expect(self.run(analyze_number._t9, 666666)).to(be_empty)
 
   with description('solutions'):
+    with before.all:
+      def solutions(n):
+        return next(analyze_number.solutions(n))[0]
+
+
+      self.solutions = solutions
+
     with it('ignores empty input'):
       expect(analyze_number.solutions(0)).to(be_empty)
 
     with it('solves alphabet'):
-      expect(next(analyze_number.solutions(312))).to(equal(('cab', 1)))
+      expect(self.solutions(312)).to(equal('cab'))
 
     with it('solves ascii nibbles'):
-      expect(next(analyze_number.solutions(0x6f776c))).to(equal(('owl', 1)))
+      expect(self.solutions(0x6f776c)).to(equal('owl'))
 
     with it('solves base 36'):
-      expect(next(analyze_number.solutions(0xCAB))).to(equal(('cab', 1)))
+      expect(self.solutions(0xCAB)).to(equal('cab'))
 
     with it('solves braille'):
-      expect(next(analyze_number.solutions(135024560123))).to(equal(('owl', 1)))
+      expect(self.solutions(135024560123)).to(equal('owl'))
 
     with it('solves morse'):
-      expect(next(analyze_number.solutions(222012201211))).to(equal(('owl', 1)))
+      expect(self.solutions(222012201211)).to(equal('owl'))
 
     with it('solves positional'):
-      expect(next(analyze_number.solutions(23100000000000000000000000))).to(
-          equal(('cab', 1)))
+      expect(self.solutions(23100000000000000000000000)).to(equal('cab'))
 
     with it('solves hexspeak'):
-      expect(next(analyze_number.solutions(0xDEAD))).to(equal(('dead', 1)))
+      expect(self.solutions(0xDEAD)).to(equal('dead'))
 
     with it('solves keyboard intersection'):
-      expect(next(analyze_number.solutions(361358))).to(equal(('cab', 1)))
+      expect(self.solutions(361358)).to(equal('cab'))
 
     with it('solves lexicographical ordering'):
-      expect(next(analyze_number.solutions(102012021))).to(equal(('cab', 1)))
+      expect(self.solutions(102012021)).to(equal('cab'))
 
     with it('solves runlength'):
-      expect(next(analyze_number.solutions(11101011))).to(equal(('cab', 1)))
+      expect(self.solutions(11101011)).to(equal('cab'))
 
     with it('solves t9'):
-      expect(next(analyze_number.solutions(6669555))).to(equal(('owl', 1)))
+      expect(self.solutions(6669555)).to(equal('owl'))
