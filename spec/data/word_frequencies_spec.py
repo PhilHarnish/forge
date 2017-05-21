@@ -2,8 +2,8 @@ import textwrap
 
 from mock import patch
 
-from spec.mamba import *
 from data import word_frequencies
+from spec.mamba import *
 
 patcher = patch.object(word_frequencies.data, 'open_project_path')
 _SMALL_FILE = textwrap.dedent("""
@@ -42,7 +42,7 @@ with description('word_frequencies'):
 
   with it('should have results'):
     t = word_frequencies.load_from_file('test')
-    expect(list(t.items())).to(equal([
+    expect(list(t.walk(['abcdefghijklmnopqrstuvwxyz'] * 4))).to(equal([
       ('the', 23135851162),
       ('of', 13151942776),
       ('and', 12997637966),
