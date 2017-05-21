@@ -1,14 +1,21 @@
-from data import anagram_index, crossword, warehouse, word_frequencies
+import collections
+
+from data import anagram_index, crossword, trie, warehouse, word_frequencies
 from puzzle.heuristics import analyze
 
 
 # Data sources.
+def _get_unigram():
+  return collections.OrderedDict(
+      word_frequencies.parse_file('data/count_1w.txt'))
+
+
 def _get_unigram_anagram_index():
-  return anagram_index.AnagramIndex(warehouse.get('/words/unigram/trie'))
+  return anagram_index.AnagramIndex(warehouse.get('/words/unigram'))
 
 
 def _get_unigram_trie():
-  return word_frequencies.load_from_file('data/count_1w.txt')
+  return trie.Trie(warehouse.get('/words/unigram').items())
 
 
 def _get_crossword():
@@ -33,6 +40,7 @@ def init():
   warehouse.register('/phrases/crossword', _get_crossword)
   warehouse.register('/phrases/crossword/connection', _get_crossword_connection)
   warehouse.register('/phrases/crossword/cursor', _get_crossword_cursor)
+  warehouse.register('/words/unigram', _get_unigram)
   warehouse.register('/words/unigram/anagram_index', _get_unigram_anagram_index)
   warehouse.register('/words/unigram/trie', _get_unigram_trie)
 
