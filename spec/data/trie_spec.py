@@ -1,3 +1,5 @@
+import pickle
+
 from data import trie
 from spec.data.fixtures import tries
 from spec.mamba import *
@@ -92,3 +94,16 @@ with description('trie'):
     with it('should include letters'):
       for c in 'abcdefghijklmnopqrstuvwxyz':
         expect(c in self.subject).to(be_true)
+
+  with description('pickling'):
+    with it('should be possible to pickle Trie'):
+      t = tries.letters()
+      expect(calling(pickle.dumps, t)).not_to(raise_error)
+
+    with it('should be possible to recreat Trie from pkl'):
+      t = tries.letters()
+      b = pickle.dumps(t)
+      expect(b).not_to(be_empty)
+      t2 = pickle.loads(b)
+      expect(t2).to(be_a(trie.Trie))
+      expect(t2).to(have_len(len(t)))
