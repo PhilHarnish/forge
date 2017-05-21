@@ -1,22 +1,34 @@
-import collections
 import heapq
 
 
-class Trie(collections.OrderedDict):
+class Trie(object):
   def __init__(self, data):
     self._smallest = float('inf')
     # Trie's index (highest value characters first).
     self._index = []
-    super(Trie, self).__init__(data)
+    self._len = 0
+    for key, value in data:
+      self[key] = value
+
+  def __contains__(self, key):
+    result = self._find_prefix(key)
+    return result is not None and result[2] > 0
+
+  def __len__(self):
+    return self._len
 
   def __setitem__(self, key, value, *args, **kwargs):
     if value > self._smallest:
       raise AssertionError('Items must be added to trie in descending order.')
     else:
       self._smallest = value
-    super(Trie, self).__setitem__(key, value, *args, **kwargs)
-    # TODO: Prevent redundant adds?
     self._add_to_index(key, value)
+
+  def __getitem__(self, key):
+    result = self._find_prefix(key)
+    if result is None or result[2] == 0:
+      raise KeyError('%s not in Trie' % key)
+    return result[2]
 
   def has_keys_with_prefix(self, prefix):
     return self._find_prefix(prefix) is not None
@@ -26,6 +38,7 @@ class Trie(collections.OrderedDict):
     pos = 0
     cursor = self._index
     searching = True
+    result = cursor
     while searching and pos < l:
       searching = False
       target = prefix[pos]
@@ -36,13 +49,14 @@ class Trie(collections.OrderedDict):
         else:
           dst_c, _, _, *children = row
         if dst_c == target:
+          result = row
           pos += 1
           if children:
             searching = True
             cursor = children
           break
     if pos == l:
-      return cursor
+      return result
     return None
 
   def walk(self, seek_sets):
@@ -82,7 +96,6 @@ class Trie(collections.OrderedDict):
       # print('Max fringe size was: %s' % len(fringe._pool))
       # print('Max solution buffer size was: %s' % len(solutions._pool))
 
-
   def _add_to_index(self, word, weight):
     # TODO: This takes ~5 seconds to initialize with massive data.
     l = len(word)
@@ -95,15 +108,19 @@ class Trie(collections.OrderedDict):
       target = word[pos]
       for row in cursor:
         if len(row) == 3:
-          dst_c, _, _ = row
+          dst_c, _, match_weight = row
           children = None
         else:
-          dst_c, _, _, *children = row
+          dst_c, _, match_weight, *children = row
         if dst_c == target:
           pos += 1
           if pos == l:
+            if match_weight:
+              # Duplicate addition.
+              raise KeyError('%s already added' % word)
             # Exhausted input; this spells something now.
             row[2] = weight
+            self._len += 1
             return
           elif children:
             # More children to consider.
@@ -120,6 +137,7 @@ class Trie(collections.OrderedDict):
         new_cursor = [word[i], weight, 0]
         add_to_cursor.append(new_cursor)
         add_to_cursor = new_cursor
+    self._len += 1
 
 
 class _MaxHeap(object):
