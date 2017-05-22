@@ -48,7 +48,6 @@ class Acrostic(_base_acrostic.BaseAcrostic):
       pos += phrase_len
       acc_weight += weight
       acc_len = len(acc)
-      word_score_rate = float(acc_weight) / pos
       if pos < target:
         interesting = (acc_len < 3) or (pos / acc_len >= _TARGET_WORD_LEN)
         if interesting:
@@ -117,6 +116,6 @@ def _scored_solution(target_score, acc):
   weighted_score = (min_weight / num_words) / target_score
   result = (
     words,
-    min(1, weighted_score)
+    min(1 / num_words, weighted_score)
   )
   return result
