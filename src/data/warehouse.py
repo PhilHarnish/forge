@@ -1,3 +1,4 @@
+import collections
 import os
 import pickle
 
@@ -40,10 +41,13 @@ def get(path):
 def _open_pkl_path(path, mode):
   return open(path, mode)
 
-def init():
+
+def init(register_base=True):
   if _DATA:
     raise Exception('Already initialized')
   _DATA['initialized'] = True
+  if register_base:
+    register('/letter/frequency', _get_letter_frequency)
 
 def reset():
   _DATA.clear()
@@ -59,3 +63,15 @@ def save():
 def restore():
   global _DATA
   _DATA = _HISTORY.pop()
+
+
+def _get_letter_frequency():
+  return collections.OrderedDict(sorted(list(zip('abcdefghijklmnopqrstuvwxyz', [
+    # abcdef.
+    9081174698, 419765694, 596623239, 361493758, 593086170, 297285731,
+    # ghijkl.
+    227771642, 220523502, 3086225277, 180739802, 195647953, 252900442,
+    341583838, 437961375, 246429812, 303249898, 139563801, 323534251,  # mnopqr.
+    565123981, 388448018, 179615587, 204486977, 252231566, 508609523,  # stuvwx.
+    195011703, 132095202,  # yz.
+  ])), key=lambda x: x[1], reverse=True))
