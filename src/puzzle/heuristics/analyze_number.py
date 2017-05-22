@@ -332,7 +332,7 @@ def _t9(digits, min_digit, max_digit):
 
 # Install.
 _HEURISTICS.extend([
-  _alphabet, _ascii_nibbles, _braille, _hexspeak, _keyboard_intersection,
-  _lexicographical_ordering, _morse, _phone_number, _positional, _runlength,
-  _t9,
+  _alphabet, _ascii_nibbles, _base_n, _braille, _hexspeak,
+  _keyboard_intersection, _lexicographical_ordering, _morse, _phone_number,
+  _positional, _runlength, _t9,
 ])
