@@ -21,7 +21,7 @@ class Trie(object):
       values.append(value)
     num_values = len(values)
     if num_values % 2:
-      self._median = (values[num_values // 2 + 1])
+      self._median = values[num_values // 2 + 1]
     else:
       self._median = (values[num_values // 2 - 1] + values[num_values // 2]) / 2
 
