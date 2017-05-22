@@ -121,9 +121,9 @@ with description('acrostic'):
     with it('finds simple words'):
       a = _acrostic_iter.Acrostic('cab')
       expected = [
-        'c ab',
-        'ca b',
         'cab',
+        'ca b',
+        'c ab',
       ]
       for i, (answer, weight) in enumerate(a.items()):
         expect('#%s = %s @ %s' % (i, answer, weight)).to(equal(
