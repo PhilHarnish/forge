@@ -1,4 +1,6 @@
+from data import warehouse
 from puzzle.problems import number_problem
+from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
 with description('NumberProblem'):
@@ -31,12 +33,38 @@ with description('NumberProblem'):
         number_problem.NumberProblem.score(['123'])
     ))
 
-  with description('solutions'):
+  with _description('solutions'):
+    with before.all:
+      warehouse.save()
+      prod_config.init()
+
+    with after.all:
+      prod_config.reset()
+      warehouse.restore()
+
     with it('solves simple problems'):
       problem = number_problem.NumberProblem(
           'ex',
-          ['0xCAB'])
+          ['0xCAB'])  # 6546
       solutions = problem.solutions()
       solution, weight = solutions.first()
       expect(solution).to(equal('cab'))
+      expect(weight).to(be_above(0))
+
+    with it('solves real problems with increment'):
+      problem = number_problem.NumberProblem(
+          'BINARY +1',
+          ['300451275870959962186'])
+      solutions = problem.solutions()
+      solution, weight = solutions.first()
+      expect(solution).to(equal('binary +1'))
+      expect(weight).to(be_above(0))
+
+    with it('solves more problems with even more increment'):
+      problem = number_problem.NumberProblem(
+          'DECIMAL +25',
+          ['29165720900'])
+      solutions = problem.solutions()
+      solution, weight = solutions.first()
+      expect(solution).to(equal('decimal +25'))
       expect(weight).to(be_above(0))

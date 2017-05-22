@@ -1,7 +1,10 @@
 import sys
 
+from data import warehouse
 from puzzle.heuristics import analyze_number
 from puzzle.problems import problem
+
+_OFFSETS = None
 
 
 class NumberProblem(problem.Problem):
@@ -27,8 +30,17 @@ class NumberProblem(problem.Problem):
   def _solve(self):
     # TODO: Much optimization needed here.
     result = {}
-    for solution, weight in analyze_number.solutions(self._value):
-      result[solution] = weight
+    best_weight = 0.0
+    for offset in _get_offsets():
+      for solution, weight in analyze_number.solutions(self._value + offset):
+        if offset:
+          solution_str = '%s +%s' % (solution, offset)
+        else:
+          solution_str = solution
+        result[solution_str] = weight
+        best_weight = max(weight, best_weight)
+      if best_weight == 1:
+        break
     return result
 
 
@@ -49,3 +61,12 @@ def _parse(src):
       # TODO: Base64.
       pass
   return result
+
+
+def _get_offsets():
+  global _OFFSETS
+  if _OFFSETS is None:
+    _OFFSETS = [0] + [
+      ord(c) - ord('a') + 1 for c in warehouse.get('/letter/frequency')
+    ]
+  return _OFFSETS
