@@ -131,6 +131,10 @@ with description('acrostic'):
         ))
       expect(a.items()).to(have_len(len(expected)))
 
+    with it('finds important words'):
+      a = _acrostic_iter.Acrostic('binary')
+      expect(next(a.items())).to(equal(('binary', 1)))
+
     with _it('crazy expensive'):
       words = [
         'champion', 'nitpick', 'conspiracy', 'windpipe', 'epinephrine',
