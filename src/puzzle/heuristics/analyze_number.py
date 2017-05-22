@@ -1,3 +1,4 @@
+import collections
 import math
 
 from data.alphabets import braille, keyboard_intersection, leet, morse, t9
@@ -25,6 +26,15 @@ def solutions(n):
 
 
 def _solutions_for_letters(letters):
+  l = len(letters)
+  if l > 8:
+    freq = collections.Counter(letters)
+    letter, count = freq.most_common(1)[0]
+    if letter in 'aeiou':
+      if count > l / 2:
+        return
+    elif count ** 2 > l / 2:
+      return
   for solution in acrostic.Acrostic(letters).items():
     yield solution
 
@@ -293,7 +303,7 @@ def _runlength(digits, min_digit, max_digit):
     digit, length = chunks[i]
     longest = max(longest, length)
     as_letters.append(chr(offset + length))
-  if len(as_letters) < 3 or longest < 3:
+  if len(as_letters) < 3 or longest < 10:
     return
   for solution in _solutions_for_letters(as_letters):
     yield solution

@@ -133,10 +133,14 @@ with description('analyze_number'):
       expect(self.run(analyze_number._runlength, 651322333143)).to(be_empty)
 
     with it('accepts input'):
-      expect(self.first(analyze_number._runlength, 111022)).to(equal('cab'))
+      # 11000000000000000111111111111111 = boo
+      expect(self.first(analyze_number._runlength, 3221258239, 2)).to(
+          equal('boo'))
 
     with it('accepts delimited input'):
-      expect(self.first(analyze_number._runlength, 11101011)).to(equal('cab'))
+      # 1101111111111111110111111111111111
+      expect(self.first(analyze_number._runlength, 15032352767, 2)).to(
+          equal('boo'))
 
   with description('t9'):
     with it('accepts t9'):
@@ -184,7 +188,7 @@ with description('analyze_number'):
       expect(self.solutions(102012021)).to(equal('cab'))
 
     with it('solves runlength'):
-      expect(self.solutions(11101011)).to(equal('cab'))
+      expect(self.solutions(15032352767)).to(equal('boo'))
 
     with it('solves t9'):
       expect(self.solutions(6669555)).to(equal('owl'))
