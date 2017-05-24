@@ -4,7 +4,7 @@ from puzzle.problems import number_problem
 from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
-with description('a_basic_puzzle'):
+with _description('a_basic_puzzle'):
   with before.all:
     warehouse.save()
     prod_config.init()
