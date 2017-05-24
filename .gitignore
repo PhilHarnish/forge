@@ -1,5 +1,6 @@
 bower_components/
-data/*.pkl
+concept/*
+data/*
 node_modules/
 *.ipynb_checkpoints
 *.pyc
