@@ -35,6 +35,11 @@ with description('analyze_number'):
         0x6, 0xf, 16, 0x7, 0x7, 16, 0x6, 0xc,
       ], 6, 16))[0]).to(equal('owl'))
 
+    with it('ignores unusual input'):
+      expect(list(analyze_number._ascii_nibbles([
+        16
+      ], 16, 16))).to(be_empty)
+
   with description('base_n'):
     with it('rejects invalid input'):
       expect(self.run(analyze_number._base_n, 100)).to(be_empty)

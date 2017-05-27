@@ -77,22 +77,26 @@ def _alphabet(digits, min_digit, max_digit):
 
 
 def _ascii_nibbles(digits, min_digit, max_digit):
-  del min_digit
-  if max_digit > 16:  # NB: Galactic included 16 as a delimiter.
+  num_digits = len(digits)
+  if min_digit >= 16:
     return
-  if max_digit == 16:
+  elif max_digit > 16:  # NB: Galactic included 16 as a delimiter.
+    return
+  elif num_digits < 2:
+    return  # Takes 2 digits to make 1 letter.
+  elif max_digit == 16:
     # Verify every 3rd digit is a delimiter.
-    for i in range(2, len(digits), 3):
+    for i in range(2, num_digits, 3):
       if digits[i] != 16:
         return
     step = 3
   else:
     step = 2
     # Verify digits is an even number.
-    if len(digits) % 2:
+    if num_digits % 2:
       return
   as_letters = []
-  for digit in range(0, len(digits), step):
+  for digit in range(0, num_digits, step):
     left, right = digits[digit], digits[digit + 1]
     if left == 16 or right == 16:
       return
