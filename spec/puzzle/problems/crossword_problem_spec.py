@@ -12,6 +12,9 @@ with description('CrosswordProblem'):
     expect(crossword_problem.CrosswordProblem.score(
         ['A quick brown', 'fox', 'jumps over the lazy dog'])).to(equal(0))
 
+  with it('rejects solitary numbers'):
+    expect(crossword_problem.CrosswordProblem.score(['1'])).to(equal(0))
+
   with it('rejects a string of numbers'):
     expect(crossword_problem.CrosswordProblem.score(['1 2 3 4 5'])).to(equal(0))
 
