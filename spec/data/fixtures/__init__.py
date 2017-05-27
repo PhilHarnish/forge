@@ -29,6 +29,11 @@ def _get_crossword_cursor():
   del connection
   return cursor
 
+
+def init():
+  """Available for functions which need to preserve imports."""
+  pass
+
 warehouse.init()
 warehouse.register('/phrases/crossword', _get_crossword)
 warehouse.register('/phrases/crossword/connection', _get_crossword_connection)

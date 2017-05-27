@@ -1,4 +1,5 @@
 from data import crossword, warehouse
+from spec.data import fixtures
 from spec.mamba import *
 
 with description('clue_keywords'):
@@ -29,6 +30,7 @@ with description('clue_keywords'):
 
 with description('db'):
   with before.all:
+    fixtures.init()
     conn, self.cursor = warehouse.get('/phrases/crossword')
     crossword.add(self.cursor, 'blue', 1, {'color': 1, 'emotion': 1})
     crossword.add(self.cursor, 'orange', 2, {'color': 1, 'fruit': 1})
