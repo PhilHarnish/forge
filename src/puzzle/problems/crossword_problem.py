@@ -31,8 +31,12 @@ class CrosswordProblem(problem.Problem):
     # TODO: Look for common crossword expressions.
     if _CROSSWORD_REGEX.match(src):
       return 1
+    words = src.split()
+    num_words = sum(word.isalpha() for word in words)
+    if num_words < len(words) / 2:
+      return 0
     # Something with a lot of words *might* be a crossword clue.
-    return max(0.0, 0.5 * (min(5, len(src.split())) / 5))
+    return max(0.0, 0.5 * (min(5, num_words) / 5))
 
   def _solve(self):
     clue = ''.join(self.lines)

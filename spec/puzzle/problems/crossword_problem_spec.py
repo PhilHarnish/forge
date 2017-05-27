@@ -1,5 +1,4 @@
 import collections
-from unittest import mock
 
 from data import data
 from puzzle.problems import crossword_problem
@@ -12,6 +11,9 @@ with description('CrosswordProblem'):
   with it('rejects multiple lines'):
     expect(crossword_problem.CrosswordProblem.score(
         ['A quick brown', 'fox', 'jumps over the lazy dog'])).to(equal(0))
+
+  with it('rejects a string of numbers'):
+    expect(crossword_problem.CrosswordProblem.score(['1 2 3 4 5'])).to(equal(0))
 
   with it('scores 1 word very low'):
     expect(crossword_problem.CrosswordProblem.score(['$#!7'])).to(be_below(.25))
