@@ -16,11 +16,14 @@ def _get_words_top():
 
 
 _TRUNCATION_LIMIT = 2 ** 27
+_WORD_LIMIT = 82383  # 1/3 of 333333M words = coupeville	82383
 
 def _get_unigram():
   results = []
   top_words = warehouse.get('/words/top')
   for word, value in word_frequencies.parse_file('data/count_1w.txt'):
+    if value < _WORD_LIMIT:
+      break
     l = len(word)
     if word not in top_words:
       reduction_factor = _TRUNCATION_LIMIT >> (l ** 2) or 1
