@@ -1,9 +1,15 @@
 import statistics
 
+from data import seek_set
+from puzzle.heuristics import acrostic
 from puzzle.problems import problem
 
 
 class AcrosticProblem(problem.Problem):
+  def __init__(self, name, lines):
+    super(AcrosticProblem, self).__init__(name, lines)
+    self._acrostic = acrostic.Acrostic(_normalize(lines))
+
   @staticmethod
   def score(lines):
     if len(lines) <= 1:
@@ -34,12 +40,40 @@ class AcrosticProblem(problem.Problem):
     return (num_lines_weight * line_length_weight * stddev_weight *
             line_length_weight)
 
-  def _solve(self):
-    return {}
+  def _solve_iter(self):
+    for solution, weight in self._acrostic.items():
+      if weight < self._threshold:
+        return
+      yield solution, weight
+
+
+def _normalize(lines):
+  sets = []
+  if lines[0].startswith('@'):
+    offset = 1
+    indexes = _parse_indexes(lines[0])
+  else:
+    offset = 0
+    indexes = None
+  sets_permutable = False
+  for line in lines[offset:]:
+    if line.startswith('* '):
+      sets_permutable = True
+      line = line[2:]
+    line = ''.join(line.split())
+    sets.append(line.lower())
+  return seek_set.SeekSet(
+      sets, sets_permutable=sets_permutable, indexes=indexes)
 
 
 def _parse_indexes(line):
   if not line.startswith('@'):
     return None
   parts = line[1:].split()
-  return [int(part) for part in parts]
+  results = []
+  for part in parts:
+    if part == '?':
+      results.append(None)
+    else:
+      results.append(int(part))
+  return results

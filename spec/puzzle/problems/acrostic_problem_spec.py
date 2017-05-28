@@ -31,3 +31,37 @@ with description('AcrosticProblem'):
     expect(acrostic_problem.AcrosticProblem.score([
         'babbling', 'bachelor', 'backbone',
     ])).to(be_below(1))
+
+  with description('indexed solutions'):
+    with it('finds specified solutions'):
+      problem = acrostic_problem.AcrosticProblem('test',
+          [
+            '@ 1 2 3',
+            'CAB',
+            'CAB',
+            'CAB',
+          ]
+      )
+      expect(list(problem.solutions())).to(equal(['cab']))
+
+    with it('finds specified solutions with permutation'):
+      problem = acrostic_problem.AcrosticProblem('test',
+          [
+            '@ 1 2 3',
+            '* xxB',
+            '* xAx',
+            '* Cxx',
+          ]
+      )
+      expect(list(problem.solutions())).to(equal(['cab']))
+
+    with it('finds specified solutions with permutation and 1 unknown index'):
+      problem = acrostic_problem.AcrosticProblem('test',
+          [
+            '@ 1 2 ?',
+            '* xAB',
+            '* xAT',
+            '* Cxx',
+          ]
+      )
+      expect(list(problem.solutions())).to(equal(['cat', 'cab']))
