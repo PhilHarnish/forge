@@ -1,7 +1,7 @@
 import pickle
 import statistics
 
-from data import trie
+from data import seek_set, trie
 from spec.data.fixtures import tries
 from spec.mamba import *
 
@@ -80,6 +80,40 @@ with description('trie'):
           set('anything'),
           set('matched'),
         ]))).to(equal([('and', 12997637966), ('a', 9081174698)]))
+
+      with description('using SeekSet'):
+        with it('works with old functionality'):
+          sets = seek_set.SeekSet(['abcdefghijklmnopqrstuvwxyz'] * 2)
+          expect(list(self.subject.walk(sets))).to(equal([
+            ('of', 13151942776), ('to', 12136980858),
+            ('a', 9081174698),
+            ('in', 8469404971), ('is', 4705743816), ('on', 3750423199)
+          ]))
+
+        with it('works with permutations'):
+          sets = seek_set.SeekSet(['ns', 'i'], sets_permutable=True)
+          expect(list(self.subject.walk(sets))).to(equal([
+            ('in', 8469404971), ('is', 4705743816)
+          ]))
+
+        with it('works with indexes'):
+          sets = seek_set.SeekSet(
+              ['txxx', 'xhxx', 'xxax', 'xxxt'],
+              indexes=[1, 2, 3, 4]
+          )
+          expect(list(self.subject.walk(sets))).to(equal([
+            ('that', 3400031103)
+          ]))
+
+        with it('works with permutable sets and fixed indexes'):
+          sets = seek_set.SeekSet(
+              ['xxax', 'xxxt', 'txxx', 'xhxx'],
+              indexes=[1, 2, 3, 4],
+              sets_permutable=True,
+          )
+          expect(list(self.subject.walk(sets))).to(equal([
+            ('that', 3400031103)
+          ]))
 
   with context('letters'):
     with before.each:

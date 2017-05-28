@@ -1,5 +1,7 @@
 import heapq
 
+from data import seek_set
+
 
 class Trie(object):
   def __init__(self, data):
@@ -70,11 +72,15 @@ class Trie(object):
     acc = []
     fringe.push(float('inf'), (acc, self._index))
     stop_seek_pos = len(seek_sets) - 1
+    seek_set_mode = isinstance(seek_sets, seek_set.SeekSet)
     while len(fringe):
       fringe_score = fringe.best_weight()
       acc, cursor = fringe.pop()
       pos = len(acc)
-      seeking = seek_sets[pos]
+      if seek_set_mode:
+        seeking = seek_sets[acc]
+      else:
+        seeking = seek_sets[pos]
       for c in seeking:
         if c not in cursor:
           continue

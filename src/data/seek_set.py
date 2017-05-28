@@ -44,6 +44,9 @@ class SeekSet(object):
     _visit(result, set(), self._sets, self._set_index, self._indexes, seek, 0)
     return result
 
+  def __len__(self):
+    return len(self._sets)
+
   def _index_sets(self, sets):
     result = collections.defaultdict(set)
     for i, chars in enumerate(sets):
