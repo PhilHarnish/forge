@@ -1,15 +1,12 @@
-import mock
-from spec.mamba import *
-
+from data import word_frequencies
 from puzzle.heuristics.acrostics import _naive_acrostic
 from spec.data.fixtures import tries
-from data import word_frequencies
+from spec.mamba import *
 
 BA_PREFIX_TRIE = word_frequencies.load(
     zip(('bad', 'bag', 'ban', 'bar', 'bat'), [1]*5))
 
-
-with _description('acrostic'):
+with description('acrostic'):
   with it('uses a mock trie'):
     a = _naive_acrostic.Acrostic(['a'], tries.letters())
     expect(len(a._trie)).to(be_below(100))
