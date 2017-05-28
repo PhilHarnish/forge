@@ -16,7 +16,9 @@ class NumberProblem(problem.Problem):
 
   @staticmethod
   def score(lines):
-    if len(lines) > 1:
+    if not lines:
+      return 0
+    elif len(lines) > 1:
       return 0
     parsed = _parse(lines[0])
     if parsed is None:
@@ -31,21 +33,27 @@ class NumberProblem(problem.Problem):
     # TODO: Much optimization needed here.
     result = {}
     best_weight = 0.0
-    for offset in _get_offsets():
+    offsets = _get_offsets()
+    for i, offset in enumerate(offsets):
+      scale_factor = 1 - i / len(offsets)
       for solution, weight in analyze_number.solutions(self._value + offset):
         if offset:
           solution_str = '%s +%s' % (solution, offset)
         else:
           solution_str = solution
-        result[solution_str] = weight
+        result[solution_str] = weight * scale_factor
         best_weight = max(weight, best_weight)
       if best_weight == 1:
-        break
+        break  # Good enough.
+      elif scale_factor < best_weight:
+        break  # Scale factor will prevent finding anything better.
     return result
 
 
 def _parse(src):
   """Converts a space-separated list of digits into 1 number."""
+  if not src:
+    return None
   segments = src.split()
   digits = []
   max_digit = 0
@@ -54,6 +62,8 @@ def _parse(src):
     if not all(c in '01' for c in segment):
       binary_heuristic = False
       break
+  if binary_heuristic:
+    max_digit = 2 ** max(len(segment) for segment in segments)
   for segment in segments:
     try:
       if binary_heuristic:
@@ -77,12 +87,12 @@ def _parse(src):
     return digits[0]
   if len(digits) >= 30:  # Chosen arbitrarily.
     return None
-  if max_digit > 30:  # Chosen arbitrarily.
+  if max_digit > 35:  # Chosen arbitrarily.
     return None
   result = 0
   while digits:
     result *= max_digit
-    result += digits.pop()
+    result += digits.pop(0)
   return result
 
 
