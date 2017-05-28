@@ -6,16 +6,17 @@ class SeekSet(object):
       indexes_permutable=False):
     if indexes_permutable and not indexes:
       raise IndexError('Must specify indexes if indexes_permutable=True')
-    if indexes and not indexes_permutable and not sets_permutable:
-      # This can only spell 1 string of characters.
-      for i, s in enumerate(sets):
-        index = indexes[i]
-        if index:
-          # Truncate sets[i] to a single letter from sets[i].
-          sets[i] = sets[i][indexes[i] - 1]
-      indexes = None
-    elif indexes or indexes_permutable:
-      raise NotImplementedError()
+    if indexes:
+      if not indexes_permutable and not sets_permutable:
+        # Use indexes to filter down sets then throw away indexes.
+        for i, s in enumerate(sets):
+          index = indexes[i]
+          if index:
+            # Truncate sets[i] to a single letter from sets[i].
+            sets[i] = sets[i][indexes[i] - 1]
+        indexes = None
+      elif indexes_permutable:
+        raise NotImplementedError()
     self._sets = list(sets)
     self._sets_permutable = sets_permutable
     self._indexes = indexes
