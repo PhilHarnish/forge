@@ -4,12 +4,18 @@ import collections
 class SeekSet(object):
   def __init__(self, sets, sets_permutable=False, indexes=None,
       indexes_permutable=False):
-    self._sets = list(sets)
-    self._sets_permutable = sets_permutable
     if indexes_permutable and not indexes:
       raise IndexError('Must specify indexes if indexes_permutable=True')
-    if indexes or indexes_permutable:
+    if indexes and not indexes_permutable and not sets_permutable:
+      # This can only spell 1 string of characters.
+      for i, s in enumerate(sets):
+        # Truncate sets[i] to a single letter from sets[i].
+        sets[i] = sets[i][indexes[i] - 1]
+      indexes = None
+    elif indexes or indexes_permutable:
       raise NotImplementedError()
+    self._sets = list(sets)
+    self._sets_permutable = sets_permutable
     self._indexes = indexes
     self._indexes_permutable = indexes_permutable
     if sets_permutable or indexes_permutable:
@@ -21,14 +27,17 @@ class SeekSet(object):
 
   def __getitem__(self, seek):
     """Use `seek` to index into `self` and return set of available letters."""
+    result = set()
     if not self._sets_permutable and not self._indexes:
       # Trivial case.
+      for i, c in enumerate(seek):
+        if c not in self._sets[i]:
+          return result
       return set(self._sets[len(seek)])
     end_pos = len(seek)
     if len(seek) == 0:
       # Beginning of SeekSet; all letters are available.
       return set(self._set_index.keys())
-    result = set()
 
     def visit(result, visited, set_index, seek, pos):
       if pos == end_pos:

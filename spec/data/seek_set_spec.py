@@ -18,7 +18,7 @@ with description('seek_set'):
           ['a'], ['b', 'c'], ['d', 'e', 'f']
         ])).not_to(raise_error)
 
-    with description('indexing'):
+    with description('indexing without indexes'):
       with before.each:
         self.subject = seek_set.SeekSet(['a', 'bc', 'def', 'hijk', 'lmnop'])
 
@@ -32,6 +32,25 @@ with description('seek_set'):
         expect(self.subject['abd']).to(contain('h'))
         expect(self.subject[['a', 'b', 'd']]).to(contain('h'))
         expect(self.subject[['a', 'b', 'd']]).to_not(contain('a'))
+
+    with description('indexing with indexes'):
+      with before.each:
+        self.subject = seek_set.SeekSet(
+            ['a', 'bc', 'def', 'hijk', 'lmnop'],
+            indexes=[1, 2, 3, 4, 5],
+        )
+
+      with it('supports "contains" for simple query'):
+        expect(self.subject['']).to(equal({'a'}))
+
+      with it('supports "contains" for simple multi-character query'):
+        expect(self.subject['a']).to(equal({'c'}))
+
+      with it('supports "contains" for complex query'):
+        expect(self.subject['acfk']).to(equal({'p'}))
+
+      with it('rejects anything off of the path'):
+        expect(self.subject['abcd']).to(be_empty)
 
   with description('permutable sets'):
     with description('construction'):
@@ -76,6 +95,31 @@ with description('seek_set'):
           '3abc',
           '4abcd',
         ], sets_permutable=True)
+
+      with it('rejects "contains" garbage input'):
+        expect(self.subject['']).not_to(contain('q'))
+
+      with it('supports "contains" for simple query'):
+        expect(self.subject['']).to(contain('a'))
+
+      with it('supports "contains" for single character query'):
+        expect(self.subject['a']).to(contain('b'))
+
+      with it('supports "contains" for complex query'):
+        expect(self.subject['123']).to(equal(set('4abcd')))
+        expect(self.subject[['b', 'b', 'b']]).to(equal(set('1a')))
+        expect(self.subject[['3', 'a', 'b']]).to(equal(
+            set('1a') | set('2ab') | set('4abcd')))
+        expect(self.subject[['3', 'a', 'b', 'c']]).to(be_empty)
+
+    with _description('complex + indexes'):
+      with before.each:
+        self.subject = seek_set.SeekSet([
+          '1a',
+          '2ab',
+          '3abc',
+          '4abcd',
+        ], sets_permutable=True, indexes=[1, 2, 3, 4])
 
       with it('rejects "contains" garbage input'):
         expect(self.subject['']).not_to(contain('q'))
