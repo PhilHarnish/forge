@@ -78,7 +78,7 @@ class Trie(object):
       acc, cursor = fringe.pop()
       pos = len(acc)
       if seek_set_mode:
-        seeking = seek_sets[acc]
+        seeking = seek_sets.seek(acc)
       else:
         seeking = seek_sets[pos]
       for c in seeking:

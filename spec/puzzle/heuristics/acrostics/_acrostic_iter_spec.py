@@ -125,6 +125,14 @@ with description('acrostic'):
         a = _acrostic_iter.Acrostic(seeking, trie=BA_PREFIX_TRIE)
         expect(list(a)).to(equal(['ban', 'bag', 'bad']))
 
+      with it('supports permuted sets'):
+        seeking = seek_set.SeekSet(
+            ['dgn', 'aaa', 'bbb'],
+            sets_permutable=True,
+            indexes=[1, 2, 3])
+        a = _acrostic_iter.Acrostic(seeking, trie=BA_PREFIX_TRIE)
+        expect(list(a)).to(equal(['ban']))
+
   with _description('real data'):
     with before.all:
       warehouse.save()

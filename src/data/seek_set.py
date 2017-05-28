@@ -37,9 +37,17 @@ class SeekSet(object):
     else:
       start, stop, step = None, None, None
     if start is not None:
-      if not self._sets_permutable and not self._indexes_permutable:
+      if start == 0:
+        return self
+      elif not self._sets_permutable and not self._indexes_permutable:
         return SeekSet(self._sets[start:stop:step])
-      raise NotImplementedError()
+      else:
+        # TODO: Find a way to support this? Seems impossible.
+        return SeekSet([[]])
+    # Indexing for lookup.
+    return self.seek(seek)
+
+  def seek(self, seek):
     result = set()
     if not self._indexes:
       if not self._sets_permutable:
