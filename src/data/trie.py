@@ -21,9 +21,10 @@ class Trie(object):
       values.append(value)
     num_values = len(values)
     if num_values % 2:
-      self._median = values[num_values // 2 + 1]
+      self._percentile25 = values[num_values // 8 + 1]
     else:
-      self._median = (values[num_values // 2 - 1] + values[num_values // 2]) / 2
+      self._percentile25 = (
+        (values[num_values // 8 - 1] + values[num_values // 8]) / 2)
 
   def __contains__(self, key):
     result = self._find_prefix(key)
@@ -58,8 +59,8 @@ class Trie(object):
   def magnitude(self):
     return self._largest
 
-  def median(self):
-    return self._median
+  def interesting_threshold(self):
+    return self._percentile25
 
   def walk(self, seek_sets):
     """Returns solutions matching `seek_sets`, ordered from high to low."""

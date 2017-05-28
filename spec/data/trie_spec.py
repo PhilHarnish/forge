@@ -34,9 +34,10 @@ with description('trie'):
     with it('reports max value'):
       expect(self.subject.magnitude()).to(equal(max(i[1] for i in _TEST_DATA)))
 
-    with it('reports median value'):
-      expect(self.subject.median()).to(equal(
-          statistics.median(i[1] for i in _TEST_DATA)
+    with it('reports interesting threshold'):
+      expect(self.subject.interesting_threshold()).to(be_between(
+          statistics.median(i[1] for i in _TEST_DATA),
+          _TEST_DATA[0][1]
       ))
 
     with description('items'):

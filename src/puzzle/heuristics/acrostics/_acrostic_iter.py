@@ -56,7 +56,7 @@ class Acrostic(_base_acrostic.BaseAcrostic):
             yield result
       elif pos == target:
         if len(acc) < target:  # Reject solutions composed of split letters.
-          scored = _scored_solution(self._trie.median(), acc)
+          scored = _scored_solution(self._trie.interesting_threshold(), acc)
           yield scored
       else:
         raise Exception('Desired length exceeded.')
