@@ -24,7 +24,7 @@ class Acrostic(_base_acrostic.BaseAcrostic):
     self._source = Observable.from_(self)
     self.subscribe = self._source.subscribe
     # Since we can assume there will be 1 letter phrases for every letter
-    # go ahead and create n Meta objects to hold phrases from [n, m].
+    # go ahead and create n Meta objects to hold phrases from n->m at [n][m].
     self._phrase_graph = [
       {} for _ in range(0, self._solution_len)
     ]

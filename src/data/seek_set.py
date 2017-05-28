@@ -30,6 +30,16 @@ class SeekSet(object):
 
   def __getitem__(self, seek):
     """Use `seek` to index into `self` and return set of available letters."""
+    if isinstance(seek, slice):
+      start, stop, step = seek.start, seek.stop, seek.step
+    elif isinstance(seek, int):
+      start, stop, step = seek, seek, 1
+    else:
+      start, stop, step = None, None, None
+    if start is not None:
+      if not self._sets_permutable and not self._indexes_permutable:
+        return SeekSet(self._sets[start:stop:step])
+      raise NotImplementedError()
     result = set()
     if not self._indexes:
       if not self._sets_permutable:

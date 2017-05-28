@@ -2,7 +2,7 @@ import collections
 
 from mock.mock import patch
 
-from data import warehouse, word_frequencies
+from data import seek_set, warehouse, word_frequencies
 from puzzle.heuristics.acrostics import _acrostic_iter
 from puzzle.puzzlepedia import prod_config
 from spec.data.fixtures import tries
@@ -31,15 +31,15 @@ with description('acrostic'):
       expect(subs.on_next.call_args).to(equal(mock.call('is')))
 
     with it('yields multi-character solutions'):
-      a = _acrostic_iter.Acrostic(list('bag'), BA_PREFIX_TRIE)
+      a = _acrostic_iter.Acrostic(list('bag'), trie=BA_PREFIX_TRIE)
       expect(list(a)).to(contain('bag'))
 
     with it('yields unique solutions'):
-      a = _acrostic_iter.Acrostic(list('ba') + ['ggg'], BA_PREFIX_TRIE)
+      a = _acrostic_iter.Acrostic(list('ba') + ['ggg'], trie=BA_PREFIX_TRIE)
       expect(list(a)).to(have_len(1))
 
     with it('yields multiple multi-character solutions'):
-      a = _acrostic_iter.Acrostic(list('ba') + ['dgnrt'], BA_PREFIX_TRIE)
+      a = _acrostic_iter.Acrostic(list('ba') + ['dgnrt'], trie=BA_PREFIX_TRIE)
       expect(list(a)).to(contain('bad', 'bag', 'ban', 'bar', 'bat'))
 
   with description('_iter_phrases'):
@@ -75,7 +75,7 @@ with description('acrostic'):
       ))
 
     with it('is used to cache results from previous walks'):
-      a = _acrostic_iter.Acrostic(list('ba') + ['dgnrt'], BA_PREFIX_TRIE)
+      a = _acrostic_iter.Acrostic(list('ba') + ['dgnrt'], trie=BA_PREFIX_TRIE)
       expect(list(a)).to(contain('bad', 'bag', 'ban', 'bar', 'bat'))
       expect(list(a._phrase_graph[0][3].items())).to(equal([
         ('bat', 1000000004), ('bar', 1000000003), ('ban', 1000000002),
@@ -108,6 +108,22 @@ with description('acrostic'):
         second = next(iter(a))
         expect(first).to(equal(second))
         expect(mock.call_count).to(be_below(10))
+
+    with description('with seek sets'):
+      with it('maintains old functionality'):
+        seeking = seek_set.SeekSet(list('superbowl'))
+        a = _acrostic_iter.Acrostic(seeking, tries.ambiguous())
+        expect(list(a)).to(contain('super bowl', 'superb owl', 'superbowl'))
+
+      with it('supports indexing'):
+        seeking = seek_set.SeekSet(['bad', 'bag', 'ban'], indexes=[1, 2, 3])
+        a = _acrostic_iter.Acrostic(seeking, trie=BA_PREFIX_TRIE)
+        expect(list(a)).to(equal(['ban']))
+
+      with it('supports ambiguous indexing'):
+        seeking = seek_set.SeekSet(['bad', 'bag', 'dgn'], indexes=[1, 2, None])
+        a = _acrostic_iter.Acrostic(seeking, trie=BA_PREFIX_TRIE)
+        expect(list(a)).to(equal(['ban', 'bag', 'bad']))
 
   with _description('real data'):
     with before.all:
