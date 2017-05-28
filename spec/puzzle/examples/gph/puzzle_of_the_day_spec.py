@@ -29,7 +29,7 @@ with _description('puzzle_of_the_day'):
     for i, (left, right) in enumerate(
         zip(solutions, puzzle_of_the_day.SOLUTIONS)):
       if left and right and left.lower() == right.lower():
-        matches.append('%s: %s' % (i, left))
+        matches.append('%s: %s' % (i + 1, left))
     expect(matches).to(equal([
       '2: nitpick',
       '4: windpipe',

@@ -5,9 +5,10 @@ def get():
   return puzzle.Puzzle('Puzzle of the day', SOURCE)
 
 
+# TODO: The "." character breaks the parser.
+
 SOURCE = """
 Winner or advocate (4|2)
-.
 Criticize small details (3|2)
 The Illuminati, for example (4|4)
 Trachea (4|2)
@@ -30,7 +31,6 @@ French revolutionary figure (5|4)
 
 SOLUTIONS = """
 CHAMPION
-.
 NITPICK
 CONSPIRACY
 WINDPIPE
