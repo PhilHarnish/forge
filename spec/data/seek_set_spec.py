@@ -52,6 +52,25 @@ with description('seek_set'):
       with it('rejects anything off of the path'):
         expect(self.subject['abcd']).to(be_empty)
 
+    with description('indexing with missing indexes'):
+      with before.each:
+        self.subject = seek_set.SeekSet(
+            ['a', 'bc', 'def', 'hijk', 'lmnop'],
+            indexes=[1, 2, 3, None, 5],
+        )
+
+      with it('supports "contains" for simple query'):
+        expect(self.subject['']).to(equal({'a'}))
+
+      with it('supports "contains" for simple multi-character query'):
+        expect(self.subject['a']).to(equal({'c'}))
+
+      with it('supports "contains" for complex query'):
+        expect(self.subject['acfh']).to(equal({'p'}))
+        expect(self.subject['acfi']).to(equal({'p'}))
+        expect(self.subject['acfj']).to(equal({'p'}))
+        expect(self.subject['acfk']).to(equal({'p'}))
+
   with description('permutable sets'):
     with description('construction'):
       with it('constructs with empty set'):

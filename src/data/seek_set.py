@@ -9,8 +9,10 @@ class SeekSet(object):
     if indexes and not indexes_permutable and not sets_permutable:
       # This can only spell 1 string of characters.
       for i, s in enumerate(sets):
-        # Truncate sets[i] to a single letter from sets[i].
-        sets[i] = sets[i][indexes[i] - 1]
+        index = indexes[i]
+        if index:
+          # Truncate sets[i] to a single letter from sets[i].
+          sets[i] = sets[i][indexes[i] - 1]
       indexes = None
     elif indexes or indexes_permutable:
       raise NotImplementedError()
