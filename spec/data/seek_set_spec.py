@@ -137,7 +137,7 @@ with description('seek_set'):
           '1a',
           '2ax',
           '3ayi',
-          '4azj',
+          '4azjq',
         ], sets_permutable=True, indexes=[1, 2, 3, 4])
 
       with it('rejects "contains" garbage input'):
@@ -152,4 +152,14 @@ with description('seek_set'):
       with it('supports "contains" for complex query'):
         expect(self.subject['1a']).to(equal({'x', 'y', 'z'}))
         expect(self.subject['1ax']).to(equal({'i', 'j'}))
-        expect(self.subject['4ax']).to(equal({'i'}))
+        expect(self.subject['1ay']).to(equal({'j'}))
+
+      with it('recognizes index > set length'):
+        self.subject = seek_set.SeekSet([
+          'a5',
+          'b2345',
+          'd2345',
+        ], sets_permutable=True, indexes=[5, 5, 1])
+        expect(self.subject['']).to(equal({'5'}))
+        expect(self.subject['5']).to(equal({'5'}))
+        expect(self.subject['55']).to(equal({'a'}))

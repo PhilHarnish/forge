@@ -58,11 +58,11 @@ class _SeekCursor(SeekSet):
 
 
 def _visit(result, visited, sets, set_index, indexes, seek, pos):
+  if indexes is None or indexes[pos] is None:
+    index = None
+  else:
+    index = indexes[pos] - 1
   if pos == len(seek):
-    if indexes is None or indexes[pos] is None:
-      index = None
-    else:
-      index = indexes[pos] - 1
     for i, set in enumerate(sets):
       if i in visited:
         continue
@@ -78,6 +78,8 @@ def _visit(result, visited, sets, set_index, indexes, seek, pos):
     return  # Invalid character.
   for next_visit in set_index[c]:
     if next_visit in visited:
+      continue
+    if index is not None and index >= len(sets[next_visit]):
       continue
     visited.add(next_visit)
     _visit(result, visited, sets, set_index, indexes, seek, pos + 1)
