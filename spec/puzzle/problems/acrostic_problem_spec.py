@@ -1,7 +1,5 @@
-from spec.mamba import *
-
 from puzzle.problems import acrostic_problem
-
+from spec.mamba import *
 
 with description('AcrosticProblem'):
   with it('ignores empty and garbage input'):
@@ -18,10 +16,15 @@ with description('AcrosticProblem'):
         'doghouse', 'cat', 'bat',
     ])))
 
+  with it('positively matches acrostic with indexes'):
+    expect(acrostic_problem.AcrosticProblem.score([
+      '@ 1 2', 'babbling', 'bachelor'
+    ])).to(equal(1))
+
   with it('favors words with similar lengths'):
     expect(acrostic_problem.AcrosticProblem.score([
-        'babbling', 'bachelor', 'backbone', 'backward', 'bacteria',
-        'baffling', 'balanced', 'baldness', 'ballroom', 'bankrupt',
+      'babbling', 'bachelor', 'backbone', 'backward', 'bacteria',
+      'baffling', 'balanced', 'baldness', 'ballroom', 'bankrupt',
     ])).to(equal(1))
 
   with it('penalizes few words'):
