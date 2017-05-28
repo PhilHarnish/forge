@@ -38,7 +38,7 @@ with description('NumberProblem'):
         number_problem.NumberProblem.score(['123'])
     ))
 
-  with _description('solutions'):
+  with _description('real data'):
     with before.all:
       warehouse.save()
       prod_config.init()
@@ -72,4 +72,13 @@ with description('NumberProblem'):
       solutions = problem.solutions()
       solution, weight = solutions.first()
       expect(solution).to(equal('decimal +25'))
+      expect(weight).to(be_above(0))
+
+    with it('solves binary (without increment)'):
+      problem = number_problem.NumberProblem(
+          'NO AIR +0',
+          ['01110 01111 00001 01001 10010'])
+      solutions = problem.solutions()
+      solution, weight = solutions.first()
+      expect(solution).to(equal('no air'))
       expect(weight).to(be_above(0))
