@@ -32,7 +32,7 @@ class NumberProblem(problem.Problem):
   def _solve(self):
     # TODO: Much optimization needed here.
     result = {}
-    best_weight = 0.0
+    required_weight = self._threshold
     offsets = _get_offsets()
     for i, offset in enumerate(offsets):
       scale_factor = 1 - i / len(offsets)
@@ -42,10 +42,10 @@ class NumberProblem(problem.Problem):
         else:
           solution_str = solution
         result[solution_str] = weight * scale_factor
-        best_weight = max(weight, best_weight)
-      if best_weight == 1:
+        required_weight = max(weight, required_weight)
+      if required_weight == 1:
         break  # Good enough.
-      elif scale_factor < best_weight:
+      elif scale_factor < required_weight:
         break  # Scale factor will prevent finding anything better.
     return result
 
