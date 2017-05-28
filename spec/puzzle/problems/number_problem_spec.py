@@ -29,6 +29,10 @@ with description('NumberProblem'):
     expect(number_problem.NumberProblem.score(['8 4 10 13 7 2 3 1 1'])).to(
         equal(1))
 
+  with it('accepts sequences in arbitrary base, part deux'):
+    expect(number_problem.NumberProblem.score([
+      '01110 01111 00001 01001 10010'])).to(equal(1))
+
   with it('favors data with more information density'):
     expect(number_problem.NumberProblem.score(['1234'])).to(be_above(
         number_problem.NumberProblem.score(['123'])

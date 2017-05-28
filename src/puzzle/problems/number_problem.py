@@ -49,11 +49,18 @@ def _parse(src):
   segments = src.split()
   digits = []
   max_digit = 0
+  binary_heuristic = True
+  for segment in segments:
+    if not all(c in '01' for c in segment):
+      binary_heuristic = False
+      break
   for segment in segments:
     try:
-      if src.startswith('0x'):
+      if binary_heuristic:
+        base = 2
+      elif segment.startswith('0x'):
         base = 16
-      elif src.startswith('0'):
+      elif segment.startswith('0'):
         base = 8
       else:
         base = 0  # Autodetect.
