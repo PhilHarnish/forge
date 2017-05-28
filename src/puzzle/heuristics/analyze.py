@@ -1,5 +1,6 @@
 from data import meta
-from puzzle.problems import anagram_problem, crossword_problem, number_problem
+from puzzle.problems import acrostic_problem, anagram_problem, \
+  crossword_problem, number_problem
 
 _PROBLEM_TYPES = set()
 
@@ -14,21 +15,23 @@ def identify(lines):
 
 
 def identify_problems(lines):
+  if len(lines) > 1:
+    # Try to parse the entire thing at once first.
+    identified = identify(lines)
+    if identified and identified.magnitude() == 1:
+      return [(identified, lines)]
   results = []
-  acc = []
   for line in lines:
-    acc.append(line)
-    identified = identify(acc)
+    identified = identify([line])
     if identified and identified.magnitude() > 0:
-      results.append((identified, acc))
-      # Make a new accumulator; last was given to results.
-      acc = []
-  return results
+      results.append((identified, [line]))
+  return sorted(results, key=lambda x: x[0].magnitude(), reverse=True)
 
 
 def init():
   if _PROBLEM_TYPES:
     return
+  register(acrostic_problem.AcrosticProblem)
   register(anagram_problem.AnagramProblem)
   register(crossword_problem.CrosswordProblem)
   register(number_problem.NumberProblem)

@@ -1,7 +1,5 @@
 import textwrap
 
-import mock
-
 from puzzle.heuristics import analyze
 from puzzle.problems import problem
 from puzzle.puzzlepedia import puzzle
@@ -11,7 +9,8 @@ from spec.mamba import *
 class TestProblem(problem.Problem):
   @staticmethod
   def score(lines):
-    del lines
+    if len(lines) > 1:
+      return 0
     return 0.9
 
   def _solve(self):
@@ -94,7 +93,7 @@ with description('Puzzle'):
 
     with it('finds the solution to the second stage'):
       stage2 = _get_multi_puzzle().get_next_stage()
-      expect(stage2.solutions()).to(equal(['final solution'] * 2))
+      expect(stage2.solutions()).to(equal(['final solution']))
 
   with description('async changes'):
     with it('notifies problem subscribers when solution changes'):
