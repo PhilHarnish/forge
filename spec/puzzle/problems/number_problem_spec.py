@@ -16,9 +16,6 @@ with description('NumberProblem'):
   with it('accepts integers'):
     expect(number_problem.NumberProblem.score(['123'])).to(be_above(0))
 
-  with it('accepts floats'):
-    expect(number_problem.NumberProblem.score(['1.23'])).to(be_above(0))
-
   with it('accepts hex'):
     expect(number_problem.NumberProblem.score(['0xDEADBEEF'])).to(be_above(0))
 
@@ -27,6 +24,10 @@ with description('NumberProblem'):
 
   with it('reluctantly accepts 0'):
     expect(number_problem.NumberProblem.score(['0'])).to(be_between(0, .000001))
+
+  with it('accepts sequences in arbitrary base'):
+    expect(number_problem.NumberProblem.score(['8 4 10 13 7 2 3 1 1'])).to(
+        equal(1))
 
   with it('favors data with more information density'):
     expect(number_problem.NumberProblem.score(['1234'])).to(be_above(

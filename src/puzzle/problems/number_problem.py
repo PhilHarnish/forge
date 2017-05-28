@@ -45,21 +45,37 @@ class NumberProblem(problem.Problem):
 
 
 def _parse(src):
-  result = None
-  try:
-    if src.startswith('0x'):
-      base = 16
-    elif src.startswith('0'):
-      base = 8
-    else:
-      base = 0  # Autodetect.
-    result = int(src, base)
-  except:
+  """Converts a space-separated list of digits into 1 number."""
+  segments = src.split()
+  digits = []
+  max_digit = 0
+  for segment in segments:
     try:
-      result = float(src)
+      if src.startswith('0x'):
+        base = 16
+      elif src.startswith('0'):
+        base = 8
+      else:
+        base = 0  # Autodetect.
+      parsed = int(segment, base)
+      digits.append(parsed)
+      if parsed > max_digit:
+        max_digit = parsed
     except:
-      # TODO: Base64.
-      pass
+      # TODO: Support float, base64.
+      return None
+  if not digits:
+    return None
+  if len(digits) == 1:
+    return digits[0]
+  if len(digits) >= 30:  # Chosen arbitrarily.
+    return None
+  if max_digit > 30:  # Chosen arbitrarily.
+    return None
+  result = 0
+  while digits:
+    result *= max_digit
+    result += digits.pop()
   return result
 
 
