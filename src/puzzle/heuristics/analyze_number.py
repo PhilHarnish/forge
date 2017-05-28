@@ -5,7 +5,7 @@ from data.alphabets import braille, keyboard_intersection, leet, morse, t9
 from puzzle.heuristics import acrostic
 
 _BASE_HIGH_PRIORITY = [
-  10, 16, 2, 26, 36,
+  10, 16, 26, 36, 32, 2,
 ]
 _BASE_PRIORITY = _BASE_HIGH_PRIORITY + [
   i for i in range(2, 40) if i not in _BASE_HIGH_PRIORITY
