@@ -1,16 +1,16 @@
 from spec.mamba import *
 
-from data import data
-from origen import seven_segment
-from origen import seven_segment_data
-from origen.puzzles import access
+if False:
+  from data import data
+  from origen import seven_segment
+  from origen import seven_segment_data
+  from origen.puzzles import access
 
-TEST_DATA = data.load(
-    'data/seven_segment_prototype_test_data.txt',
-    seven_segment.Glyphs)
+  TEST_DATA = data.load(
+      'data/seven_segment_prototype_test_data.txt',
+      seven_segment.Glyphs)
 
-
-with description('combinations'):
+with _description('combinations'):
   with it('should merge two characters'):
     merged = (
         seven_segment_data.ALPHABET['F'] |
@@ -26,7 +26,7 @@ with description('combinations'):
         seven_segment_data.glyphs_from_str('ALL'))
     expect(access.accept(transformed)).to(be_true)
 
-with description('prototype test data'):
+with _description('prototype test data'):
   with it('should load test data'):
     expect(TEST_DATA).to(have_keys('KEY', 'CORRECT', 'NOPE', 'LOST'))
 
@@ -57,7 +57,7 @@ with description('prototype test data'):
     expected = seven_segment_data.glyphs_from_str('LOSt')
     expect(expected in transformed).to(be_true)
 
-with description('Numberjack models'):
+with _description('Numberjack models'):
   with it('creates a goal and key'):
     puzzle = access.AccessPuzzle(seven_segment_data.ACCESS, 0)
     expect(puzzle.goal).not_to(be_empty)
