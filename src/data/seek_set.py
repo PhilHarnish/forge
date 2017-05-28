@@ -31,37 +31,17 @@ class SeekSet(object):
   def __getitem__(self, seek):
     """Use `seek` to index into `self` and return set of available letters."""
     result = set()
-    if not self._sets_permutable and not self._indexes:
-      # Trivial case.
-      for i, c in enumerate(seek):
-        if c not in self._sets[i]:
-          return result
-      return set(self._sets[len(seek)])
-    end_pos = len(seek)
-    if len(seek) == 0:
-      # Beginning of SeekSet; all letters are available.
-      return set(self._set_index.keys())
-
-    def visit(result, visited, set_index, seek, pos):
-      if pos == end_pos:
-        for i, set in enumerate(self._sets):
-          if i in visited:
-            continue
-          result.update(c for c in set)
-        return  # End of the line.
-      if len(result) == len(set_index):
-        return  # All characters added.
-      c = seek[pos]
-      if c not in set_index:
-        return []  # Invalid character.
-      for next_visit in set_index[c]:
-        if next_visit in visited:
-          continue
-        visited.add(next_visit)
-        visit(result, visited, set_index, seek, pos + 1)
-        visited.remove(next_visit)
-
-    visit(result, set(), self._set_index, seek, 0)
+    if not self._indexes:
+      if not self._sets_permutable:
+        # Trivial case.
+        for i, c in enumerate(seek):
+          if c not in self._sets[i]:
+            return result
+        return set(self._sets[len(seek)])
+      if len(seek) == 0:
+        # Beginning of SeekSet; all letters are available.
+        return set(self._set_index.keys())
+    _visit(result, set(), self._sets, self._set_index, self._indexes, seek, 0)
     return result
 
   def _index_sets(self, sets):
@@ -75,3 +55,30 @@ class SeekSet(object):
 class _SeekCursor(SeekSet):
   def __getitem__(self, item):
     raise NotImplementedError()
+
+
+def _visit(result, visited, sets, set_index, indexes, seek, pos):
+  if pos == len(seek):
+    if indexes is None or indexes[pos] is None:
+      index = None
+    else:
+      index = indexes[pos] - 1
+    for i, set in enumerate(sets):
+      if i in visited:
+        continue
+      if index is None:
+        result.update(c for c in set)
+      elif index < len(set):
+        result.add(set[index])
+    return  # End of the line.
+  if len(result) == len(set_index):
+    return  # All characters added.
+  c = seek[pos]
+  if c not in set_index:
+    return  # Invalid character.
+  for next_visit in set_index[c]:
+    if next_visit in visited:
+      continue
+    visited.add(next_visit)
+    _visit(result, visited, sets, set_index, indexes, seek, pos + 1)
+    visited.remove(next_visit)

@@ -131,25 +131,25 @@ with description('seek_set'):
             set('1a') | set('2ab') | set('4abcd')))
         expect(self.subject[['3', 'a', 'b', 'c']]).to(be_empty)
 
-    with _description('complex + indexes'):
+    with description('complex + indexes'):
       with before.each:
         self.subject = seek_set.SeekSet([
           '1a',
-          '2ab',
-          '3abc',
-          '4abcd',
+          '2ax',
+          '3ayi',
+          '4azj',
         ], sets_permutable=True, indexes=[1, 2, 3, 4])
 
       with it('rejects "contains" garbage input'):
         expect(self.subject['']).not_to(contain('q'))
 
       with it('supports "contains" for simple query'):
-        expect(self.subject['']).to(contain('a'))
+        expect(self.subject['']).to(equal({'1', '2', '3', '4'}))
 
       with it('supports "contains" for single character query'):
-        expect(self.subject['a']).to(contain('b'))
+        expect(self.subject['1']).to(equal({'a'}))
 
       with it('supports "contains" for complex query'):
-        expect(self.subject['123']).to(contain('4'))
-        expect(self.subject[['3', 'a', 'b']]).to(contain('d'))
-        expect(self.subject[['3', 'a', 'b', 'c']]).to(be_empty)
+        expect(self.subject['1a']).to(equal({'x', 'y', 'z'}))
+        expect(self.subject['1ax']).to(equal({'i', 'j'}))
+        expect(self.subject['4ax']).to(equal({'i'}))
