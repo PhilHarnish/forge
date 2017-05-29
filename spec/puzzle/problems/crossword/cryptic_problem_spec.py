@@ -25,6 +25,10 @@ with description('CrypticCrosswordProblem'):
     expect(cryptic_problem.CrypticProblem.score(
         ['Example crossword clue (7)'])).to(be_between(.5, 1))
 
+  with it('positively matches clues with cryptic indicators'):
+    expect(cryptic_problem.CrypticProblem.score(
+        ['Awful scene about right PC etc. display'])).to(equal(1))
+
   with it('ambiguously matches clues with lots of words'):
     expect(cryptic_problem.CrypticProblem.score(
         ['A quick brown fox jumps over the lazy dog'])).to(be_above(.25))
