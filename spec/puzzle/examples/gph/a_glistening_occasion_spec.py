@@ -4,7 +4,7 @@ from puzzle.problems import acrostic_problem
 from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
-with description('a_glistening_occasion'):
+with _description('a_glistening_occasion'):
   with before.all:
     warehouse.save()
     prod_config.init()
