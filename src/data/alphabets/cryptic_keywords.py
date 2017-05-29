@@ -1,4 +1,6 @@
 # Anagram another word.
+import collections
+
 ANAGRAM_INDICATORS = frozenset([
   'about',
   'awful',
@@ -6,8 +8,9 @@ ANAGRAM_INDICATORS = frozenset([
   'round',
   'crashing',
   'crazy',
+  'from',
   'kinked',
-  'made from',
+  'made',
   'odd',
   'oddly',
   'off',
@@ -16,8 +19,9 @@ ANAGRAM_INDICATORS = frozenset([
 # Solution appears in clue.
 EMBEDDED_INDICATORS = frozenset([
   'bit',
+  'of',
   'in',
-  'part of',
+  'part',
 ])
 # Synonym sounds like solution.
 HOMOPHONE_INDICATORS = frozenset([
@@ -25,14 +29,18 @@ HOMOPHONE_INDICATORS = frozenset([
 ])
 # First letter.
 INITIAL_INDICATORS = frozenset([
-  'about',
   'first',
   'initially',
   'with',
 ])
+# Join words.
+CONCATENATE_INDICATORS = frozenset([
+  'and',
+  'by',
+])
 # Insert a word into another word.
 INSERT_INDICATORS = frozenset([
-  'stuck in',
+  'stuck',
   'in',
 ])
 # Front and back letters.
@@ -41,7 +49,8 @@ EDGES_INDICATORS = frozenset([
 ])
 # Reversing words.
 REVERSAL_INDICATORS = frozenset([
-  'turning back'
+  'turning',
+  'back',
 ])
 # Truncating clues. ("microphone" -> "mic")
 TRUNCATION_INDICATORS = frozenset([
@@ -53,12 +62,18 @@ AMBIGUOUS_INDICATORS = frozenset([
 ])
 # Shorthand conversions.
 SHORTHAND_CONVERSIONS = {
-  'american': ['US', 'USA'],
+  'american': ['us', 'usa'],
   'foot': ['ft'],
+  'good': ['g'],
+  'right': ['r'],
+  'left': ['l'],
 }
 
-ALL_INDICATORS = frozenset(
-    ANAGRAM_INDICATORS | EMBEDDED_INDICATORS | HOMOPHONE_INDICATORS |
-    INITIAL_INDICATORS | INSERT_INDICATORS | EDGES_INDICATORS |
-    REVERSAL_INDICATORS | TRUNCATION_INDICATORS | AMBIGUOUS_INDICATORS
-)
+ALL_INDICATORS = collections.defaultdict(list)
+for group in [
+  ANAGRAM_INDICATORS, EMBEDDED_INDICATORS, HOMOPHONE_INDICATORS,
+  INITIAL_INDICATORS, INSERT_INDICATORS, EDGES_INDICATORS,
+  REVERSAL_INDICATORS, TRUNCATION_INDICATORS,
+]:
+  for indicator in group:
+    ALL_INDICATORS[indicator].append(group)
