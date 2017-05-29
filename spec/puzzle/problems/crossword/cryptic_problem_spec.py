@@ -60,3 +60,9 @@ with description('CrypticCrosswordProblem'):
       expect(self.problems).to(have_key('WASTE'))
       expect(self.problems['WASTE'].solutions()).not_to(be_empty)
       expect(self.problems['WASTE'].solutions()).to(have_key('waste'))
+
+    with it('solves nemesis'):
+      expect(self.problems).to(have_key('NEMESIS'))
+      expect(self.problems['NEMESIS'].solutions()).not_to(be_empty)
+      # TODO: Actually anagram this thing.
+      expect(self.problems['NEMESIS'].solutions()).to(have_key('senseim'))
