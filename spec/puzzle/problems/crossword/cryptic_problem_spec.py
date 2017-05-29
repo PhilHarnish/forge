@@ -1,4 +1,4 @@
-from data import data
+from data import data, trie, warehouse
 from puzzle.problems.crossword import cryptic_problem
 from spec.mamba import *
 
@@ -49,6 +49,14 @@ with description('CrypticCrosswordProblem'):
       for fixture in self.fixtures.values():
         self.problems[fixture.name] = cryptic_problem.CrypticProblem(
             fixture.name, [fixture.clue])
+      warehouse.save()
+      t = trie.Trie([
+        (fixture.name.lower(), 100000) for fixture in self.fixtures.values()
+      ])
+      warehouse.register('/words/unigram/trie', t)
+
+    with after.all:
+      warehouse.restore()
 
     with it('solves amsterdam'):
       expect(self.problems).to(have_key('AMSTERDAM'))
@@ -66,3 +74,9 @@ with description('CrypticCrosswordProblem'):
       expect(self.problems['NEMESIS'].solutions()).not_to(be_empty)
       # TODO: Actually anagram this thing.
       expect(self.problems['NEMESIS'].solutions()).to(have_key('senseim'))
+
+    with it('solves gherkin'):
+      expect(self.problems).to(have_key('GHERKIN'))
+      expect(self.problems['GHERKIN'].solutions()).not_to(be_empty)
+      # TODO: Actually anagram this thing.
+      expect(self.problems['GHERKIN'].solutions()).to(have_key('gherkin'))

@@ -1,6 +1,6 @@
 import collections
 
-from data import chain, crossword
+from data import chain, crossword, warehouse
 from data.alphabets import cryptic_keywords
 from puzzle.problems.crossword import _base_crossword_problem
 
@@ -52,7 +52,8 @@ def _visit(tokens, plan, solutions):
     except NotImplementedError:
       print('Indicator for "%s" not implemented' % indicator)
       raise
-      # TODO: look for solutions hidden in graph of words.
+  if not solutions:
+    pass  # TODO: look for solutions hidden in graph of words.
 
 
 def _visit_initial(tokens, positions, solutions):
@@ -64,6 +65,33 @@ def _visit_initial(tokens, positions, solutions):
     words.append(source[0])
   for position in reversed(positions):
     tokens.restore(position)
+
+
+def _visit_embedded(tokens, positions, solutions):
+  min_length = solutions.min_length
+  max_length = solutions.max_length
+  acc = []
+  pos_map = []
+  for pos, tokens in tokens.items():
+    source = tokens[0]
+    acc.append(source)
+    for i in range(len(source)):
+      pos_map.append(pos)
+  search_text = ''.join(acc)
+  trie = warehouse.get('/words/unigram/trie')
+  end = len(search_text) - min_length
+  ignored = set(acc)  # Ignore words from clue itself.
+  for offset in range(end):
+    for result, weight in trie.walk(search_text[offset:]):
+      if result in ignored:
+        continue
+      result_length = len(result)
+      if result_length >= min_length and result_length <= max_length:
+        # Score = % of word not banned by `positions`.
+        solutions[result] = (
+                              sum(i not in positions for i in
+                              range(offset, offset + result_length))
+                            ) / result_length
 
 
 def _visit_anagram(tokens, positions, solutions):
@@ -166,13 +194,14 @@ class _Solutions(dict):
 
 
 _VISIT_MAP = collections.OrderedDict([
+  # Embedded clues only use original words.
+  (cryptic_keywords.EMBEDDED_INDICATORS, _visit_embedded),
   # Producers.
   (cryptic_keywords.INITIAL_INDICATORS, _visit_initial),
   (cryptic_keywords.EDGES_INDICATORS, _todo_indicator),
   (cryptic_keywords.REVERSAL_INDICATORS, _todo_indicator),
   (cryptic_keywords.TRUNCATION_INDICATORS, _todo_indicator),
   # Reducers.
-  (cryptic_keywords.EMBEDDED_INDICATORS, _todo_indicator),
   (cryptic_keywords.ANAGRAM_INDICATORS, _visit_anagram),
   # TODO: Implement these.
   (cryptic_keywords.CONCATENATE_INDICATORS, _visit_concatenate),
