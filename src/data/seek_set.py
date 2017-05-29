@@ -63,8 +63,8 @@ class SeekSet(object):
         return set(self._set_index[None].keys())
     try:
       _visit(
-          result, set(), self._sets, self._set_index, self._indexes, seek, 0,
-          False)
+          result, [False] * len(self._sets), self._sets, self._set_index,
+          self._indexes, seek, 0, False)
     except:
       pass
     return result
@@ -81,8 +81,8 @@ class SeekSet(object):
       return True
     try:
       _visit(
-          set(), set(), self._sets, self._set_index, self._indexes, seek, 0,
-          True)
+          set(), [False] * len(self._sets), self._sets, self._set_index,
+          self._indexes, seek, 0, True)
       return False
     except StopIteration:
       return True
@@ -131,7 +131,7 @@ def _visit(result, visited, sets, set_index, indexes, seek, pos, stop):
     index = indexes[pos] - 1
   if pos == len(seek):
     for i, set in enumerate(sets):
-      if i in visited:
+      if visited[i]:
         continue
       elif set is None:
         result.update(_FULL_ALPHABET)
@@ -149,8 +149,8 @@ def _visit(result, visited, sets, set_index, indexes, seek, pos, stop):
   if c not in set_index[index]:
     return  # Invalid character.
   for next_visit in set_index[index][c]:
-    if next_visit in visited:
+    if visited[next_visit]:
       continue
-    visited.add(next_visit)
+    visited[next_visit] = True
     _visit(result, visited, sets, set_index, indexes, seek, pos + 1, stop)
-    visited.remove(next_visit)
+    visited[next_visit] = False
