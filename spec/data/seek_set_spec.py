@@ -163,3 +163,20 @@ with description('seek_set'):
         expect(self.subject['']).to(equal({'5'}))
         expect(self.subject['5']).to(equal({'5'}))
         expect(self.subject['55']).to(equal({'a'}))
+
+  with description('real scenarios'):
+    with it('matches scoreboard'):
+      set = seek_set.SeekSet([
+        'gabepruitt',
+        'smokey',
+        'leejones',
+        'tomizzo',
+        'michaelbradley',
+        'barackobama',
+        'christianwebster',
+        'cleanthonyearly',
+        'graysonallen',
+        'nrgstadium',
+      ], sets_permutable=True, indexes=[1, 5, 2, 13, 4, 12, 5, 6, 2, 11])
+      expect('scoreboard' in set).to(be_true)
+      expect('storyboard' in set).to(be_false)

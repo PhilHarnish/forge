@@ -23,7 +23,7 @@ class SeekSet(object):
     self._indexes_permutable = indexes_permutable
     if sets_permutable or indexes_permutable:
       self._seek_trie = {}
-      self._set_index = self._index_sets(sets)
+      self._set_index = _index_sets(indexes, sets)
     else:
       self._seek_trie = None
       self._set_index = None
@@ -58,27 +58,66 @@ class SeekSet(object):
         return set(self._sets[len(seek)])
       if len(seek) == 0:
         # Beginning of SeekSet; all letters are available.
-        return set(self._set_index.keys())
-    _visit(result, set(), self._sets, self._set_index, self._indexes, seek, 0)
+        return set(self._set_index[None].keys())
+    try:
+      _visit(
+          result, set(), self._sets, self._set_index, self._indexes, seek, 0,
+          False)
+    except:
+      pass
     return result
+
+  def __contains__(self, seek):
+    if len(seek) == 0:
+      # Beginning of SeekSet; always True.
+      return True
+    if not self._indexes and not self._sets_permutable:
+      # Trivial case.
+      for i, c in enumerate(seek):
+        if c not in self._sets[i]:
+          return False
+      return True
+    try:
+      _visit(
+          set(), set(), self._sets, self._set_index, self._indexes, seek, 0,
+          True)
+      return False
+    except StopIteration:
+      return True
 
   def __len__(self):
     return len(self._sets)
 
-  def _index_sets(self, sets):
-    result = collections.defaultdict(set)
-    for i, chars in enumerate(sets):
-      for c in chars:
-        result[c].add(i)
-    return result
+
+def _index_sets(indexes, sets):
+  result = {}
+  if indexes is None:
+    result[None] = _index_all(sets)
+  else:
+    for index in indexes:
+      if index is None:
+        result[index] = _index_all(sets)
+      else:
+        index -= 1
+        char_map = collections.defaultdict(set)
+        result[index] = char_map
+        for i, chars in enumerate(sets):
+          if index < len(chars):
+            char_map[chars[index]].add(i)
+  return result
 
 
-class _SeekCursor(SeekSet):
-  def __getitem__(self, item):
-    raise NotImplementedError()
+def _index_all(sets):
+  char_map = collections.defaultdict(set)
+  for i, chars in enumerate(sets):
+    for c in chars:
+      char_map[c].add(i)
+  return char_map
 
 
-def _visit(result, visited, sets, set_index, indexes, seek, pos):
+def _visit(result, visited, sets, set_index, indexes, seek, pos, stop):
+  if indexes and pos >= len(indexes) and stop:
+    raise StopIteration()  # End of the line.
   if indexes is None or indexes[pos] is None:
     index = None
   else:
@@ -87,21 +126,21 @@ def _visit(result, visited, sets, set_index, indexes, seek, pos):
     for i, set in enumerate(sets):
       if i in visited:
         continue
-      if index is None:
+      elif index is None:
         result.update(c for c in set)
       elif index < len(set):
         result.add(set[index])
-    return  # End of the line.
-  if len(result) == len(set_index):
-    return  # All characters added.
+    if stop:
+      raise StopIteration()  # Found at least one path.
+    elif len(result) == len(set_index[index]):
+      raise StopIteration()  # All characters added.
+    return
   c = seek[pos]
-  if c not in set_index:
+  if c not in set_index[index]:
     return  # Invalid character.
-  for next_visit in set_index[c]:
+  for next_visit in set_index[index][c]:
     if next_visit in visited:
       continue
-    if index is not None and index >= len(sets[next_visit]):
-      continue
     visited.add(next_visit)
-    _visit(result, visited, sets, set_index, indexes, seek, pos + 1)
+    _visit(result, visited, sets, set_index, indexes, seek, pos + 1, stop)
     visited.remove(next_visit)
