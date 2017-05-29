@@ -147,6 +147,7 @@ def _visit_concatenate(tokens, positions, solutions):
   min_length = solutions.min_length
   max_length = solutions.max_length
   concatenate_positions = set(positions)
+  trie = warehouse.get('/words/unigram/trie')
 
   def _add(acc):
     if len(acc) == 1:
@@ -157,12 +158,15 @@ def _visit_concatenate(tokens, positions, solutions):
       parts.append(word)
       if pos in concatenate_positions:
         banned_matches += 1
+    solution = ''.join(parts)
+    if solution not in trie:
+      return
     # Score is 0 if all acc are from possitions; .5 if 1/2 are, etc.
     if not concatenate_positions:
       score = 1
     else:
       score = 1 - (banned_matches / len(concatenate_positions))
-    solutions[''.join(parts)] = score
+    solutions[solution] = score
 
   def _crawl(pos, acc, acc_length):
     if pos in concatenate_positions and pos + 1 < end:
@@ -180,7 +184,8 @@ def _visit_concatenate(tokens, positions, solutions):
         acc.append((word, i))
         if new_length >= min_length and new_length <= max_length:
           _add(acc)
-        elif new_length < max_length:
+        elif new_length < max_length and trie.has_keys_with_prefix(
+            ''.join(a[0] for a in acc)):
           _crawl(i + 1, acc, acc_length)
         acc_length -= word_length
         acc.pop()

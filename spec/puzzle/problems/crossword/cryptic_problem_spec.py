@@ -81,3 +81,41 @@ with description('CrypticCrosswordProblem'):
       expect(self.problems).to(have_key('GHERKIN'))
       expect(self.problems['GHERKIN'].solutions()).not_to(be_empty)
       expect(self.problems['GHERKIN'].solutions()).to(have_key('gherkin'))
+
+    with it('solves all problems'):
+      incomplete = {
+        # Requires synonyms.
+        'GREENBELT', 'PASTRY', 'START',
+        # Requires crossword lookups.
+        'ESCOURT', 'SLING', 'STEAK', 'TWIG',
+        # Requires either.
+        'DAMAGES', 'RUSHDIE', 'NOTE',
+      }
+      incomplete_seen = set()
+      unsupported = {
+        # EDGES_INDICATORS.
+        'ABSCESS',
+        # REVERSAL_INDICATORS.
+        'CRAMPON',
+        # TRUNCATION_INDICATORS.
+        'MUSIC',
+        # INSERT_INDICATORS.
+        'AISLE', 'ASSIST', 'IMPLANT',
+      }
+      unsupported_seen = set()
+      results = {}
+      for problem in self.problems:
+        if problem in incomplete:
+          incomplete_seen.add(problem)
+          continue
+        try:
+          results[problem] = dict(self.problems[problem].solutions())
+        except NotImplementedError:
+          unsupported_seen.add(problem)
+      expect(incomplete_seen).to(equal(incomplete))
+      expect(unsupported_seen).to(equal(unsupported))
+      expect(results).to(have_len(
+          len(self.problems) - len(incomplete) - len(unsupported)))
+      for problem, value in results.items():
+        expect((problem, value)).not_to(equal((problem, {})))
+        expect(value).to(have_key(problem.lower()))

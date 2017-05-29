@@ -64,6 +64,9 @@ AMBIGUOUS_INDICATORS = frozenset([
 # Shorthand conversions.
 SHORTHAND_CONVERSIONS = {
   'american': ['us', 'usa'],
+  'attempt': ['try'],
+  'father': ['pa'],
+  'fathers': ['pas'],
   'foot': ['ft'],
   'good': ['g'],
   'right': ['r'],
