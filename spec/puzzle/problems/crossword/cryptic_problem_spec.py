@@ -39,7 +39,7 @@ with description('CrypticCrosswordProblem'):
         ['A quick brown fox jumps over the lazy dog'])).to(be_above(.25))
 
   with it('matches data from fixtures'):
-    for word, fixture in self.fixtures.items():
+    for _, fixture in self.fixtures.items():
       c = call(cryptic_problem.CrypticProblem.score, [fixture.clue])
       expect(c).to(be_above(.5))
 
@@ -52,4 +52,6 @@ with description('CrypticCrosswordProblem'):
 
     with it('solves amsterdam'):
       expect(self.problems).to(have_key('AMSTERDAM'))
-      expect(self.problems['AMSTERDAM'].solutions()).to(be_empty)  # TODO.
+      expect(self.problems['AMSTERDAM'].solutions()).to(have_len(1))
+      characters = set(self.problems['AMSTERDAM'].solutions().peek())
+      expect(characters).to(equal(set('amsterdam')))
