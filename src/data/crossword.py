@@ -23,9 +23,13 @@ def _normalize_clue(clue):
   return clue
 
 
+def tokenize_clue(clue):
+  return _normalize_clue(clue.lower()).split()
+
+
 def clue_keywords(clue):
   results = []
-  for keyword in _normalize_clue(clue.lower()).split():
+  for keyword in tokenize_clue(clue):
     if keyword not in _IGNORED and len(keyword) > 1:
       results.append(keyword)
   return results

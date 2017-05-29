@@ -5,6 +5,7 @@ from spec.mamba import *
 
 class CrypticFixture(object):
   def __init__(self, name, lines):
+    self.name = name
     self.clue, self.method = lines[:2]
 
 with description('CrypticCrosswordProblem'):
@@ -41,3 +42,14 @@ with description('CrypticCrosswordProblem'):
     for word, fixture in self.fixtures.items():
       c = call(cryptic_problem.CrypticProblem.score, [fixture.clue])
       expect(c).to(be_above(.5))
+
+  with description('solutions'):
+    with before.all:
+      self.problems = {}
+      for fixture in self.fixtures.values():
+        self.problems[fixture.name] = cryptic_problem.CrypticProblem(
+            fixture.name, [fixture.clue])
+
+    with it('solves amsterdam'):
+      expect(self.problems).to(have_key('AMSTERDAM'))
+      expect(self.problems['AMSTERDAM'].solutions()).to(be_empty)  # TODO.
