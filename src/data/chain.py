@@ -1,6 +1,12 @@
 class Chain(list):
-  def __init__(self, size):
+  def __init__(self, data):
     super(Chain, self).__init__()
+    if isinstance(data, int):
+      size = data
+      data = range(0, size)
+    else:
+      size = len(data)
+    self._data = data
     self._head = 0
     self._next_links = list(range(1, size))
     if size:
@@ -23,6 +29,12 @@ class Chain(list):
 
   def __len__(self):
     return self._size
+
+  def items(self):
+    cursor = self._head
+    while cursor is not None:
+      yield cursor, self._data[cursor]
+      cursor = self._next_links[cursor]
 
   def pop(self, index=None):
     if index is None:

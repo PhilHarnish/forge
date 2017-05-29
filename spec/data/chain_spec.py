@@ -65,3 +65,19 @@ with description('Chain'):
           active.remove(i)
         expect(list(self.subject)).to(equal(sorted(list(active))))
       expect(list(self.subject)).to(equal([2, 3, 4]))
+
+  with description('with data'):
+    with before.each:
+      self.subject = chain.Chain('the quick brown fox jumped'.split())
+
+    with it('provides data items()'):
+      expect(list(self.subject.items())).to(equal([
+        (0, 'the'), (1, 'quick'), (2, 'brown'), (3, 'fox'), (4, 'jumped'),
+      ]))
+
+    with it('deletes items and provides new results'):
+      self.subject.pop(1)
+      self.subject.pop(4)
+      expect(list(self.subject.items())).to(equal([
+        (0, 'the'), (2, 'brown'), (3, 'fox'),
+      ]))
