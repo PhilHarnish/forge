@@ -99,8 +99,6 @@ with description('CrypticCrosswordProblem'):
         'CRAMPON',
         # TRUNCATION_INDICATORS.
         'MUSIC',
-        # INSERT_INDICATORS.
-        'AISLE', 'ASSIST', 'IMPLANT',
       }
       unsupported_seen = set()
       results = {}

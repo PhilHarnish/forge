@@ -62,6 +62,7 @@ AMBIGUOUS_INDICATORS = frozenset([
   '?'
 ])
 # Shorthand conversions.
+# TODO: This doesn't scale. Need a synonym list.
 SHORTHAND_CONVERSIONS = {
   'american': ['us', 'usa'],
   'attempt': ['try'],
@@ -71,6 +72,7 @@ SHORTHAND_CONVERSIONS = {
   'good': ['g'],
   'right': ['r'],
   'left': ['l'],
+  'micophone': ['mic'],
 }
 
 ALL_INDICATORS = collections.defaultdict(list)

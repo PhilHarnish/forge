@@ -193,6 +193,15 @@ def _visit_concatenate(tokens, positions, solutions):
   _crawl(0, [], 0)
 
 
+def _visit_insert(tokens, positions, solutions):
+  if not solutions:
+    # "INSERT" indicator is usually a subset of functionality provided by
+    # "ANAGRAM".
+    _visit_anagram(tokens, positions, solutions)
+  if not solutions:
+    raise NotImplementedError()
+
+
 def _todo_indicator(*args, **kwargs):
   del args, kwargs
   raise NotImplementedError()
@@ -215,9 +224,9 @@ _VISIT_MAP = collections.OrderedDict([
   (cryptic_keywords.TRUNCATION_INDICATORS, _todo_indicator),
   # Reducers.
   (cryptic_keywords.ANAGRAM_INDICATORS, _visit_anagram),
-  # TODO: Implement these.
+  (cryptic_keywords.INSERT_INDICATORS, _visit_insert),
   (cryptic_keywords.CONCATENATE_INDICATORS, _visit_concatenate),
-  (cryptic_keywords.INSERT_INDICATORS, _todo_indicator),
+  # TODO: Implement these.
   (cryptic_keywords.HOMOPHONE_INDICATORS, _todo_indicator),
 ])
 _VISIT_ORDER = dict([(indicator, i) for i, indicator in enumerate(_VISIT_MAP)])
