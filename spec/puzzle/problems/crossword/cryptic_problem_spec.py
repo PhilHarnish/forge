@@ -1,10 +1,16 @@
-import collections
-
 from data import data
 from puzzle.problems.crossword import cryptic_problem
 from spec.mamba import *
 
+
+class CrypticFixture(object):
+  def __init__(self, name, lines):
+    self.clue, self.method = lines[:2]
+
 with description('CrypticCrosswordProblem'):
+  with before.all:
+    self.fixtures = data.load('data/cryptic_clues.txt', CrypticFixture)
+
   with it('ignores empty and garbage input'):
     expect(cryptic_problem.CrypticProblem.score([''])).to(equal(0))
 
@@ -24,10 +30,6 @@ with description('CrypticCrosswordProblem'):
         ['A quick brown fox jumps over the lazy dog'])).to(be_above(.25))
 
   with it('matches data from fixtures'):
-    fixtures = data.load(
-        'data/puzzle_fixtures.txt',
-        collections.namedtuple('fixture', 'name lines'))
-    for line in fixtures['cryptic_crossword_clues'].lines:
-      # Grr... Errors on this line are impossible to debug.
-      c = call(cryptic_problem.CrypticProblem.score, [line])
+    for word, fixture in self.fixtures.items():
+      c = call(cryptic_problem.CrypticProblem.score, [fixture.clue])
       expect(c).to(be_above(.5))

@@ -1,0 +1,103 @@
+[AMSTERDAM]
+Sam dreamt about European port (9)
+/SAMDREAMPT, {european port}
+
+[WASTE]
+Trash was put by the exit, initially (5)
+{trash}, WAS + The + Exit
+
+[NEMESIS]
+Just revenge - sense I'm crazy (7)
+{just revenge}, /SENSEIM
+
+[GHERKIN]
+Cucumber is a bit tougher, kinked (7)
+{cucumber}, touGHER + KINked
+
+[GECKO]
+Lizard, good with Coke, oddly (5)
+{lizard}, Good + /COKE
+
+[PASTRY]
+Father's attempt to get pie-crust (6)
+PAS + TRY, {pie-crust}
+
+[ASSIST]
+Help in class is trainee (6)
+{help}, clASS + IS + T
+
+[RISKS]
+Takes a chance, right, and skis off (5)
+{takes a chance}, Right + /SKIS
+
+[CRAMPON]
+Climber's aid gives muscular pain (no turning back) (7)
+{climber's aid}, CRAMP + NO<
+
+[SWINDLE]
+Edwin's upset about Lloyds' first fraud (7)
+/EDWINS + Lloyd's, {fraud}
+
+[START]
+Begin, s-sweet thing! (5)
+{begin}, S + TART
+
+[GREENBELT]
+Inexperienced band intended to limit urban sprawl (5, 4)
+GREEN + BELT, {intended to limit urban sprawl}
+
+[ABSCESS]
+Pus-filled swelling: scab's broken round edges of ears (7)
+/SCABS + EarS, {Pus-filled swelling}
+
+[STEAK]
+Rarely cooked cut of meat? (5)
+{rarely cooked cut of meat}, {rarely cooked cut of meat}
+
+[ELNINO]
+Cause of Pacific floods crashing on Nile (2, 4)
+{cause of pacific floods}, /ONNILE
+
+[DAMAGES]
+Legal compensation: water barrier takes a long time (7)
+{Legal compensation}, DAM + AGES
+
+[MUSIC]
+Pop, say, made by American stuck in short microphone (5)
+{pop}, M... + US + ...IC
+
+[TWIG]
+A tree shoot - understand? (4)
+{a tree shoot}, {understand}
+
+[ESCOURT]
+Accompany a very popular former car model (6)
+{accompany}, {a very popular former car model}
+
+[PHRASE]
+He raps odd group of words (6)
+/HERAPS, {group of words}
+
+[RUSHDIE]
+Controversial novelist with a hurry to snuff it! (7)
+{Controversial novelist}, RUSH + DIE
+
+[IMPLANT]
+In-body device made from tin lamp (7)
+{in-body device}, /TINLAMP
+
+[SCREEN]
+Awful scene about right PC etc. display (6)
+/(SCENE+R) {pc etc. display}
+
+[SLING]
+Vocalize about large arm support (5)
+SING + Large, {arm support}
+
+[AISLE]
+Part of a church in Paisley (5)
+{part of a church}, pAISLEy
+
+[NOTE]
+Exclusive school raising paper money (4)
+???, {paper money}
