@@ -164,6 +164,18 @@ with description('seek_set'):
         expect(self.subject['5']).to(equal({'5'}))
         expect(self.subject['55']).to(equal({'a'}))
 
+    with description('complex + indexes + missing words'):
+      with before.each:
+        self.subject = seek_set.SeekSet([
+          '1a',
+          '2ax',
+          None,
+          '4azjq',
+        ], sets_permutable=True, indexes=[1, 2, 3, 4])
+
+      with it('initially contains the full alphabet'):
+        expect(self.subject['']).to(contain(*list('abcdefghijklmnopqrstuvwxy')))
+
   with description('real scenarios'):
     with it('matches scoreboard'):
       set = seek_set.SeekSet([

@@ -1,5 +1,7 @@
 import collections
 
+_FULL_ALPHABET = set('abcdefghijklmnopqrstuvwxyz')
+
 
 class SeekSet(object):
   def __init__(self, sets, sets_permutable=False, indexes=None,
@@ -102,7 +104,10 @@ def _index_sets(indexes, sets):
         char_map = collections.defaultdict(set)
         result[index] = char_map
         for i, chars in enumerate(sets):
-          if index < len(chars):
+          if chars is None:
+            for char in _FULL_ALPHABET:
+              char_map[char].add(i)
+          elif index < len(chars):
             char_map[chars[index]].add(i)
   return result
 
@@ -110,6 +115,8 @@ def _index_sets(indexes, sets):
 def _index_all(sets):
   char_map = collections.defaultdict(set)
   for i, chars in enumerate(sets):
+    if chars is None:
+      chars = _FULL_ALPHABET
     for c in chars:
       char_map[c].add(i)
   return char_map
@@ -126,6 +133,9 @@ def _visit(result, visited, sets, set_index, indexes, seek, pos, stop):
     for i, set in enumerate(sets):
       if i in visited:
         continue
+      elif set is None:
+        result.update(_FULL_ALPHABET)
+        raise StopIteration()
       elif index is None:
         result.update(c for c in set)
       elif index < len(set):

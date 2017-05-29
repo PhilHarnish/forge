@@ -60,8 +60,11 @@ def _normalize(lines):
     if line.startswith('* '):
       sets_permutable = True
       line = line[2:]
-    line = ''.join(line.split())
-    sets.append(line.lower())
+    if line.endswith('?'):
+      line = None
+    else:
+      line = ''.join(line.split()).lower()
+    sets.append(line)
   return seek_set.SeekSet(
       sets, sets_permutable=sets_permutable, indexes=indexes)
 
