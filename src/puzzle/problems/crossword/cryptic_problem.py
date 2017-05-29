@@ -47,8 +47,23 @@ def _visit(tokens, plan, solutions):
     if source in cryptic_keywords.SHORTHAND_CONVERSIONS:
       words.extend(cryptic_keywords.SHORTHAND_CONVERSIONS[source])
   for indicator, positions in plan:
-    _VISIT_MAP[indicator](tokens, positions, solutions)
-    # TODO: look for solutions hidden in graph of words.
+    try:
+      _VISIT_MAP[indicator](tokens, positions, solutions)
+    except NotImplementedError:
+      print('Indicator for "%s" not implemented' % indicator)
+      raise
+      # TODO: look for solutions hidden in graph of words.
+
+
+def _visit_initial(tokens, positions, solutions):
+  del solutions  # Initial indicator produces more tokens.
+  for position in positions:
+    tokens.pop(position)
+  for _, words in tokens.items():
+    source = words[0]
+    words.append(source[0])
+  for position in reversed(positions):
+    tokens.restore(position)
 
 
 def _visit_anagram(tokens, positions, solutions):
@@ -92,6 +107,52 @@ def _visit_anagram(tokens, positions, solutions):
   _crawl(0, [], 0)
 
 
+def _visit_concatenate(tokens, positions, solutions):
+  end = len(tokens)
+  min_length = solutions.min_length
+  max_length = solutions.max_length
+  concatenate_positions = set(positions)
+
+  def _add(acc):
+    if len(acc) == 1:
+      return  # Ignore complete words in input.
+    parts = []  # TODO: Actually verify word is valid.
+    banned_matches = 0
+    for word, pos in acc:
+      parts.append(word)
+      if pos in concatenate_positions:
+        banned_matches += 1
+    # Score is 0 if all acc are from possitions; .5 if 1/2 are, etc.
+    if not concatenate_positions:
+      score = 1
+    else:
+      score = 1 - (banned_matches / len(concatenate_positions))
+    solutions[''.join(parts)] = score
+
+  def _crawl(pos, acc, acc_length):
+    if pos in concatenate_positions and pos + 1 < end:
+      # Optionally, skip ahead to next position using current acc.
+      _crawl(pos + 1, acc, acc_length)
+    # Try to form total word from all remaining starting points.
+    for i in range(pos, end):
+      words = tokens[i]
+      for word in words:
+        word_length = len(word)
+        new_length = acc_length + word_length
+        if new_length > max_length:
+          continue
+        acc_length = new_length
+        acc.append((word, i))
+        if new_length >= min_length and new_length <= max_length:
+          _add(acc)
+        elif new_length < max_length:
+          _crawl(i + 1, acc, acc_length)
+        acc_length -= word_length
+        acc.pop()
+
+  _crawl(0, [], 0)
+
+
 def _todo_indicator(*args, **kwargs):
   del args, kwargs
   raise NotImplementedError()
@@ -106,7 +167,7 @@ class _Solutions(dict):
 
 _VISIT_MAP = collections.OrderedDict([
   # Producers.
-  (cryptic_keywords.INITIAL_INDICATORS, _todo_indicator),
+  (cryptic_keywords.INITIAL_INDICATORS, _visit_initial),
   (cryptic_keywords.EDGES_INDICATORS, _todo_indicator),
   (cryptic_keywords.REVERSAL_INDICATORS, _todo_indicator),
   (cryptic_keywords.TRUNCATION_INDICATORS, _todo_indicator),
@@ -114,7 +175,7 @@ _VISIT_MAP = collections.OrderedDict([
   (cryptic_keywords.EMBEDDED_INDICATORS, _todo_indicator),
   (cryptic_keywords.ANAGRAM_INDICATORS, _visit_anagram),
   # TODO: Implement these.
-  (cryptic_keywords.CONCATENATE_INDICATORS, _todo_indicator),
+  (cryptic_keywords.CONCATENATE_INDICATORS, _visit_concatenate),
   (cryptic_keywords.INSERT_INDICATORS, _todo_indicator),
   (cryptic_keywords.HOMOPHONE_INDICATORS, _todo_indicator),
 ])

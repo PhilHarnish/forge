@@ -55,3 +55,8 @@ with description('CrypticCrosswordProblem'):
       expect(self.problems['AMSTERDAM'].solutions()).to(have_len(1))
       characters = set(self.problems['AMSTERDAM'].solutions().peek())
       expect(characters).to(equal(set('amsterdam')))
+
+    with it('solves waste'):
+      expect(self.problems).to(have_key('WASTE'))
+      expect(self.problems['WASTE'].solutions()).not_to(be_empty)
+      expect(self.problems['WASTE'].solutions()).to(have_key('waste'))
