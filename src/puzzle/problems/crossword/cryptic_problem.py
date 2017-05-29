@@ -8,10 +8,11 @@ class CrypticProblem(_base_crossword_problem._BaseCrosswordProblem):
     if len(lines) > 1:
       return 0
     line = lines[0]
-    if any(indicator in line for indicator in cryptic_keywords.ALL_INDICATORS):
+    parts = line.split()
+    if any(part in cryptic_keywords.ALL_INDICATORS for part in parts):
       return 1
     # TODO: Look for common crossword expressions.
     return _base_crossword_problem.score(lines) * .9  # Lower than normal.
 
   def _solve(self):
-    raise NotImplementedError()
+    return {}

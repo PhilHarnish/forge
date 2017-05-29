@@ -29,6 +29,10 @@ with description('CrypticCrosswordProblem'):
     expect(cryptic_problem.CrypticProblem.score(
         ['Awful scene about right PC etc. display'])).to(equal(1))
 
+  with it('is not fooled by substring matches'):
+    expect(cryptic_problem.CrypticProblem.score(
+        ['Winner or advocate (4|2))'])).to(be_between(0, 1))
+
   with it('ambiguously matches clues with lots of words'):
     expect(cryptic_problem.CrypticProblem.score(
         ['A quick brown fox jumps over the lazy dog'])).to(be_above(.25))
