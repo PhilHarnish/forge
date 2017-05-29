@@ -1,4 +1,4 @@
-from data import data, trie, warehouse
+from data import anagram_index, data, trie, warehouse
 from puzzle.problems.crossword import cryptic_problem
 from spec.mamba import *
 
@@ -50,10 +50,14 @@ with description('CrypticCrosswordProblem'):
         self.problems[fixture.name] = cryptic_problem.CrypticProblem(
             fixture.name, [fixture.clue])
       warehouse.save()
-      t = trie.Trie([
+      d = dict([
         (fixture.name.lower(), 100000) for fixture in self.fixtures.values()
       ])
+      warehouse.register('/words/unigram', d)
+      t = trie.Trie(warehouse.get('/words/unigram').items())
       warehouse.register('/words/unigram/trie', t)
+      a = anagram_index.AnagramIndex(warehouse.get('/words/unigram'))
+      warehouse.register('/words/unigram/anagram_index', a)
 
     with after.all:
       warehouse.restore()
@@ -61,8 +65,7 @@ with description('CrypticCrosswordProblem'):
     with it('solves amsterdam'):
       expect(self.problems).to(have_key('AMSTERDAM'))
       expect(self.problems['AMSTERDAM'].solutions()).to(have_len(1))
-      characters = set(self.problems['AMSTERDAM'].solutions().peek())
-      expect(characters).to(equal(set('amsterdam')))
+      expect(self.problems['AMSTERDAM'].solutions()).to(have_key('amsterdam'))
 
     with it('solves waste'):
       expect(self.problems).to(have_key('WASTE'))
@@ -72,11 +75,9 @@ with description('CrypticCrosswordProblem'):
     with it('solves nemesis'):
       expect(self.problems).to(have_key('NEMESIS'))
       expect(self.problems['NEMESIS'].solutions()).not_to(be_empty)
-      # TODO: Actually anagram this thing.
-      expect(self.problems['NEMESIS'].solutions()).to(have_key('senseim'))
+      expect(self.problems['NEMESIS'].solutions()).to(have_key('nemesis'))
 
     with it('solves gherkin'):
       expect(self.problems).to(have_key('GHERKIN'))
       expect(self.problems['GHERKIN'].solutions()).not_to(be_empty)
-      # TODO: Actually anagram this thing.
       expect(self.problems['GHERKIN'].solutions()).to(have_key('gherkin'))

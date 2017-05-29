@@ -99,20 +99,27 @@ def _visit_anagram(tokens, positions, solutions):
   min_length = solutions.min_length
   max_length = solutions.max_length
   anagram_positions = set(positions)
+  anagram_index = warehouse.get('/words/unigram/anagram_index')
 
   def _add(acc):
-    parts = []  # TODO: Actually perorm anagram.
+    parts = []
     banned_matches = 0
     for word, pos in acc:
       parts.append(word)
       if pos in anagram_positions:
         banned_matches += 1
+    solution = ''.join(parts)
+    if solution not in anagram_index:
+      return
+    anagrams = anagram_index[solution]
     # Score is 0 if all acc are from possitions; .5 if 1/2 are, etc.
     if not anagram_positions:
       score = 1
     else:
       score = 1 - (banned_matches / len(anagram_positions))
-    solutions[''.join(parts)] = score
+    for anagram in anagrams:
+      if anagram != solution:
+        solutions[anagram] = score
 
   def _crawl(pos, acc, acc_length):
     # Try to form total word from all remaining words.
