@@ -1,27 +1,11 @@
-import re
-
-from puzzle.problems import problem
-
-_CROSSWORD_REGEX = re.compile(r'^.*\(([\d\s,|]+)\)$')
-_INTS = re.compile(r'(\d+)')
+from puzzle.problems.crossword import _base_crossword_problem
 
 
-class CrypticProblem(problem.Problem):
+class CrypticProblem(_base_crossword_problem._BaseCrosswordProblem):
   @staticmethod
   def score(lines):
     # TODO: Look for common crossword expressions.
-    return score_base(lines) * .9  # Lower than normal.
+    return _base_crossword_problem.score(lines) * .9  # Lower than normal.
 
   def _solve(self):
     raise NotImplementedError()
-
-
-def score_base(lines):
-  if len(lines) > 1:
-    return 0
-  src = lines[0]
-  # TODO: Look for common crossword expressions.
-  if _CROSSWORD_REGEX.match(src):
-    return 1
-  # Something with a lot of words *might* be a crossword clue.
-  return max(0.0, 0.5 * (min(5, len(src.split())) / 5))
