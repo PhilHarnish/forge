@@ -1,7 +1,7 @@
 import collections
 
 from data import data
-from puzzle.problems import crossword_problem
+from puzzle.problems.crossword import crossword_problem
 from spec.mamba import *
 
 with description('CrosswordProblem'):

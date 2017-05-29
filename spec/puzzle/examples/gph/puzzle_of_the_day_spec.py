@@ -1,6 +1,6 @@
 from data import warehouse
 from puzzle.examples.gph import puzzle_of_the_day
-from puzzle.problems import crossword_problem
+from puzzle.problems.crossword import _base_crossword_problem
 from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
@@ -18,7 +18,7 @@ with _description('puzzle_of_the_day'):
     problems = self.subject.problems()
     expect(problems).to(have_len(len(puzzle_of_the_day.SOLUTIONS)))
     for problem in problems:
-      expect(problem).to(be_a(crossword_problem.CrosswordProblem))
+      expect(problem).to(be_a(_base_crossword_problem.CrosswordProblem))
 
   with it('solves first problem'):
     expect(self.subject.problem(0).solution).not_to(be_empty)

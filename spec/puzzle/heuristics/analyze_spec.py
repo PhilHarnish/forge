@@ -1,9 +1,7 @@
-from spec.mamba import *
-
 from puzzle.heuristics import analyze
-from puzzle.problems import anagram_problem
-from puzzle.problems import crossword_problem
-from puzzle.problems import problem
+from puzzle.problems import anagram_problem, problem
+from puzzle.problems.crossword import crossword_problem
+from spec.mamba import *
 
 
 class ExampleProblemZeroes(problem.Problem):
