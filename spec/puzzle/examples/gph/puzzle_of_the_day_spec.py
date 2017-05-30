@@ -1,6 +1,6 @@
 from data import warehouse
 from puzzle.examples.gph import puzzle_of_the_day
-from puzzle.problems.crossword import _base_crossword_problem
+from puzzle.problems.crossword import crossword_problem
 from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
@@ -18,20 +18,31 @@ with _description('puzzle_of_the_day'):
     problems = self.subject.problems()
     expect(problems).to(have_len(len(puzzle_of_the_day.SOLUTIONS)))
     for problem in problems:
-      expect(problem).to(be_a(_base_crossword_problem.CrosswordProblem))
+      expect(problem).to(be_a(crossword_problem.CrosswordProblem))
 
   with it('solves first problem'):
     expect(self.subject.problem(0).solution).not_to(be_empty)
 
   with it('gets some solutions right'):
     solutions = self.subject.solutions()
-    matches = []
-    for i, (left, right) in enumerate(
-        zip(solutions, puzzle_of_the_day.SOLUTIONS)):
-      if left and right and left.lower() == right.lower():
-        matches.append('%s: %s' % (i + 1, left))
-    expect(matches).to(equal([
-      '2: nitpick',
-      '4: windpipe',
-      '9: pilaf',
+    expect(solutions).to(equal([
+      'pacino',  # Wrong.
+      'nitpick',
+      None,
+      'windpipe',
+      None,
+      'laboroflove',  # Wrong.
+      None,
+      None,
+      'tribal',  # Wrong.
+      None,
+      'carrera',  # Wrong.
+      None,
+      None,
+      None,
+      'tacky',  # Wrong.
+      None,
+      'pilaf',
+      None,
+      None,
     ]))

@@ -25,7 +25,6 @@ with _description('a_basic_puzzle'):
 
   with it('gets some solutions right'):
     solutions = self.subject.solutions()
-    matches = []
     expect(solutions).to(equal([
       'decimal +25',
       'octal +12',
