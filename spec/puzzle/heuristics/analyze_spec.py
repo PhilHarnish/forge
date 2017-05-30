@@ -84,3 +84,23 @@ with description('identify'):
       expect(identified[cryptic_problem.CrypticProblem]).to(equal(1))
       expect(identified[cryptic_problem.CrypticProblem]).to(be_above(
           identified[crossword_problem.CrosswordProblem]))
+
+    with it('string hints override group preferences'):
+      identified = analyze.identify(
+          ['Lizard, good with Coke, oddly (5)'],
+          hint='crossword',
+      )
+      expect(identified).to(have_key(cryptic_problem.CrypticProblem))
+      expect(identified).to(have_key(crossword_problem.CrosswordProblem))
+      expect(identified[crossword_problem.CrosswordProblem]).to(be_above(
+          identified[cryptic_problem.CrypticProblem]))
+
+    with it('typed hints override group preferences'):
+      identified = analyze.identify(
+          ['Lizard, good with Coke, oddly (5)'],
+          hint=crossword_problem.CrosswordProblem,
+      )
+      expect(identified).to(have_key(cryptic_problem.CrypticProblem))
+      expect(identified).to(have_key(crossword_problem.CrosswordProblem))
+      expect(identified[crossword_problem.CrosswordProblem]).to(be_above(
+          identified[cryptic_problem.CrypticProblem]))
