@@ -20,7 +20,6 @@ ANAGRAM_INDICATORS = frozenset([
 # Solution appears in clue.
 EMBEDDED_INDICATORS = frozenset([
   'bit',
-  'of',
   'in',
   'part',
 ])
