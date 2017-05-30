@@ -94,13 +94,16 @@ def _visit_embedded(tokens, positions, solutions):
   max_length = solutions.max_length
   acc = []
   pos_map = []
+  start_map = []
   for pos, tokens in tokens.items():
     source = tokens[0]
     acc.append(source)
     for i in range(len(source)):
       pos_map.append(pos)
+      start_map.append(i == 0)
   search_text = ''.join(acc)
   trie = warehouse.get('/words/unigram/trie')
+  interesting_threshold = trie.interesting_threshold()
   end = len(search_text) - min_length
   ignored = set(acc)  # Ignore words from clue itself.
   for offset in range(end):
@@ -109,8 +112,12 @@ def _visit_embedded(tokens, positions, solutions):
         continue
       result_length = len(result)
       if result_length >= min_length and result_length <= max_length:
+        base_weight = min(1, weight / interesting_threshold)
+        # Demote scores for start-of-word.
+        if start_map[offset]:
+          base_weight *= .9
         # Score = % of word not banned by `positions`.
-        solutions[result] = (
+        solutions[result] = base_weight * (
                               sum(i not in positions for i in
                               range(offset, offset + result_length))
                             ) / result_length
@@ -122,6 +129,8 @@ def _visit_anagram(tokens, positions, solutions):
   max_length = solutions.max_length
   anagram_positions = set(positions)
   anagram_index = warehouse.get('/words/unigram/anagram_index')
+  trie = warehouse.get('/words/unigram/trie')
+  interesting_threshold = trie.interesting_threshold()
 
   def _add(acc):
     parts = []
@@ -141,7 +150,8 @@ def _visit_anagram(tokens, positions, solutions):
       score = 1 - (banned_matches / len(anagram_positions))
     for anagram in anagrams:
       if anagram != solution:
-        solutions[anagram] = score
+        base_weight = min(1, trie[anagram] / interesting_threshold)
+        solutions[anagram] = base_weight * score
 
   def _crawl(pos, acc, acc_length):
     # Try to form total word from all remaining words.
@@ -170,6 +180,7 @@ def _visit_concatenate(tokens, positions, solutions):
   max_length = solutions.max_length
   concatenate_positions = set(positions)
   trie = warehouse.get('/words/unigram/trie')
+  interesting_threshold = trie.interesting_threshold()
 
   def _add(acc):
     if len(acc) == 1:
@@ -188,7 +199,8 @@ def _visit_concatenate(tokens, positions, solutions):
       score = 1
     else:
       score = 1 - (banned_matches / len(concatenate_positions))
-    solutions[solution] = score
+    base_weight = min(1, trie[solution] / interesting_threshold)
+    solutions[solution] = base_weight * score
 
   def _crawl(pos, acc, acc_length):
     if pos in concatenate_positions and pos + 1 < end:

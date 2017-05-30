@@ -56,6 +56,7 @@ with description('CrypticCrosswordProblem'):
       d = dict([
         (fixture.name.lower(), 100000) for fixture in self.fixtures.values()
       ])
+      d['micro'] = 10000
       warehouse.register('/words/unigram', d)
       t = trie.Trie(warehouse.get('/words/unigram').items())
       warehouse.register('/words/unigram/trie', t)
@@ -87,8 +88,11 @@ with description('CrypticCrosswordProblem'):
 
     with it('solves music'):
       expect(self.problems).to(have_key('MUSIC'))
-      expect(self.problems['MUSIC'].solutions()).not_to(be_empty)
-      expect(self.problems['MUSIC'].solutions()).to(have_key('music'))
+      solutions = self.problems['MUSIC'].solutions()
+      expect(solutions).not_to(be_empty)
+      expect(solutions).to(have_key('music'))
+      expect(solutions).to(have_key('micro'))
+      expect(solutions['music']).to(be_above(solutions['micro']))
 
     with it('solves all problems'):
       incomplete = {
