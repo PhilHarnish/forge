@@ -2,7 +2,7 @@ from puzzle.puzzlepedia import puzzle
 
 
 def get():
-  return puzzle.Puzzle('Puzzle of the day', SOURCE)
+  return puzzle.Puzzle('Puzzle of the day', SOURCE, hint='crossword')
 
 
 # TODO: The "." character breaks the parser.
