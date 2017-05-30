@@ -215,6 +215,12 @@ def _visit_concatenate(tokens, positions, solutions):
   _crawl(0, [], 0)
 
 
+def _visit_homophone(tokens, positions, solutions):
+  del tokens, positions
+  if not solutions:
+    raise NotImplementedError('Homophones not implemented')
+
+
 def _visit_insert(tokens, positions, solutions):
   if not solutions:
     # "INSERT" indicator is usually a subset of functionality provided by
@@ -222,11 +228,6 @@ def _visit_insert(tokens, positions, solutions):
     _visit_anagram(tokens, positions, solutions)
   if not solutions:
     raise NotImplementedError()
-
-
-def _todo_indicator(*args, **kwargs):
-  del args, kwargs
-  raise NotImplementedError()
 
 
 class _Solutions(dict):
@@ -243,12 +244,12 @@ _VISIT_MAP = collections.OrderedDict([
   (cryptic_keywords.INITIAL_INDICATORS, _visit_initial),
   (cryptic_keywords.EDGES_INDICATORS, _visit_edges),
   (cryptic_keywords.REVERSAL_INDICATORS, _visit_reversal),
-  (cryptic_keywords.TRUNCATION_INDICATORS, _todo_indicator),
   # Reducers.
   (cryptic_keywords.ANAGRAM_INDICATORS, _visit_anagram),
+  # TODO: Incomplete implementation. Redundant with anagram indicator.
   (cryptic_keywords.INSERT_INDICATORS, _visit_insert),
   (cryptic_keywords.CONCATENATE_INDICATORS, _visit_concatenate),
-  # TODO: Implement these.
-  (cryptic_keywords.HOMOPHONE_INDICATORS, _todo_indicator),
+  # TODO: Incomplete implementation. This should be up with "producers".
+  (cryptic_keywords.HOMOPHONE_INDICATORS, _visit_homophone),
 ])
 _VISIT_ORDER = dict([(indicator, i) for i, indicator in enumerate(_VISIT_MAP)])

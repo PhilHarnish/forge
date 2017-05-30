@@ -82,6 +82,11 @@ with description('CrypticCrosswordProblem'):
       expect(self.problems['GHERKIN'].solutions()).not_to(be_empty)
       expect(self.problems['GHERKIN'].solutions()).to(have_key('gherkin'))
 
+    with it('solves music'):
+      expect(self.problems).to(have_key('MUSIC'))
+      expect(self.problems['MUSIC'].solutions()).not_to(be_empty)
+      expect(self.problems['MUSIC'].solutions()).to(have_key('music'))
+
     with it('solves all problems'):
       incomplete = {
         # Requires synonyms.
@@ -92,10 +97,7 @@ with description('CrypticCrosswordProblem'):
         'DAMAGES', 'RUSHDIE', 'NOTE',
       }
       incomplete_seen = set()
-      unsupported = {
-        # TRUNCATION_INDICATORS.
-        'MUSIC',
-      }
+      unsupported = set()
       unsupported_seen = set()
       results = {}
       for problem in self.problems:

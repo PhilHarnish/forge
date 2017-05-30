@@ -54,10 +54,6 @@ REVERSAL_INDICATORS = frozenset([
   'turning',
   'back',
 ])
-# Truncating clues. ("microphone" -> "mic")
-TRUNCATION_INDICATORS = frozenset([
-  'short',
-])
 # Ambiguous definition (e.g., double entendre).
 AMBIGUOUS_INDICATORS = frozenset([
   '?'
@@ -73,14 +69,14 @@ SHORTHAND_CONVERSIONS = {
   'good': ['g'],
   'right': ['r'],
   'left': ['l'],
-  'micophone': ['mic'],
+  'microphone': ['mic'],
 }
 
 ALL_INDICATORS = collections.defaultdict(list)
 for group in [
   ANAGRAM_INDICATORS, EMBEDDED_INDICATORS, HOMOPHONE_INDICATORS,
   INITIAL_INDICATORS, CONCATENATE_INDICATORS, INSERT_INDICATORS,
-  EDGES_INDICATORS, REVERSAL_INDICATORS, TRUNCATION_INDICATORS,
+  EDGES_INDICATORS, REVERSAL_INDICATORS,
 ]:
   for indicator in group:
     ALL_INDICATORS[indicator].append(group)
