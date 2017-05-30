@@ -16,7 +16,7 @@ def _get_words_top():
 
 
 _TRUNCATION_LIMIT = 2 ** 27
-_WORD_LIMIT = 82383  # 1/3 of 333333M words = coupeville	82383
+_WORD_LIMIT = 47436  # After "gherkin" which is a cryptic solution in test set.
 
 def _get_unigram():
   results = []
