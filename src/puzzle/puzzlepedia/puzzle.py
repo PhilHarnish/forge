@@ -36,7 +36,7 @@ class Puzzle(subjects.Subject):
     return [p.active for p in self._meta_problems]
 
   def solutions(self):
-    return [p.solution for p in self._meta_problems if p.solution]
+    return [p.solution for p in self._meta_problems]
 
   def get_next_stage(self):
     return Puzzle('meta', self)
