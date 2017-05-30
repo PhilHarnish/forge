@@ -46,9 +46,12 @@ with description('CrypticCrosswordProblem'):
   with description('solutions'):
     with before.all:
       self.problems = {}
+      all_clues = []
       for fixture in self.fixtures.values():
+        all_clues.append(fixture.clue)
         self.problems[fixture.name] = cryptic_problem.CrypticProblem(
             fixture.name, [fixture.clue])
+      expect(all_clues).to(have_len(26))  # Make fail to see output.
       warehouse.save()
       d = dict([
         (fixture.name.lower(), 100000) for fixture in self.fixtures.values()
