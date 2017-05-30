@@ -6,7 +6,7 @@ from puzzle.puzzlepedia import solution_stream
 
 
 class Puzzle(subjects.Subject):
-  def __init__(self, name, source):
+  def __init__(self, name, source, hint=None):
     super(Puzzle, self).__init__()
     self._meta_problems = []
     self._child_streams = []
@@ -20,7 +20,7 @@ class Puzzle(subjects.Subject):
       raise NotImplementedError(
           'Puzzle source type %s unsupported' % type(source))
     for i, (meta_problem, consumed) in enumerate(
-        analyze.identify_problems(lines)):
+        analyze.identify_problems(lines, hint=hint)):
       problem = _reify(meta_problem, '#%s' % i, consumed)
       self._meta_problems.append(problem)
       self._child_streams.append(solution_stream.SolutionStream(
