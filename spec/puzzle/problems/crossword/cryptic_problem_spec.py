@@ -85,7 +85,7 @@ with description('CrypticCrosswordProblem'):
     with it('solves all problems'):
       incomplete = {
         # Requires synonyms.
-        'GREENBELT', 'PASTRY', 'START',
+        'CRAMPON', 'GREENBELT', 'PASTRY', 'START',
         # Requires crossword lookups.
         'ESCOURT', 'SLING', 'STEAK', 'TWIG',
         # Requires either.
@@ -93,8 +93,6 @@ with description('CrypticCrosswordProblem'):
       }
       incomplete_seen = set()
       unsupported = {
-        # REVERSAL_INDICATORS.
-        'CRAMPON',
         # TRUNCATION_INDICATORS.
         'MUSIC',
       }
