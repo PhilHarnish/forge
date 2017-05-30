@@ -31,13 +31,13 @@ HOMOPHONE_INDICATORS = frozenset([
 INITIAL_INDICATORS = frozenset([
   'first',
   'initially',
-  'with',
 ])
 # Join words.
 CONCATENATE_INDICATORS = frozenset([
   'and',
   'by',
   'put',
+  'with',
 ])
 # Insert a word into another word.
 INSERT_INDICATORS = frozenset([

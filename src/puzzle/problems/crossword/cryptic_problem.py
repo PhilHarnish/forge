@@ -131,14 +131,20 @@ def _visit_anagram(tokens, positions, solutions):
   anagram_index = warehouse.get('/words/unigram/anagram_index')
   trie = warehouse.get('/words/unigram/trie')
   interesting_threshold = trie.interesting_threshold()
+  banned_max = len(anagram_positions)
 
-  def _add(acc):
+  def _add(acc, banned_max):
     parts = []
     banned_matches = 0
     for word, pos in acc:
       parts.append(word)
       if pos in anagram_positions:
         banned_matches += 1
+      elif word in cryptic_keywords.CONCATENATE_INDICATORS:
+        # Special case for concatenate keywords which frequently join two
+        # chunks of an anagram.
+        banned_matches += 1
+        banned_max += 1
     solution = ''.join(parts)
     if solution not in anagram_index:
       return
@@ -147,7 +153,7 @@ def _visit_anagram(tokens, positions, solutions):
     if not anagram_positions:
       score = 1
     else:
-      score = 1 - (banned_matches / len(anagram_positions))
+      score = 1 - (banned_matches / banned_max)
     for anagram in anagrams:
       if anagram != solution:
         base_weight = min(1, trie[anagram] / interesting_threshold)
@@ -165,7 +171,7 @@ def _visit_anagram(tokens, positions, solutions):
         acc_length = new_length
         acc.append((word, i))
         if new_length >= min_length and new_length <= max_length:
-          _add(acc)
+          _add(acc, banned_max)
         elif new_length < max_length:
           _crawl(i + 1, acc, acc_length)
         acc_length -= word_length
@@ -185,7 +191,7 @@ def _visit_concatenate(tokens, positions, solutions):
   def _add(acc):
     if len(acc) == 1:
       return  # Ignore complete words in input.
-    parts = []  # TODO: Actually verify word is valid.
+    parts = []
     banned_matches = 0
     for word, pos in acc:
       parts.append(word)
