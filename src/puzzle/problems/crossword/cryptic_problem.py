@@ -67,6 +67,17 @@ def _visit_initial(tokens, positions, solutions):
     tokens.restore(position)
 
 
+def _visit_edges(tokens, positions, solutions):
+  del solutions  # Initial indicator produces more tokens.
+  for position in positions:
+    tokens.pop(position)
+  for _, words in tokens.items():
+    source = words[0]
+    words.append(source[0] + source[-1])
+  for position in reversed(positions):
+    tokens.restore(position)
+
+
 def _visit_embedded(tokens, positions, solutions):
   min_length = solutions.min_length
   max_length = solutions.max_length
@@ -219,7 +230,7 @@ _VISIT_MAP = collections.OrderedDict([
   (cryptic_keywords.EMBEDDED_INDICATORS, _visit_embedded),
   # Producers.
   (cryptic_keywords.INITIAL_INDICATORS, _visit_initial),
-  (cryptic_keywords.EDGES_INDICATORS, _todo_indicator),
+  (cryptic_keywords.EDGES_INDICATORS, _visit_edges),
   (cryptic_keywords.REVERSAL_INDICATORS, _todo_indicator),
   (cryptic_keywords.TRUNCATION_INDICATORS, _todo_indicator),
   # Reducers.

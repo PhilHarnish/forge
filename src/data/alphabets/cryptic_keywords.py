@@ -14,6 +14,7 @@ ANAGRAM_INDICATORS = frozenset([
   'odd',
   'oddly',
   'off',
+  'round',
   'upset',
 ])
 # Solution appears in clue.

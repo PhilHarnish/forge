@@ -93,8 +93,6 @@ with description('CrypticCrosswordProblem'):
       }
       incomplete_seen = set()
       unsupported = {
-        # EDGES_INDICATORS.
-        'ABSCESS',
         # REVERSAL_INDICATORS.
         'CRAMPON',
         # TRUNCATION_INDICATORS.
@@ -116,4 +114,6 @@ with description('CrypticCrosswordProblem'):
           len(self.problems) - len(incomplete) - len(unsupported)))
       for problem, value in results.items():
         expect((problem, value)).not_to(equal((problem, {})))
-        expect(value).to(have_key(problem.lower()))
+        problem_lower = problem.lower()
+        expect(value).to(have_key(problem_lower))
+        expect(value[problem_lower]).to(equal(1))
