@@ -1,6 +1,6 @@
 from puzzle.heuristics import analyze
 from puzzle.problems import anagram_problem, problem
-from puzzle.problems.crossword import crossword_problem
+from puzzle.problems.crossword import crossword_problem, cryptic_problem
 from spec.mamba import *
 
 
@@ -76,3 +76,11 @@ with description('identify'):
       identified = analyze.identify(['snap'])
       expect(identified).to(have_key(anagram_problem.AnagramProblem))
       expect(identified[anagram_problem.AnagramProblem]).to(equal(1))
+
+    with it('identifies (and prefers) cryptic problems over crosswords'):
+      identified = analyze.identify(['Lizard, good with Coke, oddly (5)'])
+      expect(identified).to(have_key(cryptic_problem.CrypticProblem))
+      expect(identified).to(have_key(crossword_problem.CrosswordProblem))
+      expect(identified[cryptic_problem.CrypticProblem]).to(equal(1))
+      expect(identified[cryptic_problem.CrypticProblem]).to(be_above(
+          identified[crossword_problem.CrosswordProblem]))

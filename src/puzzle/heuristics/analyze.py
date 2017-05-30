@@ -4,14 +4,22 @@ from puzzle.problems import acrostic_problem, anagram_problem, \
 from puzzle.problems.crossword import crossword_problem, cryptic_problem
 
 _PROBLEM_TYPES = set()
+_IDENTIFY_ORDER = []
 
 
 def identify(lines):
   scores = meta.Meta()
-  for t in _PROBLEM_TYPES:
-    score = t.score(lines)
-    if score:
-      scores[t] = score
+  for group in _IDENTIFY_ORDER:
+    group_count = 0
+    group_scale = 2 * len(group)
+    for t in group:
+      score = t.score(lines)
+      if score:
+        # For group size of 5: 1, .9, .8, .7, .6, .5.
+        penalty_multiplier = 1 - (group_count / group_scale)
+        scores[t] = score * penalty_multiplier
+        if score == 1:
+          group_count += 1
   return scores
 
 
@@ -34,18 +42,22 @@ def init():
     return
   register(acrostic_problem.AcrosticProblem)
   register(anagram_problem.AnagramProblem)
-  register(crossword_problem.CrosswordProblem)
-  register(cryptic_problem.CrypticProblem)
+  register(cryptic_problem.CrypticProblem, crossword_problem.CrosswordProblem)
   register(number_problem.NumberProblem)
 
 
 def reset():
   _PROBLEM_TYPES.clear()
+  _IDENTIFY_ORDER.clear()
 
 
 def problem_types():
   return _PROBLEM_TYPES
 
 
-def register(cls):
-  _PROBLEM_TYPES.add(cls)
+def register(*problems):
+  for problem in problems:
+    if problem in _PROBLEM_TYPES:
+      raise IndexError('%s already registered' % problem)
+    _PROBLEM_TYPES.add(problem)
+  _IDENTIFY_ORDER.append(problems)
