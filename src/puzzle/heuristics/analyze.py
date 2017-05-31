@@ -20,10 +20,18 @@ def identify(lines, hint=None):
         if hint is None:
           pass
         elif isinstance(hint, str):
-          if hint.lower() not in t.__name__.lower():
+          hint = hint.lower()
+          type_name = t.__name__.lower()
+          if hint not in type_name:
             penalty_multiplier *= .25
+          elif type_name.startswith(hint):  # Perfect match.
+            penalty_multiplier = 1
+            score = 1
         elif isinstance(hint, type):
-          if t != hint:
+          if t == hint:  # Perfect match.
+            penalty_multiplier = 1
+            score = 1
+          else:
             penalty_multiplier *= .25
         scores[t] = score * penalty_multiplier
         if score == 1:
