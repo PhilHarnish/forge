@@ -1,6 +1,6 @@
 from data import meta
 from puzzle.problems import acrostic_problem, anagram_problem, \
-  number_problem
+  cryptogram_problem, number_problem
 from puzzle.problems.crossword import crossword_problem, cryptic_problem
 
 _PROBLEM_TYPES = set()
@@ -59,6 +59,7 @@ def init():
   register(acrostic_problem.AcrosticProblem)
   register(anagram_problem.AnagramProblem)
   register(cryptic_problem.CrypticProblem, crossword_problem.CrosswordProblem)
+  register(cryptogram_problem.CryptogramProblem)
   register(number_problem.NumberProblem)
 
 
