@@ -1,4 +1,5 @@
 from puzzle.problems import cryptogram_problem
+from spec.data import fixtures
 from spec.mamba import *
 
 with description('CryptogramProblem'):
@@ -16,3 +17,11 @@ with description('CryptogramProblem'):
   with it('accepts all other input'):
     expect(cryptogram_problem.CryptogramProblem.score(['owl'])).to(
         be_between(0, .25))
+
+  with description('basic solutions'):
+    with before.all:
+      fixtures.init()
+
+    with it('solves rot13'):
+      p = cryptogram_problem.CryptogramProblem('rot13', ['bjy'])
+      expect(p.solutions()).to(equal({'owl': 1}))
