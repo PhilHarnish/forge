@@ -24,4 +24,17 @@ with description('CryptogramProblem'):
 
     with it('solves rot13'):
       p = cryptogram_problem.CryptogramProblem('rot13', ['bjy'])
-      expect(p.solutions()).to(equal({'owl': 1}))
+      expect(p.solutions()).to(equal({'owl (rot13)': 1}))
+
+    with it('solves rot14'):
+      p = cryptogram_problem.CryptogramProblem('rot14', ['egbqdn'])
+      expect(p.solutions()).to(equal({'superb (rot14)': 1}))
+
+    with it('solves mixed translations'):
+      p = cryptogram_problem.CryptogramProblem('rot13 and 14', [
+        'bjy egbqdn'
+      ])
+      expect(p.solutions()).to(equal({
+        'owl rtodqa (rot13)': 1 / 3,
+        'pxm superb (rot14)': 2 / 3,
+      }))

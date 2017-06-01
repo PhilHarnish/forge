@@ -8,6 +8,12 @@ _ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 _ROT_TRANSLATIONS = [None] + [
   str.maketrans(_ALPHABET, _ALPHABET[i:] + _ALPHABET[:i]) for i in range(1, 26)
 ]
+# At least 1/5th of the words must convert.
+_MIN_CONVERSION = 0.2
+# Minimum threshold for an "interesting" translation.
+_MIN_WORD_THRESHOLD = 45000
+# Minimum number of characters to consider "translated".
+_MIN_WORD = 3
 
 
 class CryptogramProblem(problem.Problem):
@@ -37,9 +43,10 @@ class CryptogramProblem(problem.Problem):
     # First attempt a rotN solve.
     all_text = '\n'.join(self.lines)
     for offset in _ROT_OFFSETS:
-      if is_rot_n(self._words, offset):
-        # Return 1.0 score because a match is (normally) exceptionally rare.
-        yield all_text.translate(_ROT_TRANSLATIONS[offset]), 1
+      score = rot_n_score(self._words, offset)
+      if score > _MIN_CONVERSION:
+        solution = all_text.translate(_ROT_TRANSLATIONS[offset])
+        yield '%s (rot%s)' % (solution, offset), score
 
   def _solve(self):
     raise NotImplementedError()
@@ -50,6 +57,24 @@ def _parse(lines):
   return tokens, list(filter(str.isalpha, tokens))
 
 
-def is_rot_n(words, n):
+def rot_n_score(words, n):
+  """ Score `words` for rotation `n`.
+  :param words:
+  :param n:
+  :return: Returns 1 if every single word translates to a common word.
+      If all words are common score decreases proportional to chars translated.
+      If all translations are uncommon then
+  """
   unigrams = warehouse.get('/words/unigram')
-  return all(word.translate(_ROT_TRANSLATIONS[n]) in unigrams for word in words)
+  score = 0
+  all = 0
+  for word in words:
+    l = len(word)
+    if l < _MIN_WORD:
+      continue
+    translated = word.translate(_ROT_TRANSLATIONS[n])
+    if translated in unigrams:
+      word_weight = min(1, unigrams[translated] / _MIN_WORD_THRESHOLD)
+      score += l * word_weight
+    all += l
+  return score / all
