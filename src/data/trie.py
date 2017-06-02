@@ -1,6 +1,6 @@
 import heapq
 
-from data import seek_set
+from data.seek_sets import seek_set
 
 
 class Trie(object):

@@ -1,6 +1,6 @@
 import statistics
 
-from data import seek_set
+from data.seek_sets import seek_set
 from puzzle.heuristics import acrostic
 from puzzle.problems import problem
 

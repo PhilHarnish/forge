@@ -2,7 +2,8 @@ import collections
 
 from mock.mock import patch
 
-from data import seek_set, warehouse, word_frequencies
+from data import warehouse, word_frequencies
+from data.seek_sets import seek_set
 from puzzle.heuristics.acrostics import _acrostic_iter
 from puzzle.puzzlepedia import prod_config
 from spec.data.fixtures import tries

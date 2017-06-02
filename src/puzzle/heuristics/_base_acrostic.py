@@ -1,4 +1,5 @@
-from data import seek_set, warehouse
+from data import warehouse
+from data.seek_sets import seek_set
 
 
 class BaseAcrostic(object):

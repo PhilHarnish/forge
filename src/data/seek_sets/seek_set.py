@@ -1,9 +1,11 @@
 import collections
 
+from data.seek_sets import _base_seek_set
+
 _FULL_ALPHABET = set('abcdefghijklmnopqrstuvwxyz')
 
 
-class SeekSet(object):
+class SeekSet(_base_seek_set._BaseSeekSet):
   def __init__(self, sets, sets_permutable=False, indexes=None,
       indexes_permutable=False):
     if indexes_permutable and not indexes:
@@ -19,7 +21,7 @@ class SeekSet(object):
         indexes = None
       elif indexes_permutable:
         raise NotImplementedError()
-    self._sets = list(sets)
+    super(SeekSet, self).__init__(sets)
     self._sets_permutable = sets_permutable
     self._indexes = indexes
     self._indexes_permutable = indexes_permutable

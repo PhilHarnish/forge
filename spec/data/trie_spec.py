@@ -1,7 +1,8 @@
 import pickle
 import statistics
 
-from data import seek_set, trie
+from data import trie
+from data.seek_sets import seek_set
 from spec.data.fixtures import tries
 from spec.mamba import *
 
