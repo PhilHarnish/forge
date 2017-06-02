@@ -1,6 +1,8 @@
 from data.seek_sets import crypto_seek_set
 from spec.mamba import *
 
+ALL = set('abcdefghijklmnopqrstuvwxyz')
+
 with description('crypto_seek_set'):
   with description('simple'):
     with description('construction'):
@@ -23,7 +25,7 @@ with description('crypto_seek_set'):
     with description('indexing'):
       with it('supports "contains" for simple query'):
         subject = crypto_seek_set.CryptoSeekSet('aaaaaa')
-        expect(subject['']).to(equal(set('abcdefghijklmnopqrstuvwxyz')))
+        expect(subject['']).to(equal(ALL))
 
       with it('rejects impossibly long seeks'):
         bomb = crypto_seek_set.CryptoSeekSet('a')
@@ -31,7 +33,7 @@ with description('crypto_seek_set'):
 
       with it('supports "contains" for simple multi-character query'):
         subject = crypto_seek_set.CryptoSeekSet('xyz')
-        expect(subject['a']).to(equal(set('bcdefghijklmnopqrstuvwxyz')))
+        expect(subject['a']).to(equal(ALL - {'a'}))
 
       with it('returns empty set when matches line up'):
         subject = crypto_seek_set.CryptoSeekSet('xyz')
@@ -44,6 +46,25 @@ with description('crypto_seek_set'):
       with it('recognizes when characters return'):
         subject = crypto_seek_set.CryptoSeekSet('ababab')
         # Imply a = x; return all unassigned letters since b is unknown.
-        expect(subject['x']).to(equal(set('abcdefghijklmnopqrstuvwyz')))
+        expect(subject['x']).to(equal(ALL - {'x'}))
         # Imply a = x, b = y; return x since a is known.
-        expect(subject['xy']).to(equal(set('x')))
+        expect(subject['xy']).to(equal({'x'}))
+
+    with description('with translatins'):
+      with before.all:
+        self.translation = {
+          'e': 's',
+          'g': 'u',
+          'b': 'p',
+          'q': 'e',
+          'd': 'r',
+          'n': 'b',
+        }
+
+      with it('accepts compatible translations'):
+        subject = crypto_seek_set.CryptoSeekSet('egbqdn', self.translation)
+        expect(subject['super']).to(equal({'b'}))
+
+      with it('rejects incompatible translations'):
+        subject = crypto_seek_set.CryptoSeekSet('egbqdn', self.translation)
+        expect(subject['n']).to(be_empty)

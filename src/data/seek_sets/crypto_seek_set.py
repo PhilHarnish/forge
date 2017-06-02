@@ -54,12 +54,17 @@ class CryptoSeekSet(base_seek_set.BaseSeekSet):
     crypto_to_normal = self._crypto_to_normal.copy()
     crypto = self._sets
     for pos, c in enumerate(seek):
+      crypto_c = crypto[pos]
       if c in normal_to_crypto:
-        if normal_to_crypto[c] != crypto[pos]:
+        if normal_to_crypto[c] != crypto_c:
           return set()
         continue  # Input and our translated copy line up.
+      if crypto_c in crypto_to_normal:
+        if crypto_to_normal[crypto_c] != c:
+          # The crypto letter should have been c and was not.
+          return set()
+        continue
       # From now on this letter needs to match our underlying cryptogram.
-      crypto_c = crypto[pos]
       normal_to_crypto[c] = crypto_c
       crypto_to_normal[crypto_c] = c
     # Made it to the end of the input and it is valid.
