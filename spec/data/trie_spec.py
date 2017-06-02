@@ -74,6 +74,15 @@ with description('trie'):
           ('in', 8469404971), ('is', 4705743816), ('on', 3750423199)
         ]))
 
+      with it('returns only 2 letter results when exact_match is required'):
+        expect(list(self.subject.walk(
+            ['abcdefghijklmnopqrstuvwxyz'] * 2,
+            exact_match=True,
+        ))).to(equal([
+          ('of', 13151942776), ('to', 12136980858),
+          ('in', 8469404971), ('is', 4705743816), ('on', 3750423199)
+        ]))
+
       with it('returns specific matches when given constraints'):
         expect(list(self.subject.walk([
           set('answer'),

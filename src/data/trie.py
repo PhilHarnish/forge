@@ -8,7 +8,9 @@ class Trie(object):
     self._smallest = float('inf')
     self._largest = 0
     # Trie's index (highest value characters first).
-    self._index = {}
+    self._index = {
+      'max_length': 0,
+    }
     self._len = 0
     values = []
     for key, value in data:
@@ -64,7 +66,7 @@ class Trie(object):
   def interesting_threshold(self):
     return self._percentile25
 
-  def walk(self, seek_sets):
+  def walk(self, seek_sets, exact_match=False):
     """Returns solutions matching `seek_sets`, ordered from high to low."""
     # TODO: Inline per findings from commit 47a736f.
     fringe = _MaxHeap()
@@ -76,6 +78,8 @@ class Trie(object):
     while len(fringe):
       fringe_score = fringe.best_weight()
       acc, cursor = fringe.pop()
+      if exact_match and stop_seek_pos >= cursor['max_length']:
+        continue
       pos = len(acc)
       if seek_set_mode:
         seeking = seek_sets.seek(acc)
@@ -86,11 +90,12 @@ class Trie(object):
           continue
         acc.append(c)
         next_children = cursor[c]
-        magnitude = next_children['max_weight']
-        match_weight = next_children['match_weight']
-        if match_weight:
-          heapq.heappush(solutions, (-match_weight, ''.join(acc)))
+        if not exact_match or pos == stop_seek_pos:
+          match_weight = next_children['match_weight']
+          if match_weight:
+            heapq.heappush(solutions, (-match_weight, ''.join(acc)))
         if len(next_children) > 2 and pos < stop_seek_pos:
+          magnitude = next_children['max_weight']
           fringe.push(magnitude, (acc[:], next_children))
         acc.pop()
       while len(solutions) and -solutions[0][0] >= fringe_score:
@@ -107,6 +112,8 @@ class Trie(object):
   def _add_to_index(self, word, weight):
     l = len(word)
     cursor = self._index
+    if l > self._index['max_length']:
+      self._index['max_length'] = l
     pos = 0
     while pos < l:
       target = word[pos]
@@ -114,6 +121,8 @@ class Trie(object):
         break
       cursor = cursor[target]
       match_weight = cursor['match_weight']
+      if l > cursor['max_length']:
+        cursor['max_length'] = l
       pos += 1
       if pos == l:
         if match_weight:
@@ -131,11 +140,13 @@ class Trie(object):
       if i == end:
         cursor[word[i]] = {
           'max_weight': weight,
+          'max_length': l,
           'match_weight': weight,
         }
       else:
         new_cursor = {
           'max_weight': weight,
+          'max_length': l,
           'match_weight': 0,
         }
         cursor[word[i]] = new_cursor
