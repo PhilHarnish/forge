@@ -28,9 +28,12 @@ class Acrostic(_base_acrostic.BaseAcrostic):
     self._phrase_graph = [
       {} for _ in range(0, self._solution_len)
     ]
-    self._walks = [
-      self._trie.walk(self._words[i:]) for i in range(0, self._solution_len)
-    ]
+    self._walks = []
+    for i in range(0, self._solution_len):
+      try:
+        self._walks.append(self._trie.walk(self._words[i:]))
+      except IndexError:
+        break
 
   def __iter__(self):
     for phrase, weight in self._walk_phrase_graph_from(0, [], 0):
@@ -75,6 +78,8 @@ class Acrostic(_base_acrostic.BaseAcrostic):
       yield phrase
 
   def _walk(self, pos):
+    if pos >= len(self._walks):
+      return
     phrases_at = self._phrase_graph[pos]
     for phrase, weight in self._walks[pos]:
       l = len(phrase)
