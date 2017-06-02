@@ -53,7 +53,7 @@ with description('CryptogramProblem'):
       expect(solutions).to(have_key(expected))
       expect(solutions[expected]).to(be_above(0.5))
 
-  with description('real data'):
+  with _description('real data'):
     with before.all:
       warehouse.save()
       prod_config.init()
@@ -62,7 +62,7 @@ with description('CryptogramProblem'):
       prod_config.reset()
       warehouse.restore()
 
-    with _it('solves long cryptograms'):
+    with it('solves long cryptograms'):
       initial = """
         T gxawjhixtq om t jawe hz wkccde jrtj ghumomjm hz t mrhxj woege hz 
         eugxawjep jebj. Ieuextdda jre gowrex kmep jh eugxawj jre jebj om moqwde 
