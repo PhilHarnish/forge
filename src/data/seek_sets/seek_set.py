@@ -40,32 +40,37 @@ class SeekSet(_base_seek_set._BaseSeekSet):
       start, stop, step = seek, seek, 1
     else:
       start, stop, step = None, None, None
-    if start is not None:
+    if start is not None:  # Slicing.
       if start == 0:
         return self
       elif not self._sets_permutable and not self._indexes_permutable:
         return SeekSet(self._sets[start:stop:step])
       else:
         # TODO: Find a way to support this? Seems impossible.
-        return SeekSet([[]])
+        raise IndexError('%s out of bounds' % seek)
     # Indexing for lookup.
     return self.seek(seek)
 
   def seek(self, seek):
     result = set()
+    end = len(seek)
+    l = len(self._sets)
+    if end > l:
+      # Indicates a bug or inefficient behavior.
+      raise IndexError('%s out of bounds' % seek)
     if not self._indexes:
       if not self._sets_permutable:
         # Trivial case.
         for i, c in enumerate(seek):
           if c not in self._sets[i]:
             return result
-        return set(self._sets[len(seek)])
-      if len(seek) == 0:
+        return set(self._sets[end])
+      if end == 0:
         # Beginning of SeekSet; all letters are available.
         return set(self._set_index[None].keys())
     try:
       _visit(
-          result, [False] * len(self._sets), self._sets, self._set_index,
+          result, [False] * l, self._sets, self._set_index,
           self._indexes, seek, 0, False)
     except:
       pass
