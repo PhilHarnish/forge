@@ -28,10 +28,10 @@ with _description('a_basic_puzzle'):
     expect(solutions).to(equal([
       'decimal +25',
       'octal +12',
-      'sept e nary +1',
+      None,  # 'sept e nary +1' lost when Trie threshold was changed.
       'binary +1',
       None,
-      'qui nary +9',
+      None,  # 'qui nary +9' lost when Trie threshold was changed.
       None,
       None,
       'quaternary +12',
