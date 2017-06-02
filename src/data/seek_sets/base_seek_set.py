@@ -1,4 +1,4 @@
-class _BaseSeekSet(object):
+class BaseSeekSet(object):
   def __init__(self, sets):
     self._sets = list(sets)
 

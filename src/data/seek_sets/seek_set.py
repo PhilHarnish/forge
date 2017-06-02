@@ -1,11 +1,11 @@
 import collections
 
-from data.seek_sets import _base_seek_set
+from data.seek_sets import base_seek_set
 
 _FULL_ALPHABET = set('abcdefghijklmnopqrstuvwxyz')
 
 
-class SeekSet(_base_seek_set._BaseSeekSet):
+class SeekSet(base_seek_set.BaseSeekSet):
   def __init__(self, sets, sets_permutable=False, indexes=None,
       indexes_permutable=False):
     if indexes_permutable and not indexes:

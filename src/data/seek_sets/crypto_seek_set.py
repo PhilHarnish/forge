@@ -1,9 +1,9 @@
-from data.seek_sets import _base_seek_set
+from data.seek_sets import base_seek_set
 
 _FULL_ALPHABET = set('abcdefghijklmnopqrstuvwxyz')
 
 
-class CryptoSeekSet(_base_seek_set._BaseSeekSet):
+class CryptoSeekSet(base_seek_set.BaseSeekSet):
   def __init__(self, sets, translation=None):
     if not isinstance(sets, str):
       raise TypeError('CryptoSeekSet `sets` must be str')

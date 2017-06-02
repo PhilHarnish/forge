@@ -1,6 +1,6 @@
 import heapq
 
-from data.seek_sets import seek_set
+from data.seek_sets import base_seek_set
 
 
 class Trie(object):
@@ -74,7 +74,7 @@ class Trie(object):
     acc = []
     fringe.push(float('inf'), (acc, self._index))
     stop_seek_pos = len(seek_sets) - 1
-    seek_set_mode = isinstance(seek_sets, seek_set.SeekSet)
+    seek_set_mode = isinstance(seek_sets, base_seek_set.BaseSeekSet)
     while len(fringe):
       fringe_score = fringe.best_weight()
       acc, cursor = fringe.pop()
