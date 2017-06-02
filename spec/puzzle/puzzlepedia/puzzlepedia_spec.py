@@ -2,7 +2,7 @@ from puzzle.puzzlepedia import puzzle, puzzlepedia
 from spec.mamba import *
 
 display_patch = mock.patch('puzzle.puzzlepedia.puzzlepedia.display')
-prod_config_patch = mock.patch('puzzle.puzzlepedia.prod_config')
+prod_config_patch = mock.patch('puzzle.puzzlepedia.puzzlepedia.prod_config')
 
 with description('puzzlepedia'):
   with before.each:
