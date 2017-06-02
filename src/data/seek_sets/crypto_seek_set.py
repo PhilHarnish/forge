@@ -10,9 +10,11 @@ class CryptoSeekSet(base_seek_set.BaseSeekSet):
     super(CryptoSeekSet, self).__init__(sets)
     if translation:
       # Invert map; we want to quickly convert crypto
-      self._translation = {v: k for k, v in translation.items()}
+      self._crypto_to_normal = translation.copy()
+      self._normal_to_crypto = {v: k for k, v in translation.items()}
     else:
-      self._translation = {}
+      self._crypto_to_normal = {}
+      self._normal_to_crypto = {}
 
   def __contains__(self, seek):
     if len(seek) == 0:
@@ -48,20 +50,28 @@ class CryptoSeekSet(base_seek_set.BaseSeekSet):
     if end > l:
       # Indicates a bug or inefficient behavior.
       raise IndexError('%s out of bounds' % seek)
-    working_set = self._translation.copy()
-    sets = self._sets
+    normal_to_crypto = self._normal_to_crypto.copy()
+    crypto_to_normal = self._crypto_to_normal.copy()
+    crypto = self._sets
     for pos, c in enumerate(seek):
-      if c in working_set:
-        if working_set[c] != sets[pos]:
+      if c in normal_to_crypto:
+        if normal_to_crypto[c] != crypto[pos]:
           return set()
         continue  # Input and our translated copy line up.
       # From now on this letter needs to match our underlying cryptogram.
-      working_set[c] = sets[pos]
-    # Made it to the end of the input.
+      crypto_c = crypto[pos]
+      normal_to_crypto[c] = crypto_c
+      crypto_to_normal[crypto_c] = c
+    # Made it to the end of the input and it is valid.
     result = set()
-    for c in _FULL_ALPHABET:
-      if c not in working_set:
-        result.add(c)
+    if crypto[end] in crypto_to_normal:
+      # The next letter is already known.
+      result.add(crypto_to_normal[crypto[end]])
+    else:
+      # The next letter is unknown.
+      for c in _FULL_ALPHABET:
+        if c not in normal_to_crypto:
+          result.add(c)
     return result
 
   def __len__(self):
