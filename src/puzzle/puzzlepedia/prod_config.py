@@ -24,12 +24,23 @@ def _get_unigram():
   for word, value in word_frequencies.parse_file('data/count_1w.txt'):
     if value < _WORD_LIMIT:
       break
-    l = len(word)
-    if word not in top_words:
-      reduction_factor = _TRUNCATION_LIMIT >> (l ** 2) or 1
-      value = value // reduction_factor
-    if value:
-      results.append((word, value))
+    last_c = None
+    c_chain = 0
+    for c in word:
+      if c == last_c:
+        c_chain += 1
+      else:
+        last_c = c
+        c_chain = 1
+      if c_chain >= 3:
+        break
+    else:
+      l = len(word)
+      if word not in top_words:
+        reduction_factor = _TRUNCATION_LIMIT >> (l ** 2) or 1
+        value = value // reduction_factor
+      if value:
+        results.append((word, value))
   return collections.OrderedDict(
       sorted(results, key=lambda x: x[1], reverse=True))
 
