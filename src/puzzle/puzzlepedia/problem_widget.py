@@ -1,6 +1,8 @@
 import rx
 from ipywidgets import widgets
 
+from puzzle.puzzlepedia import table_widget
+
 
 def ProblemWidget(meta_problem):
   """Factory for IPython widgets, pretending to be real widget."""
@@ -14,7 +16,7 @@ def ProblemWidget(meta_problem):
   dropdown_source = _observable_for_widget(dropdown)
 
   def _on_problem_kind_change(problem):
-    _update_label_for_problem(solutions, best_solution, problem)
+    _update_solutions_for_problem(solutions_table, best_solution, problem)
 
   dropdown_source.subscribe(_on_problem_kind_change)
   # Best solution.
@@ -26,17 +28,24 @@ def ProblemWidget(meta_problem):
     meta_problem.solution = solution
 
   best_solution_source.subscribe(_on_best_solution_change)
-  solutions = widgets.Label('...calculating...')
+  solutions_table = table_widget.TableWidget()
   if meta_problem.peek():
-    _update_label_for_problem(solutions, best_solution, meta_problem.peek())
-  return widgets.VBox([widgets.HBox(items), solutions])
+    _update_solutions_for_problem(
+        solutions_table, best_solution, meta_problem.peek())
+  return widgets.VBox([widgets.HBox(items), solutions_table])
 
 
-def _update_label_for_problem(label, best_solution, problem):
+def _update_solutions_for_problem(table, best_solution, problem):
   solutions = problem.solutions()
   if solutions.peek():
     best_solution.value = solutions.peek()
-  label.value = str(solutions)
+  headers = ['score', 'solution', 'notes']
+  data = []
+  for solution, score in solutions.items():
+    data.append([
+      round(score, 3), solution, '<br />'.join(problem.notes_for(solution))
+    ])
+  table.update_data(data, headers=headers)
 
 
 def _observable_for_widget(widget):
