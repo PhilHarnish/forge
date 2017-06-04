@@ -78,8 +78,6 @@ class Trie(object):
     while len(fringe):
       fringe_score = fringe.best_weight()
       acc, cursor = fringe.pop()
-      if exact_match and stop_seek_pos >= cursor['max_length']:
-        continue
       pos = len(acc)
       if seek_set_mode:
         seeking = seek_sets.seek(acc)
@@ -95,8 +93,11 @@ class Trie(object):
           if match_weight:
             heapq.heappush(solutions, (-match_weight, ''.join(acc)))
         if len(next_children) > 2 and pos < stop_seek_pos:
-          magnitude = next_children['max_weight']
-          fringe.push(magnitude, (acc[:], next_children))
+          if exact_match and stop_seek_pos >= next_children['max_length']:
+            pass
+          else:
+            magnitude = next_children['max_weight']
+            fringe.push(magnitude, (acc[:], next_children))
         acc.pop()
       while len(solutions) and -solutions[0][0] >= fringe_score:
         solution_weight, solution_word = heapq.heappop(solutions)
@@ -105,7 +106,7 @@ class Trie(object):
       solution_weight, solution_word = heapq.heappop(solutions)
       yield solution_word, -solution_weight
 
-    if len(fringe._pool) > 10:
+    if len(fringe._pool) > 15:
       print('WARNING')
       print('Max fringe size was: %s' % len(fringe._pool))
 
