@@ -1,7 +1,7 @@
-from spec.mamba import *
 from unittest import mock
 
 from puzzle.problems import problem
+from spec.mamba import *
 
 with description('Problem'):
   with it('instantiates'):
@@ -25,3 +25,15 @@ with description('Problem'):
     ex = ExampleProblem('example', [])
     ex.constrain(lambda k, v: v >= 1)
     expect(ex.solutions()).to(equal({'solution 1': 1}))
+
+  with it('stores notes for solutions'):
+    class ExampleProblem(problem.Problem):
+      _solve = mock.Mock(return_value={
+        'solution 1': 1,
+        'solution 2': .5,
+      })
+
+
+    ex = ExampleProblem('example', [])
+    for solution in ex.solutions():
+      expect(ex.notes_for(solution)).to(be_a(list))

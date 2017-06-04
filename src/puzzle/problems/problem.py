@@ -1,3 +1,5 @@
+import collections
+
 from data import meta
 
 _THRESHOLD = 0.01
@@ -9,6 +11,7 @@ class Problem(object):
     self.lines = lines
     self._threshold = threshold
     self._solutions = None
+    self._notes = collections.defaultdict(list)
     self._constraints = [
       lambda k, v: v > self._threshold
     ]
@@ -36,6 +39,9 @@ class Problem(object):
           results.append((k, v))
       self._solutions = meta.Meta(results)
     return self._solutions
+
+  def notes_for(self, solution):
+    return self._notes.get(solution, [])
 
   def _solve_iter(self):
     return iter(self._solve().items())
