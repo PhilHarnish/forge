@@ -62,10 +62,6 @@ with description('CryptogramProblem'):
       prod_config.reset()
       warehouse.restore()
 
-    with it('does not find solutions for long repeated strings'):
-      p = cryptogram_problem.CryptogramProblem('large cryptogram', ['aaa'])
-      expect(p.solutions()).to(be_empty)
-
     with it('solves long cryptograms'):
       initial = """
         T gxawjhixtq om t jawe hz wkccde jrtj ghumomjm hz t mrhxj woege hz 
@@ -89,3 +85,7 @@ with description('CryptogramProblem'):
       solutions = p.solutions()
       expect(solutions).to(have_key(expected))
       expect(solutions[expected]).to(be_above(0.9))
+
+    with it('does not find solutions for long repeated strings'):
+      p = cryptogram_problem.CryptogramProblem('large cryptogram', ['aaa'])
+      expect(p.solutions()).to(be_empty)
