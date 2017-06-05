@@ -2,6 +2,10 @@ import mock
 from expects import *
 from expects import matchers
 
+from spec.data import fixtures
+
+fixtures.init()
+
 # Mamba.
 self = {}
 
