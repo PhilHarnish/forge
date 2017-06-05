@@ -1,6 +1,7 @@
 import collections
 
-from data import anagram_index, crossword, data, trie, warehouse, \
+from data import anagram_index, crossword, data, pickle_cache, trie, \
+  warehouse, \
   word_frequencies
 from puzzle.heuristics import analyze
 
@@ -49,6 +50,7 @@ def _get_unigram_anagram_index():
   return anagram_index.AnagramIndex(warehouse.get('/words/unigram'))
 
 
+@pickle_cache.cache('words_unigram_trie')
 def _get_unigram_trie():
   return trie.Trie(warehouse.get('/words/unigram').items())
 
@@ -78,7 +80,7 @@ def init():
   warehouse.register('/words/top', _get_words_top)
   warehouse.register('/words/unigram', _get_unigram)
   warehouse.register('/words/unigram/anagram_index', _get_unigram_anagram_index)
-  warehouse.register('/words/unigram/trie', _get_unigram_trie, pickle=True)
+  warehouse.register('/words/unigram/trie', _get_unigram_trie)
 
 
 def reset():
