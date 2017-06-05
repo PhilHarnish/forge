@@ -1,7 +1,8 @@
-from data.wordnik import _word_api
-from spec.mamba import *
+if False:
+  from data.wordnik import _word_api
+  from spec.mamba import *
 
-with description('_word_api'):
+with _description('_word_api'):
   with description('synonyms'):
     with it('executes without error'):
       expect(calling(_word_api.synonyms, 'string')).not_to(raise_error)
