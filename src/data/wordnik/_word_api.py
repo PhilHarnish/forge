@@ -13,7 +13,7 @@ def _get_api():
   return _API
 
 
-@pickle_cache.cache('wordnik_synonyms')
+@pickle_cache.cache('wordnik/synonyms')
 def synonyms(word):
   synonyms = set()
   results = _get_api().getRelatedWords(
@@ -34,7 +34,7 @@ def synonyms(word):
   return synonyms
 
 
-@pickle_cache.cache('wordnik_hypernyms')
+@pickle_cache.cache('wordnik/hypernyms')
 def hypernyms(word):
   hypernym = set()
   results = _get_api().getRelatedWords(
