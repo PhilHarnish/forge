@@ -11,6 +11,10 @@ class CrypticFixture(object):
 
 with description('CrypticCrosswordProblem'):
   with before.all:
+    # Sample format of data/cryptic_clues.txt:
+    # [AMSTERDAM]
+    # Sam dreamt about European port (9)
+    # /SAMDREAMPT, {european port}
     self.fixtures = data.load('data/cryptic_clues.txt', CrypticFixture)
 
   with it('ignores empty and garbage input'):
@@ -134,14 +138,17 @@ with description('CrypticCrosswordProblem'):
         results = {}
         for problem in self.problems:
           try:
-            results[problem] = dict(self.problems[problem].solutions())
+            result = dict(self.problems[problem].solutions())
+            if result:
+              results[problem] = result
+            else:
+              incomplete_seen.add(problem)
+              if problem in incomplete:
+                expect(result).to(be_empty)
           except NotImplementedError:
             unsupported_seen.add(problem)
         for problem, value in results.items():
-          if problem in incomplete:
-            expect((problem, value)).to(equal((problem, {})))
-          else:
-            expect((problem, value)).not_to(equal((problem, {})))
+          expect((problem, value)).not_to(equal((problem, {})))
           problem_lower = problem.lower()
           expect(value).to(have_key(problem_lower))
           expect(value[problem_lower]).to(equal(1))
