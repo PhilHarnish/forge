@@ -1,4 +1,5 @@
 from data import anagram_index, data, trie, warehouse
+from data.word_api import word_api
 from puzzle.problems.crossword import cryptic_problem
 from spec.mamba import *
 
@@ -105,33 +106,46 @@ with description('CrypticCrosswordProblem'):
       expect(solutions).to(have_key('wight'))
       expect(solutions['gecko']).to(be_above(solutions['wight']))
 
-    with it('solves all problems'):
-      incomplete = {
-        # Requires synonyms.
-        'CRAMPON', 'GREENBELT', 'PASTRY', 'START',
-        # Requires crossword lookups.
-        'ESCOURT', 'SLING', 'STEAK', 'TWIG',
-        # Requires either.
-        'DAMAGES', 'RUSHDIE', 'NOTE',
-      }
-      incomplete_seen = set()
-      unsupported = set()
-      unsupported_seen = set()
-      results = {}
-      for problem in self.problems:
-        if problem in incomplete:
-          incomplete_seen.add(problem)
-          continue
-        try:
-          results[problem] = dict(self.problems[problem].solutions())
-        except NotImplementedError:
-          unsupported_seen.add(problem)
-      expect(incomplete_seen).to(equal(incomplete))
-      expect(unsupported_seen).to(equal(unsupported))
-      expect(results).to(have_len(
-          len(self.problems) - len(incomplete) - len(unsupported)))
-      for problem, value in results.items():
-        expect((problem, value)).not_to(equal((problem, {})))
-        problem_lower = problem.lower()
-        expect(value).to(have_key(problem_lower))
-        expect(value[problem_lower]).to(equal(1))
+    with _description('with wordnet'):
+      with before.all:
+        warehouse.save()
+        warehouse.register('/api/words', word_api.get_api('wordnet'))
+
+      with after.all:
+        warehouse.restore()
+
+      with it('solves pastry'):
+        expect(self.problems['PASTRY'].solutions()).not_to(be_empty)
+        expect(self.problems['PASTRY'].solutions()).to(have_key('pastry'))
+
+      with it('solves all problems'):
+        incomplete = {
+          # Requires synonyms.
+          'GREENBELT', 'START',
+          # Requires crossword lookups.
+          'CRAMPON',  # "muscular pain" -> "cramp".
+          'ESCOURT', 'SLING', 'STEAK', 'TWIG',
+          # Requires either.
+          'DAMAGES', 'RUSHDIE', 'NOTE',
+        }
+        incomplete_seen = set()
+        unsupported = set()
+        unsupported_seen = set()
+        results = {}
+        for problem in self.problems:
+          try:
+            results[problem] = dict(self.problems[problem].solutions())
+          except NotImplementedError:
+            unsupported_seen.add(problem)
+        for problem, value in results.items():
+          if problem in incomplete:
+            expect((problem, value)).to(equal((problem, {})))
+          else:
+            expect((problem, value)).not_to(equal((problem, {})))
+          problem_lower = problem.lower()
+          expect(value).to(have_key(problem_lower))
+          expect(value[problem_lower]).to(equal(1))
+        expect(results).to(have_len(
+            len(self.problems) - len(incomplete) - len(unsupported)))
+        expect(incomplete_seen).to(equal(incomplete))
+        expect(unsupported_seen).to(equal(unsupported))

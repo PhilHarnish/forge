@@ -41,11 +41,13 @@ def _compile(clue):
 
 
 def _visit(tokens, plan, solutions):
+  words_api = warehouse.get('/api/words')
   # First pass: perform any necessary expansions.
   for _, words in tokens.items():
     source = words[0]
     if source in cryptic_keywords.SHORTHAND_CONVERSIONS:
       words.extend(cryptic_keywords.SHORTHAND_CONVERSIONS[source])
+    words.extend(words_api.expand(source).keys())
   for indicator, positions in plan:
     try:
       _VISIT_MAP[indicator](tokens, positions, solutions)
@@ -53,7 +55,8 @@ def _visit(tokens, plan, solutions):
       print('Indicator for "%s" not implemented' % indicator)
       raise
   if not solutions:
-    pass  # TODO: look for solutions hidden in graph of words.
+    # Finally, attempt to find the solution from pieces of the expanded words.
+    _visit_concatenate(tokens, [], solutions)
 
 
 def _visit_initial(tokens, positions, solutions):

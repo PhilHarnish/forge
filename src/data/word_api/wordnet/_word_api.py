@@ -6,6 +6,7 @@ from data import meta
 def expand(word, pos=None):
   return synonyms(word, limit_one_word=True)
 
+
 def synonyms(word, limit_one_word=True):
   suffix = _suffix(word)
   results = meta.Meta()
@@ -57,7 +58,7 @@ def _add_synset_lemmas(results, visited, synset, limit_one_word, suffix):
 
 def _suffix(word):
   base_form = wordnet.morphy(word)
-  if base_form != word and word.startswith(base_form):
+  if base_form is not None and base_form != word and word.startswith(base_form):
     # Only supports re-adding a removed suffix. Only works for some plurals.
     return word[len(base_form):]
   return ''
