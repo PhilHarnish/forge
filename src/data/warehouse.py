@@ -1,13 +1,13 @@
 import collections
 import time
 
-_DATA = {}
-_HISTORY = []
+_DATA = collections.ChainMap()
+_HISTORY = [_DATA]
 _DEADLINE_MS = 10
 
 
 def register(path, value):
-  if path in _DATA:
+  if path in _DATA.maps[0]:
     raise KeyError('%s already specified' % path)
   _DATA[path] = value
 
@@ -24,9 +24,8 @@ def get(path):
 
 
 def init(register_base=True):
-  if _DATA:
+  if '_INITIALIZED' in _DATA.maps[0]:
     raise Exception('Already initialized')
-  _DATA['_INITIALIZED'] = True
   _DATA['_DEADLINE_MS'] = _DEADLINE_MS
   if register_base:
     register('/letter/frequency', _get_letter_frequency)
@@ -39,7 +38,7 @@ def reset():
 def save():
   global _DATA
   _HISTORY.append(_DATA)
-  _DATA = {}
+  _DATA = _DATA.new_child()
 
 
 def restore():

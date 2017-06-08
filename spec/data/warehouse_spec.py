@@ -1,3 +1,5 @@
+import collections
+
 from mock.mock import patch
 
 from data import warehouse
@@ -5,7 +7,8 @@ from spec.mamba import *
 
 with description('warehouse'):
   with before.all:
-    self.warehouse_patch = patch.object(warehouse, '_DATA', {})
+    self.warehouse_patch = patch.object(
+        warehouse, '_DATA', collections.ChainMap())
     self.warehouse_patch.start()
 
   with after.all:
@@ -42,10 +45,10 @@ with description('warehouse'):
       expect(call(warehouse.get, '/some/path')).to(equal(self.value))
 
   with description('save and restore'):
-    with it('should clear the state when saved'):
+    with it('should read the underlying when saved'):
       warehouse.register('/some/path', 1)
       warehouse.save()
-      expect(calling(warehouse.get, '/some/path')).to(raise_error(KeyError))
+      expect(calling(warehouse.get, '/some/path')).not_to(raise_error(KeyError))
 
     with it('should allow new changes'):
       warehouse.save()
