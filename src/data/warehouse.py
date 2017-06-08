@@ -23,10 +23,10 @@ def get(path):
   return _DATA[path]
 
 
-def init(register_base=True):
+def init(register_base=True, deadline_ms=_DEADLINE_MS):
   if '_INITIALIZED' in _DATA.maps[0]:
     raise Exception('Already initialized')
-  _DATA['_DEADLINE_MS'] = _DEADLINE_MS
+  set_deadline_ms(deadline_ms)
   if register_base:
     register('/letter/frequency', _get_letter_frequency)
 
@@ -44,6 +44,10 @@ def save():
 def restore():
   global _DATA
   _DATA = _HISTORY.pop()
+
+
+def set_deadline_ms(deadline_ms):
+  _DATA['_DEADLINE_MS'] = deadline_ms
 
 
 def _get_letter_frequency():

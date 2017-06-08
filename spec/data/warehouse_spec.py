@@ -1,4 +1,5 @@
 import collections
+import itertools
 
 from mock.mock import patch
 
@@ -26,6 +27,13 @@ with description('warehouse'):
   with it('protects against redundant registration'):
     expect(calling(warehouse.register, '/some/path', 1)).not_to(raise_error)
     expect(calling(warehouse.register, '/some/path', 1)).to(raise_error)
+
+  with it('enforces deadline'):
+    c = itertools.count()
+    time_stub = lambda: next(c) * 1000
+    with patch('data.warehouse.time.time', side_effect=time_stub):
+      warehouse.register('/slow/path', lambda: 1)
+      expect(calling(warehouse.get, '/slow/path')).to(raise_error)
 
   with description('simple data'):
     with it('should register data'):
