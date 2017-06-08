@@ -5,6 +5,8 @@ from data import anagram_index, crossword, data, pickle_cache, trie, \
   word_frequencies
 from puzzle.heuristics import analyze
 
+_DEADLINE_MS = 5000
+
 
 # Data sources.
 def _get_words_top():
@@ -73,7 +75,7 @@ def _get_crossword_cursor():
 
 def init():
   analyze.init()
-  warehouse.init()
+  warehouse.init(deadline_ms=_DEADLINE_MS)
   warehouse.register('/phrases/crossword', _get_crossword)
   warehouse.register('/phrases/crossword/connection', _get_crossword_connection)
   warehouse.register('/phrases/crossword/cursor', _get_crossword_cursor)
