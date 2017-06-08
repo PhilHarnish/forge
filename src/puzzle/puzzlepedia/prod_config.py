@@ -3,9 +3,15 @@ import collections
 from data import anagram_index, crossword, data, pickle_cache, trie, \
   warehouse, \
   word_frequencies
+from data.word_api import word_api
 from puzzle.heuristics import analyze
 
 _DEADLINE_MS = 5000
+
+
+# API sources.
+def _get_words_api():
+  return word_api.get_api('wordnet')
 
 
 # Data sources.
@@ -76,6 +82,7 @@ def _get_crossword_cursor():
 def init():
   analyze.init()
   warehouse.init(deadline_ms=_DEADLINE_MS)
+  warehouse.register('/api/words', _get_words_api)
   warehouse.register('/phrases/crossword', _get_crossword)
   warehouse.register('/phrases/crossword/connection', _get_crossword_connection)
   warehouse.register('/phrases/crossword/cursor', _get_crossword_cursor)

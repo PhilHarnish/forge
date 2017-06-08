@@ -1,9 +1,15 @@
 import collections
 
 from data import anagram_index, crossword, warehouse
-from spec.data.fixtures import tries
+from spec.data.fixtures import _words_api, tries
 
 
+# API sources.
+def _get_words_api():
+  return _words_api
+
+
+# Data sources.
 def _get_unigram():
   return collections.OrderedDict(tries.kitchen_sink_data())
 
@@ -35,6 +41,7 @@ def init():
   pass
 
 warehouse.init()
+warehouse.register('/api/words', _get_words_api)
 warehouse.register('/phrases/crossword', _get_crossword)
 warehouse.register('/phrases/crossword/connection', _get_crossword_connection)
 warehouse.register('/phrases/crossword/cursor', _get_crossword_cursor)
