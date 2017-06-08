@@ -1,7 +1,13 @@
-from data.word_api.wordnet import _word_api
+from data.word_api import word_api
 from spec.mamba import *
 
-with description('_word_api'):
+_word_api = None
+
+with _description('_word_api'):
+  with before.all:
+    global _word_api
+    _word_api = word_api.get_api('wordnet')
+
   with description('synonyms'):
     with it('executes without error'):
       expect(calling(_word_api.synonyms, 'string')).not_to(raise_error)
