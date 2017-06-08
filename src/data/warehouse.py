@@ -1,7 +1,9 @@
 import collections
+import time
 
 _DATA = {}
 _HISTORY = []
+_DEADLINE_MS = 10
 
 
 def register(path, value):
@@ -9,19 +11,26 @@ def register(path, value):
     raise KeyError('%s already specified' % path)
   _DATA[path] = value
 
+
 def get(path):
   value = _DATA[path]
   if callable(value):
+    start = time.time()
     _DATA[path] = value()
+    delta = (time.time() - start) * 1000
+    if delta > _DATA['_DEADLINE_MS']:
+      raise Exception('Deadline exceeded loading %s (%.0f ms)' % (path, delta))
   return _DATA[path]
 
 
 def init(register_base=True):
   if _DATA:
     raise Exception('Already initialized')
-  _DATA['initialized'] = True
+  _DATA['_INITIALIZED'] = True
+  _DATA['_DEADLINE_MS'] = _DEADLINE_MS
   if register_base:
     register('/letter/frequency', _get_letter_frequency)
+
 
 def reset():
   _DATA.clear()
