@@ -1,4 +1,4 @@
-from data.wordnet import _word_api
+from data.word_api.wordnet import _word_api
 from spec.mamba import *
 
 with description('_word_api'):

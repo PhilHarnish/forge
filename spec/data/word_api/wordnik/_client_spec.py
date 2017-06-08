@@ -1,5 +1,5 @@
 if False:
-  from data.wordnik import _client
+  from data.word_api.wordnik import _client
   from spec.mamba import *
 
 with _description('_client'):

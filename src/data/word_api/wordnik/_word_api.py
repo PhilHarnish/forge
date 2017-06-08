@@ -1,7 +1,7 @@
 from wordnik import WordApi
 
 from data import pickle_cache
-from data.wordnik import _client
+from data.word_api.wordnik import _client
 
 _API = None
 
