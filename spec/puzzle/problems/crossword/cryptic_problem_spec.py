@@ -56,7 +56,7 @@ with description('CrypticCrosswordProblem'):
         all_clues.append(fixture.clue)
         self.problems[fixture.name] = cryptic_problem.CrypticProblem(
             fixture.name, [fixture.clue])
-      expect(all_clues).to(have_len(26))  # Make fail to see output.
+      expect(all_clues).to(have_len(51))  # Make fail to see output.
       warehouse.save()
       d = dict([
         (fixture.name.lower(), 100000) for fixture in self.fixtures.values()
@@ -110,7 +110,7 @@ with description('CrypticCrosswordProblem'):
       expect(solutions).to(have_key('wight'))
       expect(solutions['gecko']).to(be_above(solutions['wight']))
 
-    with _description('with wordnet'):
+    with description('with wordnet'):
       with before.all:
         warehouse.save()
         warehouse.register('/api/words', word_api.get_api('wordnet'))
@@ -131,10 +131,17 @@ with description('CrypticCrosswordProblem'):
           'ESCOURT', 'SLING', 'STEAK', 'TWIG',
           # Requires either.
           'DAMAGES', 'RUSHDIE', 'NOTE',
+          # Untriaged.
+          'GAP', 'ALCOHOL', 'SPANNER', 'PSALM', 'AUNT', 'MACHISMO', 'DUCKS',
+          'GONDOLAS', 'OUTLAW', 'NINTH', 'ANGLING', 'COMICAL', 'OBOISTS',
+          'FLEA', 'HOSTS', 'SUSHI', 'TOAST', 'TWIG', 'EMMA',
         }
         incomplete_seen = set()
-        unsupported = set()
+        # TODO: Triage these.
+        unsupported = {'PROLONG', 'CAPTAINHOOK', 'FALLINGSTAR'}
         unsupported_seen = set()
+        # TODO: Triage these.
+        incorrect = {'SASH'}
         results = {}
         for problem in self.problems:
           try:
@@ -150,9 +157,12 @@ with description('CrypticCrosswordProblem'):
         for problem, value in results.items():
           expect((problem, value)).not_to(equal((problem, {})))
           problem_lower = problem.lower()
-          expect(value).to(have_key(problem_lower))
-          expect(value[problem_lower]).to(equal(1))
-        expect(results).to(have_len(
-            len(self.problems) - len(incomplete) - len(unsupported)))
+          if problem in incorrect:
+            expect(value).not_to(have_key(problem_lower))
+          else:
+            expect(value).to(have_key(problem_lower))
+            expect(value[problem_lower]).to(equal(1))
         expect(incomplete_seen).to(equal(incomplete))
         expect(unsupported_seen).to(equal(unsupported))
+        expect(results).to(have_len(
+            len(self.problems) - len(incomplete) - len(unsupported)))
