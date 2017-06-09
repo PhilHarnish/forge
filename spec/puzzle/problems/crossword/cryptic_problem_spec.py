@@ -128,12 +128,16 @@ with description('CrypticCrosswordProblem'):
           'GREENBELT', 'START',
           # Requires crossword lookups.
           'CRAMPON',  # "muscular pain" -> "cramp".
+          'GAP',  # "Space".
+          'DUCKS',  # "1+ bird", "lowers head".
           'ESCOURT', 'SLING', 'STEAK', 'TWIG',
           # Requires either.
           'DAMAGES', 'RUSHDIE', 'NOTE',
+          # ...advanced.
+          'ALCOHOL',  # "Everybody goes round company house for drink".
+          'SPANNER',  # "Tool for tightening a bridge?".
           # Untriaged.
-          'GAP', 'ALCOHOL', 'SPANNER', 'PSALM', 'AUNT', 'MACHISMO', 'DUCKS',
-          'GONDOLAS', 'OUTLAW', 'NINTH', 'ANGLING', 'COMICAL', 'OBOISTS',
+          'OUTLAW', 'NINTH', 'ANGLING', 'OBOISTS',
           'FLEA', 'HOSTS', 'SUSHI', 'TOAST', 'TWIG', 'EMMA',
         }
         incomplete_seen = set()
@@ -162,7 +166,8 @@ with description('CrypticCrosswordProblem'):
           else:
             expect(value).to(have_key(problem_lower))
             expect(value[problem_lower]).to(equal(1))
-        expect(incomplete_seen).to(equal(incomplete))
+        expect(incomplete_seen - incomplete).to(be_empty)
+        expect(incomplete - incomplete_seen).to(be_empty)
         expect(unsupported_seen).to(equal(unsupported))
         expect(results).to(have_len(
             len(self.problems) - len(incomplete) - len(unsupported)))

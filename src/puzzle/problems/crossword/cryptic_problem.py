@@ -8,9 +8,14 @@ from puzzle.problems.crossword import _base_crossword_problem
 class CrypticProblem(_base_crossword_problem._BaseCrosswordProblem):
   def __init__(self, name, lines):
     super(CrypticProblem, self).__init__(name, lines)
-    parsed, plan = _compile(lines[0])
-    self._tokens = chain.Chain(parsed)
-    self._plan = plan
+    self._plan = None
+    self._tokens = None
+
+  def _init(self):
+    if self._plan is None and self._tokens is None:
+      parsed, plan = _compile(self.lines[0])
+      self._tokens = chain.Chain(parsed)
+      self._plan = plan
 
   @staticmethod
   def score(lines):
@@ -23,17 +28,23 @@ class CrypticProblem(_base_crossword_problem._BaseCrosswordProblem):
     return _base_crossword_problem.score(lines) * .9  # Lower than normal.
 
   def _solve(self):
+    self._init()
     solutions = _Solutions(self._min_length, self._max_length)
     _visit(self._tokens, self._plan, solutions)
     return solutions
 
 
 def _compile(clue):
+  words_api = warehouse.get('/api/words')
   result = []
   indicators_seen = collections.defaultdict(list)
   for i, token in enumerate(crossword.tokenize_clue(clue)):
-    if token in cryptic_keywords.ALL_INDICATORS:
-      for indicator in cryptic_keywords.ALL_INDICATORS[token]:
+    indicator_token = token
+    base_form = words_api.base_form(token)
+    if base_form in cryptic_keywords.ALL_INDICATORS:
+      indicator_token = base_form
+    if indicator_token in cryptic_keywords.ALL_INDICATORS:
+      for indicator in cryptic_keywords.ALL_INDICATORS[indicator_token]:
         indicators_seen[indicator].append(i)
     result.append([token])
   plan = sorted(indicators_seen.items(), key=lambda i: _VISIT_ORDER[i[0]])
