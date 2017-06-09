@@ -3,8 +3,16 @@ from nltk.corpus import wordnet
 from data import meta
 
 
+def base_form(word):
+  return wordnet.morphy(word)
+
+
 def expand(word, pos=None):
-  return synonyms(word, limit_one_word=True)
+  result = synonyms(word, limit_one_word=True)
+  base_form = wordnet.morphy(word)
+  if base_form and base_form not in result:
+    result[base_form] = 1
+  return result
 
 
 def synonyms(word, limit_one_word=True):
