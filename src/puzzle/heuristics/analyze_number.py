@@ -6,6 +6,7 @@ from puzzle.heuristics import acrostic
 
 _BASE_HIGH_PRIORITY = [
   10, 16, 26, 36, 32, 2,
+  128, 256,  # These extra bases are included for potential ASCII matches.
 ]
 _BASE_PRIORITY = _BASE_HIGH_PRIORITY + [
   i for i in range(2, 40) if i not in _BASE_HIGH_PRIORITY
@@ -22,12 +23,12 @@ def solutions(n):
 
 def solutions_with_notes(n):
   for base in _BASE_PRIORITY:
-    digits, notes = _get_digits_in_base(n, base)
-    min_digit = min(digits)
-    max_digit = max(digits)
-    for heuristic in _HEURISTICS:
-      for result in heuristic(digits, min_digit, max_digit):
-        yield result, notes
+    for digits, notes in _get_digits_in_base(n, base):
+      min_digit = min(digits)
+      max_digit = max(digits)
+      for heuristic in _HEURISTICS:
+        for result in heuristic(digits, min_digit, max_digit):
+          yield result, notes
 
 
 def _solutions_for_letters(letters):
@@ -45,12 +46,66 @@ def _solutions_for_letters(letters):
 
 
 def _get_digits_in_base(n, b):
+  """Converts and yields n in base b.
+
+  Also yields if:
+  - A pattern of spacer digits are discovered then another yield occurs with
+    spacers removed.
+  - TODO: A null digit (0) might be used to separate words.
+  """
   digits = []
   notes = ['base%s' % b]
+  # Look for patterns while converting base. For each digit, record when it was
+  # first seen and, upon seeing it again the spacing between digits. If the
+  # spacing pattern is violated the digit is stored as (None, None).
+  patterns = {}
+  pos = 0
   while n:
-    digits.append(int(n % b))
+    digit = int(n % b)
+    digits.append(digit)
     n //= b
-  return list(reversed(digits or [0])), notes
+    if digit in patterns:
+      first, spacing = patterns[digit]
+      if first is None:
+        pass  # No pattern.
+      elif spacing is None:
+        spacing = pos - first
+        if spacing == 1:  # This would remove everything.
+          patterns[digit] = (None, None)
+        elif spacing <= first:  # We first encountered this number too late
+          patterns[digit] = (None, None)
+        else:
+          patterns[digit] = (first, spacing)
+      elif (pos - first) % spacing:
+        patterns[digit] = (None, None)  # Uneven spacing discovered.
+    else:  # First occurrence.
+      patterns[digit] = (pos, None)
+    pos += 1
+  result = list(reversed(digits or [0]))
+  yield result, notes
+  # Remove digits if there was a pattern.
+  if b == 2 or len(patterns) == 2:
+    return  # This is pointless when binary or there are only 2 digits.
+  l = len(result)
+  if l <= 10:
+    return  # Sequence too small.
+  for target, (first, spacing) in patterns.items():
+    if first is None or spacing is None:
+      continue
+    if l // spacing <= 5:
+      continue  # Removing just a few spacers isn't interesting.
+    filtered = []
+    # Need to adjust `first` because it was calculated pre-reversal.
+    first = (l - first) % spacing - 1
+    for i, digit in enumerate(result):
+      if (i - first) % spacing:  # Not the pattern we're tracking.
+        filtered.append(digit)
+      elif digit != target:
+        # This pattern didn't reach the end of the sequence.
+        break
+    else:  # End of for loop reached.
+      note = 'filtered %s (+%s%s%s)' % (target, first, '%', spacing)
+      yield filtered, notes + [note]
 
 
 def _run_length(digits, max_length):

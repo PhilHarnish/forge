@@ -4,11 +4,11 @@ from spec.mamba import *
 with description('analyze_number'):
   with before.each:
     def run(fn, n, base):
-      digits, _ = analyze_number._get_digits_in_base(n, base)
-      min_digit = min(digits)
-      max_digit = max(digits)
-      for result in fn(digits, min_digit, max_digit):
-        yield result
+      for digits, _ in analyze_number._get_digits_in_base(n, base):
+        min_digit = min(digits)
+        max_digit = max(digits)
+        for result in fn(digits, min_digit, max_digit):
+          yield result
 
 
     def first(fn, n, base):
@@ -17,6 +17,27 @@ with description('analyze_number'):
 
     self.run = lambda fn, n, base=10: call(run, fn, n, base)
     self.first = lambda fn, n, base=10: call(first, fn, n, base)
+
+  with description('_get_digits_in_base'):
+    with it('converts base'):
+      expect(next(analyze_number._get_digits_in_base(
+          0x5072697A776172646564746F61757468, 256
+      ))).to(equal(
+          ([
+            0x50, 0x72, 0x69, 0x7A, 0x77, 0x61, 0x72, 0x64,
+            0x65, 0x64, 0x74, 0x6F, 0x61, 0x75, 0x74, 0x68
+          ], ['base256'])))
+
+    with it('converts base with gaps'):
+      results = analyze_number._get_digits_in_base(
+          0x50007269007A77006172006465006474006F610075740068, 256
+      )
+      next(results)  # Burn first result.
+      expect(next(results)).to(equal(
+          ([
+            0x50, 0x72, 0x69, 0x7A, 0x77, 0x61, 0x72, 0x64,
+            0x65, 0x64, 0x74, 0x6F, 0x61, 0x75, 0x74, 0x68
+          ], ['base256', 'filtered 0 (+1%3)'])))
 
   with description('alphabet'):
     with it('rejects invalid input'):
