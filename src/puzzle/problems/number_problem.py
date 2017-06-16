@@ -10,17 +10,13 @@ _OFFSETS = None
 class NumberProblem(problem.Problem):
   def __init__(self, name, lines):
     super(NumberProblem, self).__init__(name, lines)
-    if len(lines) > 1:
-      raise NotImplementedError()
-    self._value = _parse(lines[0])
+    self._value = _parse(lines)
 
   @staticmethod
   def score(lines):
     if not lines:
       return 0
-    elif len(lines) > 1:
-      return 0
-    parsed = _parse(lines[0])
+    parsed = _parse(lines)
     if parsed is None:
       return 0
     if isinstance(parsed, float):
@@ -50,34 +46,41 @@ class NumberProblem(problem.Problem):
     return result
 
 
-def _parse(src):
+def _parse(lines):
   """Converts a space-separated list of digits into 1 number."""
-  if not src:
+  if not lines:
     return None
-  segments = src.split()
+  segments = ' '.join(lines).split()  # Merge into one line.
+  if not segments:
+    return None
   digits = []
+  bases = []
+  segment_lengths = []
   max_digit = 0
   binary_heuristic = True
   for segment in segments:
     if not all(c in '01' for c in segment):
       binary_heuristic = False
       break
-  if binary_heuristic:
-    max_digit = 2 ** max(len(segment) for segment in segments)
   for segment in segments:
+    segment_length = len(segment)
     try:
       if binary_heuristic:
         base = 2
       elif segment.startswith('0x'):
         base = 16
+        segment_length -= 2
       elif segment.startswith('0'):
         base = 8
+        segment_length -= 1
       else:
         base = 0  # Autodetect.
+      segment_lengths.append(segment_length)
+      bases.append(base)
       parsed = int(segment, base)
       digits.append(parsed)
       if parsed > max_digit:
-        max_digit = parsed
+        max_digit = parsed + 1
     except:
       # TODO: Support float, base64.
       return None
@@ -85,9 +88,16 @@ def _parse(src):
     return None
   if len(digits) == 1:
     return digits[0]
+  # Well formed data heuristic.
+  if len(segment_lengths) == len(bases) and len(bases) == len(digits):
+    target_length = segment_lengths[0]
+    target_base = bases[0]
+    length = len(digits)
+    if (all(segment_lengths[i] == target_length for i in range(length)) and
+      all(bases[i] == target_base for i in range(length))):
+      # This data should be considered well formed already.
+      max_digit = target_base ** target_length
   if len(digits) >= 30:  # Chosen arbitrarily.
-    return None
-  if max_digit > 35:  # Chosen arbitrarily.
     return None
   result = 0
   while digits:
