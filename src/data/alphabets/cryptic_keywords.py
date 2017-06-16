@@ -12,8 +12,8 @@ ANAGRAM_INDICATORS = frozenset([
   'crazy',
   'destruction',
   'from',
-  'kinked',
-  'made',
+  'kink',
+  'make',
   'odd',
   'oddly',
   'off',
@@ -35,7 +35,9 @@ HOMOPHONE_INDICATORS = frozenset([
 # First letter.
 INITIAL_INDICATORS = frozenset([
   'first',
+  'initial',
   'initially',
+  'lead',
 ])
 # Join words.
 CONCATENATE_INDICATORS = frozenset([
@@ -51,10 +53,11 @@ INSERT_INDICATORS = frozenset([
 ])
 # Front and back letters.
 EDGES_INDICATORS = frozenset([
-  'edges',
+  'edge',
 ])
 # Reversing words.
 REVERSAL_INDICATORS = frozenset([
+  'turn',
   'turning',
   'back',
 ])

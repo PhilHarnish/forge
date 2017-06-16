@@ -93,14 +93,6 @@ with description('CrypticCrosswordProblem'):
       expect(self.problems['GHERKIN'].solutions()).not_to(be_empty)
       expect(self.problems['GHERKIN'].solutions()).to(have_key('gherkin'))
 
-    with it('solves music'):
-      expect(self.problems).to(have_key('MUSIC'))
-      solutions = self.problems['MUSIC'].solutions()
-      expect(solutions).not_to(be_empty)
-      expect(solutions).to(have_key('music'))
-      expect(solutions).to(have_key('micro'))
-      expect(solutions['music']).to(be_above(solutions['micro']))
-
     with it('solves gecko'):
       expect(self.problems).to(have_key('GECKO'))
       solutions = self.problems['GECKO'].solutions()
@@ -110,7 +102,7 @@ with description('CrypticCrosswordProblem'):
       expect(solutions).to(have_key('wight'))
       expect(solutions['gecko']).to(be_above(solutions['wight']))
 
-    with description('with wordnet'):
+    with _description('with wordnet'):
       with before.all:
         warehouse.save()
         warehouse.register('/api/words', word_api.get_api('wordnet'))
@@ -118,9 +110,20 @@ with description('CrypticCrosswordProblem'):
       with after.all:
         warehouse.restore()
 
+      with it('solves music'):
+        solutions = self.problems['MUSIC'].solutions()
+        expect(solutions).not_to(be_empty)
+        expect(solutions).to(have_key('music'))
+        expect(solutions).to(have_key('micro'))
+        expect(solutions['music']).to(be_above(solutions['micro']))
+
       with it('solves pastry'):
         expect(self.problems['PASTRY'].solutions()).not_to(be_empty)
         expect(self.problems['PASTRY'].solutions()).to(have_key('pastry'))
+
+      with it('solves sash'):
+        expect(self.problems['SASH'].solutions()).not_to(be_empty)
+        expect(self.problems['SASH'].solutions()).to(have_key('sash'))
 
       with it('solves all problems'):
         incomplete = {
@@ -145,7 +148,7 @@ with description('CrypticCrosswordProblem'):
         unsupported = {'PROLONG', 'CAPTAINHOOK', 'FALLINGSTAR'}
         unsupported_seen = set()
         # TODO: Triage these.
-        incorrect = {'SASH'}
+        incorrect = {}
         results = {}
         for problem in self.problems:
           try:
