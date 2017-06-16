@@ -46,6 +46,20 @@ with description('analyze_number'):
     with it('accepts input'):
       expect(self.first(analyze_number._alphabet, 312)).to(equal('cab'))
 
+  with description('ascii'):
+    with it('rejects invalid input'):
+      expect(self.run(analyze_number._ascii, 101)).to(be_empty)
+
+    with it('accepts input'):
+      expect(self.first(analyze_number._ascii, 0x636162, 256)).to(equal('cab'))
+
+    with it('accepts sufficiently long input even with punctuation'):
+      expect(self.first(
+          analyze_number._ascii,
+          0x63616220636162206361622e,
+          256)
+      ).to(equal('cab cab cab.'))
+
   with description('ascii_nibbles'):
     with it('accepts input'):
       expect(self.first(analyze_number._ascii_nibbles, 0x6f776c, 16)).to(

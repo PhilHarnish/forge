@@ -137,6 +137,33 @@ def _alphabet(digits, min_digit, max_digit):
     yield solution
 
 
+def _ascii(digits, min_digit, max_digit):
+  if not chr(min_digit).isprintable():
+    return
+  elif not chr(max_digit).isprintable():
+    return
+  as_letters = []
+  for digit in digits:
+    letter = chr(digit)
+    if not letter.isprintable():
+      return
+    as_letters.append(letter)
+  solutions = set()
+  for solution in _solutions_for_letters(as_letters):
+    solutions.add(solution)
+    yield solution
+  if len(as_letters) < 10:
+    return
+  # If we got this far we're going to return a result. It's fairly improbable
+  # for 10+ ASCII printable digits to be generated. The printable range of ASCII
+  # is pretty spotty. However, the input may have been obfuscated-but-printable
+  # ascii or simply contains punctuation. If so, return it as a low-weighted
+  # result.
+  printable_result = ''.join(as_letters)
+  if printable_result not in solutions:
+    yield printable_result, 0.25
+
+
 def _ascii_nibbles(digits, min_digit, max_digit):
   num_digits = len(digits)
   if min_digit >= 16:
@@ -397,7 +424,7 @@ def _t9(digits, min_digit, max_digit):
 
 # Install.
 _HEURISTICS.extend([
-  _alphabet, _ascii_nibbles, _base_n, _braille, _hexspeak,
+  _alphabet, _ascii, _ascii_nibbles, _base_n, _braille, _hexspeak,
   _keyboard_intersection, _lexicographical_ordering, _morse, _phone_number,
   _positional, _runlength, _t9,
 ])
