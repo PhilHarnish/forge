@@ -102,7 +102,7 @@ with description('CrypticCrosswordProblem'):
       expect(solutions).to(have_key('wight'))
       expect(solutions['gecko']).to(be_above(solutions['wight']))
 
-    with _description('with wordnet'):
+    with description('with wordnet'):
       with before.all:
         warehouse.save()
         warehouse.register('/api/words', word_api.get_api('wordnet'))
@@ -144,10 +144,12 @@ with description('CrypticCrosswordProblem'):
           'FLEA', 'HOSTS', 'SUSHI', 'TOAST', 'TWIG', 'EMMA',
         }
         incomplete_seen = set()
-        # TODO: Triage these.
-        unsupported = {'PROLONG', 'CAPTAINHOOK', 'FALLINGSTAR'}
+        unsupported = {
+          'PROLONG',  # EMBEDDED indicator but pine == long for some reason.
+          'CAPTAINHOOK',  # EMBEDDED indicator but cryptic is 'need of a hand'.
+          'FALLINGSTAR',  # EMBEDDED but actually double definition.
+        }
         unsupported_seen = set()
-        # TODO: Triage these.
         incorrect = {}
         results = {}
         for problem in self.problems:
