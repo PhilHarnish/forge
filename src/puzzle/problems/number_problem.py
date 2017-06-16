@@ -8,9 +8,10 @@ _OFFSETS = None
 
 
 class NumberProblem(problem.Problem):
-  def __init__(self, name, lines):
+  def __init__(self, name, lines, allow_offsets=True):
     super(NumberProblem, self).__init__(name, lines)
     self._value = _parse(lines)
+    self._allow_offsets = allow_offsets
 
   @staticmethod
   def score(lines):
@@ -29,15 +30,22 @@ class NumberProblem(problem.Problem):
     # TODO: Much optimization needed here.
     result = {}
     required_weight = self._threshold
-    offsets = _get_offsets()
+    if self._allow_offsets:
+      offsets = _get_offsets()
+    else:
+      offsets = [0]
     for i, offset in enumerate(offsets):
       scale_factor = 1 - i / len(offsets)
-      for solution, weight in analyze_number.solutions(self._value + offset):
+      for (solution, weight), notes in analyze_number.solutions_with_notes(
+              self._value + offset):
         if offset:
           solution_str = '%s +%s' % (solution, offset)
         else:
           solution_str = solution
         result[solution_str] = weight * scale_factor
+        if offset:
+          self._notes[solution_str].append('offset +%s' % offset)
+        self._notes[solution_str] += notes
         required_weight = max(weight, required_weight)
       if required_weight == 1:
         break  # Good enough.
