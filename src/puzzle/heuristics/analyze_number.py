@@ -16,13 +16,18 @@ _HEURISTICS = []  # Updated at end.
 def solutions(n):
   if not n:
     return
+  for solution, notes in solutions_with_notes(n):
+    yield solution
+
+
+def solutions_with_notes(n):
   for base in _BASE_PRIORITY:
-    digits = _get_digits_in_base(n, base)
+    digits, notes = _get_digits_in_base(n, base)
     min_digit = min(digits)
     max_digit = max(digits)
     for heuristic in _HEURISTICS:
       for result in heuristic(digits, min_digit, max_digit):
-        yield result
+        yield result, notes
 
 
 def _solutions_for_letters(letters):
@@ -41,10 +46,11 @@ def _solutions_for_letters(letters):
 
 def _get_digits_in_base(n, b):
   digits = []
+  notes = ['base%s' % b]
   while n:
     digits.append(int(n % b))
     n //= b
-  return list(reversed(digits or [0]))
+  return list(reversed(digits or [0])), notes
 
 
 def _run_length(digits, max_length):

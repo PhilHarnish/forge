@@ -4,7 +4,7 @@ from spec.mamba import *
 with description('analyze_number'):
   with before.each:
     def run(fn, n, base):
-      digits = analyze_number._get_digits_in_base(n, base)
+      digits, _ = analyze_number._get_digits_in_base(n, base)
       min_digit = min(digits)
       max_digit = max(digits)
       for result in fn(digits, min_digit, max_digit):
@@ -157,7 +157,8 @@ with description('analyze_number'):
   with description('solutions'):
     with before.all:
       def solutions(n):
-        return next(analyze_number.solutions(n))[0]
+        (solution, weight), notes = next(analyze_number.solutions_with_notes(n))
+        return solution, notes
 
 
       self.solutions = solutions
@@ -166,34 +167,35 @@ with description('analyze_number'):
       expect(analyze_number.solutions(0)).to(be_empty)
 
     with it('solves alphabet'):
-      expect(self.solutions(312)).to(equal('cab'))
+      expect(self.solutions(312)).to(equal(('cab', ['base10'])))
 
     with it('solves ascii nibbles'):
-      expect(self.solutions(0x6f776c)).to(equal('owl'))
+      expect(self.solutions(0x6f776c)).to(equal(('owl', ['base16'])))
 
     with it('solves base 36'):
-      expect(self.solutions(0xCAB)).to(equal('cab'))
+      expect(self.solutions(0xCAB)).to(equal(('cab', ['base16'])))
 
     with it('solves braille'):
-      expect(self.solutions(135024560123)).to(equal('owl'))
+      expect(self.solutions(135024560123)).to(equal(('owl', ['base10'])))
 
     with it('solves morse'):
-      expect(self.solutions(222012201211)).to(equal('owl'))
+      expect(self.solutions(222012201211)).to(equal(('owl', ['base10'])))
 
     with it('solves positional'):
-      expect(self.solutions(23100000000000000000000000)).to(equal('cab'))
+      expect(self.solutions(23100000000000000000000000)).to(
+          equal(('cab', ['base10'])))
 
     with it('solves hexspeak'):
-      expect(self.solutions(0xDEAD)).to(equal('dead'))
+      expect(self.solutions(0xDEAD)).to(equal(('dead', ['base16'])))
 
     with it('solves keyboard intersection'):
-      expect(self.solutions(361358)).to(equal('cab'))
+      expect(self.solutions(361358)).to(equal(('cab', ['base10'])))
 
     with it('solves lexicographical ordering'):
-      expect(self.solutions(102012021)).to(equal('cab'))
+      expect(self.solutions(102012021)).to(equal(('cab', ['base10'])))
 
     with it('solves runlength'):
-      expect(self.solutions(15032352767)).to(equal('boo'))
+      expect(self.solutions(15032352767)).to(equal(('boo', ['base2'])))
 
     with it('solves t9'):
-      expect(self.solutions(6669555)).to(equal('owl'))
+      expect(self.solutions(6669555)).to(equal(('owl', ['base10'])))
