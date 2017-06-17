@@ -137,13 +137,13 @@ with description('CrypticCrosswordProblem'):
           'DUCKS',  # "1+ bird", "lowers head".
           'NINTH',  # "after <this> life".
           'ANGLING',  # Dropping a line.
+          'TOAST',  # Here's to you.
+          'TWIG',  # Tree shoot, UK "understand".
           'ESCOURT', 'SLING', 'STEAK', 'TWIG',
           # Requires either.
           'DAMAGES', 'RUSHDIE', 'NOTE',
           # ...advanced.
           'SPANNER',  # "Tool for tightening a bridge?".
-          # Untriaged.
-          'SUSHI', 'TOAST', 'TWIG', 'EMMA',
         }
         incomplete_seen = set()
         unsupported = {

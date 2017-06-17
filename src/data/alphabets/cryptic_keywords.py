@@ -11,6 +11,7 @@ ANAGRAM_INDICATORS = frozenset([
   'crash',
   'crazy',
   'destruction',
+  'downfall',
   'from',
   'kink',
   'make',
@@ -63,6 +64,7 @@ REVERSAL_INDICATORS = frozenset([
   'turn',
   'turning',
   'back',
+  'backward',
 ])
 # Ambiguous definition (e.g., double entendre).
 AMBIGUOUS_INDICATORS = frozenset([
