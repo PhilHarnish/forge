@@ -48,7 +48,7 @@ with description('CrypticCrosswordProblem'):
       c = call(cryptic_problem.CrypticProblem.score, [fixture.clue])
       expect(c).to(be_above(.5))
 
-  with _description('solutions'):
+  with description('solutions'):
     with before.all:
       self.problems = {}
       all_clues = []
@@ -117,6 +117,10 @@ with description('CrypticCrosswordProblem'):
         expect(solutions).to(have_key('micro'))
         expect(solutions['music']).to(be_above(solutions['micro']))
 
+      with it('solves hosts'):
+        expect(self.problems['HOSTS'].solutions()).not_to(be_empty)
+        expect(self.problems['HOSTS'].solutions()).to(have_key('hosts'))
+
       with it('solves pastry'):
         expect(self.problems['PASTRY'].solutions()).not_to(be_empty)
         expect(self.problems['PASTRY'].solutions()).to(have_key('pastry'))
@@ -128,26 +132,32 @@ with description('CrypticCrosswordProblem'):
       with it('solves all problems'):
         incomplete = {
           # Requires synonyms.
-          'GREENBELT', 'START',
+          'GREENBELT',
           # Requires crossword lookups.
-          'CRAMPON',  # "muscular pain" -> "cramp".
-          'GAP',  # "Space".
           'DUCKS',  # "1+ bird", "lowers head".
+          'NINTH',  # "after <this> life".
+          'ANGLING',  # Dropping a line.
           'ESCOURT', 'SLING', 'STEAK', 'TWIG',
           # Requires either.
           'DAMAGES', 'RUSHDIE', 'NOTE',
           # ...advanced.
-          'ALCOHOL',  # "Everybody goes round company house for drink".
           'SPANNER',  # "Tool for tightening a bridge?".
           # Untriaged.
-          'OUTLAW', 'NINTH', 'ANGLING', 'OBOISTS',
-          'FLEA', 'HOSTS', 'SUSHI', 'TOAST', 'TWIG', 'EMMA',
+          'SUSHI', 'TOAST', 'TWIG', 'EMMA',
         }
         incomplete_seen = set()
         unsupported = {
           'PROLONG',  # EMBEDDED indicator but pine == long for some reason.
           'CAPTAINHOOK',  # EMBEDDED indicator but cryptic is 'need of a hand'.
           'FALLINGSTAR',  # EMBEDDED but actually double definition.
+          'FLEA',  # HOMOPHONE for "to escape".
+        }
+        last_resort_matches = {
+          'ALCOHOL',  # drink.
+          'CRAMPON',  # climber.
+          'GAP',  # space.
+          'HOSTS',  # entertains.
+          'START',  # begin.
         }
         unsupported_seen = set()
         incorrect = {}
@@ -170,7 +180,10 @@ with description('CrypticCrosswordProblem'):
             expect(value).not_to(have_key(problem_lower))
           else:
             expect(value).to(have_key(problem_lower))
-            expect(value[problem_lower]).to(equal(1))
+            if problem in last_resort_matches:
+              expect(value[problem_lower]).to(be_above(.25))
+            else:
+              expect(value[problem_lower]).to(equal(1))
         expect(incomplete_seen - incomplete).to(be_empty)
         expect(incomplete - incomplete_seen).to(be_empty)
         expect(unsupported_seen).to(equal(unsupported))

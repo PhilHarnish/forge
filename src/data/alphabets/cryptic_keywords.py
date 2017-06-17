@@ -20,6 +20,7 @@ ANAGRAM_INDICATORS = frozenset([
   'out',
   'put',
   'round',
+  'transform',
   'upset',
 ])
 # Solution appears in clue.
@@ -27,9 +28,11 @@ EMBEDDED_INDICATORS = frozenset([
   'bit',
   'in',
   'part',
+  'partly',
 ])
 # Synonym sounds like solution.
 HOMOPHONE_INDICATORS = frozenset([
+  'hear',
   'say',
 ])
 # First letter.

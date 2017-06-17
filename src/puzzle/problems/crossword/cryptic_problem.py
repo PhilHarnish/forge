@@ -66,8 +66,11 @@ def _visit(tokens, plan, solutions):
       print('Indicator for "%s" not implemented' % indicator)
       raise
   if not solutions:
-    # Finally, attempt to find the solution from pieces of the expanded words.
+    # Attempt to find the solution from pieces of the expanded words.
     _visit_concatenate(tokens, [], solutions)
+  if not solutions:
+    # Finally, attempt to find the solution from just 1 expanded word.
+    _visit_edge_words(tokens, [], solutions)
 
 
 def _visit_initial(tokens, positions, solutions):
@@ -81,8 +84,17 @@ def _visit_initial(tokens, positions, solutions):
     tokens.restore(position)
 
 
-def _visit_edges(tokens, positions, solutions):
-  del solutions  # Initial indicator produces more tokens.
+def _visit_edge_words(tokens, positions, solutions):
+  del positions
+  top_words = warehouse.get('/words/unigram')
+  for edge in (tokens[0], tokens[-1]):
+    for token in edge[1:]:  # Skip first word.
+      if token in top_words:
+        solutions[token] = .33
+
+
+def _visit_word_edges(tokens, positions, solutions):
+  del solutions  # Edge indicator produces more tokens.
   for position in positions:
     tokens.pop(position)
   for _, words in tokens.items():
@@ -274,7 +286,7 @@ _VISIT_MAP = collections.OrderedDict([
   (cryptic_keywords.EMBEDDED_INDICATORS, _visit_embedded),
   # Producers.
   (cryptic_keywords.INITIAL_INDICATORS, _visit_initial),
-  (cryptic_keywords.EDGES_INDICATORS, _visit_edges),
+  (cryptic_keywords.EDGES_INDICATORS, _visit_word_edges),
   (cryptic_keywords.REVERSAL_INDICATORS, _visit_reversal),
   # Reducers.
   (cryptic_keywords.ANAGRAM_INDICATORS, _visit_anagram),
