@@ -12,6 +12,12 @@ with _description('_word_api'):
     with it('handles plurals'):
       expect(_word_api.base_form('snails')).to(equal('snail'))
 
+  with description('expand'):
+    with it('expands fiery'):
+      expanded = _word_api.expand('fiery')
+      expect(expanded).to(have_keys('ardent', 'flaming', 'igneous'))
+      expect(expanded).not_to(have_key('fiery'))
+
   with description('synonyms'):
     with it('executes without error'):
       expect(calling(_word_api.synonyms, 'string')).not_to(raise_error)

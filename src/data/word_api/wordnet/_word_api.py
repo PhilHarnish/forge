@@ -12,6 +12,8 @@ def expand(word, pos=None):
   base_form = wordnet.morphy(word)
   if base_form and base_form not in result:
     result[base_form] = 1
+  if word in result:
+    del result[word]
   return result
 
 
