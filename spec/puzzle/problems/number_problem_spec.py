@@ -40,11 +40,11 @@ with description('NumberProblem'):
       parsed = number_problem._parse([
         '0x500072 0x69007A 0x770061 0x720064 0x650064 0x74006F 0x610075',
         '0x740068',  # 0x6F0072 0x720074 0x680069 0x730062 0x6F006F 0x6B002E
-      ]
-      )
-      expect(parsed).to(equal(
-          0x50007269007A77006172006465006474006F610075740068
-      ))
+      ])
+      expect(parsed).to(equal([
+        0x500072, 0x69007A, 0x770061, 0x720064, 0x650064, 0x74006F, 0x610075,
+        0x740068,
+      ]))
 
   with _description('real data'):
     with before.all:
@@ -104,4 +104,18 @@ with description('NumberProblem'):
       solutions = problem.solutions()
       solution, weight = solutions.first()
       expect(solution).to(equal('Prizeawardedtoauthorforthisbook.'))
+      expect(weight).to(be_above(0))
+
+    with it('solves MSPC devils on third'):
+      input = """
+        14 7 49 14 70 23 71
+      """.split('\n')
+      problem = number_problem.NumberProblem(
+          'mspc',
+          input,
+          allow_offsets=False,
+      )
+      solutions = problem.solutions()
+      solution, weight = solutions.first()
+      expect(solution).to(equal('unlucky'))
       expect(weight).to(be_above(0))

@@ -22,8 +22,12 @@ def solutions(n):
 
 
 def solutions_with_notes(n):
+  yield from digit_solutions_with_notes([n])
+
+
+def digit_solutions_with_notes(source):
   for base in _BASE_PRIORITY:
-    for digits, notes in _get_digits_in_base(n, base):
+    for digits, notes in _convert_digits_to_base(source, base):
       min_digit = min(digits)
       max_digit = max(digits)
       for heuristic in _HEURISTICS:
@@ -46,25 +50,32 @@ def _solutions_for_letters(letters):
 
 
 def _get_digits_in_base(n, b):
-  """Converts and yields n in base b.
-
-  Also yields if:
-  - A pattern of spacer digits are discovered then another yield occurs with
-    spacers removed.
-  - TODO: A null digit (0) might be used to separate words.
-  """
+  """Converts and returns n in base b."""
   digits = []
-  notes = ['base%s' % b]
-  # Look for patterns while converting base. For each digit, record when it was
-  # first seen and, upon seeing it again the spacing between digits. If the
-  # spacing pattern is violated the digit is stored as (None, None).
-  patterns = {}
-  pos = 0
   while n:
     digit = int(n % b)
     digits.append(digit)
     n //= b
-    if digit in patterns:
+  return list(reversed(digits or [0]))
+
+
+def _find_pattern_in_digits(digits, notes):
+  """Yields if a pattern was found.
+
+  - A pattern of spacer digits are discovered then another yield occurs with
+    spacers removed.
+  - TODO: A null digit (0) might be used to separate words.
+  """
+  # Look for patterns while converting base. For each digit, record when it was
+  # first seen and, upon seeing it again the spacing between digits. If the
+  # spacing pattern is violated the digit is stored as (None, None).
+  patterns = {}
+  # Going through digits backwards and then forwards later allows us to quickly
+  # eliminate mis-matched patterns.
+  for pos, digit in enumerate(reversed(digits)):
+    if digit not in patterns:  # First occurrence.
+      patterns[digit] = (pos, None)
+    else:
       first, spacing = patterns[digit]
       if first is None:
         pass  # No pattern.
@@ -78,15 +89,10 @@ def _get_digits_in_base(n, b):
           patterns[digit] = (first, spacing)
       elif (pos - first) % spacing:
         patterns[digit] = (None, None)  # Uneven spacing discovered.
-    else:  # First occurrence.
-      patterns[digit] = (pos, None)
-    pos += 1
-  result = list(reversed(digits or [0]))
-  yield result, notes
   # Remove digits if there was a pattern.
-  if b == 2 or len(patterns) == 2:
-    return  # This is pointless when binary or there are only 2 digits.
-  l = len(result)
+  if len(patterns) <= 2:
+    return  # This is pointless when there are only 2 digits.
+  l = len(digits)
   if l <= 10:
     return  # Sequence too small.
   for target, (first, spacing) in patterns.items():
@@ -97,7 +103,7 @@ def _get_digits_in_base(n, b):
     filtered = []
     # Need to adjust `first` because it was calculated pre-reversal.
     first = (l - first) % spacing - 1
-    for i, digit in enumerate(result):
+    for i, digit in enumerate(digits):
       if (i - first) % spacing:  # Not the pattern we're tracking.
         filtered.append(digit)
       elif digit != target:
@@ -106,6 +112,29 @@ def _get_digits_in_base(n, b):
     else:  # End of for loop reached.
       note = 'filtered %s (+%s%s%s)' % (target, first, '%', spacing)
       yield filtered, notes + [note]
+
+
+def _convert_digits_to_base(digits, b):
+  combined = []
+  delimited = []
+  use_delimited = True
+  notes = ['base%s' % b]
+  for n in digits:
+    converted = _get_digits_in_base(n, b)
+    combined += converted
+    if not use_delimited:
+      pass
+    elif 0 in converted:
+      use_delimited = False
+    else:
+      if delimited:
+        delimited.append(0)
+      delimited += converted
+  yield combined, notes
+  yield from _find_pattern_in_digits(combined, notes)
+  if use_delimited:
+    yield delimited, notes + ['with 0 delimiter']
+    yield from _find_pattern_in_digits(combined, notes + ['with 0 delimiter'])
 
 
 def _run_length(digits, max_length):
@@ -138,10 +167,13 @@ def _alphabet(digits, min_digit, max_digit):
 
 
 def _ascii(digits, min_digit, max_digit):
-  if not chr(min_digit).isprintable():
-    return
-  elif not chr(max_digit).isprintable():
-    return
+  try:
+    if not chr(min_digit).isprintable():
+      return
+    elif not chr(max_digit).isprintable():
+      return
+  except:
+    print('wtf')
   as_letters = []
   for digit in digits:
     letter = chr(digit)

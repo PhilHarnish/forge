@@ -10,7 +10,7 @@ _OFFSETS = None
 class NumberProblem(problem.Problem):
   def __init__(self, name, lines, allow_offsets=True):
     super(NumberProblem, self).__init__(name, lines)
-    self._value = _parse(lines)
+    self._digits = _parse(lines)
     self._allow_offsets = allow_offsets
 
   @staticmethod
@@ -18,26 +18,32 @@ class NumberProblem(problem.Problem):
     if not lines:
       return 0
     parsed = _parse(lines)
-    if parsed is None:
+    if not parsed:
       return 0
-    if isinstance(parsed, float):
+    if any(isinstance(digit, float) for digit in parsed):
       return .5  # Unsure how to score a float.
+    if len(parsed) > 5:
+      return 1  # Enough digits to be interesting.
     # Weakest score returned for 0 ('epsilon').
-    # Smallest 4 letter word can be made with base-16.
-    return max(sys.float_info.epsilon, min(parsed / 0xAAAA, 1))
+    max_information = max(parsed) ** len(parsed)
+    return max(sys.float_info.epsilon, min(max_information / 0xAAAA, 1))
 
   def _solve(self):
     # TODO: Much optimization needed here.
     result = {}
     required_weight = self._threshold
-    if self._allow_offsets:
+    if self._allow_offsets and len(self._digits) == 1:
       offsets = _get_offsets()
     else:
       offsets = [0]
     for i, offset in enumerate(offsets):
       scale_factor = 1 - i / len(offsets)
-      for (solution, weight), notes in analyze_number.solutions_with_notes(
-              self._value + offset):
+      digits = self._digits[:]
+      if offset:
+        digits[0] += offset
+      for (
+      solution, weight), notes in analyze_number.digit_solutions_with_notes(
+          digits):
         if offset:
           solution_str = '%s +%s' % (solution, offset)
         else:
@@ -95,7 +101,7 @@ def _parse(lines):
   if not digits:
     return None
   if len(digits) == 1:
-    return digits[0]
+    return digits
   # Well formed data heuristic.
   if len(segment_lengths) == len(bases) and len(bases) == len(digits):
     target_length = segment_lengths[0]
@@ -107,6 +113,7 @@ def _parse(lines):
       max_digit = target_base ** target_length
   if len(digits) >= 30:  # Chosen arbitrarily.
     return None
+  return digits
   result = 0
   while digits:
     result *= max_digit
