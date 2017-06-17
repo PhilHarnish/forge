@@ -15,6 +15,7 @@ ANAGRAM_INDICATORS = frozenset([
   'from',
   'kink',
   'make',
+  'mess',
   'odd',
   'oddly',
   'off',

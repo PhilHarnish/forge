@@ -29,7 +29,7 @@ class CrypticProblem(_base_crossword_problem._BaseCrosswordProblem):
 
   def _solve(self):
     self._init()
-    solutions = _Solutions(self._min_length, self._max_length)
+    solutions = _Solutions(self._notes, self._min_length, self._max_length)
     _visit(self._tokens, self._plan, solutions)
     return solutions
 
@@ -90,7 +90,7 @@ def _visit_edge_words(tokens, positions, solutions):
   for edge in (tokens[0], tokens[-1]):
     for token in edge[1:]:  # Skip first word.
       if token in top_words:
-        solutions[token] = .33
+        solutions.add(token, .33, 'synonym for edge word "%s"', edge[0])
 
 
 def _visit_word_edges(tokens, positions, solutions):
@@ -121,8 +121,8 @@ def _visit_embedded(tokens, positions, solutions):
   acc = []
   pos_map = []
   start_map = []
-  for pos, tokens in tokens.items():
-    source = tokens[0]
+  for pos, expanded in tokens.items():
+    source = expanded[0]
     acc.append(source)
     for i in range(len(source)):
       pos_map.append(pos)
@@ -143,10 +143,14 @@ def _visit_embedded(tokens, positions, solutions):
         if start_map[offset]:
           base_weight *= .9
         # Score = % of word not banned by `positions`.
-        solutions[result] = base_weight * (
+        score = base_weight * (
                               sum(i not in positions for i in
                               range(offset, offset + result_length))
                             ) / result_length
+        start_pos = pos_map[offset]
+        end_pos = pos_map[offset + result_length] + 1
+        embedded_slice = tokens[start_pos:end_pos]
+        solutions.add(result, score, 'embedded in %s', embedded_slice)
 
 
 def _visit_anagram(tokens, positions, solutions):
@@ -183,7 +187,7 @@ def _visit_anagram(tokens, positions, solutions):
     for anagram in anagrams:
       if anagram != solution:
         base_weight = min(1, trie[anagram] / interesting_threshold)
-        solutions[anagram] = base_weight * score
+        solutions.add(anagram, base_weight * score, 'anagram of %s', acc)
 
   def _crawl(pos, acc, acc_length):
     # Try to form total word from all remaining words.
@@ -232,7 +236,7 @@ def _visit_concatenate(tokens, positions, solutions):
     else:
       score = 1 - (banned_matches / len(concatenate_positions))
     base_weight = min(1, trie[solution] / interesting_threshold)
-    solutions[solution] = base_weight * score
+    solutions.add(solution, base_weight * score, 'concatenation of %s', acc)
 
   def _crawl(pos, acc, acc_length):
     if pos in concatenate_positions and pos + 1 < end:
@@ -275,10 +279,19 @@ def _visit_insert(tokens, positions, solutions):
 
 
 class _Solutions(dict):
-  def __init__(self, min_length, max_length):
+  def __init__(self, notes, min_length, max_length):
     super(_Solutions, self).__init__()
+    self._notes = notes
     self.min_length = min_length
     self.max_length = max_length
+
+  def add(self, solution, weight, note, ingredients):
+    if solution not in self or weight > self[solution]:
+      self[solution] = weight
+      self._notes[solution].clear()
+      if note:
+        self._notes[solution].append(
+            note % ', '.join(word for word, *_ in ingredients))
 
 
 _VISIT_MAP = collections.OrderedDict([
@@ -290,9 +303,9 @@ _VISIT_MAP = collections.OrderedDict([
   (cryptic_keywords.REVERSAL_INDICATORS, _visit_reversal),
   # Reducers.
   (cryptic_keywords.ANAGRAM_INDICATORS, _visit_anagram),
+  (cryptic_keywords.CONCATENATE_INDICATORS, _visit_concatenate),
   # TODO: Incomplete implementation. Redundant with anagram indicator.
   (cryptic_keywords.INSERT_INDICATORS, _visit_insert),
-  (cryptic_keywords.CONCATENATE_INDICATORS, _visit_concatenate),
   # TODO: Incomplete implementation. This should be up with "producers".
   (cryptic_keywords.HOMOPHONE_INDICATORS, _visit_homophone),
 ])

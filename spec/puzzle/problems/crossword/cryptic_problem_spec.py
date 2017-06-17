@@ -61,6 +61,7 @@ with description('CrypticCrosswordProblem'):
       d = dict([
         (fixture.name.lower(), 100000) for fixture in self.fixtures.values()
       ])
+      d['volcanoes'] = 100000  # For GPH Zero Space.
       d['micro'] = 10000  # For MUSIC.
       d['witch'] = 10000  # For GECKO.
       d['wight'] = 10000  # For GECKO.
@@ -190,3 +191,11 @@ with description('CrypticCrosswordProblem'):
         expect(results).to(have_len(
             len(self.problems) - len(incomplete) - len(unsupported)))
         expect(len(results) / len(self.problems)).to(be_above_or_equal(2 / 3))
+
+      with it('solves a GPH Zero Space puzzle'):
+        problem = cryptic_problem.CrypticProblem(
+            'gphzs', ['Fiery spouts put oven coals in a mess (9)'])
+        solutions = problem.solutions()
+        expect(solutions).to(have_key('volcanoes'))
+        expect(solutions['volcanoes']).to(equal(1))
+        expect(solutions.peek()).to(equal('volcanoes'))
