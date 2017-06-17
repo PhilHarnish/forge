@@ -8,6 +8,10 @@ with _description('_word_api'):
     global _word_api
     _word_api = word_api.get_api('wordnet')
 
+  with description('base_form'):
+    with it('handles plurals'):
+      expect(_word_api.base_form('snails')).to(equal('snail'))
+
   with description('synonyms'):
     with it('executes without error'):
       expect(calling(_word_api.synonyms, 'string')).not_to(raise_error)
