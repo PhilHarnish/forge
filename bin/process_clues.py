@@ -30,9 +30,6 @@ def _prune_keywords(keywords):
   for keyword, count in top:
     ALL_SEEN[keyword] += count
     results[keyword] = count
-    if keyword.endswith('s') and len(keyword) > 1:
-      # Singularize, just in case. (This won't always produce real words.)
-      results[keyword[:-1]] = count
   return results
 
 conn = crossword.init('data/crossword.sqlite')
