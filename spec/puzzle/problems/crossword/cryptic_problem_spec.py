@@ -48,7 +48,7 @@ with description('CrypticCrosswordProblem'):
       c = call(cryptic_problem.CrypticProblem.score, [fixture.clue])
       expect(c).to(be_above(.5))
 
-  with description('solutions'):
+  with _description('solutions'):
     with before.all:
       self.problems = {}
       all_clues = []
