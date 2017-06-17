@@ -34,15 +34,15 @@ with _description('puzzle_of_the_day'):
       'laboroflove',  # Wrong.
       None,
       None,
+      'pilaf',
       'tribal',  # Wrong.
       None,
       'carrera',  # Wrong.
       None,
       None,
       None,
+      None,
+      None,
       'tacky',  # Wrong.
-      None,
-      'pilaf',
-      None,
       None,
     ]))

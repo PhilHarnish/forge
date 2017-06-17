@@ -1,7 +1,7 @@
 import re
 import sqlite3
 
-from data import data
+from data import data, warehouse
 
 _WHITESPACE_RE = re.compile(r'\s*[-_,]\s*')
 _REMOVE_RE = re.compile(r'(\([\d\s,|]+\)|[^\w\s])')
@@ -28,8 +28,12 @@ def tokenize_clue(clue):
 
 
 def clue_keywords(clue):
+  words_api = warehouse.get('/api/words')
   results = []
   for keyword in tokenize_clue(clue):
+    base_form = words_api.base_form(keyword)
+    if base_form:
+      keyword = base_form
     if keyword not in _IGNORED and len(keyword) > 1:
       results.append(keyword)
   return results

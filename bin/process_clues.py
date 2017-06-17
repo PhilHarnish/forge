@@ -1,9 +1,19 @@
 """Process http://www.otsys.com/clue/ DB for use with python."""
 import collections
+import os
 import sqlite3
+import sys
+
+# Add parent directory to path.
+sys.path.append(os.path.join(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+    'src'))
 
 from data import crossword
 from data import data
+from puzzle.puzzlepedia import prod_config
+
+prod_config.init()
 
 STOP_WORD = '~'  # Appears after z.
 MAX_KEYWORDS = 50
