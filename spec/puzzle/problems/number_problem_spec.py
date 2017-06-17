@@ -107,15 +107,30 @@ with description('NumberProblem'):
       expect(weight).to(be_above(0))
 
     with it('solves MSPC devils on third'):
-      input = """
-        14 7 49 14 70 23 71
-      """.split('\n')
-      problem = number_problem.NumberProblem(
+      input = [
+        '14 7 49 14 70 23 71',
+        '22 1 70 23 26 43 70 5 16 22 13',
+        '5 49 52 40 5 67 1 2 49 1 2 2 1 16 13',
+        '22 5 71 13 4 7 17 1 1 23',
+        '43 4 41 1 13 77 14 5 16 1 22',
+        '49 26 7 1 49 4 1 13 2 7 14 8 67 1 16',
+        '13 52 26 7 25 1',
+      ]
+      problems = [number_problem.NumberProblem(
           'mspc',
-          input,
+          [line],
           allow_offsets=False,
-      )
-      solutions = problem.solutions()
-      solution, weight = solutions.first()
-      expect(solution).to(equal('unlucky'))
-      expect(weight).to(be_above(0))
+      ) for line in input]
+      expected_solutions = [
+        'unlucky',
+        'deck of cards',
+        'alphabet letters',
+        'days in week',
+        'five squared',
+        'loneliest number',
+        'sponge',
+      ]
+      for problem, expected in zip(problems, expected_solutions):
+        solutions = problem.solutions()
+        expect(solutions).to(have_key(expected))
+        expect(solutions[expected]).to(be_above(0))
