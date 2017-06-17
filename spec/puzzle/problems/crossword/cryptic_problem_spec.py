@@ -102,7 +102,7 @@ with description('CrypticCrosswordProblem'):
       expect(solutions).to(have_key('wight'))
       expect(solutions['gecko']).to(be_above(solutions['wight']))
 
-    with description('with wordnet'):
+    with _description('with wordnet'):
       with before.all:
         warehouse.save()
         warehouse.register('/api/words', word_api.get_api('wordnet'))
@@ -189,3 +189,4 @@ with description('CrypticCrosswordProblem'):
         expect(unsupported_seen).to(equal(unsupported))
         expect(results).to(have_len(
             len(self.problems) - len(incomplete) - len(unsupported)))
+        expect(len(results) / len(self.problems)).to(be_above_or_equal(2 / 3))
