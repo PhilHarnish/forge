@@ -7,7 +7,9 @@ _INITIALIZED = False
 
 def parse(source, hint=None):
   _init()
-  return puzzle.Puzzle('first stage', source, hint=hint)
+  result = puzzle.Puzzle('first stage', source, hint=hint)
+  interact_with(result)
+  return result
 
 
 def interact_with(puzzle):
