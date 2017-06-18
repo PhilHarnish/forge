@@ -65,6 +65,11 @@ def _visit(tokens, plan, solutions):
     except NotImplementedError:
       print('Indicator for "%s" not implemented' % indicator)
       raise
+    except Exception:
+      print('Error visiting %s for %s' % (
+        indicator, ' '.join(words[0] for words in tokens)
+      ))
+      raise
   if not solutions:
     # Attempt to find the solution from pieces of the expanded words.
     _visit_concatenate(tokens, [], solutions)
@@ -90,7 +95,7 @@ def _visit_edge_words(tokens, positions, solutions):
   for edge in (tokens[0], tokens[-1]):
     for token in edge[1:]:  # Skip first word.
       if token in top_words:
-        solutions.add(token, .33, 'synonym for edge word "%s"', edge[0])
+        solutions.add(token, .33, 'synonym for edge word "%s"', [[edge[0]]])
 
 
 def _visit_word_edges(tokens, positions, solutions):
@@ -148,7 +153,7 @@ def _visit_embedded(tokens, positions, solutions):
                               range(offset, offset + result_length))
                             ) / result_length
         start_pos = pos_map[offset]
-        end_pos = pos_map[offset + result_length] + 1
+        end_pos = pos_map[offset + result_length - 1] + 1
         embedded_slice = tokens[start_pos:end_pos]
         solutions.add(result, score, 'embedded in %s', embedded_slice)
 
@@ -291,7 +296,7 @@ class _Solutions(dict):
       self._notes[solution].clear()
       if note:
         self._notes[solution].append(
-            note % ', '.join(word for word, *_ in ingredients))
+            note % ', '.join(words[0] for words in ingredients))
 
 
 _VISIT_MAP = collections.OrderedDict([
