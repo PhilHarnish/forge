@@ -167,13 +167,10 @@ def _alphabet(digits, min_digit, max_digit):
 
 
 def _ascii(digits, min_digit, max_digit):
-  try:
-    if not chr(min_digit).isprintable():
-      return
-    elif not chr(max_digit).isprintable():
-      return
-  except:
-    print('wtf')
+  if not chr(min_digit).isprintable():
+    return
+  elif not chr(max_digit).isprintable():
+    return
   as_letters = []
   for digit in digits:
     letter = chr(digit)
