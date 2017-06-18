@@ -46,7 +46,8 @@ def score(lines):
   if _CROSSWORD_REGEX.match(src):
     return 1
   words = src.split()
-  num_words = sum(word.isalpha() for word in words)
+  # Remove common pieces of punctuation when considering words.
+  num_words = sum(word.strip('"\',.').isalpha() for word in words)
   if num_words < len(words) / 2:
     return 0
   # Something with a lot of words *might* be a crossword clue.
