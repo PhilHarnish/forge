@@ -18,6 +18,36 @@ with _description('_word_api'):
       expect(expanded).to(have_keys('ardent', 'flaming', 'igneous'))
       expect(expanded).not_to(have_key('fiery'))
 
+  with description('tag'):
+    with it('tags empty sentences'):
+      expect(_word_api.tag('')).to(equal([]))
+
+    with it('tags real sentence'):
+      expect(_word_api.tag(
+          'The positions of CEO, analyst, and accountant'
+          ' are held by Alex, Sheila, and Sarah.')
+      ).to(equal([
+        ('The', 'DT'),
+        ('positions', 'NNS'),
+        ('of', 'IN'),
+        ('CEO', 'NNP'),
+        (',', ','),
+        ('analyst', 'NN'),
+        (',', ','),
+        ('and', 'CC'),
+        ('accountant', 'NN'),
+        ('are', 'VBP'),
+        ('held', 'VBN'),
+        ('by', 'IN'),
+        ('Alex', 'NNP'),
+        (',', ','),
+        ('Sheila', 'NNP'),
+        (',', ','),
+        ('and', 'CC'),
+        ('Sarah', 'NNP'),
+        ('.', '.'),
+      ]))
+
   with description('synonyms'):
     with it('executes without error'):
       expect(calling(_word_api.synonyms, 'string')).not_to(raise_error)

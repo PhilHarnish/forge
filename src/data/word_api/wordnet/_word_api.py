@@ -1,3 +1,4 @@
+import nltk
 from nltk.corpus import wordnet
 
 from data import meta
@@ -72,3 +73,8 @@ def _suffix(word):
     # Only supports re-adding a removed suffix. Only works for some plurals.
     return word[len(base_form):]
   return ''
+
+
+def tag(sentence):
+  tokens = nltk.word_tokenize(sentence)
+  return nltk.pos_tag(tokens)
