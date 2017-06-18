@@ -23,7 +23,7 @@ class Chain(list):
   def __iter__(self):
     cursor = self._head
     while cursor is not None:
-      yield cursor
+      yield self[cursor]
       cursor = self._next_links[cursor]
 
   def __len__(self):

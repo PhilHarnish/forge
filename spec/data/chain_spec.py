@@ -9,6 +9,12 @@ with description('Chain'):
     expect(chain.Chain(1)).to(have_len(1))
     expect(chain.Chain(2)).to(have_len(2))
 
+  with it('overrides iterator'):
+    expected = list(['a', 'b', 'c', 'd'])
+    actual = chain.Chain(['a', 'b', 'c', 'd'])
+    for expected, actual in zip(expected, actual):
+      expect(expected).to(equal(actual))
+
   with description('with mutations'):
     with before.each:
       self.subject = chain.Chain(5)
