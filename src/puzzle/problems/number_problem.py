@@ -114,11 +114,6 @@ def _parse(lines):
   if len(digits) >= 30:  # Chosen arbitrarily.
     return None
   return digits
-  result = 0
-  while digits:
-    result *= max_digit
-    result += digits.pop(0)
-  return result
 
 
 def _get_offsets():
