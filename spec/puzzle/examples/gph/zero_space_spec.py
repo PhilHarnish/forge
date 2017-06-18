@@ -4,7 +4,7 @@ from puzzle.problems.crossword import crossword_problem
 from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
-with description('zero_space'):
+with _description('zero_space'):
   with before.all:
     warehouse.save()
     prod_config.init()
