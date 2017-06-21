@@ -79,6 +79,25 @@ with description('_Dimensions'):
       andy = self.subject['Andy']
       expect(lambda: andy['Bob']).to(raise_error(KeyError))
 
+  with description('reifying dimensions'):
+    with before.each:
+      # OrderedDict used to ensure storage_order is consistent.
+      self.subject = _dimensions._Dimensions(collections.OrderedDict([
+        ('name', ['Andy', 'Bob', 'Cathy']),
+        ('age', [10, 11, 12]),
+      ]))
+
+    with it('should require an existing constraint'):
+      expect(lambda: self.subject['age']).to(raise_error(KeyError))
+
+    with it('requires reified dimension have integer values'):
+      expect(lambda: self.subject[10]['name']).to(
+          raise_error(NotImplementedError))
+
+    with it('produces a reified dimension when valid'):
+      dimension = self.subject['Andy']['age']
+      expect(dimension).to(be_a(Numberjack.Predicate))
+
   with description('constraints'):
     with before.each:
       # OrderedDict used to ensure storage_order is consistent.

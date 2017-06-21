@@ -52,3 +52,24 @@ with description('LogicSystem'):
         'Andyx11': 1, 'Bobx11': 0, 'Cathyx11': 0,
         'Andyx12': 0, 'Bobx12': 1, 'Cathyx12': 0,
       }))
+
+    with it('finds solutions with reified dimension inequalities'):
+      d = self.subject._dimensions
+      # Force Andy between Cathy and Bob.
+      d.constrain(d['Andy']['age'] > d['Cathy']['age'])
+      d.constrain(d['Andy']['age'] < d['Bob']['age'])
+      expect(self.subject.solution()).to(equal({
+        'Andyx10': 0, 'Bobx10': 0, 'Cathyx10': 1,
+        'Andyx11': 1, 'Bobx11': 0, 'Cathyx11': 0,
+        'Andyx12': 0, 'Bobx12': 1, 'Cathyx12': 0,
+      }))
+
+    with it('finds solutions with reified dimension offsets'):
+      d = self.subject._dimensions
+      # Cathy = Bob - 2.
+      d.constrain(d['Cathy']['age'] == d['Bob']['age'] - 2)
+      expect(self.subject.solution()).to(equal({
+        'Andyx10': 0, 'Bobx10': 0, 'Cathyx10': 1,
+        'Andyx11': 1, 'Bobx11': 0, 'Cathyx11': 0,
+        'Andyx12': 0, 'Bobx12': 1, 'Cathyx12': 0,
+      }))

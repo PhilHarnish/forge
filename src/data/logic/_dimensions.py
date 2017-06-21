@@ -20,6 +20,8 @@ class _DimensionSlice(dict):
     return slice
 
   def __getitem__(self, item):
+    if item in self._dimensions:
+      return self._reify_dimension(item)
     slice = self.__copy__()
     dimension = self._id_to_dimension[item]
     if dimension in slice._slice_constraints:
@@ -46,7 +48,7 @@ class _DimensionSlice(dict):
 
   def _iter_items(self, acc, cursor, depth):
     if depth >= len(self._storage_order):
-      acc.append(('key', cursor))
+      acc.append((cursor.name(), cursor))
       return
     dimension = self._storage_order[depth]
     depth += 1
@@ -55,6 +57,15 @@ class _DimensionSlice(dict):
     else:
       for child in self._dimensions[dimension]:
         self._iter_items(acc, cursor[child], depth)
+
+  def _reify_dimension(self, dimension):
+    if len(self._slice_constraints) != 1:
+      raise KeyError()
+    # Validate dimension values are all ints.
+    for value in self._dimensions[dimension]:
+      if not isinstance(value, int):
+        raise NotImplementedError
+    return Numberjack.Sum(self.values(), self._dimensions[dimension])
 
 
 class _Dimensions(_DimensionSlice):
@@ -109,6 +120,9 @@ class _Dimensions(_DimensionSlice):
       for value in self._dimensions[dimension]:
         groups.append(self[value].values())
     return groups
+
+  def constrain(self, *constraints):
+    self._constraints.extend(constraints)
 
   def constraints(self):
     return self._constraints
