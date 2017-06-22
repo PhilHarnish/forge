@@ -25,7 +25,7 @@ with description('LogicSystem'):
       name_counter = collections.Counter()
       age_counter = collections.Counter()
       for variable_name, value in self.subject.solution().items():
-        name, age = variable_name.split('x')
+        name, age = variable_name.split('_')
         if value:
           name_counter[name] += 1
           age_counter[age] += 1
@@ -48,9 +48,9 @@ with description('LogicSystem'):
       # Force Cathy == 10
       d['Cathy'][11] = False
       expect(self.subject.solution()).to(equal({
-        'Andyx10': 0, 'Bobx10': 0, 'Cathyx10': 1,
-        'Andyx11': 1, 'Bobx11': 0, 'Cathyx11': 0,
-        'Andyx12': 0, 'Bobx12': 1, 'Cathyx12': 0,
+        'Andy_10': 0, 'Bob_10': 0, 'Cathy_10': 1,
+        'Andy_11': 1, 'Bob_11': 0, 'Cathy_11': 0,
+        'Andy_12': 0, 'Bob_12': 1, 'Cathy_12': 0,
       }))
 
     with it('finds solutions with reified dimension inequalities'):
@@ -59,9 +59,9 @@ with description('LogicSystem'):
       d.constrain(d['Andy']['age'] > d['Cathy']['age'])
       d.constrain(d['Andy']['age'] < d['Bob']['age'])
       expect(self.subject.solution()).to(equal({
-        'Andyx10': 0, 'Bobx10': 0, 'Cathyx10': 1,
-        'Andyx11': 1, 'Bobx11': 0, 'Cathyx11': 0,
-        'Andyx12': 0, 'Bobx12': 1, 'Cathyx12': 0,
+        'Andy_10': 0, 'Bob_10': 0, 'Cathy_10': 1,
+        'Andy_11': 1, 'Bob_11': 0, 'Cathy_11': 0,
+        'Andy_12': 0, 'Bob_12': 1, 'Cathy_12': 0,
       }))
 
     with it('finds solutions with reified dimension offsets'):
@@ -69,7 +69,7 @@ with description('LogicSystem'):
       # Cathy = Bob - 2.
       d.constrain(d['Cathy']['age'] == d['Bob']['age'] - 2)
       expect(self.subject.solution()).to(equal({
-        'Andyx10': 0, 'Bobx10': 0, 'Cathyx10': 1,
-        'Andyx11': 1, 'Bobx11': 0, 'Cathyx11': 0,
-        'Andyx12': 0, 'Bobx12': 1, 'Cathyx12': 0,
+        'Andy_10': 0, 'Bob_10': 0, 'Cathy_10': 1,
+        'Andy_11': 1, 'Bob_11': 0, 'Cathy_11': 0,
+        'Andy_12': 0, 'Bob_12': 1, 'Cathy_12': 0,
       }))

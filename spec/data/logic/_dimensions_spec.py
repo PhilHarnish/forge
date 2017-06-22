@@ -33,12 +33,12 @@ with description('_Dimensions'):
         'age': [10, 10, 10],
       })).to(raise_error)
 
-    with it('does not support 3+ dimensions'):
+    with it('supports 3+ dimensions'):
       expect(calling(_dimensions._Dimensions, {
         'name': ['Andy', 'Bob', 'Cathy'],
-        'age': [10, 10, 10],
+        'age': [10, 11, 12],
         'occupation': ['CEO', 'Accountant', 'Analyst'],
-      })).to(raise_error(NotImplementedError))
+      })).not_to(raise_error(NotImplementedError))
 
   with description('iterating'):
     with before.each:
@@ -53,7 +53,7 @@ with description('_Dimensions'):
       expect(variables).to(have_len(9))
       for variable in variables:
         expect(variable).to(be_a(Numberjack.Variable))
-        name, age = variable.name().split('x')
+        name, age = variable.name().split('_')
         expect(name).to(be_one_of('Andy', 'Bob', 'Cathy'))
         expect(age).to(be_one_of('10', '11', '12'))
 
@@ -62,7 +62,7 @@ with description('_Dimensions'):
       expect(variables).to(have_len(3))
       for variable in variables:
         expect(variable).to(be_a(Numberjack.Variable))
-        name, age = variable.name().split('x')
+        name, age = variable.name().split('_')
         expect(name).to(be_one_of('Andy'))
         expect(age).to(be_one_of('10', '11', '12'))
 
@@ -71,7 +71,7 @@ with description('_Dimensions'):
       expect(variables).to(have_len(1))
       variable = variables[0]
       expect(variable).to(be_a(Numberjack.Variable))
-      name, age = variable.name().split('x')
+      name, age = variable.name().split('_')
       expect(name).to(equal('Andy'))
       expect(age).to(equal('10'))
 

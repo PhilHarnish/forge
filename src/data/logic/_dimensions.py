@@ -1,3 +1,5 @@
+import itertools
+
 import Numberjack
 
 
@@ -70,8 +72,6 @@ class _DimensionSlice(dict):
 
 class _Dimensions(_DimensionSlice):
   def __init__(self, dimensions):
-    if len(dimensions) >= 3:
-      raise NotImplementedError('3+ dimensions are known to be incorrect')
     storage_order = []
     id_to_dimension = {}
     data = {}
@@ -85,30 +85,44 @@ class _Dimensions(_DimensionSlice):
           raise Exception('Identifier %s not unique. Appears in %s and %s' % (
             value, id_to_dimension[value], dimension))
         id_to_dimension[value] = dimension
-    self._init_variables(data, to_add, [])
+    cardinality_groups = self._init_variables(data, to_add)
     super(_Dimensions, self).__init__(
         dimensions, storage_order, id_to_dimension, data)
-    self._constraints.extend(self._enforce_dimensional_cardinality())
+    self._constraints.extend(
+        self._enforce_dimensional_cardinality(cardinality_groups))
 
-  def _init_variables(self, data, values, acc):
+  def _init_variables(self, data, values):
     if not values:
-      return
-    depth = len(acc)
-    at_end = len(values) == depth + 1
-    row = values[depth]
-    for item in row:
-      acc.append(item)
-      if at_end:
-        name = 'x'.join(map(str, acc))
-        data[item] = Numberjack.Variable(name)
-      else:
-        data[item] = {}
-        self._init_variables(data[item], values, acc)
-      acc.pop()
+      return []
+    cardinality_groups = []
+    if len(values) == 1:
+      cardinality_groups.append([])
+      for x in values[0]:
+        variable = Numberjack.Variable(str(x))
+        data[x] = variable
+        cardinality_groups[0].append(variable)
+      return cardinality_groups
+    for dimension_x, dimension_y in itertools.combinations(values, 2):
+      for x in dimension_x:
+        data[x] = {}
+        group = []
+        cardinality_groups.append(group)
+        for y in dimension_y:
+          name = '%s_%s' % (x, y)
+          variable = Numberjack.Variable(name)
+          data[x][y] = variable
+          group.append(variable)
+      # Accumulate the inverted groups.
+      for y in dimension_y:
+        group = []
+        cardinality_groups.append(group)
+        for x in dimension_x:
+          group.append(data[x][y])
+    return cardinality_groups
 
-  def _enforce_dimensional_cardinality(self):
+  def _enforce_dimensional_cardinality(self, cardinality_groups):
     result = []
-    for group in self._cardinality_groups():
+    for group in cardinality_groups:
       num_zeros = len(group) - 1
       result.append(
           Numberjack.Gcc(group, {0: (num_zeros, num_zeros), 1: (1, 1)}))
@@ -116,6 +130,12 @@ class _Dimensions(_DimensionSlice):
 
   def _cardinality_groups(self):
     groups = []
+    for dimension_x, dimension_y in itertools.combinations(
+        self._storage_order, 2):
+      group = []
+      for x in self._dimensions[dimension_x]:
+        for y in self._dimensions[dimension_y]:
+          group.append(self._data[x])
     for dimension in self._storage_order:
       for value in self._dimensions[dimension]:
         groups.append(self[value].values())
