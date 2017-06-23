@@ -65,6 +65,29 @@ with description('mamba test helper'):
       expect(1).to(be_one_of(*range(3)))
       expect(2).to(be_one_of(*range(3)))
 
+  with description('look like'):
+    with it('should normally behave like equals'):
+      expect('a').to(look_like('a'))
+      expect('asdf').to(look_like('asdf'))
+      expect('a s d f').to(look_like('a s d f'))
+
+    with it('should accept inputs with newlines'):
+      expect('l\n' * 5).to(look_like('l\n' * 5))
+
+    with it('should accept inputs with crazy indentation'):
+      expected = """
+                  this
+                    is
+                      an
+                        example
+      """
+      actual = """
+      this
+        is
+          an
+            example"""
+      expect(expected).to(look_like(actual))
+
   with description('mocks'):
     with before.each:
       self.subject = mock.Mock(name='mamba_mock')

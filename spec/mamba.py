@@ -1,3 +1,5 @@
+import textwrap
+
 import mock
 from expects import *
 from expects import matchers
@@ -155,3 +157,14 @@ def _fmt_args(args, kwargs):
                      '%s=%s' % (key, repr(value)) for key, value in
                      kwargs.items()
                    ])
+
+
+class look_like(equal):
+  def __init__(self, expected):
+    super(look_like, self).__init__(self._clean(expected))
+
+  def _match(self, subject):
+    return super(look_like, self)._match(self._clean(subject))
+
+  def _clean(self, s):
+    return textwrap.dedent(s.rstrip(' ').strip('\n'))
