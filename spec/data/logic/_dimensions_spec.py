@@ -92,8 +92,12 @@ with description('_Dimensions'):
       expect(self.subject.items()).to(have_len(9 * 3))
 
     with it('returns a slice of variables once 1 dimension is specified'):
-      # 2 rows of length 3 + 1 unconstrained board.
-      expect(self.subject['Andy'].items()).to(have_len(3 * 2 + 9))
+      # 2 rows of length 3 + 1.
+      expect(self.subject['Andy'].items()).to(have_len(3 * 2))
+
+    with it('returns a slice of variables matching criteria'):
+      for result in self.subject['Andy'].values():
+        expect(result.name()).to(contain('Andy'))
 
   with description('reifying dimensions'):
     with before.each:

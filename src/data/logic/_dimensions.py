@@ -53,7 +53,7 @@ class _DimensionSlice(dict):
     n_constraints = len(self._slice_constraints)
     if n_constraints == 0:
       return self._all_slice()
-    elif n_constraints < 2:
+    elif n_constraints == 1:
       return self._combination_slice()
     elif n_constraints == 2:
       return self._precise_slice()
@@ -76,12 +76,12 @@ class _DimensionSlice(dict):
         self._storage_order, 2):
       if dimension_x in self._slice_constraints:
         iter_x = [self._slice_constraints[dimension_x]]
-      else:
+        iter_y = self._dimensions[dimension_y]
+      elif dimension_y in self._slice_constraints:
         iter_x = self._dimensions[dimension_x]
-      if dimension_y in self._slice_constraints:
         iter_y = [self._slice_constraints[dimension_y]]
       else:
-        iter_y = self._dimensions[dimension_y]
+        continue
       for x, y in itertools.product(iter_x, iter_y):
         item = self._data[x][y]
         acc.append((item.name(), item))
