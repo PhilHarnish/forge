@@ -105,3 +105,35 @@ with description('LogicSystem'):
         '10': 2, '11': 2, '12': 2,
         'CEO': 2, 'Accountant': 2, 'Analyst': 2,
       }))
+
+    with it('produces a correct solution with constraints'):
+      d = self.subject._dimensions
+      # CEO is the oldest.
+      d.constrain(d['CEO']['age'] > d['Accountant']['age'])
+      d.constrain(d['CEO']['age'] > d['Analyst']['age'])
+      # Andy is a year younger than Bob.
+      d.constrain(d['Andy']['age'] + 1 == d['Bob']['age'])
+      # Cathy is older than the Accountant.
+      d.constrain(d['Cathy']['age'] > d['Accountant']['age'])
+      # Bob is either the CEO or the accountant.
+      d.constrain(d['Bob']['CEO'].value() | d['Bob']['Accountant'].value())
+      expect(str(self.subject)).to(look_like("""
+          Andy
+          | Bob
+          | | Cathy
+          #     10
+            #   11
+              # 12
+          Andy
+          | Bob
+          | | Cathy
+              # CEO
+            #   Accountant
+          #     Analyst
+          10
+          | 11
+          | | 12
+              # CEO
+            #   Accountant
+          #     Analyst
+      """))
