@@ -13,7 +13,7 @@ with description('LogicSystem'):
       'occupation': ['CEO', 'Accountant', 'Analyst'],
     })).not_to(raise_error)
 
-  with description('solution'):
+  with description('2D solutions'):
     with before.each:
       # OrderedDict used to ensure storage_order is consistent.
       self.subject = logic_system.LogicSystem(collections.OrderedDict([
@@ -72,4 +72,28 @@ with description('LogicSystem'):
         'Andy_10': 0, 'Bob_10': 0, 'Cathy_10': 1,
         'Andy_11': 1, 'Bob_11': 0, 'Cathy_11': 0,
         'Andy_12': 0, 'Bob_12': 1, 'Cathy_12': 0,
+      }))
+
+  with description('3D solutions'):
+    with before.each:
+      # OrderedDict used to ensure storage_order is consistent.
+      self.dimensions = collections.OrderedDict([
+        ('name', ['Andy', 'Bob', 'Cathy']),
+        ('age', [10, 11, 12]),
+        ('occupation', ['CEO', 'Accountant', 'Analyst']),
+      ])
+      self.subject = logic_system.LogicSystem(self.dimensions)
+
+    with it('volunteers a valid solution without any context'):
+      seen = collections.Counter()
+      for variable_name, value in self.subject.solution().items():
+        x, y = variable_name.split('_')
+        if value:
+          seen[x] += 1
+          seen[y] += 1
+      # Each is "2" because each value is part of 2 tables.
+      expect(seen).to(equal({
+        'Andy': 2, 'Bob': 2, 'Cathy': 2,
+        '10': 2, '11': 2, '12': 2,
+        'CEO': 2, 'Accountant': 2, 'Analyst': 2,
       }))
