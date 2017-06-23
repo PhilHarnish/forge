@@ -38,9 +38,9 @@ with description('_Dimensions'):
         'name': ['Andy', 'Bob', 'Cathy'],
         'age': [10, 11, 12],
         'occupation': ['CEO', 'Accountant', 'Analyst'],
-      })).not_to(raise_error(NotImplementedError))
+      })).not_to(raise_error)
 
-  with description('iterating'):
+  with description('iterating 2D'):
     with before.each:
       # OrderedDict used to ensure storage_order is consistent.
       self.subject = _dimensions._Dimensions(collections.OrderedDict([

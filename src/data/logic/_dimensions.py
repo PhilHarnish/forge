@@ -43,22 +43,41 @@ class _DimensionSlice(dict):
   def values(self):
     return [v for _, v in self.items()]
 
+  def value(self):
+    values = self.values()
+    if len(values) != 1:
+      raise KeyError('%s values, expected 1' % len(values))
+    return values[0]
+
   def items(self):
+    if len(self._slice_constraints) < 2:
+      return self._combination_slice()
+    elif len(self._slice_constraints) == 2:
+      return self._precise_slice()
+    raise NotImplementedError('Querying 3+ dimensions is unsupported')
+
+  def _combination_slice(self):
     acc = []
-    self._iter_items(acc, self._data, 0)
+    for dimension_x, dimension_y in itertools.combinations(
+        self._storage_order, 2):
+      if dimension_x in self._slice_constraints:
+        iter_x = [self._slice_constraints[dimension_x]]
+      else:
+        iter_x = self._dimensions[dimension_x]
+      if dimension_y in self._slice_constraints:
+        iter_y = [self._slice_constraints[dimension_y]]
+      else:
+        iter_y = self._dimensions[dimension_y]
+      for x, y in itertools.product(iter_x, iter_y):
+        item = self._data[x][y]
+        acc.append((item.name(), item))
     return acc
 
-  def _iter_items(self, acc, cursor, depth):
-    if depth >= len(self._storage_order):
-      acc.append((cursor.name(), cursor))
-      return
-    dimension = self._storage_order[depth]
-    depth += 1
-    if dimension in self._slice_constraints:
-      self._iter_items(acc, cursor[self._slice_constraints[dimension]], depth)
-    else:
-      for child in self._dimensions[dimension]:
-        self._iter_items(acc, cursor[child], depth)
+  def _precise_slice(self):
+    constraints = self._slice_constraints
+    x, y = [constraints[i] for i in self._storage_order if i in constraints]
+    item = self._data[x][y]
+    return [(item.name(), item)]
 
   def _reify_dimension(self, dimension):
     if len(self._slice_constraints) != 1:
@@ -90,6 +109,8 @@ class _Dimensions(_DimensionSlice):
         dimensions, storage_order, id_to_dimension, data)
     self._constraints.extend(
         self._enforce_dimensional_cardinality(cardinality_groups))
+    self._constraints.extend(
+        self._enforce_dimensional_inference())
 
   def _init_variables(self, data, values):
     if not values:
@@ -104,7 +125,7 @@ class _Dimensions(_DimensionSlice):
       return cardinality_groups
     for dimension_x, dimension_y in itertools.combinations(values, 2):
       for x in dimension_x:
-        data[x] = {}
+        data.setdefault(x, {})
         group = []
         cardinality_groups.append(group)
         for y in dimension_y:
@@ -121,6 +142,7 @@ class _Dimensions(_DimensionSlice):
     return cardinality_groups
 
   def _enforce_dimensional_cardinality(self, cardinality_groups):
+    """Every row and column in every board should have exactly 1 True value."""
     result = []
     for group in cardinality_groups:
       num_zeros = len(group) - 1
@@ -128,18 +150,53 @@ class _Dimensions(_DimensionSlice):
           Numberjack.Gcc(group, {0: (num_zeros, num_zeros), 1: (1, 1)}))
     return result
 
-  def _cardinality_groups(self):
-    groups = []
-    for dimension_x, dimension_y in itertools.combinations(
-        self._storage_order, 2):
-      group = []
+  def _enforce_dimensional_inference(self):
+    """Aligned cells between 3 boards must not sum to 2.
+
+    Consider: Andy is 10, 10's favorite color is red -> Andy's is red. This
+    inference holds for: (a) 0 are True, (b) 1 is True, OR (c) all 3 True.
+    Therefore 0, 1, and 3 are valid sums for the 3 aligned relationships.
+
+    Each board triplet inference is computed like so:
+      y y  z z
+    x A1A2 B1B2  A1 + B1 + C1 != 2 -- A, top left #1
+    x A3A4 B3B4  A1 + B2 + C3 != 2 -- A, top left #2
+    z C1C2       A2 + B1 + C2 != 2 -- A, top right, #1
+    z C3C4       A2 + B2 + C4 != 2 -- A, top right, #2
+    """
+    result = []
+    visited_triplets = set()
+    for dimension_x, dimension_y, dimension_z in itertools.combinations(
+        self._storage_order, 3):
+      board_a = (dimension_x, dimension_y)
+      board_b = (dimension_x, dimension_z)
+      board_c = (dimension_y, dimension_z)
+      triplet = ','.join(map(str, sorted([board_a, board_b, board_c])))
+      if triplet in visited_triplets:
+        raise Exception('Redundant work performed?')
+      visited_triplets.add(triplet)
+      # Prefetch all of the rows from board B and columns from board C as they
+      # will be needed repeatedly.
+      rows = []
       for x in self._dimensions[dimension_x]:
-        for y in self._dimensions[dimension_y]:
-          group.append(self._data[x])
-    for dimension in self._storage_order:
-      for value in self._dimensions[dimension]:
-        groups.append(self[value].values())
-    return groups
+        row = []
+        rows.append(row)
+        for z in self._dimensions[dimension_z]:
+          row.append(self[x][z].value())
+      columns = []
+      for y in self._dimensions[dimension_y]:
+        column = []
+        columns.append(column)
+        for z in self._dimensions[dimension_z]:
+          column.append(self[y][z].value())
+      # For each cell in board A set up inference with aligned rows and columns.
+      for row_index, x in enumerate(self._dimensions[dimension_x]):
+        for column_index, y in enumerate(self._dimensions[dimension_y]):
+          assert len(rows[row_index]) == len(columns[column_index])
+          for row, column in zip(rows[row_index], columns[column_index]):
+            # A1 + B1 + C1 != 2 -- A, top left #1  (see doc above).
+            result.append(self[x][y].value() + row + column != 2)
+    return result
 
   def constrain(self, *constraints):
     self._constraints.extend(constraints)
