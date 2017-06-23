@@ -47,32 +47,40 @@ with description('LogicSystem'):
       d['Cathy'][12] = False
       # Force Cathy == 10
       d['Cathy'][11] = False
-      expect(self.subject.solution()).to(equal({
-        'Andy_10': 0, 'Bob_10': 0, 'Cathy_10': 1,
-        'Andy_11': 1, 'Bob_11': 0, 'Cathy_11': 0,
-        'Andy_12': 0, 'Bob_12': 1, 'Cathy_12': 0,
-      }))
+      expect(str(self.subject)).to(look_like("""
+          Andy
+          | Bob
+          | | Cathy
+              # 10
+          #     11
+            #   12
+      """))
 
     with it('finds solutions with reified dimension inequalities'):
       d = self.subject._dimensions
       # Force Andy between Cathy and Bob.
       d.constrain(d['Andy']['age'] > d['Cathy']['age'])
       d.constrain(d['Andy']['age'] < d['Bob']['age'])
-      expect(self.subject.solution()).to(equal({
-        'Andy_10': 0, 'Bob_10': 0, 'Cathy_10': 1,
-        'Andy_11': 1, 'Bob_11': 0, 'Cathy_11': 0,
-        'Andy_12': 0, 'Bob_12': 1, 'Cathy_12': 0,
-      }))
-
+      expect(str(self.subject)).to(look_like("""
+          Andy
+          | Bob
+          | | Cathy
+              # 10
+          #     11
+            #   12
+      """))
     with it('finds solutions with reified dimension offsets'):
       d = self.subject._dimensions
       # Cathy = Bob - 2.
       d.constrain(d['Cathy']['age'] == d['Bob']['age'] - 2)
-      expect(self.subject.solution()).to(equal({
-        'Andy_10': 0, 'Bob_10': 0, 'Cathy_10': 1,
-        'Andy_11': 1, 'Bob_11': 0, 'Cathy_11': 0,
-        'Andy_12': 0, 'Bob_12': 1, 'Cathy_12': 0,
-      }))
+      expect(str(self.subject)).to(look_like("""
+          Andy
+          | Bob
+          | | Cathy
+              # 10
+          #     11
+            #   12
+      """))
 
   with description('3D solutions'):
     with before.each:
