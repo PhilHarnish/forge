@@ -99,7 +99,7 @@ with description('_Dimensions'):
       for result in self.subject['Andy'].values():
         expect(result.name()).to(contain('Andy'))
 
-  with description('reifying dimensions'):
+  with description('reifying 2D dimensions'):
     with before.each:
       # OrderedDict used to ensure storage_order is consistent.
       self.subject = _dimensions._Dimensions(collections.OrderedDict([
@@ -115,6 +115,22 @@ with description('_Dimensions'):
           raise_error(NotImplementedError))
 
     with it('produces a reified dimension when valid'):
+      dimension = self.subject['Andy']['age']
+      expect(dimension).to(be_a(Numberjack.Predicate))
+
+  with description('reifying 3D dimensions'):
+    with before.each:
+      # OrderedDict used to ensure storage_order is consistent.
+      self.subject = _dimensions._Dimensions(collections.OrderedDict([
+        ('name', ['Andy', 'Bob', 'Cathy']),
+        ('age', [10, 11, 12]),
+        ('occupation', ['CEO', 'Accountant', 'Analyst']),
+      ]))
+
+    with it('should reify age for Andy'):
+      expect(lambda: self.subject['Andy']['age']).not_to(raise_error)
+
+    with it('produce a valid predicate'):
       dimension = self.subject['Andy']['age']
       expect(dimension).to(be_a(Numberjack.Predicate))
 

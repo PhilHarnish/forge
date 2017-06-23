@@ -70,11 +70,13 @@ class _DimensionSlice(dict):
         acc.append((item.name(), item))
     return acc
 
-  def _combination_slice(self):
+  def _combination_slice(self, extra_dimension=''):
     acc = []
     for dimension_x, dimension_y in itertools.combinations(
         self._storage_order, 2):
-      if dimension_x in self._slice_constraints:
+      if extra_dimension and extra_dimension not in (dimension_x, dimension_y):
+        continue
+      elif dimension_x in self._slice_constraints:
         iter_x = [self._slice_constraints[dimension_x]]
         iter_y = self._dimensions[dimension_y]
       elif dimension_y in self._slice_constraints:
@@ -97,10 +99,15 @@ class _DimensionSlice(dict):
     if len(self._slice_constraints) != 1:
       raise KeyError()
     # Validate dimension values are all ints.
-    for value in self._dimensions[dimension]:
+    values = self._dimensions[dimension]
+    for value in values:
       if not isinstance(value, int):
         raise NotImplementedError
-    return Numberjack.Sum(self.values(), self._dimensions[dimension])
+    variables = [
+      v for _, v in self._combination_slice(extra_dimension=dimension)
+    ]
+    assert len(variables) == len(values)
+    return Numberjack.Sum(variables, values)
 
 
 class _Dimensions(_DimensionSlice):
