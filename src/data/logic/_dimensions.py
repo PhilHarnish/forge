@@ -24,30 +24,26 @@ class _DimensionSlice(dict):
   def __getitem__(self, item):
     if item in self._dimensions:
       return self._reify_dimension(item)
-    slice = self.__copy__()
     dimension = self._id_to_dimension[item]
-    if dimension in slice._slice_constraints:
+    if dimension in self._slice_constraints:
       raise KeyError(
           'Unable to constrain %s = %s, already constrained to %s' % (
-            dimension, item, slice._slice_constraints[dimension]))
+            dimension, item, self._slice_constraints[dimension]))
+    if self._slice_constraints:
+      # Temporarily set the 2nd constraint and return resulting query.
+      self._slice_constraints[dimension] = item
+      _, value = self._precise_slice()[0]
+      del self._slice_constraints[dimension]
+      return value
+    slice = self.__copy__()
     slice._slice_constraints[dimension] = item
     return slice
-
-  def __setitem__(self, key, value):
-    for item in self[key]:
-      self._constraints.append(item == value)
 
   def __iter__(self):
     yield from iter(self.values())
 
   def values(self):
     return [v for _, v in self.items()]
-
-  def value(self):
-    values = self.values()
-    if len(values) != 1:
-      raise KeyError('%s values, expected 1' % len(values))
-    return values[0]
 
   def items(self):
     n_constraints = len(self._slice_constraints)
@@ -203,23 +199,26 @@ class _Dimensions(_DimensionSlice):
         row = []
         rows.append(row)
         for z in self._dimensions[dimension_z]:
-          row.append(self[x][z].value())
+          row.append(self[x][z])
       columns = []
       for y in self._dimensions[dimension_y]:
         column = []
         columns.append(column)
         for z in self._dimensions[dimension_z]:
-          column.append(self[y][z].value())
+          column.append(self[y][z])
       # For each cell in board A set up inference with aligned rows and columns.
       for row_index, x in enumerate(self._dimensions[dimension_x]):
         for column_index, y in enumerate(self._dimensions[dimension_y]):
           assert len(rows[row_index]) == len(columns[column_index])
           for row, column in zip(rows[row_index], columns[column_index]):
             # A1 + B1 + C1 != 2 -- A, top left #1  (see doc above).
-            result.append(self[x][y].value() + row + column != 2)
+            result.append(self[x][y] + row + column != 2)
     return result
 
   def constrain(self, *constraints):
+    for constraint in constraints:
+      if not isinstance(constraint, Numberjack.Predicate):
+        raise TypeError('%s is not a Numberjack Predicate' % constraint)
     self._constraints.extend(constraints)
 
   def constraints(self):

@@ -67,9 +67,7 @@ with description('_Dimensions'):
         expect(age).to(be_one_of('10', '11', '12'))
 
     with it('should support slicing multiple dimensions'):
-      variables = self.subject['Andy'][10].values()
-      expect(variables).to(have_len(1))
-      variable = variables[0]
+      variable = self.subject['Andy'][10]
       expect(variable).to(be_a(Numberjack.Variable))
       name, age = variable.name().split('_')
       expect(name).to(equal('Andy'))
@@ -148,15 +146,21 @@ with description('_Dimensions'):
       for constraint in constraints:
         expect(constraint).to(be_a(Numberjack.Gcc))
 
-    with description('assignment'):
-      with it('should constrain single values'):
-        before_len = len(self.subject.constraints())
-        self.subject['Andy'][10] = False
-        after_len = len(self.subject.constraints())
-        expect(after_len - before_len).to(equal(1))
+    with it('should constrain single values'):
+      before_len = len(self.subject.constraints())
+      self.subject.constrain(self.subject['Andy'][10] == False)
+      after_len = len(self.subject.constraints())
+      expect(after_len - before_len).to(equal(1))
 
-      with it('should constrain multiple values'):
-        before_len = len(self.subject.constraints())
-        self.subject['Andy'] = False
-        after_len = len(self.subject.constraints())
-        expect(after_len - before_len).to(equal(3))
+  with description('shorthand'):
+    with before.each:
+      self.subject = _dimensions._Dimensions({
+        'name': ['Andy', 'Bob', 'Cathy'],
+        'age': [10, 11, 12],
+        'occupation': ['CEO', 'Accountant', 'Analyst'],
+      })
+
+    with it('should expose operators'):
+      d = self.subject
+      expr = d['Bob']['CEO'] | d['Bob']['Accountant']
+      expect(expr).to(be_a(Numberjack.Predicate))

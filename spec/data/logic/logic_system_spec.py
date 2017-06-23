@@ -43,10 +43,10 @@ with description('LogicSystem'):
     with it('finds correct solution with constraints'):
       d = self.subject._dimensions
       # Force Bob == 12.
-      d['Andy'][12] = False
-      d['Cathy'][12] = False
+      d.constrain(d['Andy'][12] == False)
+      d.constrain(d['Cathy'][12] == False)
       # Force Cathy == 10
-      d['Cathy'][11] = False
+      d.constrain(d['Cathy'][11] == False)
       expect(str(self.subject)).to(look_like("""
           Andy
           | Bob
@@ -116,7 +116,7 @@ with description('LogicSystem'):
       # Cathy is older than the Accountant.
       d.constrain(d['Cathy']['age'] > d['Accountant']['age'])
       # Bob is either the CEO or the accountant.
-      d.constrain(d['Bob']['CEO'].value() | d['Bob']['Accountant'].value())
+      d.constrain(d['Bob']['CEO'] | d['Bob']['Accountant'])
       expect(str(self.subject)).to(look_like("""
           Andy
           | Bob

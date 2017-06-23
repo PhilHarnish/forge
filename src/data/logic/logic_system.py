@@ -39,7 +39,7 @@ class LogicSystem(object):
       for y in y_values:  # Rows.
         row = []
         for x in x_values:  # Columns
-          if self._dimensions[x][y].value().get_value():
+          if self._dimensions[x][y].get_value():
             row.append('#')
           else:
             row.append(' ')
