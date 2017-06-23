@@ -50,11 +50,25 @@ class _DimensionSlice(dict):
     return values[0]
 
   def items(self):
-    if len(self._slice_constraints) < 2:
+    n_constraints = len(self._slice_constraints)
+    if n_constraints == 0:
+      return self._all_slice()
+    elif n_constraints < 2:
       return self._combination_slice()
-    elif len(self._slice_constraints) == 2:
+    elif n_constraints == 2:
       return self._precise_slice()
     raise NotImplementedError('Querying 3+ dimensions is unsupported')
+
+  def _all_slice(self):
+    acc = []
+    for dimension_x, dimension_y in itertools.combinations(
+        self._storage_order, 2):
+      x_values = self._dimensions[dimension_x]
+      y_values = self._dimensions[dimension_y]
+      for x, y in itertools.product(x_values, y_values):
+        item = self._data[x][y]
+        acc.append((item.name(), item))
+    return acc
 
   def _combination_slice(self):
     acc = []

@@ -79,6 +79,22 @@ with description('_Dimensions'):
       andy = self.subject['Andy']
       expect(lambda: andy['Bob']).to(raise_error(KeyError))
 
+  with description('iterating 3D'):
+    with before.each:
+      # OrderedDict used to ensure storage_order is consistent.
+      self.subject = _dimensions._Dimensions(collections.OrderedDict([
+        ('name', ['Andy', 'Bob', 'Cathy']),
+        ('age', [10, 11, 12]),
+        ('occupation', ['CEO', 'Accountant', 'Analyst']),
+      ]))
+
+    with it('returns all variables by default'):
+      expect(self.subject.items()).to(have_len(9 * 3))
+
+    with it('returns a slice of variables once 1 dimension is specified'):
+      # 2 rows of length 3 + 1 unconstrained board.
+      expect(self.subject['Andy'].items()).to(have_len(3 * 2 + 9))
+
   with description('reifying dimensions'):
     with before.each:
       # OrderedDict used to ensure storage_order is consistent.
