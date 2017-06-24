@@ -7,7 +7,7 @@ class _DimensionFactory(object):
   def __init__(self):
     self._dimensions = {}
 
-  def __call__(self, *args, **kwargs):
+  def __call__(self, **kwargs):
     if not kwargs:
       raise TypeError('kwarg is required')
     elif len(kwargs) > 1:
@@ -20,12 +20,12 @@ class _DimensionFactory(object):
         ))
       self._dimensions[dimension] = self._make_slices(dimension, values)
       return self._dimensions[dimension].values()
-    raise TypeError('invalid call %s %s' % (args, kwargs))
+    raise TypeError('invalid call %s' % kwargs)
 
   def _make_slices(self, dimension, values):
     result = collections.OrderedDict()
     for slice in values:
-      result[slice] = _dimension_slice._DimensionSlice(self, dimension, slice)
+      result[slice] = _dimension_slice._DimensionSlice(self, {dimension: slice})
     return result
 
   def dimensions(self):
