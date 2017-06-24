@@ -5,8 +5,9 @@ from data.logic import _dimension_slice
 
 class _DimensionFactory(object):
   def __init__(self):
-    self._dimensions = {}
+    self._dimensions = collections.OrderedDict()
     self._id_to_dimension = {}
+    self._slice_cache = {}
 
   def __call__(self, **kwargs):
     if not kwargs:
@@ -38,7 +39,6 @@ class _DimensionFactory(object):
     return result
 
   def resolve(self, slice, key):
-    dimension = None
     value = None
     if key in self._dimensions:
       dimension = key
@@ -53,10 +53,20 @@ class _DimensionFactory(object):
         dimension: value,
       }
       address.update(slice.address())
-      return _dimension_slice._DimensionSlice(self, address)
+      return self._get_slice(address)
     else:
       raise KeyError('slice already constrained %s to %s' % (
         dimension, slice._constraints[dimension]))
+
+  def _get_slice(self, address):
+    key_parts = []
+    for dimension in self._dimensions:
+      if dimension in address:
+        key_parts.append('%s=%s' % (dimension, address[dimension]))
+    key = ','.join(key_parts)
+    if key not in self._slice_cache:
+      self._slice_cache[key] = _dimension_slice._DimensionSlice(self, address)
+    return self._slice_cache[key]
 
   def dimensions(self):
     return self._dimensions

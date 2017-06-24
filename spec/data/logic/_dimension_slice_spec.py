@@ -2,6 +2,9 @@ from data.logic import _dimension_factory, _dimension_slice
 from spec.mamba import *
 
 with description('_dimension_slice._DimensionSlice'):
+  with before.each:
+    self.factory = _dimension_factory._DimensionFactory()
+
   with description('constructor'):
     with it('handles simple input'):
       expect(calling(
@@ -9,9 +12,6 @@ with description('_dimension_slice._DimensionSlice'):
       )).not_to(raise_error)
 
   with description('resolve'):
-    with before.each:
-      self.factory = _dimension_factory._DimensionFactory()
-
     with it('rejects invalid access'):
       empty = _dimension_slice._DimensionSlice(self.factory, {})
       expect(lambda: empty.foo).to(raise_error(KeyError))
@@ -56,7 +56,30 @@ with description('_dimension_slice._DimensionSlice'):
       cherries, = self.factory(fruit=['cherries'])
       expect(lambda: andy.fruit).not_to(raise_error)
       expect(andy.fruit).to(be_a(_dimension_slice._DimensionSlice))
-      expect(andy['fruit'].address()).to(equal({
-        'name': 'andy',
-        'fruit': None,
+      expect(cherries['name'].address()).to(equal({
+        'name': None,
+        'fruit': 'cherries',
       }))
+
+  with description('cache'):
+    with it('returns unique slices for new requests'):
+      andy, bob = self.factory(name=['andy', 'bob'])
+      cherries, dates = self.factory(fruit=['cherries', 'dates'])
+      slices = [
+        andy.fruit, andy.cherries, andy.dates,
+        bob.fruit, bob.cherries, bob.dates,
+        cherries.name, cherries.andy, cherries.bob,
+        dates.name, dates.andy, dates.bob,
+      ]
+      seen = set()
+      for slice in slices:
+        address = id(slice)
+        expect(seen).not_to(contain(address))
+
+    with it('returns cached slices for repeated requests'):
+      andy, = self.factory(name=['andy'])
+      cherries, = self.factory(fruit=['cherries'])
+      expect(andy.cherries).to(be(andy['cherries']))
+      expect(andy.fruit).to(be(andy['fruit']))
+      expect(cherries.andy).to(be(cherries['andy']))
+      expect(cherries.name).to(be(cherries['name']))
