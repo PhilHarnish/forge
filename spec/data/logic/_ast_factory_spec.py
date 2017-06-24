@@ -46,4 +46,4 @@ with description('_ast_factory'):
           calling(_ast_factory.compare, self.andy, ['=='], [self.cherries])
       ).not_to(raise_error)
       expect(_ast_factory.compare(self.andy, ['=='], [self.cherries])).to(be_a(
-          ast.Compare))
+          ast.Expr))

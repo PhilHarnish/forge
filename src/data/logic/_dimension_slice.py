@@ -1,4 +1,9 @@
-class _DimensionSlice(object):
+from data.logic import _addressable_value, _ast_factory
+
+
+class _DimensionSlice(
+    _addressable_value.AddressableValue,
+    _ast_factory.AccumulatingExpressionMixin):
   def __init__(self, factory, constraints):
     self._factory = factory
     self._constraints = constraints

@@ -1,4 +1,4 @@
-from data.logic import _dimension_factory, _dimension_slice
+from data.logic import _ast_factory, _dimension_factory, _dimension_slice
 from spec.mamba import *
 
 with description('_dimension_slice._DimensionSlice'):
@@ -92,3 +92,11 @@ with description('_dimension_slice._DimensionSlice'):
       expect(andy.fruit).to(be(andy['fruit']))
       expect(cherries.andy).to(be(cherries['andy']))
       expect(cherries.name).to(be(cherries['name']))
+
+  with description('operators'):
+    with description('eq'):
+      with it('accepts two unconstrained slices'):
+        andy, = self.factory(name=['andy'])
+        cherries, = self.factory(fruit=['cherries'])
+        expression = andy == cherries
+        expect(expression).to(be_a(_ast_factory.AccumulatingExpr))
