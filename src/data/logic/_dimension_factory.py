@@ -6,6 +6,7 @@ from data.logic import _dimension_slice
 class _DimensionFactory(object):
   def __init__(self):
     self._dimensions = {}
+    self._id_to_dimension = {}
 
   def __call__(self, **kwargs):
     if not kwargs:
@@ -19,17 +20,43 @@ class _DimensionFactory(object):
           dimension, self._dimensions[dimension]
         ))
       self._dimensions[dimension] = self._make_slices(dimension, values)
+      for value in values:
+        if value in self._dimensions:
+          raise TypeError('ID %s collides with dimension of same name' % (
+            value))
+        if value in self._id_to_dimension:
+          raise TypeError('ID %s already reserved by %s' % (
+            value, self._id_to_dimension[value]))
+        self._id_to_dimension[value] = dimension
       return self._dimensions[dimension].values()
     raise TypeError('invalid call %s' % kwargs)
 
   def _make_slices(self, dimension, values):
     result = collections.OrderedDict()
-    for slice in values:
-      result[slice] = _dimension_slice._DimensionSlice(self, {dimension: slice})
+    for value in values:
+      result[value] = _dimension_slice._DimensionSlice(self, {dimension: value})
     return result
 
   def resolve(self, slice, key):
-    raise KeyError('dimension key "%s" is unknown' % key)
+    dimension = None
+    value = None
+    if key in self._dimensions:
+      dimension = key
+    elif key in self._id_to_dimension:
+      dimension = self._id_to_dimension[key]
+      value = key
+    else:
+      raise KeyError('dimension key "%s" is unknown' % key)
+    address = slice.address()
+    if dimension not in address or address[dimension] is None:
+      address = {
+        dimension: value,
+      }
+      address.update(slice.address())
+      return _dimension_slice._DimensionSlice(self, address)
+    else:
+      raise KeyError('slice already constrained %s to %s' % (
+        dimension, slice._constraints[dimension]))
 
   def dimensions(self):
     return self._dimensions

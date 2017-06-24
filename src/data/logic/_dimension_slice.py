@@ -8,3 +8,6 @@ class _DimensionSlice(object):
 
   def __getitem__(self, item):
     return self._factory.resolve(self, item)
+
+  def address(self):
+    return self._constraints
