@@ -100,3 +100,9 @@ with description('_dimension_slice._DimensionSlice'):
         cherries, = self.factory(fruit=['cherries'])
         expression = andy == cherries
         expect(expression).to(be_a(_ast_factory.AccumulatingExpr))
+
+      with it('accumulates comparisons'):
+        andy, bob = self.factory(name=['andy', 'bob'])
+        age = self.factory(age=[10, 11])
+        expression = ((andy.age + 1) == bob)
+        expect(expression).to(be_a(_ast_factory.AccumulatingExpr))

@@ -3,17 +3,35 @@ import ast
 from data.logic import _addressable_value
 
 _OPERATOR_MAP = {
+  '+': ast.Add,
   '==': ast.Eq,
+  '-': ast.Sub,
 }
 
 
 class AccumulatingExpressionMixin(object):
+  def __add__(self, other):
+    return bin_op(self, '+', other)
+
   def __eq__(self, other):
     return compare(self, ['=='], [other])
+
+  def __sub__(self, other):
+    return bin_op(self, '-', other)
 
 
 class AccumulatingExpr(ast.Expr, AccumulatingExpressionMixin):
   """Overloads operators and accumulate expressions at runtime."""
+
+
+def bin_op(left, op, right):
+  return AccumulatingExpr(
+      value=ast.BinOp(
+          left=coerce_value(left),
+          op=coerce_operator(op),
+          right=coerce_value(right),
+      )
+  )
 
 
 def compare(left, ops, comparators):
