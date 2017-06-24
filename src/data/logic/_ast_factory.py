@@ -5,6 +5,7 @@ from data.logic import _addressable_value
 _OPERATOR_MAP = {
   '+': ast.Add,
   '==': ast.Eq,
+  '!=': ast.NotEq,
   '-': ast.Sub,
 }
 
@@ -18,6 +19,9 @@ class AccumulatingExpressionMixin(object):
 
   def __sub__(self, other):
     return bin_op(self, '-', other)
+
+  def __ne__(self, other):
+    return compare(self, ['!='], [other])
 
 
 class AccumulatingExpr(ast.Expr, AccumulatingExpressionMixin):
