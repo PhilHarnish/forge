@@ -28,11 +28,11 @@ with description('_dimension_slice._DimensionSlice'):
       expect(lambda: andy.dates).not_to(raise_error)
       expect(andy.dates).to(be_a(_dimension_slice._DimensionSlice))
       expect(bob.cherries).to(be_a(_dimension_slice._DimensionSlice))
-      expect(dates.bob.address()).to(equal({
+      expect(dates.bob.dimension_address()).to(equal({
         'name': 'bob',
         'fruit': 'dates',
       }))
-      expect(cherries.andy.address()).to(equal({
+      expect(cherries.andy.dimension_address()).to(equal({
         'name': 'andy',
         'fruit': 'cherries',
       }))
@@ -42,11 +42,11 @@ with description('_dimension_slice._DimensionSlice'):
       cherries, = self.factory(fruit=['cherries'])
       expect(lambda: andy['cherries']).not_to(raise_error)
       expect(andy['cherries']).to(be_a(_dimension_slice._DimensionSlice))
-      expect(andy['cherries'].address()).to(equal({
+      expect(andy['cherries'].dimension_address()).to(equal({
         'name': 'andy',
         'fruit': 'cherries',
       }))
-      expect(cherries['andy'].address()).to(equal({
+      expect(cherries['andy'].dimension_address()).to(equal({
         'name': 'andy',
         'fruit': 'cherries',
       }))
@@ -56,10 +56,19 @@ with description('_dimension_slice._DimensionSlice'):
       cherries, = self.factory(fruit=['cherries'])
       expect(lambda: andy.fruit).not_to(raise_error)
       expect(andy.fruit).to(be_a(_dimension_slice._DimensionSlice))
-      expect(cherries['name'].address()).to(equal({
+      expect(cherries['name'].dimension_address()).to(equal({
         'name': None,
         'fruit': 'cherries',
       }))
+
+  with description('dimension_name'):
+    with it('produces fully qualified names'):
+      andy, = self.factory(name=['andy'])
+      cherries, = self.factory(fruit=['cherries'])
+      expect(andy.cherries.dimension_address_name()).to(
+          equal('name["andy"].fruit["cherries"]'))
+      expect(cherries.andy.dimension_address_name()).to(
+          equal('name["andy"].fruit["cherries"]'))
 
   with description('cache'):
     with it('returns unique slices for new requests'):

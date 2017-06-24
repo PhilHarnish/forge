@@ -47,23 +47,26 @@ class _DimensionFactory(object):
       value = key
     else:
       raise KeyError('dimension key "%s" is unknown' % key)
-    address = slice.address()
+    address = slice.dimension_address()
     if dimension not in address or address[dimension] is None:
       address = {
         dimension: value,
       }
-      address.update(slice.address())
+      address.update(slice.dimension_address())
       return self._get_slice(address)
     else:
       raise KeyError('slice already constrained %s to %s' % (
         dimension, slice._constraints[dimension]))
 
-  def _get_slice(self, address):
+  def dimension_address_name(self, address):
     key_parts = []
     for dimension in self._dimensions:
       if dimension in address:
-        key_parts.append('%s=%s' % (dimension, address[dimension]))
-    key = ','.join(key_parts)
+        key_parts.append('%s["%s"]' % (dimension, address[dimension]))
+    return '.'.join(key_parts)
+
+  def _get_slice(self, address):
+    key = self.dimension_address_name(address)
     if key not in self._slice_cache:
       self._slice_cache[key] = _dimension_slice._DimensionSlice(self, address)
     return self._slice_cache[key]

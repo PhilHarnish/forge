@@ -9,5 +9,8 @@ class _DimensionSlice(object):
   def __getitem__(self, item):
     return self._factory.resolve(self, item)
 
-  def address(self):
+  def dimension_address(self):
     return self._constraints
+
+  def dimension_address_name(self):
+    return self._factory.dimension_address_name(self.dimension_address())
