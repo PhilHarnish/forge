@@ -28,5 +28,8 @@ class _DimensionFactory(object):
       result[slice] = _dimension_slice._DimensionSlice(self, {dimension: slice})
     return result
 
+  def resolve(self, slice, key):
+    raise KeyError('dimension key "%s" is unknown' % key)
+
   def dimensions(self):
     return self._dimensions
