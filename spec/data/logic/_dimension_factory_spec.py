@@ -1,9 +1,5 @@
-from data.logic import _dimension_factory
+from data.logic import _dimension_factory, _dimension_slice
 from spec.mamba import *
-
-_DIMENSIONS_OUT = """
-   (Andy, Bob, Cathy) = dimensions(name=['Andy', 'Bob', 'Cathy'])
-"""
 
 with description('_dimension_factory._DimensionFactory'):
   with before.each:
@@ -22,9 +18,12 @@ with description('_dimension_factory._DimensionFactory'):
   with description('registering'):
     with it('remembers registered dimensions'):
       self.subject(name=['A', 'B'])
-      expect(self.subject._dimensions).to(equal({
-        'name': ['A', 'B'],
-      }))
+      dimensions = self.subject.dimensions()
+      expect(dimensions).to(have_key('name'))
+      for dimension in dimensions.values():
+        expect(dimension).to(have_len(2))
+        for slice in dimension.values():
+          expect(slice).to(be_a(_dimension_slice._DimensionSlice))
 
     with it('prevents duplicate registration'):
       self.subject(name=['A', 'B'])
