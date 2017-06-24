@@ -13,9 +13,14 @@ with description('_dimension_slice._DimensionSlice'):
       self.factory = _dimension_factory._DimensionFactory()
 
     with it('rejects invalid access'):
-      self.empty = _dimension_slice._DimensionSlice(self.factory, {})
-      expect(lambda: self.empty.foo).to(raise_error(KeyError))
-      expect(lambda: self.empty['foo']).to(raise_error(KeyError))
+      empty = _dimension_slice._DimensionSlice(self.factory, {})
+      expect(lambda: empty.foo).to(raise_error(KeyError))
+      expect(lambda: empty['foo']).to(raise_error(KeyError))
+
+    with it('rejects redundant access'):
+      a, = self.factory(name=['andy'])
+      expect(lambda: a.andy).to(raise_error(KeyError))
+      expect(lambda: a['andy']).to(raise_error(KeyError))
 
     with it('accepts valid sub-slices'):
       andy, bob = self.factory(name=['andy', 'bob'])
@@ -32,7 +37,7 @@ with description('_dimension_slice._DimensionSlice'):
         'fruit': 'cherries',
       }))
 
-    with it('accepts valid sub-slices'):
+    with it('accepts valid array sub-slices'):
       andy, = self.factory(name=['andy'])
       cherries, = self.factory(fruit=['cherries'])
       expect(lambda: andy['cherries']).not_to(raise_error)
@@ -40,4 +45,18 @@ with description('_dimension_slice._DimensionSlice'):
       expect(andy['cherries'].address()).to(equal({
         'name': 'andy',
         'fruit': 'cherries',
+      }))
+      expect(cherries['andy'].address()).to(equal({
+        'name': 'andy',
+        'fruit': 'cherries',
+      }))
+
+    with it('accepts slicing dimensions'):
+      andy, = self.factory(name=['andy'])
+      cherries, = self.factory(fruit=['cherries'])
+      expect(lambda: andy.fruit).not_to(raise_error)
+      expect(andy.fruit).to(be_a(_dimension_slice._DimensionSlice))
+      expect(andy['fruit'].address()).to(equal({
+        'name': 'andy',
+        'fruit': None,
       }))
