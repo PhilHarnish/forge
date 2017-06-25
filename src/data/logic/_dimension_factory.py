@@ -52,10 +52,8 @@ class _DimensionFactory(object):
       raise KeyError('dimension key "%s" is unknown' % key)
     address = slice.dimension_address()
     if dimension not in address or address[dimension] is None:
-      address = {
-        dimension: value,
-      }
-      address.update(slice.dimension_address())
+      address = address.copy()
+      address[dimension] = value
       return self._get_slice(address)
     else:
       raise KeyError('slice already constrained %s to %s' % (

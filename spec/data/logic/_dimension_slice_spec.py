@@ -70,6 +70,10 @@ with description('_dimension_slice._DimensionSlice'):
       expect(cherries.andy.dimension_address_name()).to(
           equal('name["andy"].fruit["cherries"]'))
 
+    with it('produces properly named sub-slices'):
+      name = self.factory(name=['andy'])
+      expect(name['andy'].dimension_address_name()).to(equal('name["andy"]'))
+
   with description('cache'):
     with it('returns unique slices for new requests'):
       andy, bob = self.factory(name=['andy', 'bob'])
