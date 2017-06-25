@@ -21,4 +21,4 @@ with description('_model._Model'):
           self.dates == self.bob,
           self.cherries != self.bob,
       )
-      expect(self.model.constraints()).to(have_len(3))
+      expect(self.model.constraints).to(have_len(3))
