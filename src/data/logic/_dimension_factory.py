@@ -63,7 +63,8 @@ class _DimensionFactory(object):
     key_parts = []
     for dimension in self._dimensions:
       if dimension in address:
-        key_parts.append('%s["%s"]' % (dimension, address[dimension]))
+        key_parts.append('%s[%s]' % (
+          dimension, repr(address[dimension]).replace('\'', '"')))
     return '.'.join(key_parts)
 
   def _get_slice(self, address):
