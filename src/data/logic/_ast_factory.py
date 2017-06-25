@@ -28,6 +28,10 @@ class AccumulatingExpr(ast.Expr, AccumulatingExpressionMixin):
   """Overloads operators and accumulate expressions at runtime."""
 
 
+# Cloak as an "Expr" object to blend in with AST libraries.
+AccumulatingExpr.__name__ = 'Expr'
+
+
 def bin_op(left, op, right):
   return AccumulatingExpr(
       value=ast.BinOp(
