@@ -6,7 +6,9 @@ from data.logic import _dimension_slice
 class _DimensionFactory(object):
   def __init__(self):
     self._dimensions = collections.OrderedDict()
+    # Map of identifier: dimension.
     self._id_to_dimension = {}
+    # Cache of already-requested dimensions.
     self._slice_cache = {}
 
   def __call__(self, **kwargs):
@@ -29,7 +31,8 @@ class _DimensionFactory(object):
           raise TypeError('ID %s already reserved by %s' % (
             value, self._id_to_dimension[value]))
         self._id_to_dimension[value] = dimension
-      return self._dimensions[dimension].values()
+      return _OriginalDimensionSlice(
+          self, {dimension: None}, self._dimensions[dimension].values())
     raise TypeError('invalid call %s' % kwargs)
 
   def _make_slices(self, dimension, values):
@@ -73,3 +76,12 @@ class _DimensionFactory(object):
 
   def dimensions(self):
     return self._dimensions
+
+
+class _OriginalDimensionSlice(_dimension_slice._DimensionSlice):
+  def __init__(self, factory, constraints, children):
+    super(_OriginalDimensionSlice, self).__init__(factory, constraints)
+    self._children = children
+
+  def __iter__(self):
+    return iter(self._children)
