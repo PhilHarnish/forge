@@ -1,4 +1,5 @@
 import collections
+import itertools
 
 from data.logic import _dimension_slice
 
@@ -75,6 +76,29 @@ class _DimensionFactory(object):
 
   def dimensions(self):
     return self._dimensions
+
+  def cardinality_groups(self):
+    result = []
+    for (x_key, x_values), (y_key, y_values) in itertools.combinations(
+        self._dimensions.items(), 2):
+      constraint = {}
+      # Rows.
+      for x_value in x_values:
+        constraint[x_key] = x_value
+        group = []
+        result.append(group)
+        for y_value in y_values:
+          constraint[y_key] = y_value
+          group.append(constraint.copy())
+      # Columns.
+      for y_value in y_values:
+        constraint[y_key] = y_value
+        group = []
+        result.append(group)
+        for x_value in x_values:
+          constraint[x_key] = x_value
+          group.append(constraint.copy())
+    return result
 
 
 class _OriginalDimensionSlice(_dimension_slice._DimensionSlice):
