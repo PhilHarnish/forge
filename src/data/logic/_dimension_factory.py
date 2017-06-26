@@ -59,12 +59,12 @@ class _DimensionFactory(object):
       raise KeyError('slice already constrained %s to %s' % (
         dimension, slice._constraints[dimension]))
 
-  def dimension_address_name(self, address):
+  def dimension_address_name(self, constraints):
     key_parts = []
     for dimension in self._dimensions:
-      if dimension in address:
+      if dimension in constraints:
         key_parts.append('%s[%s]' % (
-          dimension, repr(address[dimension]).replace('\'', '"')))
+          dimension, repr(constraints[dimension]).replace('\'', '"')))
     return '.'.join(key_parts)
 
   def _get_slice(self, address):
