@@ -15,7 +15,16 @@ with description('_model._Model'):
       self.andy, self.bob = self.factory(name=['andy', 'bob'])
       self.cherries, self.dates = self.factory(fruit=['cherries', 'dates'])
 
-    with it('accumulates constraints'):
+    with it('accumulates constraints one at a time'):
+      expect(self.model.constraints).to(have_len(0))
+      self.model(self.andy == self.cherries)
+      expect(self.model.constraints).to(have_len(1))
+      self.model(self.dates == self.bob)
+      expect(self.model.constraints).to(have_len(2))
+      self.model(self.cherries != self.bob)
+      expect(self.model.constraints).to(have_len(3))
+
+    with it('accumulates constraints all at once'):
       self.model(
           self.andy == self.cherries,
           self.dates == self.bob,
