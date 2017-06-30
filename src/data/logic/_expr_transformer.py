@@ -32,6 +32,16 @@ class ExprTransformer(ast.NodeTransformer):
     # All visited nodes must be supported.
     _fail(node)
 
+  def visit_BinOp(self, node):
+    left = self.visit(node.left)
+    right = self.visit(node.right)
+    op = node.op
+    if isinstance(op, ast.Sub):
+      return left - right
+    elif isinstance(op, ast.Add):
+      return left + right
+    _fail(node, msg='Binary op %s unsupported' % op.__class__.__name__)
+
   def visit_Compare(self, node):
     left = self.visit(node.left)
     comparators = [self.visit(comparator) for comparator in node.comparators]
@@ -56,6 +66,8 @@ class ExprTransformer(ast.NodeTransformer):
       raise TypeError('ast.Name only supports ast.Load')
     return self._model.resolve(node.id)
 
+  def visit_Num(self, node):
+    return node.n
 
 def _fail(node, msg='Visit error'):
   try:
