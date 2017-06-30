@@ -1,6 +1,7 @@
 import ast
 
-from data.logic import _dimension_factory, _expr_transformer, _model
+from data.logic import _dimension_factory, _expr_transformer, _model, \
+  _predicates
 from spec.mamba import *
 
 with description('_expr_transformer.ExprTransformer'):
@@ -26,4 +27,4 @@ with description('_expr_transformer.ExprTransformer'):
 
     with it('supports precise (2d) assignment'):
       expr = self.name['andy'].fruit == self.fruit['cherries']
-      expect(self.transformer.compile(expr)).to(be_a(_model._Predicates))
+      expect(self.transformer.compile(expr)).to(be_a(_predicates.Predicates))
