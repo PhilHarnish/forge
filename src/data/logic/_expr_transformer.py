@@ -70,7 +70,10 @@ class ExprTransformer(ast.NodeTransformer):
     return self._model.resolve(node.id)
 
   def visit_Num(self, node):
-    return node.n
+    return self._model.resolve_value(node.n)
+
+  def visit_Str(self, node):
+    return self._model.resolve_value(node.s)
 
 def _fail(node, msg='Visit error'):
   try:

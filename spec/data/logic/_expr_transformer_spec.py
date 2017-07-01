@@ -16,6 +16,28 @@ with description('_expr_transformer.ExprTransformer'):
       self.andy, self.bob = self.name = self.factory(name=['andy', 'bob'])
       self.cherries, self.dates = self.fruit = self.factory(
           fruit=['cherries', 'dates'])
+      self._10, self._11 = self.age = self.factory(age=[10, 11])
+
+    with it('resolves names'):
+      node = ast.Name(id='name["andy"].fruit["cherries"]', ctx=ast.Load())
+      transformed = self.transformer.visit(node)
+      expect(transformed).to(be_a(_model._Reference))
+      expect(transformed._constraints).to(equal({
+        'name': 'andy',
+        'fruit': 'cherries'
+      }))
+
+    with it('resolves numbers'):
+      node = ast.Num(n=10)
+      transformed = self.transformer.visit(node)
+      expect(transformed).to(be_a(_model._Reference))
+      expect(transformed._constraints).to(equal({'age': 10}))
+
+    with it('resolves strings'):
+      node = ast.Str(s='cherries')
+      transformed = self.transformer.visit(node)
+      expect(transformed).to(be_a(_model._Reference))
+      expect(transformed._constraints).to(equal({'fruit': 'cherries'}))
 
     with it('fails to visit unsupported nodes'):
       expect(calling(self.transformer.compile, ast.Await)).to(
