@@ -1,11 +1,12 @@
 import collections
 import itertools
 
-from data.logic import _dimension_slice
+from data.logic import _dimension_slice, _util
 
 
-class _DimensionFactory(object):
+class _DimensionFactory(_dimension_slice._DimensionSlice):
   def __init__(self):
+    super(_DimensionFactory, self).__init__(self, {})
     self._dimensions = collections.OrderedDict()
     # Map of identifier: dimension.
     self._id_to_dimension = {}
@@ -51,7 +52,7 @@ class _DimensionFactory(object):
       value = key
     else:
       raise KeyError('dimension key "%s" is unknown' % key)
-    address = slice.dimension_address()
+    address = slice.dimension_constraints()
     if dimension not in address or address[dimension] is None:
       address = address.copy()
       address[dimension] = value
@@ -60,19 +61,12 @@ class _DimensionFactory(object):
       raise KeyError('slice already constrained %s to %s' % (
         dimension, slice._constraints[dimension]))
 
-  def dimension_address_name(self, constraints):
-    key_parts = []
-    for dimension in self._dimensions:
-      if dimension in constraints:
-        key_parts.append('%s[%s]' % (
-          dimension, repr(constraints[dimension]).replace('\'', '"')))
-    return '.'.join(key_parts)
-
-  def _get_slice(self, address):
-    key = self.dimension_address_name(address)
-    if key not in self._slice_cache:
-      self._slice_cache[key] = _dimension_slice._DimensionSlice(self, address)
-    return self._slice_cache[key]
+  def _get_slice(self, constraints):
+    address = _util.address(self._dimensions, constraints)
+    if address not in self._slice_cache:
+      self._slice_cache[address] = _dimension_slice._DimensionSlice(self,
+          constraints)
+    return self._slice_cache[address]
 
   def dimensions(self):
     return self._dimensions
