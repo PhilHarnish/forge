@@ -35,3 +35,11 @@ with description('_predicates'):
     expect(predicates).to(equal([False, False, True]))
     predicates = _predicates.Predicates([1, 2, 3]) > 2
     expect(predicates).to(equal([False, True, True]))
+
+  with it('handles | operator overloading'):
+    predicates = _predicates.Predicates([1, 2, 3]) | 2
+    expect(predicates).to(equal([3, 2, 3]))
+
+  with it('handles ^ operator overloading'):
+    predicates = _predicates.Predicates([1, 2, 3]) ^ 2
+    expect(predicates).to(equal([1, 0, 1]))

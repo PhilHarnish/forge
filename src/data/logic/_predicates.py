@@ -25,3 +25,12 @@ class Predicates(list):
 
   def __ge__(self, other):
     return Predicates([child >= other for child in self])
+
+  def __or__(self, other):
+    # TODO: This should really be a cross product.
+    return Predicates([child | other for child in self])
+
+  def __xor__(self, other):
+    # TODO: This should really be a cross product.
+    # This shortcut may not always work. When does it fail?
+    return Predicates([child + other == 1 for child in self])
