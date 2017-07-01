@@ -1,6 +1,16 @@
 import ast
 
 
+def address(dimensions, constraints):
+  """Returns the address for 'constraints'. Ignores unset fields."""
+  address_parts = []
+  for dimension in dimensions:
+    if dimension in constraints:
+      address_parts.append('%s[%s]' % (
+        dimension, repr(constraints[dimension]).replace('\'', '"')))
+  return '.'.join(address_parts)
+
+
 def parse(address):
   result = {}
   for subscript in address.split('.'):

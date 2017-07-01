@@ -2,6 +2,24 @@ from data.logic import _util
 from spec.mamba import *
 
 with description('_util'):
+  with description('address'):
+    with before.each:
+      self.dimensions = ['name', 'fruit', 'age']
+
+    with it('accepts empty input'):
+      expect(_util.address(self.dimensions, {})).to(equal(''))
+
+    with it('accepts simple input'):
+      expect(_util.address(self.dimensions, {'name': None})).to(equal(
+          'name[None]'))
+
+    with it('accepts varied input'):
+      expect(_util.address(self.dimensions, {
+        'name': None,
+        'age': 1,
+        'fruit': 'apple',
+      })).to(equal('name[None].fruit["apple"].age[1]'))
+
   with description('parse'):
     with it('handles simple input'):
       expect(_util.parse('var_a["key_a"]')).to(equal({'var_a': 'key_a'}))
