@@ -4,8 +4,10 @@ class AddressableValue(object):
   Resolves circular dependency.
   """
 
-  def dimension_address(self):
+  def dimension_constraints(self):
+    """:returns dict representation of constraints."""
     raise NotImplementedError()
 
-  def dimension_address_name(self):
+  def dimension_address(self):
+    """:returns str representation of constraints."""
     raise NotImplementedError()

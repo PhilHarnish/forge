@@ -28,11 +28,11 @@ with description('_dimension_slice._DimensionSlice'):
       expect(lambda: andy.dates).not_to(raise_error)
       expect(andy.dates).to(be_a(_dimension_slice._DimensionSlice))
       expect(bob.cherries).to(be_a(_dimension_slice._DimensionSlice))
-      expect(dates.bob.dimension_address()).to(equal({
+      expect(dates.bob.dimension_constraints()).to(equal({
         'name': 'bob',
         'fruit': 'dates',
       }))
-      expect(cherries.andy.dimension_address()).to(equal({
+      expect(cherries.andy.dimension_constraints()).to(equal({
         'name': 'andy',
         'fruit': 'cherries',
       }))
@@ -42,11 +42,11 @@ with description('_dimension_slice._DimensionSlice'):
       cherries, = self.factory(fruit=['cherries'])
       expect(lambda: andy['cherries']).not_to(raise_error)
       expect(andy['cherries']).to(be_a(_dimension_slice._DimensionSlice))
-      expect(andy['cherries'].dimension_address()).to(equal({
+      expect(andy['cherries'].dimension_constraints()).to(equal({
         'name': 'andy',
         'fruit': 'cherries',
       }))
-      expect(cherries['andy'].dimension_address()).to(equal({
+      expect(cherries['andy'].dimension_constraints()).to(equal({
         'name': 'andy',
         'fruit': 'cherries',
       }))
@@ -56,7 +56,7 @@ with description('_dimension_slice._DimensionSlice'):
       cherries, = self.factory(fruit=['cherries'])
       expect(lambda: andy.fruit).not_to(raise_error)
       expect(andy.fruit).to(be_a(_dimension_slice._DimensionSlice))
-      expect(cherries['name'].dimension_address()).to(equal({
+      expect(cherries['name'].dimension_constraints()).to(equal({
         'name': None,
         'fruit': 'cherries',
       }))
@@ -65,23 +65,23 @@ with description('_dimension_slice._DimensionSlice'):
     with it('produces fully qualified names'):
       andy, = self.factory(name=['andy'])
       cherries, = self.factory(fruit=['cherries'])
-      expect(andy.cherries.dimension_address_name()).to(
+      expect(andy.cherries.dimension_address()).to(
           equal('name["andy"].fruit["cherries"]'))
-      expect(cherries.andy.dimension_address_name()).to(
+      expect(cherries.andy.dimension_address()).to(
           equal('name["andy"].fruit["cherries"]'))
 
     with it('produces properly named sub-slices'):
       name = self.factory(name=['andy'])
-      expect(name['andy'].dimension_address_name()).to(equal('name["andy"]'))
+      expect(name['andy'].dimension_address()).to(equal('name["andy"]'))
 
     with it('ignores unconstrained slices'):
       name = self.factory(name=['andy'])
       fruit = self.factory(fruit=['cherries'])
       age = self.factory(age=[10])
-      expect(name['andy'].dimension_address_name()).to(equal('name["andy"]'))
-      expect(name['andy'].fruit.dimension_address_name()).to(equal(
+      expect(name['andy'].dimension_address()).to(equal('name["andy"]'))
+      expect(name['andy'].fruit.dimension_address()).to(equal(
           'name["andy"].fruit[None]'))
-      expect(fruit['cherries'].dimension_address_name()).to(equal(
+      expect(fruit['cherries'].dimension_address()).to(equal(
           'fruit["cherries"]'))
 
   with description('cache'):
