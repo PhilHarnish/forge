@@ -1,4 +1,4 @@
-from data.logic import _addressable_value, _ast_factory
+from data.logic import _addressable_value, _ast_factory, _util
 
 
 class _DimensionSlice(
@@ -14,8 +14,8 @@ class _DimensionSlice(
   def __getitem__(self, item):
     return self._factory.resolve(self, item)
 
-  def dimension_address(self):
+  def dimension_constraints(self):
     return self._constraints
 
-  def dimension_address_name(self):
-    return self._factory.dimension_address_name(self.dimension_address())
+  def dimension_address(self):
+    return _util.address(self._factory.dimensions(), self._constraints)
