@@ -6,6 +6,8 @@ _OPERATOR_MAP = {
   '+': ast.Add,
   '==': ast.Eq,
   '!=': ast.NotEq,
+  '|': ast.BitOr,
+  '^': ast.BitXor,
   '-': ast.Sub,
 }
 
@@ -22,6 +24,12 @@ class AccumulatingExpressionMixin(object):
 
   def __ne__(self, other):
     return compare(self, ['!='], [other])
+
+  def __or__(self, other):
+    return bin_op(self, '|', other)
+
+  def __xor__(self, other):
+    return bin_op(self, '^', other)
 
 
 class AccumulatingExpr(ast.Expr, AccumulatingExpressionMixin):
@@ -69,5 +77,5 @@ def coerce_value(value):
   elif isinstance(value, str):
     return ast.Str(s=value)
   elif isinstance(value, _addressable_value.AddressableValue):
-    return ast.Name(id=value.dimension_address_name(), ctx=ast.Load())
+    return ast.Name(id=value.dimension_address(), ctx=ast.Load())
   raise TypeError('unable to coerce %s' % value)

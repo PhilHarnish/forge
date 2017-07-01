@@ -37,6 +37,19 @@ with description('_ast_factory'):
       expect(calling(_ast_factory.coerce_value, 'a')).not_to(raise_error)
       expect(_ast_factory.coerce_value('a')).to(be_a(ast.Str))
 
+  with description('binary operations'):
+    with it('supports +'):
+      expect(_ast_factory.bin_op(self.andy, '+', 1)).to(be_a(ast.Expr))
+
+    with it('supports -'):
+      expect(_ast_factory.bin_op(self.andy, '-', 1)).to(be_a(ast.Expr))
+
+    with it('supports |'):
+      expect(_ast_factory.bin_op(self.andy, '|', True)).to(be_a(ast.Expr))
+
+    with it('supports ^'):
+      expect(_ast_factory.bin_op(self.andy, '|', False)).to(be_a(ast.Expr))
+
   with description('compare'):
     with it('rejects invalid input'):
       expect(calling(_ast_factory.compare, None, [], [])).to(raise_error)
