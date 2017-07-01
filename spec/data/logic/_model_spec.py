@@ -31,3 +31,26 @@ with description('_model._Model'):
           self.cherries != self.bob,
       )
       expect(self.model.constraints).to(have_len(3))
+
+  with description('resolve'):
+    with before.each:
+      self.model = _model._Model(self.factory)
+      self.factory(name=['andy', 'bob'])
+      self.factory(fruit=['cherries', 'dates'])
+
+    with it('resolves simple addresses'):
+      reference = self.model.resolve('name["andy"]')
+      expect(reference._constraints).to(equal({'name': 'andy'}))
+
+    with it('resolves complex addresses'):
+      reference = self.model.resolve('name["andy"].fruit["cherries"]')
+      expect(reference._constraints).to(equal({
+        'name': 'andy',
+        'fruit': 'cherries'
+      }))
+
+    with it('resolves values'):
+      reference = self.model.resolve_value('cherries')
+      expect(reference._constraints).to(equal({
+        'fruit': 'cherries'
+      }))
