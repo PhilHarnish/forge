@@ -74,6 +74,16 @@ with description('_dimension_slice._DimensionSlice'):
       name = self.factory(name=['andy'])
       expect(name['andy'].dimension_address_name()).to(equal('name["andy"]'))
 
+    with it('ignores unconstrained slices'):
+      name = self.factory(name=['andy'])
+      fruit = self.factory(fruit=['cherries'])
+      age = self.factory(age=[10])
+      expect(name['andy'].dimension_address_name()).to(equal('name["andy"]'))
+      expect(name['andy'].fruit.dimension_address_name()).to(equal(
+          'name["andy"].fruit[None]'))
+      expect(fruit['cherries'].dimension_address_name()).to(equal(
+          'fruit["cherries"]'))
+
   with description('cache'):
     with it('returns unique slices for new requests'):
       andy, bob = self.factory(name=['andy', 'bob'])
