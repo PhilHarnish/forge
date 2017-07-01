@@ -27,4 +27,25 @@ with description('_expr_transformer.ExprTransformer'):
 
     with it('supports precise (2d) assignment'):
       expr = self.name['andy'].fruit == self.fruit['cherries']
-      expect(self.transformer.compile(expr)).to(be_a(_predicates.Predicates))
+      compiled = self.transformer.compile(expr)
+      expect(compiled).to(be_a(_predicates.Predicates))
+      expect(str(compiled)).to(equal(
+          '(name["andy"].fruit["cherries"] == True)'))
+
+    with it('supports OR operation'):
+      expr = (self.name['andy'].fruit['cherries'] |
+              self.fruit['cherries'].name['bob'])
+      compiled = self.transformer.compile(expr)
+      expect(compiled).to(be_a(_predicates.Predicates))
+      expect(str(compiled)).to(equal(
+          '((name["andy"].fruit["cherries"] == True) or'
+          ' (name["bob"].fruit["cherries"] == True))'))
+
+    with it('supports XOR operation'):
+      expr = (self.name['andy'].fruit['cherries'] ^
+              self.fruit['cherries'].name['bob'])
+      compiled = self.transformer.compile(expr)
+      expect(compiled).to(be_a(_predicates.Predicates))
+      expect(str(compiled)).to(equal(
+          '((name["andy"].fruit["cherries"] +'
+          ' name["bob"].fruit["cherries"]) == 1)'))

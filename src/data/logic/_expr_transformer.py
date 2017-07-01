@@ -3,6 +3,8 @@ import ast
 import Numberjack
 import astor
 
+from data.logic import _predicates
+
 
 class ExprTransformer(ast.NodeTransformer):
   """Visits and replaces an AST with Numberjack primitives.
@@ -36,10 +38,11 @@ class ExprTransformer(ast.NodeTransformer):
     left = self.visit(node.left)
     right = self.visit(node.right)
     op = node.op
-    if isinstance(op, ast.Sub):
-      return left - right
-    elif isinstance(op, ast.Add):
-      return left + right
+    if isinstance(op, ast.BitOr):
+      return (left == True) | (right == True)
+    elif isinstance(op, ast.BitXor):
+      # This shortcut may not always work. When does it fail?
+      return left + right == 1
     _fail(node, msg='Binary op %s unsupported' % op.__class__.__name__)
 
   def visit_Compare(self, node):
@@ -56,7 +59,7 @@ class ExprTransformer(ast.NodeTransformer):
 
   def visit_Expr(self, node):
     result = self.visit(node.value)  # Expr is a wrapper on `value`.
-    if isinstance(result, Numberjack.Predicate):
+    if isinstance(result, (_predicates.Predicates, Numberjack.Predicate)):
       return result
     # Every expression is implicitly true.
     return result == True
