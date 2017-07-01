@@ -34,3 +34,6 @@ class Predicates(list):
     # TODO: This should really be a cross product.
     # This shortcut may not always work. When does it fail?
     return Predicates([child + other == 1 for child in self])
+
+  def __str__(self):
+    return '\n'.join(map(str, self))
