@@ -45,7 +45,5 @@ with description('solutions'):
         subject to:
           (name["Andy"].occupation["analyst"] == True)
           ((name["Bob"].age[11] + occupation["analyst"].age[11]) == 1)
-          (((10*occupation["CEO"].age[10] + 11*occupation["CEO"].age[11] + 
-          12*occupation["CEO"].age[12]) + 2) == (10*name["Andy"].age[10] + 
-          11*name["Andy"].age[11] + 12*name["Andy"].age[12]))
+          (((10*occupation["CEO"].age[10] + 11*occupation["CEO"].age[11] + 12*occupation["CEO"].age[12]) + 2) == (10*name["Andy"].age[10] + 11*name["Andy"].age[11] + 12*name["Andy"].age[12]))
       """))
