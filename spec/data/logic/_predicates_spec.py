@@ -56,3 +56,51 @@ with description('_predicates'):
     with it('produces strings for multiple predicates'):
       predicates = _predicates.Predicates(['first', 'second'])
       expect(str(predicates)).to(equal('first\nsecond'))
+
+  with description('priorities'):
+    with before.all:
+      FAIL = {}
+      self.FAIL = FAIL
+
+
+      class _Value(object):
+        def __init__(self, value):
+          self._value = value
+
+
+      class _HighPriority(_Value):
+        def __eq__(self, other):
+          return self._value == other._value
+
+        def __add__(self, other):
+          return self._value + other._value
+
+
+      class _LowPriority(_Value):
+        def __eq__(self, other):
+          return FAIL
+
+        def __add__(self, other):
+          return FAIL
+
+
+      self.patcher = mock.patch.object(_predicates, '_LOWER_PRIORITY', (
+        _LowPriority,
+      ))
+
+      self.patcher.start()
+      self.bad_value = _LowPriority(5)
+      self.good_value = _HighPriority(5)
+
+    with after.all:
+      self.patcher.stop()
+
+    with it('normally prefers left operand'):
+      expect(self.bad_value == self.good_value).to(be(self.FAIL))
+
+    with it('succeeds when operands are flipped'):
+      expect(self.good_value == self.bad_value).to(be_true)
+
+    with it('changes precedence as Predicates'):
+      expect(_predicates.Predicates([self.bad_value]) == self.good_value).to(
+          equal([True]))
