@@ -29,13 +29,23 @@ with description('solutions'):
     with it('supports diverse constraints'):
       self.model(self.Andy.occupation == self.Analyst)
       self.model((11 == self.Bob.age) ^ (11 == self.Analyst.age))
+      self.model(self.CEO.age + 2 == self.Andy.age)
       expect(str(self.model)).to(look_like("""
         assign:
           name["Andy"].occupation["analyst"] in {0,1}
           name["Bob"].age[11] in {0,1}
           occupation["analyst"].age[11] in {0,1}
+          occupation["CEO"].age[10] in {0,1}
+          occupation["CEO"].age[11] in {0,1}
+          occupation["CEO"].age[12] in {0,1}
+          name["Andy"].age[10] in {0,1}
+          name["Andy"].age[11] in {0,1}
+          name["Andy"].age[12] in {0,1}
           
         subject to:
           (name["Andy"].occupation["analyst"] == True)
           ((name["Bob"].age[11] + occupation["analyst"].age[11]) == 1)
+          (((10*occupation["CEO"].age[10] + 11*occupation["CEO"].age[11] + 
+          12*occupation["CEO"].age[12]) + 2) == (10*name["Andy"].age[10] + 
+          11*name["Andy"].age[11] + 12*name["Andy"].age[12]))
       """))
