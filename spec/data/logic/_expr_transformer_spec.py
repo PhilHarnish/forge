@@ -71,3 +71,39 @@ with description('_expr_transformer.ExprTransformer'):
       expect(str(compiled)).to(equal(
           '((name["andy"].fruit["cherries"] +'
           ' name["bob"].fruit["cherries"]) == 1)'))
+
+    with it('supports + operation, int on right'):
+      expr = self.name['andy'].age + 2
+      compiled = self.transformer.compile(expr)
+      expect(compiled).to(be_a(_predicates.Predicates))
+      expect(str(compiled)).to(equal(
+          '(('
+          '10*name["andy"].age[10] in {0,1} + 11*name["andy"].age[11] in {0,1}'
+          ') + 2)'))
+
+    with it('supports + operation, int on left'):
+      expr = 2 + self.name['andy'].age
+      compiled = self.transformer.compile(expr)
+      expect(compiled).to(be_a(_predicates.Predicates))
+      expect(str(compiled)).to(equal(
+          '(('
+          '10*name["andy"].age[10] in {0,1} + 11*name["andy"].age[11] in {0,1}'
+          ') + 2)'))
+
+    with it('supports - operation, int on right'):
+      expr = self.name['andy'].age - 2
+      compiled = self.transformer.compile(expr)
+      expect(compiled).to(be_a(_predicates.Predicates))
+      expect(str(compiled)).to(equal(
+          '(('
+          '10*name["andy"].age[10] in {0,1} + 11*name["andy"].age[11] in {0,1}'
+          ') - 2)'))
+
+    with it('supports - operation, int on left'):
+      expr = 2 - self.name['andy'].age
+      compiled = self.transformer.compile(expr)
+      expect(compiled).to(be_a(_predicates.Predicates))
+      expect(str(compiled)).to(equal(
+          '(2 - ('
+          '10*name["andy"].age[10] in {0,1} + 11*name["andy"].age[11] in {0,1}'
+          '))'))

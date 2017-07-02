@@ -43,6 +43,10 @@ class ExprTransformer(ast.NodeTransformer):
     elif isinstance(op, ast.BitXor):
       # This shortcut may not always work. When does it fail?
       return left + right == 1
+    elif isinstance(op, ast.Add):
+      return left + right
+    elif isinstance(op, ast.Sub):
+      return left - right
     _fail(node, msg='Binary op %s unsupported' % op.__class__.__name__)
 
   def visit_Compare(self, node):
