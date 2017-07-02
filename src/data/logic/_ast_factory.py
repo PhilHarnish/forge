@@ -16,11 +16,17 @@ class AccumulatingExpressionMixin(object):
   def __add__(self, other):
     return bin_op(self, '+', other)
 
+  def __radd__(self, other):
+    return bin_op(other, '+', self)
+
   def __eq__(self, other):
     return compare(self, ['=='], [other])
 
   def __sub__(self, other):
     return bin_op(self, '-', other)
+
+  def __rsub__(self, other):
+    return bin_op(other, '-', self)
 
   def __ne__(self, other):
     return compare(self, ['!='], [other])
