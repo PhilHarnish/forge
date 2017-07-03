@@ -57,6 +57,14 @@ class ExprTransformer(ast.NodeTransformer):
         left = (left == right)
       elif isinstance(op, ast.NotEq):
         left = (left != right)
+      elif isinstance(op, ast.Gt):
+        left = (left > right)
+      elif isinstance(op, ast.GtE):
+        left = (left >= right)
+      elif isinstance(op, ast.Lt):
+        left = (left < right)
+      elif isinstance(op, ast.LtE):
+        left = (left <= right)
       else:
         _fail(node, msg='Comparing %s unsupported' % op.__class__.__name__)
     return left
@@ -72,6 +80,9 @@ class ExprTransformer(ast.NodeTransformer):
     if not isinstance(node.ctx, ast.Load):
       raise TypeError('ast.Name only supports ast.Load')
     return self._model.resolve(node.id)
+
+  def visit_NameConstant(self, node):
+    return node.value
 
   def visit_Num(self, node):
     return self._model.resolve_value(node.n)

@@ -9,6 +9,10 @@ _OPERATOR_MAP = {
   '|': ast.BitOr,
   '^': ast.BitXor,
   '-': ast.Sub,
+  '>': ast.Gt,
+  '>=': ast.GtE,
+  '<': ast.Lt,
+  '<=': ast.LtE,
 }
 
 
@@ -21,6 +25,18 @@ class AccumulatingExpressionMixin(object):
 
   def __eq__(self, other):
     return compare(self, ['=='], [other])
+
+  def __gt__(self, other):
+    return compare(self, ['>'], [other])
+
+  def __ge__(self, other):
+    return compare(self, ['>='], [other])
+
+  def __lt__(self, other):
+    return compare(self, ['<'], [other])
+
+  def __le__(self, other):
+    return compare(self, ['<='], [other])
 
   def __sub__(self, other):
     return bin_op(self, '-', other)
