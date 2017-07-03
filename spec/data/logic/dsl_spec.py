@@ -1,7 +1,9 @@
+import collections
+
 from data.logic.dsl import *
 from spec.mamba import *
 
-with description('solutions'):
+with description('dsl'):
   with before.each:
     self.dimensions = DimensionFactory()
     self.model = Model(self.dimensions)
@@ -47,3 +49,181 @@ with description('solutions'):
           ((name["Bob"].age[11] + occupation["analyst"].age[11]) == 1)
           (((10*occupation["CEO"].age[10] + 11*occupation["CEO"].age[11] + 12*occupation["CEO"].age[12]) + 2) == (10*name["Andy"].age[10] + 11*name["Andy"].age[11] + 12*name["Andy"].age[12]))
       """))
+
+  with description('2D solutions'):
+    with before.each:
+      (self.Andy, self.Bob, self.Cathy) = self.name = self.dimensions(
+          name=['Andy', 'Bob', 'Cathy'])
+      (self._10, self._11, self._12) = self.age = self.dimensions(
+          age=[10, 11, 12])
+
+    with it('volunteers a valid solution without any context'):
+      name_counter = collections.Counter()
+      age_counter = collections.Counter()
+      solver = self.model.load('Mistral')
+      solver.solve()
+      for variable_name, value in self.model._variable_cache.items():
+        name, age = variable_name.split('.')
+        if value.get_value():
+          name_counter[name] += 1
+          age_counter[age] += 1
+      expect(name_counter).to(equal({
+        'name["Andy"]': 1,
+        'name["Bob"]': 1,
+        'name["Cathy"]': 1
+      }))
+      expect(age_counter).to(equal({
+        'age[12]': 1,
+        'age[11]': 1,
+        'age[10]': 1
+      }))
+
+    with it('finds correct solution with constraints'):
+      # Force Bob == 12.
+      self.model(self.Andy[12] == False)
+      self.model(self.Cathy[12] == False)
+      # Force Cathy == 10
+      self.model(self.name['Cathy'][11] == False)
+      solver = self.model.load('Mistral')
+      solver.solve()
+      expected = {
+        'name["Andy"].age[12]': 0,
+        'name["Cathy"].age[12]': 0,
+        'name["Cathy"].age[11]': 0,
+        'name["Andy"].age[10]': 0,
+        'name["Andy"].age[11]': 1,
+        'name["Bob"].age[10]': 0,
+        'name["Bob"].age[11]': 0,
+        'name["Bob"].age[12]': 1,
+        'name["Cathy"].age[10]': 1,
+      }
+      actual = {}
+      for key, value in self.model._variable_cache.items():
+        actual[key] = value.get_value()
+      expect(actual).to(equal(expected))
+
+    with it('finds solutions with reified dimension inequalities'):
+      # Force Andy between Cathy and Bob.
+      self.model(self.name['Andy']['age'] > self.name['Cathy']['age'])
+      self.model(self.name['Andy']['age'] < self.name['Bob']['age'])
+      solver = self.model.load('Mistral')
+      solver.solve()
+      expected = {
+        'name["Andy"].age[10]': 0,
+        'name["Andy"].age[11]': 1,
+        'name["Andy"].age[12]': 0,
+        'name["Andy"].age[None]': 11,
+        'name["Cathy"].age[10]': 1,
+        'name["Cathy"].age[11]': 0,
+        'name["Cathy"].age[12]': 0,
+        'name["Cathy"].age[None]': 10,
+        'name["Bob"].age[10]': 0,
+        'name["Bob"].age[11]': 0,
+        'name["Bob"].age[12]': 1,
+        'name["Bob"].age[None]': 12
+      }
+      actual = {}
+      for key, value in self.model._variable_cache.items():
+        actual[key] = value.get_value()
+      expect(actual).to(equal(expected))
+
+    with it('finds solutions with reified dimension offsets'):
+      # Cathy = Bob - 2.
+      self.model(self.name['Cathy']['age'] == self.name['Bob']['age'] - 2)
+      solver = self.model.load('Mistral')
+      solver.solve()
+      expected = {
+        'name["Bob"].age[10]': 0,
+        'name["Bob"].age[11]': 0,
+        'name["Bob"].age[12]': 1,
+        'name["Bob"].age[None]': 0,
+        'name["Cathy"].age[10]': 1,
+        'name["Cathy"].age[11]': 0,
+        'name["Cathy"].age[12]': 0,
+        'name["Cathy"].age[None]': 10,
+        'name["Andy"].age[10]': 0,
+        'name["Andy"].age[11]': 1,
+        'name["Andy"].age[12]': 0
+      }
+      actual = {}
+      for key, value in self.model._variable_cache.items():
+        actual[key] = value.get_value()
+      expect(actual).to(equal(expected))
+
+  with description('3D solutions'):
+    with before.each:
+      (self.Andy, self.Bob, self.Cathy) = self.name = self.dimensions(
+          name=['Andy', 'Bob', 'Cathy'])
+      (self.CEO, self.Project_Manager, self.Analyst) = self.occupation = (
+        self.dimensions(occupation=['CEO', 'Project Manager', 'analyst']))
+      (self._10, self._11, self._12) = self.age = self.dimensions(
+          age=[10, 11, 12])
+
+    with it('volunteers a valid solution without any context'):
+      seen = collections.Counter()
+      solver = self.model.load('Mistral')
+      solver.solve()
+      for variable_name, value in self.model._variable_cache.items():
+        x, y = variable_name.split('.')
+        if value.get_value():
+          seen[x] += 1
+          seen[y] += 1
+      # Each is "2" because each value is part of 2 tables.
+      expect(seen).to(equal({
+        'name["Andy"]': 2, 'name["Bob"]': 2, 'name["Cathy"]': 2,
+        'occupation["CEO"]': 2, 'occupation["Project Manager"]': 2,
+        'occupation["analyst"]': 2,
+        'age[10]': 2, 'age[11]': 2, 'age[12]': 2,
+      }))
+
+    with it('produces a correct solution with constraints'):
+      # CEO is the oldest.
+      self.model(self.CEO['age'] > self.Project_Manager['age'])
+      self.model(self.CEO['age'] > self.Analyst['age'])
+      # Andy is a year younger than Bob.
+      self.model(self.Andy['age'] + 1 == self.Bob['age'])
+      # Cathy is older than the Project_Manager.
+      self.model(self.Cathy['age'] > self.Project_Manager['age'])
+      # Bob is either the CEO or the accountant.
+      self.model(self.Bob['CEO'] | self.Bob['Project Manager'])
+      solver = self.model.load('Mistral')
+      solver.solve()
+      expected = {
+        'occupation["CEO"].age[10]': 0,
+        'occupation["CEO"].age[11]': 0,
+        'occupation["CEO"].age[12]': 1,
+        'occupation["CEO"].age[None]': 12,
+        'occupation["Project Manager"].age[10]': 0,
+        'occupation["Project Manager"].age[11]': 1,
+        'occupation["Project Manager"].age[12]': 0,
+        'occupation["Project Manager"].age[None]': 11,
+        'occupation["analyst"].age[10]': 1,
+        'occupation["analyst"].age[11]': 0,
+        'occupation["analyst"].age[12]': 0,
+        'occupation["analyst"].age[None]': 10,
+        'name["Andy"].age[10]': 1,
+        'name["Andy"].age[11]': 0,
+        'name["Andy"].age[12]': 0,
+        'name["Andy"].age[None]': 0,
+        'name["Bob"].age[10]': 0,
+        'name["Bob"].age[11]': 1,
+        'name["Bob"].age[12]': 0,
+        'name["Bob"].age[None]': 11,
+        'name["Cathy"].age[10]': 0,
+        'name["Cathy"].age[11]': 0,
+        'name["Cathy"].age[12]': 1,
+        'name["Cathy"].age[None]': 12,
+        'name["Bob"].occupation["CEO"]': 0,
+        'name["Bob"].occupation["Project Manager"]': 1,
+        'name["Andy"].occupation["CEO"]': 0,
+        'name["Andy"].occupation["Project Manager"]': 0,
+        'name["Andy"].occupation["analyst"]': 1,
+        'name["Bob"].occupation["analyst"]': 0,
+        'name["Cathy"].occupation["CEO"]': 1,
+        'name["Cathy"].occupation["Project Manager"]': 0,
+        'name["Cathy"].occupation["analyst"]': 0
+      }
+      actual = {}
+      for key, value in self.model._variable_cache.items():
+        actual[key] = value.get_value()
+      expect(actual).to(equal(expected))

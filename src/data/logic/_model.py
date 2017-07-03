@@ -33,7 +33,7 @@ class _Model(Numberjack.Model):
   def load(self, solvername, X=None, encoding=None):
     # WARNING: Nothing prevents redundant dimensional constraints.
     self.add(self.dimension_constraints())
-    super(_Model, self).load(solvername, X=X, encoding=encoding)
+    return super(_Model, self).load(solvername, X=X, encoding=encoding)
 
   def _compile(self, expr):
     return self._expr_transformer.compile(expr)
