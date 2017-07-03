@@ -1,3 +1,4 @@
+import ast
 import itertools
 
 import Numberjack
@@ -21,11 +22,16 @@ class _Model(Numberjack.Model):
     for arg in args:
       if isinstance(arg, (list, tuple)):
         self.add(*arg)
+      elif isinstance(arg, ast.Expr):
+        converted.append(self._compile(arg))
       elif isinstance(arg, Numberjack.Predicate):
         converted.append(arg)
       else:
         raise TypeError('Model only accepts expressions (given %s)' % arg)
     super(_Model, self).add(converted)
+
+  def _compile(self, expr):
+    return self._expr_transformer.compile(expr)
 
   def resolve(self, address):
     return _reference.Reference(self, _util.parse(address))
