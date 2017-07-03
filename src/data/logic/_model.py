@@ -93,6 +93,27 @@ class _Model(Numberjack.Model):
       variables.append(self.get_variables(constraints))
     return Numberjack.Sum(variables, values)
 
+  def get_solutions(self):
+    column_headers = list(self._dimension_factory.dimensions().keys())
+    cells = []
+    dimensions = list(self._dimension_factory.dimensions().items())
+    first_header, first_values = dimensions[0]
+    for first_value in first_values:
+      row = [[first_value]]
+      cells.append(row)
+      for column_header, column_values in dimensions[1:]:
+        true_values = []
+        row.append(true_values)
+        for column_value in column_values:
+          variable = self.get_variables({
+            first_header: first_value,
+            column_header: column_value,
+          })
+          assert len(variable) == 1, 'Constraint error for %s' % variable
+          if variable[0].get_value() == 1:
+            true_values.append(column_value)
+    return column_headers, cells
+
   def dimension_constraints(self):
     return (
       self._dimensional_cardinality_constraints(),

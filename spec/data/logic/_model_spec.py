@@ -120,7 +120,24 @@ with description('_model._Model usage'):
           '(10*name["bob"].age[10] in {0,1} + 11*name["bob"].age[11] in {0,1})'
       ))
 
-  with description('_dimension_constraints'):
+  with description('get_solutions'):
+    with it('returns a 3x2 table'):
+      self.model(self.andy.cherries[10] == True)
+      self.model.load('Mistral').solve()
+      column_headings, cells = self.model.get_solutions()
+      expect(column_headings).to(have_len(3))
+      expect(column_headings).to(equal([
+        'name', 'fruit', 'age',
+      ]))
+      expect(cells).to(have_len(2))
+      for row in cells:
+        expect(row).to(have_len(3))
+      expect(cells).to(equal([
+        [['andy'], ['cherries'], [10]],
+        [['bob'], ['dates'], [11]],
+      ]))
+
+  with description('dimension_constraints'):
     with it('enforces cardinality constraints'):
       result = self.model._dimensional_cardinality_constraints()
       expect(result).to(have_len(12))
