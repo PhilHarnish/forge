@@ -88,6 +88,12 @@ class _Model(Numberjack.Model):
       variables.append(self.get_variables(constraints))
     return Numberjack.Sum(variables, values)
 
+  def _dimension_constraints(self):
+    return (
+      self._dimensional_cardinality_constraints(),
+      self._dimensional_inference_constraints(),
+    )
+
   def _dimensional_cardinality_constraints(self):
     result = []
     for group in self._dimension_factory.cardinality_groups():
@@ -101,4 +107,17 @@ class _Model(Numberjack.Model):
         variables.append(variable[0])
       result.append(
           Numberjack.Gcc(variables, {0: (num_zeros, num_zeros), 1: (1, 1)}))
+    return _predicates.Predicates(result)
+
+  def _dimensional_inference_constraints(self):
+    result = []
+    for group in self._dimension_factory.inference_groups():
+      variables = []
+      for constraint in group:
+        variable = self.get_variables(constraint)
+        assert len(variable) == 1, 'Enforcing cardinality impossible for %s' % (
+          constraint
+        )
+        variables.append(variable[0])
+      result.append(Numberjack.Sum(variables) != 2)
     return _predicates.Predicates(result)

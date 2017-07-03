@@ -1,3 +1,5 @@
+import re
+
 from data.logic import _dimension_factory, _model, _reference
 from spec.mamba import *
 
@@ -138,4 +140,21 @@ with description('_model._Model usage'):
         Gcc(name["andy"].fruit["dates"] name["bob"].fruit["dates"])
         Gcc(name["bob"].age[10] name["bob"].age[11])
         Gcc(name["bob"].fruit["cherries"] name["bob"].fruit["dates"])
+      """))
+
+    with it('enforces inference constraints'):
+      result = self.model._dimensional_inference_constraints()
+      expect(result).to(have_len(8))
+      s = '\n'.join(sorted(
+          re.sub(r'\.|name|fruit|age', '', str(result)).split('\n')
+      ))
+      expect(s).to(look_like("""
+        ((["andy"]["cherries"] + ["andy"][10] + ["cherries"][10]) != 2)
+        ((["andy"]["cherries"] + ["andy"][11] + ["cherries"][11]) != 2)
+        ((["andy"]["dates"] + ["andy"][10] + ["dates"][10]) != 2)
+        ((["andy"]["dates"] + ["andy"][11] + ["dates"][11]) != 2)
+        ((["bob"]["cherries"] + ["bob"][10] + ["cherries"][10]) != 2)
+        ((["bob"]["cherries"] + ["bob"][11] + ["cherries"][11]) != 2)
+        ((["bob"]["dates"] + ["bob"][10] + ["dates"][10]) != 2)
+        ((["bob"]["dates"] + ["bob"][11] + ["dates"][11]) != 2)
       """))
