@@ -164,7 +164,9 @@ class look_like(equal):
     super(look_like, self).__init__(self._clean(expected))
 
   def _match(self, subject):
-    return super(look_like, self)._match(self._clean(subject))
+    cleaned = self._clean(subject)
+    success, _ = super(look_like, self)._match(cleaned)
+    return success, cleaned.split('\n')
 
   def _clean(self, s):
     return textwrap.dedent(s.rstrip(' ').strip('\n'))
