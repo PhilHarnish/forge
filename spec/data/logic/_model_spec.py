@@ -31,6 +31,17 @@ with description('_model._Model'):
           self.cherries != self.bob,
       )
       expect(self.model.constraints).to(have_len(3))
+      expect(str(self.model)).to(look_like("""
+        assign:
+          name["andy"].fruit["cherries"] in {0,1}
+          name["bob"].fruit["dates"] in {0,1}
+          name["bob"].fruit["cherries"] in {0,1}
+
+        subject to:
+          (name["andy"].fruit["cherries"] == True)
+          (name["bob"].fruit["dates"] == True)
+          (name["bob"].fruit["cherries"] == False)
+      """))
 
   with description('resolve'):
     with before.each:
