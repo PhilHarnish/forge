@@ -5,7 +5,7 @@ from spec.mamba import *
 
 with description('_reference.Reference'):
   with before.each:
-    self.model = mock.Mock(_get_variables=lambda *args: Numberjack.Variable())
+    self.model = mock.Mock(get_variables=lambda *args: Numberjack.Variable())
 
   with description('ValueReference constructor'):
     with it('handles simple input'):
@@ -53,3 +53,19 @@ with description('_reference.Reference'):
       c = a != b
       expect(c).to(be_a(Numberjack.Predicate))
       expect(str(c)).to(equal('(x == False)'))
+
+  with description('value'):
+    with it('returned from ValueReference matches input'):
+      expect(_reference.ValueReference(self.model, 11).value()).to(equal(11))
+
+    with it('returned from Reference matches input if under-constrained'):
+      expect(_reference.Reference(self.model, {
+        'age': 11,
+      }).value()).to(equal(11))
+
+    with it('returns Numberjack.Variable for 2 constraints'):
+      value = _reference.Reference(self.model, {
+        'age': 11,
+        'name': 'andy',
+      }).value()
+      expect(value).to(be_a(Numberjack.Variable))

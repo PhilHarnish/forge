@@ -25,7 +25,11 @@ class Reference(ValueReference):
   """Holds a reference to a dimension Name."""
 
   def __init__(self, model, constraints):
-    super(Reference, self).__init__(model, _UNDEFINED)
+    if len(constraints) == 1:
+      value = next(iter(constraints.values()))
+    else:
+      value = _UNDEFINED
+    super(Reference, self).__init__(model, value)
     self._constraints = constraints
 
   def __eq__(self, other):
@@ -45,7 +49,11 @@ class Reference(ValueReference):
     return super(Reference, self).__ne__(other)
 
   def value(self):
-    return self._model._get_variables(self._constraints)
+    # If the Reference is under-constrained there won't be any matching
+    # variables. However, an unconstrained Reference may have one constraint
+    # value which could be returned instead.
+    return (self._model.get_variables(self._constraints) or
+            super(Reference, self).value())
 
 
 def coerce_value(value):
