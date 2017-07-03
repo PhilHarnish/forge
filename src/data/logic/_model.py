@@ -1,6 +1,6 @@
 import Numberjack
 
-from data.logic import _expr_transformer, _util
+from data.logic import _expr_transformer, _reference, _util
 
 
 class _Model(Numberjack.Model):
@@ -26,16 +26,13 @@ class _Model(Numberjack.Model):
     super(_Model, self).add(converted)
 
   def resolve(self, address):
-    return _Reference(self, _util.parse(address))
+    return _reference.Reference(self, _util.parse(address))
 
   def resolve_value(self, value):
-    return _Reference(
-        self, self._dimension_factory[value].dimension_constraints())
-
-
-class _Reference(object):
-  """Holds a reference to a dimension Name."""
-
-  def __init__(self, model, constraints, equality=True):
-    self._model = model
-    self._constraints = constraints
+    try:
+      return _reference.Reference(
+          self, self._dimension_factory[value].dimension_constraints())
+    except KeyError:
+      # Not a specific dimension. It seems like returning "value" is possible
+      # if the __r*__ operators are specified.
+      return _reference.ValueReference(self, value)

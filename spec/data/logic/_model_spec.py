@@ -1,4 +1,4 @@
-from data.logic import _dimension_factory, _model
+from data.logic import _dimension_factory, _model, _reference
 from spec.mamba import *
 
 with description('_model._Model'):
@@ -65,3 +65,8 @@ with description('_model._Model'):
       expect(reference._constraints).to(equal({
         'fruit': 'cherries'
       }))
+
+    with it('resolves primitives'):
+      reference = self.model.resolve_value(11)
+      expect(reference).to(be_a(_reference.ValueReference))
+      expect(reference.value()).to(equal(11))
