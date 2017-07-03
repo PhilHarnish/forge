@@ -35,3 +35,46 @@ def overload_with_fn(fn):
         setattr(cls, rop, fn(rop_fn, op_fn))
     return cls
   return wrapper
+
+
+class OverloadedSelfBase(object):
+  def __eq__(self, other):
+    return self
+
+  def __ne__(self, other):
+    return self
+
+  def __lt__(self, other):
+    return self
+
+  def __gt__(self, other):
+    return self
+
+  def __le__(self, other):
+    return self
+
+  def __ge__(self, other):
+    return self
+
+  def __add__(self, other):
+    return self
+
+  def __radd__(self, other):
+    return self
+  def __sub__(self, other):
+    return self
+
+  def __rsub__(self, other):
+    return self
+
+  def __or__(self, other):
+    return self
+
+  def __ror__(self, other):
+    return self
+
+  def __xor__(self, other):
+    return self
+
+  def __rxor__(self, other):
+    return self
