@@ -30,6 +30,11 @@ class _Model(Numberjack.Model):
         raise TypeError('Model only accepts expressions (given %s)' % arg)
     super(_Model, self).add(converted)
 
+  def load(self, solvername, X=None, encoding=None):
+    # WARNING: Nothing prevents redundant dimensional constraints.
+    self.add(self.dimension_constraints())
+    super(_Model, self).load(solvername, X=X, encoding=encoding)
+
   def _compile(self, expr):
     return self._expr_transformer.compile(expr)
 
@@ -88,7 +93,7 @@ class _Model(Numberjack.Model):
       variables.append(self.get_variables(constraints))
     return Numberjack.Sum(variables, values)
 
-  def _dimension_constraints(self):
+  def dimension_constraints(self):
     return (
       self._dimensional_cardinality_constraints(),
       self._dimensional_inference_constraints(),
@@ -98,15 +103,20 @@ class _Model(Numberjack.Model):
     result = []
     for group in self._dimension_factory.cardinality_groups():
       num_zeros = len(group) - 1
-      variables = []
-      for constraint in group:
-        variable = self.get_variables(constraint)
-        assert len(variable) == 1, 'Enforcing cardinality impossible for %s' % (
-          constraint
-        )
-        variables.append(variable[0])
-      result.append(
-          Numberjack.Gcc(variables, {0: (num_zeros, num_zeros), 1: (1, 1)}))
+      if num_zeros == 0:
+        continue
+      elif num_zeros == 1:
+        a, b = group
+        result.append(self.get_variables(a) != self.get_variables(b))
+      else:
+        variables = []
+        for constraint in group:
+          variable = self.get_variables(constraint)
+          assert len(variable) == 1, 'Enforcing cardinality impossible for %s' % (
+            constraint
+          )
+          variables.append(variable[0])
+        result.append(Numberjack.Sum(variables) == 1)
     return _predicates.Predicates(result)
 
   def _dimensional_inference_constraints(self):

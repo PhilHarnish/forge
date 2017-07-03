@@ -128,18 +128,18 @@ with description('_model._Model usage'):
           str(result).replace(' | 0 in [1,1] 1 in [1,1] ', '').split('\n')
       ))
       expect(s).to(look_like("""
-        Gcc(fruit["cherries"].age[10] fruit["cherries"].age[11])
-        Gcc(fruit["cherries"].age[10] fruit["dates"].age[10])
-        Gcc(fruit["cherries"].age[11] fruit["dates"].age[11])
-        Gcc(fruit["dates"].age[10] fruit["dates"].age[11])
-        Gcc(name["andy"].age[10] name["andy"].age[11])
-        Gcc(name["andy"].age[10] name["bob"].age[10])
-        Gcc(name["andy"].age[11] name["bob"].age[11])
-        Gcc(name["andy"].fruit["cherries"] name["andy"].fruit["dates"])
-        Gcc(name["andy"].fruit["cherries"] name["bob"].fruit["cherries"])
-        Gcc(name["andy"].fruit["dates"] name["bob"].fruit["dates"])
-        Gcc(name["bob"].age[10] name["bob"].age[11])
-        Gcc(name["bob"].fruit["cherries"] name["bob"].fruit["dates"])
+        (fruit["cherries"].age[10] != fruit["cherries"].age[11])
+        (fruit["cherries"].age[10] != fruit["dates"].age[10])
+        (fruit["cherries"].age[11] != fruit["dates"].age[11])
+        (fruit["dates"].age[10] != fruit["dates"].age[11])
+        (name["andy"].age[10] != name["andy"].age[11])
+        (name["andy"].age[10] != name["bob"].age[10])
+        (name["andy"].age[11] != name["bob"].age[11])
+        (name["andy"].fruit["cherries"] != name["andy"].fruit["dates"])
+        (name["andy"].fruit["cherries"] != name["bob"].fruit["cherries"])
+        (name["andy"].fruit["dates"] != name["bob"].fruit["dates"])
+        (name["bob"].age[10] != name["bob"].age[11])
+        (name["bob"].fruit["cherries"] != name["bob"].fruit["dates"])
       """))
 
     with it('enforces inference constraints'):
@@ -158,3 +158,14 @@ with description('_model._Model usage'):
         ((["bob"]["dates"] + ["bob"][10] + ["dates"][10]) != 2)
         ((["bob"]["dates"] + ["bob"][11] + ["dates"][11]) != 2)
       """))
+
+  with description('load'):
+    with it('applies dimensional constraints before loading'):
+      expect(str(self.model)).to(look_like("""
+        assign:
+                 
+        subject to:
+      """))
+      expect(len(self.model.constraints)).to(be(0))
+      self.model.load('Mistral')
+      expect(len(self.model.constraints)).to(be_above(20))
