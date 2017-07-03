@@ -117,3 +117,25 @@ with description('_model._Model usage'):
       expect(str(result)).to(equal(
           '(10*name["bob"].age[10] in {0,1} + 11*name["bob"].age[11] in {0,1})'
       ))
+
+  with description('_dimension_constraints'):
+    with it('enforces cardinality constraints'):
+      result = self.model._dimensional_cardinality_constraints()
+      expect(result).to(have_len(12))
+      s = '\n'.join(sorted(
+          str(result).replace(' | 0 in [1,1] 1 in [1,1] ', '').split('\n')
+      ))
+      expect(s).to(look_like("""
+        Gcc(fruit["cherries"].age[10] fruit["cherries"].age[11])
+        Gcc(fruit["cherries"].age[10] fruit["dates"].age[10])
+        Gcc(fruit["cherries"].age[11] fruit["dates"].age[11])
+        Gcc(fruit["dates"].age[10] fruit["dates"].age[11])
+        Gcc(name["andy"].age[10] name["andy"].age[11])
+        Gcc(name["andy"].age[10] name["bob"].age[10])
+        Gcc(name["andy"].age[11] name["bob"].age[11])
+        Gcc(name["andy"].fruit["cherries"] name["andy"].fruit["dates"])
+        Gcc(name["andy"].fruit["cherries"] name["bob"].fruit["cherries"])
+        Gcc(name["andy"].fruit["dates"] name["bob"].fruit["dates"])
+        Gcc(name["bob"].age[10] name["bob"].age[11])
+        Gcc(name["bob"].fruit["cherries"] name["bob"].fruit["dates"])
+      """))

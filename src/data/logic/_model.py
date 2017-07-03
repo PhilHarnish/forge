@@ -20,7 +20,7 @@ class _Model(Numberjack.Model):
   def add(self, *args):
     converted = []
     for arg in args:
-      if isinstance(arg, (list, tuple)):
+      if isinstance(arg, (list, tuple, _predicates.Predicates)):
         self.add(*arg)
       elif isinstance(arg, ast.Expr):
         converted.append(self._compile(arg))
@@ -87,3 +87,18 @@ class _Model(Numberjack.Model):
       constraints[key2] = value
       variables.append(self.get_variables(constraints))
     return Numberjack.Sum(variables, values)
+
+  def _dimensional_cardinality_constraints(self):
+    result = []
+    for group in self._dimension_factory.cardinality_groups():
+      num_zeros = len(group) - 1
+      variables = []
+      for constraint in group:
+        variable = self.get_variables(constraint)
+        assert len(variable) == 1, 'Enforcing cardinality impossible for %s' % (
+          constraint
+        )
+        variables.append(variable[0])
+      result.append(
+          Numberjack.Gcc(variables, {0: (num_zeros, num_zeros), 1: (1, 1)}))
+    return _predicates.Predicates(result)
