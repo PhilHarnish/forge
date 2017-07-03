@@ -1,20 +1,22 @@
 from data.logic import _dimension_factory, _model, _reference
 from spec.mamba import *
 
-with description('_model._Model'):
+with description('_model._Model constructor'):
   with before.each:
     self.factory = _dimension_factory._DimensionFactory()
 
-  with description('constructor'):
-    with it('handles simple input'):
-      expect(calling(_model._Model, self.factory)).not_to(raise_error)
+  with it('handles simple input'):
+    expect(calling(_model._Model, self.factory)).not_to(raise_error)
+
+with description('_model._Model usage'):
+  with before.each:
+    self.factory = _dimension_factory._DimensionFactory()
+    self.model = _model._Model(self.factory)
+    self.andy, self.bob = self.factory(name=['andy', 'bob'])
+    self.cherries, self.dates = self.factory(fruit=['cherries', 'dates'])
+    self._10, self._11 = self.factory(age=[10, 11])
 
   with description('constraints'):
-    with before.each:
-      self.model = _model._Model(self.factory)
-      self.andy, self.bob = self.factory(name=['andy', 'bob'])
-      self.cherries, self.dates = self.factory(fruit=['cherries', 'dates'])
-
     with it('accumulates constraints one at a time'):
       expect(self.model.constraints).to(have_len(0))
       self.model(self.andy == self.cherries)
@@ -44,11 +46,6 @@ with description('_model._Model'):
       """))
 
   with description('resolve'):
-    with before.each:
-      self.model = _model._Model(self.factory)
-      self.factory(name=['andy', 'bob'])
-      self.factory(fruit=['cherries', 'dates'])
-
     with it('resolves simple addresses'):
       reference = self.model.resolve('name["andy"]')
       expect(reference._constraints).to(equal({'name': 'andy'}))
@@ -63,10 +60,51 @@ with description('_model._Model'):
     with it('resolves values'):
       reference = self.model.resolve_value('cherries')
       expect(reference._constraints).to(equal({
-        'fruit': 'cherries'
+        'fruit': 'cherries',
       }))
 
     with it('resolves primitives'):
       reference = self.model.resolve_value(11)
       expect(reference).to(be_a(_reference.ValueReference))
       expect(reference.value()).to(equal(11))
+
+  with description('get_variables'):
+    with it('returns empty result for empty query'):
+      expect(str(self.model.get_variables({}))).to(equal(''))
+
+    with it('returns empty results for weakly constrained query'):
+      expect(str(self.model.get_variables({'name': 'andy'}))).to(equal(''))
+
+    with it('returns 1 result for well constrained query'):
+      result = self.model.get_variables({
+        'name': 'andy',
+        'fruit': 'cherries',
+      })
+      expect(result).to(have_len(1))
+      expect(str(result)).to(equal('name["andy"].fruit["cherries"] in {0,1}'))
+
+    with it('returns multiple results for well constrained query'):
+      result = self.model.get_variables({
+        'name': 'andy',
+        'fruit': 'cherries',
+        'age': 10,
+      })
+      expect(result).to(have_len(3))
+      expect(str(result)).to(look_like("""
+        name["andy"].fruit["cherries"] in {0,1}
+        name["andy"].age[10] in {0,1}
+        fruit["cherries"].age[10] in {0,1}
+      """))
+
+    with it('returns from a cache'):
+      result_1 = self.model.get_variables({
+        'name': 'andy',
+        'fruit': 'cherries',
+      })
+      result_2 = self.model.get_variables({
+        'name': 'andy',
+        'fruit': 'cherries',
+      })
+      expect(result_1).to(have_len(len(result_2)))
+      for a, b in zip(result_1, result_2):
+        expect(a).to(be(b))

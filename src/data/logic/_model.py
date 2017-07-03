@@ -1,6 +1,8 @@
+import itertools
+
 import Numberjack
 
-from data.logic import _expr_transformer, _reference, _util
+from data.logic import _expr_transformer, _predicates, _reference, _util
 
 
 class _Model(Numberjack.Model):
@@ -36,3 +38,26 @@ class _Model(Numberjack.Model):
       # Not a specific dimension. It seems like returning "value" is possible
       # if the __r*__ operators are specified.
       return _reference.ValueReference(self, value)
+
+  def get_variables(self, constraints):
+    results = []
+    constraint_components = constraints.items()
+    # Every pair of constraints produces a variable for consideration.
+    # Eg, Andy == CEO == 12 == True.
+    for (key1, value1), (key2, value2) in itertools.combinations(
+        constraint_components, 2):
+      variable_constraints = {
+        key1: value1,
+        key2: value2,
+      }
+      address = _util.address(
+          self._dimension_factory.dimensions(), variable_constraints)
+      if address in self._variable_cache:
+        pass
+      elif value1 is not None and value2 is not None:
+        # Create a boolean variable for address.
+        self._variable_cache[address] = Numberjack.Variable(address)
+      else:
+        raise NotImplementedError()
+      results.append(self._variable_cache[address])
+    return _predicates.Predicates(results)
