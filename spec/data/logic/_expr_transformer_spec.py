@@ -1,7 +1,7 @@
 import ast
 
 from data.logic import _dimension_factory, _expr_transformer, _model, \
-  _predicates
+  _predicates, _reference
 from spec.mamba import *
 
 with description('_expr_transformer.ExprTransformer'):
@@ -21,7 +21,7 @@ with description('_expr_transformer.ExprTransformer'):
     with it('resolves names'):
       node = ast.Name(id='name["andy"].fruit["cherries"]', ctx=ast.Load())
       transformed = self.transformer.visit(node)
-      expect(transformed).to(be_a(_model._Reference))
+      expect(transformed).to(be_a(_reference.Reference))
       expect(transformed._constraints).to(equal({
         'name': 'andy',
         'fruit': 'cherries'
@@ -30,13 +30,13 @@ with description('_expr_transformer.ExprTransformer'):
     with it('resolves numbers'):
       node = ast.Num(n=10)
       transformed = self.transformer.visit(node)
-      expect(transformed).to(be_a(_model._Reference))
+      expect(transformed).to(be_a(_reference.Reference))
       expect(transformed._constraints).to(equal({'age': 10}))
 
     with it('resolves strings'):
       node = ast.Str(s='cherries')
       transformed = self.transformer.visit(node)
-      expect(transformed).to(be_a(_model._Reference))
+      expect(transformed).to(be_a(_reference.Reference))
       expect(transformed._constraints).to(equal({'fruit': 'cherries'}))
 
     with it('fails to visit unsupported nodes'):
@@ -86,9 +86,9 @@ with description('_expr_transformer.ExprTransformer'):
       compiled = self.transformer.compile(expr)
       expect(compiled).to(be_a(_predicates.Predicates))
       expect(str(compiled)).to(equal(
-          '(('
+          '(2 + ('
           '10*name["andy"].age[10] in {0,1} + 11*name["andy"].age[11] in {0,1}'
-          ') + 2)'))
+          '))'))
 
     with it('supports - operation, int on right'):
       expr = self.name['andy'].age - 2
