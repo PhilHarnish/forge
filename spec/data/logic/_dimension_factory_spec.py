@@ -64,6 +64,29 @@ with description('_dimension_factory._DimensionFactory'):
         {'number': 1, 'another': 'x'}, {'number': 1, 'another': 'y'}
       ]))
 
+  with description('inference groups'):
+    with it('returns nothing for 2 dimensions'):
+      self.subject(name=['A', 'B'])
+      self.subject(number=[1, 2])
+      groups = self.subject.inference_groups()
+      expect(groups).to(equal([]))
+
+    with it('returns results for 3 dimensions'):
+      self.subject(a=['A', 'B'])
+      self.subject(b=[1, 2])
+      self.subject(c=['x', 'y'])
+      groups = self.subject.inference_groups()
+      expect(groups).to(equal([
+        ({'a': 'A', 'b': 1}, {'a': 'A', 'c': 'x'}, {'b': 1, 'c': 'x'}),
+        ({'a': 'A', 'b': 1}, {'a': 'A', 'c': 'y'}, {'b': 1, 'c': 'y'}),
+        ({'a': 'A', 'b': 2}, {'a': 'A', 'c': 'x'}, {'b': 2, 'c': 'x'}),
+        ({'a': 'A', 'b': 2}, {'a': 'A', 'c': 'y'}, {'b': 2, 'c': 'y'}),
+        ({'a': 'B', 'b': 1}, {'a': 'B', 'c': 'x'}, {'b': 1, 'c': 'x'}),
+        ({'a': 'B', 'b': 1}, {'a': 'B', 'c': 'y'}, {'b': 1, 'c': 'y'}),
+        ({'a': 'B', 'b': 2}, {'a': 'B', 'c': 'x'}, {'b': 2, 'c': 'x'}),
+        ({'a': 'B', 'b': 2}, {'a': 'B', 'c': 'y'}, {'b': 2, 'c': 'y'})
+      ]))
+
   with description('unpacking'):
     with it('raises on empty input'):
       def bad():

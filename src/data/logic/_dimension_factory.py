@@ -94,6 +94,60 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
           group.append(constraint.copy())
     return result
 
+  def inference_groups(self):
+    """Aligned cells between 3 boards must not sum to 2.
+
+    Consider: Andy is 10, 10's favorite color is red -> Andy's is red. This
+    inference holds for: (a) 0 are True, (b) 1 is True, OR (c) all 3 True.
+    Therefore 0, 1, and 3 are valid sums for the 3 aligned relationships.
+
+    Each board triplet inference is computed like so:
+      y y  z z
+    x A1A2 B1B2  A1 + B1 + C1 != 2 -- A, top left #1
+    x A3A4 B3B4  A1 + B2 + C3 != 2 -- A, top left #2
+    z C1C2       A2 + B1 + C2 != 2 -- A, top right, #1
+    z C3C4       A2 + B2 + C4 != 2 -- A, top right, #2
+    """
+    result = []
+    visited_triplets = set()
+    for x, y, z in itertools.combinations(self._dimensions.items(), 3):
+      (x_key, x_values), (y_key, y_values), (z_key, z_values) = x, y, z
+      board_a = (x_key, y_key)
+      board_b = (x_key, z_key)
+      board_c = (y_key, z_key)
+      triplet = ','.join(map(str, sorted([board_a, board_b, board_c])))
+      if triplet in visited_triplets:
+        raise Exception('Redundant work performed?')
+      visited_triplets.add(triplet)
+      # Prefetch all of the rows from board B and columns from board C as they
+      # will be needed repeatedly.
+      rows = []
+      for x_value in x_values:
+        row = []
+        rows.append(row)
+        for z_value in z_values:
+          row.append({
+            x_key: x_value,
+            z_key: z_value,
+          })
+      columns = []
+      for y_value in y_values:
+        column = []
+        columns.append(column)
+        for z_value in z_values:
+          column.append({
+            y_key: y_value,
+            z_key: z_value,
+          })
+      # For each cell in board A set up inference with aligned rows and columns.
+      for row_index, x_value in enumerate(x_values):
+        for column_index, y_value in enumerate(y_values):
+          assert len(rows[row_index]) == len(columns[column_index])
+          for row, column in zip(rows[row_index], columns[column_index]):
+            # A1 + B1 + C1 != 2 -- A, top left #1  (see doc above).
+            result.append(({x_key: x_value, y_key: y_value}, row, column))
+    return result
+
 
 class _OriginalDimensionSlice(_dimension_slice._DimensionSlice):
   def __init__(self, factory, constraints, children):
