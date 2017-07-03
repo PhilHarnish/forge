@@ -64,6 +64,26 @@ class _Model(Numberjack.Model):
         # Create a boolean variable for address.
         self._variable_cache[address] = Numberjack.Variable(address)
       else:
-        raise NotImplementedError()
+        self._variable_cache[address] = self._reify_constraints(
+            variable_constraints)
       results.append(self._variable_cache[address])
     return _predicates.Predicates(results)
+
+  def _reify_constraints(self, constraints):
+    assert len(constraints) == 2
+    (key1, value1), (key2, value2) = constraints.items()
+    if value1 is None:
+      # Swap values so key1/value1 are fully constrained.
+      (key1, value1), (key2, value2) =  (key2, value2), (key1, value1)
+    assert value2 is None and value1 is not None
+    variables = []
+    # These are the values which are unconstrained.
+    values = list(self._dimension_factory.dimensions()[key2].keys())
+    for value in values:
+      if not isinstance(value, (int, float)):
+        raise TypeError('Unable to reify %s dimension, %s is not a number' % (
+            key2, value))
+      # Constrain to this new value, temporarily.
+      constraints[key2] = value
+      variables.append(self.get_variables(constraints))
+    return Numberjack.Sum(variables, values)

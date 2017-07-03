@@ -108,3 +108,12 @@ with description('_model._Model usage'):
       expect(result_1).to(have_len(len(result_2)))
       for a, b in zip(result_1, result_2):
         expect(a).to(be(b))
+
+    with it('reifies partially constrained dimensions'):
+      result = self.model.get_variables({
+        'name': 'bob',
+        'age': None,
+      })
+      expect(str(result)).to(equal(
+          '(10*name["bob"].age[10] in {0,1} + 11*name["bob"].age[11] in {0,1})'
+      ))
