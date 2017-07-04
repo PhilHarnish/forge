@@ -61,6 +61,10 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.Assign))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('compiles dimensions'):
+      node = _grammar_transformer.transform('name <= {1, Ex, "Multi Word"}')
+      expect(calling(compile, node, '<string>', 'exec')).not_to(raise_error)
+
     with it('registers dimension references'):
       transformer = _grammar_transformer._GrammarTransformer()
       parsed = ast.parse('name <= {1, Ex, "Multi Word"}')

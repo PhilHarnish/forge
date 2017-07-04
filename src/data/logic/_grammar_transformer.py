@@ -40,7 +40,9 @@ def transform(program):
     match = _COMMENT_REGEX.match(line)
     if match and match.groups():
       lines[i] = repr(match.groups()[1])
-  return _GrammarTransformer().visit(ast.parse('\n'.join(lines)))
+  visited = _GrammarTransformer().visit(ast.parse('\n'.join(lines)))
+  ast.fix_missing_locations(visited)
+  return visited
 
 
 class _GrammarTransformer(ast.NodeTransformer):
@@ -194,7 +196,12 @@ def _dimension_target_dimension(dimension):
 
 
 def _dimension_value(dimension, values):
-  dimensions = [ast.Str(s=value) for value in values]
+  dimensions = []
+  for value in values:
+    if isinstance(value, str):
+      dimensions.append(ast.Str(s=value))
+    else:
+      dimensions.append(ast.Num(n=value))
   return ast.Call(
       func=ast.Name(
           id='dimensions',
