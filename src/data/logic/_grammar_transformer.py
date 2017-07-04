@@ -11,6 +11,12 @@ model = Model(dimensions)
 """).body
 
 
+_BOOL_TO_BIN_OP_MAP = {
+  ast.Or: ast.BitXor,
+  ast.And: ast.BitAnd,
+}
+
+
 _REFERENCE_TYPES = (
   ast.Name,
   ast.Str,
@@ -67,6 +73,24 @@ class _GrammarTransformer(ast.NodeTransformer):
             ctx=ast.Load(),
         )
         self._references[alias] = name
+
+  def visit_BoolOp(self, node):
+    self.generic_visit(node)
+    values = node.values
+    op = _BOOL_TO_BIN_OP_MAP[type(node.op)]()
+    left, right, *remainder = values
+    node = ast.BinOp(
+        left=left,
+        op=op,
+        right=right,
+    )
+    for right in remainder:
+      node = ast.BinOp(
+          left=node,
+          op=op,
+          right=right,
+      )
+    return node
 
   def visit_Compare(self, node):
     # This may be a dimensions definition.

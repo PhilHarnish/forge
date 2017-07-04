@@ -88,6 +88,24 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.Expr))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('constrains A or B or C or D'):
+      node = _grammar_transformer.transform('A or B or C or D')
+      expected = goal("""
+          model(A ^ B ^ C ^ D)
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))
+
+    with it('constrains A and B and C and D'):
+      node = _grammar_transformer.transform('A and B and C and D')
+      expected = goal("""
+          model(A & B & C & D)
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))
+
     with it('constrains A & B'):
       node = _grammar_transformer.transform('A & B')
       expected = goal("""
