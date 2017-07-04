@@ -89,10 +89,10 @@ def _dimension_name(node):
 def _dimension_target_tuple(values):
   targets = []
   for value in values:
-    if value.isdigit():
-      name = '_%s' % value
-    else:
+    if isinstance(value, str):
       name = value.replace(' ', '_')
+    else:
+      name = '_%s' % value
     targets.append(ast.Name(
         id=name,
         ctx=ast.Store(),

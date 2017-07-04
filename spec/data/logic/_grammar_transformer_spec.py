@@ -40,3 +40,23 @@ with description('_GrammarTransformer'):
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Expr))
       expect(to_source(assignment)).to(look_like(expected))
+
+    with it('detects dimension = 1, 2, 3'):
+      node, transformer = transform('name <= {1, 2, 3}')
+      expected = goal("""
+          _1, _2, _3 = name = dimensions(name=[1, 2, 3])
+      """)
+      transformer.visit(node)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))
+
+    with it('detects dimension = "a", "b c", "d e f"'):
+      node, transformer = transform('name <= {"a", "b c", "d e f"}')
+      expected = goal("""
+          a, b_c, d_e_f = name = dimensions(name=['a', 'b c', 'd e f'])
+      """)
+      transformer.visit(node)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))
