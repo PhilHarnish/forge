@@ -1,15 +1,42 @@
 import ast
 
+import astor
+
 from data.logic import _grammar_transformer
 from spec.mamba import *
 
-with description('_GrammarTransformer'):
-  with before.all:
-    self.transformer = _grammar_transformer._GrammarTransformer(
-        '\n'.join('# line #%s.' % i for i in range(1, 10)))
 
+def transform(program):
+  return parse(program), _grammar_transformer._GrammarTransformer(program)
+
+
+def parse(program):
+  cleaned = textwrap.dedent(program.strip('\n'))
+  return ast.parse(cleaned)
+
+
+def to_source(root):
+  return astor.to_source(root, '  ')
+
+
+def goal(program):
+  return to_source(parse(program))
+
+
+with description('_GrammarTransformer'):
   with description('visit_Module'):
     with it('prepends header'):
-      node = ast.Module(body=[])
-      result = self.transformer.visit(node)
+      node, transformer = transform('')
+      transformer.visit(node)
       expect(node.body).to(have_len(3))
+
+  with description('visit_Assign'):
+    with it('detects dimension = a, b, c'):
+      node, transformer = transform('name <= {a, b, c}')
+      expected = goal("""
+          a, b, c = name = dimensions(name=['a', 'b', 'c'])
+      """)
+      transformer.visit(node)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))
