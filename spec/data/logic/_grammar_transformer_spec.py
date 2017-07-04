@@ -61,6 +61,23 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.Expr))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('registers dimension references'):
+      transformer = _grammar_transformer._GrammarTransformer()
+      parsed = ast.parse('name <= {1, Ex, "Multi Word"}')
+      transformer.visit(parsed)
+      actual = {}
+      for reference, node in transformer._references.items():
+        expect(node).to(be_a(ast.Name))
+        actual[reference] = node.id
+      expect(actual).to(equal({
+        'name': 'name',
+        1: '_1',
+        '_1': '_1',
+        'Ex': 'Ex',
+        'Multi_Word': 'Multi_Word',
+        'MultiWord': 'Multi_Word'
+      }))
+
   with description('model constraints'):
     with it('constrains A == B'):
       node = _grammar_transformer.transform('A == B')

@@ -51,6 +51,16 @@ class _GrammarTransformer(ast.NodeTransformer):
       dimension: [_dimension_name(value) for value in values]
     }
 
+  def _register_references(self, *references):
+    for reference in references:
+      canonical_reference_name = _canonical_reference_name(reference)
+      for alias in _aliases(reference):
+        name = ast.Name(
+            id=canonical_reference_name,
+            ctx=ast.Load(),
+        )
+        self._references[alias] = name
+
   def visit_Compare(self, node):
     # This may be a dimensions definition.
     dimensions = self._dimension_definitions(node)
@@ -58,6 +68,7 @@ class _GrammarTransformer(ast.NodeTransformer):
       return self.generic_visit(node)
     elif len(dimensions) == 1:
       dimension, values = next(iter(dimensions.items()))
+      self._register_references(dimension, *values)
       node = ast.Assign(
           targets=[
             _dimension_target_tuple(values),
@@ -89,6 +100,22 @@ def _fail(node, msg='Visit error'):
       msg, node.__class__.__name__))
 
 
+def _aliases(name):
+  aliases = set()
+  if isinstance(name, str):
+    aliases.add(name.replace(' ', '_'))
+    aliases.add(name.replace(' ', ''))
+  else:
+    aliases.add(name)
+    aliases.add('_%s' % name)
+  return aliases
+
+
+def _canonical_reference_name(value):
+  if isinstance(value, str):
+    return value.replace(' ', '_')
+  return '_%s' % value
+
 def _constrain_comparison(node):
   if not isinstance(node, ast.Compare):
     return node
@@ -115,10 +142,7 @@ def _dimension_name(node):
 def _dimension_target_tuple(values):
   targets = []
   for value in values:
-    if isinstance(value, str):
-      name = value.replace(' ', '_')
-    else:
-      name = '_%s' % value
+    name = _canonical_reference_name(value)
     targets.append(ast.Name(
         id=name,
         ctx=ast.Store(),
