@@ -71,7 +71,6 @@ with description('_GrammarTransformer'):
         actual[reference] = node.id
       expect(actual).to(equal({
         'name': 'name',
-        1: '_1',
         '_1': '_1',
         'Ex': 'Ex',
         'Multi_Word': 'Multi_Word',

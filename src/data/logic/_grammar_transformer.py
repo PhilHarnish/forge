@@ -106,7 +106,6 @@ def _aliases(name):
     aliases.add(name.replace(' ', '_'))
     aliases.add(name.replace(' ', ''))
   else:
-    aliases.add(name)
     aliases.add('_%s' % name)
   return aliases
 
