@@ -40,7 +40,7 @@ with description('_GrammarTransformer'):
           a, b, c = name = dimensions(name=['a', 'b', 'c'])
       """)
       assignment = node.body[-1]
-      expect(assignment).to(be_a(ast.Expr))
+      expect(assignment).to(be_a(ast.Assign))
       expect(to_source(assignment)).to(look_like(expected))
 
     with it('detects dimension = 1, 2, 3'):
@@ -49,7 +49,7 @@ with description('_GrammarTransformer'):
           _1, _2, _3 = name = dimensions(name=[1, 2, 3])
       """)
       assignment = node.body[-1]
-      expect(assignment).to(be_a(ast.Expr))
+      expect(assignment).to(be_a(ast.Assign))
       expect(to_source(assignment)).to(look_like(expected))
 
     with it('detects dimension = "a", "b c", "d e f"'):
@@ -58,7 +58,7 @@ with description('_GrammarTransformer'):
           a, b_c, d_e_f = name = dimensions(name=['a', 'b c', 'd e f'])
       """)
       assignment = node.body[-1]
-      expect(assignment).to(be_a(ast.Expr))
+      expect(assignment).to(be_a(ast.Assign))
       expect(to_source(assignment)).to(look_like(expected))
 
     with it('registers dimension references'):

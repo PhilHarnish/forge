@@ -90,6 +90,7 @@ class ExprTransformer(ast.NodeTransformer):
   def visit_Str(self, node):
     return self._model.resolve_value(node.s)
 
+
 def _fail(node, msg='Visit error'):
   try:
     raise NotImplementedError('%s (in ast.%s). Source:\n\t\t\t%s' % (

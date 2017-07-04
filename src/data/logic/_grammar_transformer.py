@@ -92,9 +92,10 @@ class _GrammarTransformer(ast.NodeTransformer):
       )
     return node
 
-  def visit_Compare(self, node):
+  def visit_Expr(self, node):
     # This may be a dimensions definition.
-    dimensions = self._dimension_definitions(node)
+    value = node.value
+    dimensions = self._dimension_definitions(value)
     if not dimensions:
       return self.generic_visit(node)
     elif len(dimensions) == 1:
