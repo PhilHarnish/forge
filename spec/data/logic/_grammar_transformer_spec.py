@@ -60,3 +60,13 @@ with description('_GrammarTransformer'):
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Expr))
       expect(to_source(assignment)).to(look_like(expected))
+
+  with description('model constraints'):
+    with it('constrains A == B'):
+      node = _grammar_transformer.transform('A == B')
+      expected = goal("""
+          model(A == B)
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))

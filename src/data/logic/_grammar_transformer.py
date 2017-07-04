@@ -69,8 +69,15 @@ class _GrammarTransformer(ast.NodeTransformer):
     _fail(node)
 
   def visit_Module(self, node):
-    node.body = _HEADER + node.body
-    return self.generic_visit(node)
+    body = _HEADER.copy()
+    for expr in node.body:
+      expr = self.visit(expr)
+      if (isinstance(expr, ast.Expr) and
+          isinstance(expr.value, ast.Compare)):
+        expr.value = _constrain_comparison(expr.value)
+      body.append(expr)
+    node.body = body
+    return node
 
 
 def _fail(node, msg='Visit error'):
@@ -80,6 +87,19 @@ def _fail(node, msg='Visit error'):
   except AttributeError:  # Astor was unable to convert the source.
     raise NotImplementedError('%s (in ast.%s).' % (
       msg, node.__class__.__name__))
+
+
+def _constrain_comparison(node):
+  if not isinstance(node, ast.Compare):
+    return node
+  return ast.Call(
+      func=ast.Name(
+          id='model',
+          ctx=ast.Load(),
+      ),
+      args=[node],
+      keywords=[],
+  )
 
 
 def _dimension_name(node):
