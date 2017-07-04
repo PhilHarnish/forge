@@ -1,4 +1,6 @@
 import ast
+import re
+import textwrap
 
 import astor
 
@@ -15,11 +17,22 @@ _REFERENCE_TYPES = (
   ast.Num,
 )
 
+_COMMENT_REGEX = re.compile(r'^(\s*)(#.*)$')
+
+
+def transform(program):
+  cleaned = textwrap.dedent(program.strip('\n'))
+  lines = cleaned.split('\n')
+  for i, line in enumerate(lines):
+    match = _COMMENT_REGEX.match(line)
+    if match and match.groups():
+      lines[i] = repr(match.groups()[1])
+  return _GrammarTransformer().visit(ast.parse('\n'.join(lines)))
+
 
 class _GrammarTransformer(ast.NodeTransformer):
-  def __init__(self, src):
+  def __init__(self):
     super(_GrammarTransformer, self).__init__()
-    self._src = src.split('\n')
     self._references = {}
 
   def _dimension_definitions(self, node):
@@ -58,13 +71,6 @@ class _GrammarTransformer(ast.NodeTransformer):
   def visit_Module(self, node):
     node.body = _HEADER + node.body
     return self.generic_visit(node)
-
-  def _msg(self, node, msg):
-    return '\n'.join([
-      msg,
-      self._src[node.lineno],
-      '-' * node.col_offset + '^',
-    ])
 
 
 def _fail(node, msg='Visit error'):
