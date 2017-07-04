@@ -1,3 +1,5 @@
+import ast
+
 from puzzle.problems import logic_problem
 from spec.mamba import *
 
@@ -16,17 +18,17 @@ with description('LogicProblem score'):
 with description('LogicProblem constructor'):
   with it('parses empty input'):
     problem = logic_problem.LogicProblem('test', [''])
-    expect(problem._parsed).to(have_len(0))
+    expect(problem._parse()).to(be_a(ast.Module))
 
   with it('parses comments'):
     problem = logic_problem.LogicProblem('test', [
       '# This is a comment.'
     ])
-    expect(problem._parsed).to(have_len(0))
+    expect(problem._parse()).to(be_a(ast.Module))
 
   with it('parses statements'):
     problem = logic_problem.LogicProblem('test', [
       '# This is a comment.',
-      'ages = 10, 11, 12'
+      'ages <= {10, 11, 12}'
     ])
-    expect(problem._parsed).to(have_len(1))
+    expect(problem._parse()).to(be_a(ast.Module))
