@@ -73,6 +73,7 @@ with description('_GrammarTransformer'):
         'name': 'name',
         '_1': '_1',
         'Ex': 'Ex',
+        'Multi Word': 'Multi_Word',
         'Multi_Word': 'Multi_Word',
         'MultiWord': 'Multi_Word'
       }))
@@ -82,6 +83,42 @@ with description('_GrammarTransformer'):
       node = _grammar_transformer.transform('A == B')
       expected = goal("""
           model(A == B)
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))
+
+    with it('constrains A & B'):
+      node = _grammar_transformer.transform('A & B')
+      expected = goal("""
+          model(A & B)
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))
+
+  with description('reference aliases'):
+    with it('no-op for well-defined references'):
+      node = _grammar_transformer.transform("""
+        name <= {andy, bob, cynthia}
+        color <= {red, green, blue}
+        andy == red
+      """)
+      expected = goal("""
+          model(andy == red)
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))
+
+    with it('rewrites string references'):
+      node = _grammar_transformer.transform("""
+        name <= {andy, bob, cynthia}
+        color <= {red, green, 'sky blue'}
+        andy == 'sky blue' & bob != sky_blue
+      """)
+      expected = goal("""
+          model(andy == sky_blue & bob != sky_blue)
       """)
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Expr))

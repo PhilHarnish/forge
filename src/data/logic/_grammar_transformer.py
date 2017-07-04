@@ -17,6 +17,13 @@ _REFERENCE_TYPES = (
   ast.Num,
 )
 
+
+_CONSTRAINT_TYPES = (
+  ast.Compare,
+  ast.BinOp,
+)
+
+
 _COMMENT_REGEX = re.compile(r'^(\s*)(#.*)$')
 
 
@@ -83,12 +90,16 @@ class _GrammarTransformer(ast.NodeTransformer):
     body = _HEADER.copy()
     for expr in node.body:
       expr = self.visit(expr)
-      if (isinstance(expr, ast.Expr) and
-          isinstance(expr.value, ast.Compare)):
+      if isinstance(expr, ast.Expr):
         expr.value = _constrain_comparison(expr.value)
       body.append(expr)
     node.body = body
     return node
+
+  def visit_Str(self, node):
+    if node.s in self._references:
+      return self._references[node.s]
+    return self.generic_visit(node)
 
 
 def _fail(node, msg='Visit error'):
@@ -103,6 +114,7 @@ def _fail(node, msg='Visit error'):
 def _aliases(name):
   aliases = set()
   if isinstance(name, str):
+    aliases.add(name)
     aliases.add(name.replace(' ', '_'))
     aliases.add(name.replace(' ', ''))
   else:
@@ -116,7 +128,7 @@ def _canonical_reference_name(value):
   return '_%s' % value
 
 def _constrain_comparison(node):
-  if not isinstance(node, ast.Compare):
+  if not isinstance(node, _CONSTRAINT_TYPES):
     return node
   return ast.Call(
       func=ast.Name(
