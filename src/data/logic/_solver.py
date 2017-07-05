@@ -9,6 +9,9 @@ class Solver(object):
       self._solved = True
       self._solver.solve()
 
+  def solved(self):
+    return self._solved and self._solver.is_sat() or not self._solver.is_unsat()
+
   def __str__(self):
     if not self._solved:
       return '<unsolved>'

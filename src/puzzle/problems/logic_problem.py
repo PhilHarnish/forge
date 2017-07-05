@@ -30,6 +30,8 @@ class LogicProblem(problem.Problem):
     model = variables['model']
     solver = model.load('Mistral')
     solver.solve()
-    solutions = model.get_solutions()
-    # TODO: Return valid solutions.
+    if not solver.solved():
+      return {}
+    solutions = {}
+    solutions[str(solver)] = 1
     return solutions
