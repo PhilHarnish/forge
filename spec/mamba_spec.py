@@ -109,3 +109,17 @@ with description('mamba test helper'):
     with it('should handle negation'):
       self.subject(1, key='value')
       expect(self.subject).not_to(have_been_called_with(2, key='other'))
+
+    with it('should call counts'):
+      expect(self.subject).to(have_been_called_times(0))
+      self.subject()
+      expect(self.subject).to(have_been_called_times(1))
+      self.subject()
+      expect(self.subject).to(have_been_called_times(2))
+
+    with it('should support called once shorthand'):
+      expect(self.subject).not_to(have_been_called_once)
+      self.subject()
+      expect(self.subject).to(have_been_called_once)
+      self.subject()
+      expect(self.subject).not_to(have_been_called_once)

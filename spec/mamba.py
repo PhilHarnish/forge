@@ -82,6 +82,27 @@ have_been_called = _have_been_called()
 have_been_called_with = _have_been_called()
 
 
+class have_been_called_times(matchers.Matcher):
+  def __init__(self, times):
+    self._times = times
+
+  def __call__(self, times):
+    return have_been_called_times(self._times)
+
+  def _match(self, subject):
+    return (self._times == len(subject.call_args_list),
+        [str(c) for c in subject.call_args_list])
+
+  def _failure_message(self, subject, *args):
+    return self._failure_message_negated(subject, *args).replace(' not ', ' ')
+
+  def _failure_message_negated(self, subject, *args):
+    return 'expected: %s to have been called %s times' % (subject, self._times)
+
+
+have_been_called_once = have_been_called_times(1)
+
+
 # Sentinel object for undefined values.
 _NOT_SET = {}
 
