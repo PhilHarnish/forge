@@ -37,6 +37,16 @@ with description('_ast_factory'):
       expect(calling(_ast_factory.coerce_value, 'a')).not_to(raise_error)
       expect(_ast_factory.coerce_value('a')).to(be_a(ast.Str))
 
+    with it('supports expressions'):
+      node = ast.Expr(value=ast.Load())
+      expect(calling(_ast_factory.coerce_value, node)).not_to(raise_error)
+      expect(_ast_factory.coerce_value(node)).to(be_a(ast.Load))
+
+    with it('supports all other AST nodes'):
+      node = ast.Load()
+      expect(calling(_ast_factory.coerce_value, node)).not_to(raise_error)
+      expect(_ast_factory.coerce_value(node)).to(be_a(ast.Load))
+
   with description('binary operations'):
     with it('supports +'):
       expect(_ast_factory.bin_op(self.andy, '+', 1)).to(be_a(ast.Expr))

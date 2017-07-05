@@ -92,7 +92,9 @@ def coerce_operator(op):
 def coerce_value(value):
   if isinstance(value, ast.Expr):
     return value.value  # Prevent excessive nesting.
-  if isinstance(value, bool):
+  elif isinstance(value, ast.AST):
+    return value
+  elif isinstance(value, bool):
     return ast.NameConstant(value=value)
   elif isinstance(value, (int, float)):
     return ast.Num(n=value)
