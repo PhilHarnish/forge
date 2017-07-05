@@ -6,7 +6,7 @@ from puzzle.problems import logic_problem
 from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
-with description('zebra_puzzle'):
+with _description('zebra_puzzle'):
   with description('solution'):
     with before.all:
       warehouse.save()
