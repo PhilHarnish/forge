@@ -7,7 +7,10 @@ class Solver(object):
   def solve(self):
     if not self._solved:
       self._solved = True
-      self._solver.solve()
+      return self._solver.solve()
+    elif not self._solver.is_unsat():
+      return self._solver.getNextSolution()
+    return False
 
   def solved(self):
     return self._solved and self._solver.is_sat() or not self._solver.is_unsat()

@@ -22,16 +22,12 @@ class LogicProblem(problem.Problem):
   def _parse(self):
     return _grammar_transformer.transform('\n'.join(self.lines))
 
-  def _solve(self):
+  def _solve_iter(self):
     parsed = self._parse()
     compiled = compile(parsed, '<string>', 'exec')
     variables = {}
     exec(compiled, variables)
     model = variables['model']
     solver = model.load('Mistral')
-    solver.solve()
-    if not solver.solved():
-      return {}
-    solutions = {}
-    solutions[str(solver)] = 1
-    return solutions
+    while solver.solve():
+      yield str(solver), 1
