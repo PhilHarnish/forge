@@ -24,7 +24,6 @@ class LogicProblem(problem.Problem):
 
   def _solve(self):
     parsed = self._parse()
-    ast.fix_missing_locations(parsed)
     compiled = compile(parsed, '<string>', 'exec')
     variables = {}
     exec(compiled, variables)
