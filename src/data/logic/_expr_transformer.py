@@ -19,8 +19,9 @@ class ExprTransformer(ast.NodeTransformer):
     if not isinstance(node, ast.Expr):
       raise TypeError('%s cannot be compiled' % node)
     result = self.visit(node)
-    if isinstance(result, ast.AST):
-      raise _fail(node)
+    if not isinstance(result, (Numberjack.Predicate, _predicates.Predicates)):
+      _fail(node, msg='Failed to compile. %s (%s) remains' % (
+          type(result), result))
     return result
 
   def visit(self, node):
@@ -48,6 +49,17 @@ class ExprTransformer(ast.NodeTransformer):
     elif isinstance(op, ast.Sub):
       return left - right
     _fail(node, msg='Binary op %s unsupported' % op.__class__.__name__)
+
+  def visit_Call(self, node):
+    if not isinstance(node.func, ast.Name):
+      _fail(node.func, msg='func is %s, not ast.Name' % type(node.func))
+    fn = node.func.id
+    if not hasattr(Numberjack, fn) or not callable(getattr(Numberjack, fn)):
+      _fail(node.func, msg='Unable to resolve fn %s on Numberjack' % fn)
+    args = [self.visit(arg) for arg in node.args]
+    # Wrap result in a Predicates object so that our operator overloading takes
+    # precedence.
+    return _predicates.Predicates([getattr(Numberjack, fn)(*args)])
 
   def visit_Compare(self, node):
     left = self.visit(node.left)
@@ -95,6 +107,6 @@ def _fail(node, msg='Visit error'):
   try:
     raise NotImplementedError('%s (in ast.%s). Source:\n\t\t\t%s' % (
       msg, node.__class__.__name__, astor.to_source(node)))
-  except AttributeError:  # Astor was unable to convert the source.
+  except:  # Astor was unable to convert the source.
     raise NotImplementedError('%s (in ast.%s).' % (
-      msg, node.__class__.__name__))
+        msg, node.__class__.__name__))
