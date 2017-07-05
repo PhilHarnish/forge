@@ -5,7 +5,11 @@ from spec.mamba import *
 
 with description('_reference.Reference'):
   with before.each:
-    self.model = mock.Mock(get_variables=lambda *args: Numberjack.Variable())
+    self.model = mock.Mock(
+        __name__='_model._Model',
+        get_variables=lambda *args: Numberjack.Variable(),
+        side_effect=lambda *args: [a.ident for a in args]
+    )
 
   with description('ValueReference constructor'):
     with it('handles simple input'):
@@ -69,3 +73,8 @@ with description('_reference.Reference'):
         'name': 'andy',
       }).value()
       expect(value).to(be_a(Numberjack.Variable))
+
+  with description('modeling'):
+    with it('raises exception when modeled'):
+      value = _reference.Reference(self.model, {})
+      expect(calling(self.model, value)).to(raise_error)

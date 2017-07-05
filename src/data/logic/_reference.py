@@ -55,6 +55,10 @@ class Reference(ValueReference):
     return (self._model.get_variables(self._constraints) or
             super(Reference, self).value())
 
+  @property
+  def ident(self):
+    raise TypeError('Attempted to model a Reference object (%s)' % self)
+
 
 def coerce_value(value):
   if isinstance(value, ValueReference):
