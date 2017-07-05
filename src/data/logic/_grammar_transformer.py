@@ -69,12 +69,10 @@ class _GrammarTransformer(ast.NodeTransformer):
   def _register_references(self, *references):
     for reference in references:
       canonical_reference_name = _canonical_reference_name(reference)
-      for alias in _aliases(reference):
-        name = ast.Name(
-            id=canonical_reference_name,
-            ctx=ast.Load(),
-        )
-        self._references[alias] = name
+      self._references[canonical_reference_name] = ast.Name(
+          id=canonical_reference_name,
+          ctx=ast.Load(),
+      )
 
   def visit_BoolOp(self, node):
     self.generic_visit(node)
@@ -113,6 +111,12 @@ class _GrammarTransformer(ast.NodeTransformer):
       return node
     _fail(node)
 
+  def visit_Name(self, node):
+    canonical_reference_name = _canonical_reference_name(node.id)
+    if canonical_reference_name in self._references:
+      return self._references[canonical_reference_name]
+    return self.generic_visit(node)
+
   def visit_Module(self, node):
     body = _HEADER.copy()
     for expr in node.body:
@@ -124,8 +128,9 @@ class _GrammarTransformer(ast.NodeTransformer):
     return node
 
   def visit_Str(self, node):
-    if node.s in self._references:
-      return self._references[node.s]
+    canonical_reference_name = _canonical_reference_name(node.s)
+    if canonical_reference_name in self._references:
+      return self._references[canonical_reference_name]
     return self.generic_visit(node)
 
 
@@ -138,20 +143,9 @@ def _fail(node, msg='Visit error'):
       msg, node.__class__.__name__))
 
 
-def _aliases(name):
-  aliases = set()
-  if isinstance(name, str):
-    aliases.add(name)
-    aliases.add(name.replace(' ', '_'))
-    aliases.add(name.replace(' ', ''))
-  else:
-    aliases.add('_%s' % name)
-  return aliases
-
-
 def _canonical_reference_name(value):
   if isinstance(value, str):
-    return value.replace(' ', '_')
+    return value.replace(' ', '_').replace('-', '_').lower()
   return '_%s' % value
 
 def _constrain_comparison(node):

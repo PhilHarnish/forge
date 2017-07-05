@@ -76,10 +76,8 @@ with description('_GrammarTransformer'):
       expect(actual).to(equal({
         'name': 'name',
         '_1': '_1',
-        'Ex': 'Ex',
-        'Multi Word': 'Multi_Word',
-        'Multi_Word': 'Multi_Word',
-        'MultiWord': 'Multi_Word'
+        'ex': 'ex',
+        'multi_word': 'multi_word'
       }))
 
   with description('model constraints'):
@@ -141,6 +139,18 @@ with description('_GrammarTransformer'):
       """)
       expected = goal("""
           model(andy == sky_blue & bob != sky_blue)
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))
+
+    with it('matches alias references'):
+      node = _grammar_transformer.transform("""
+        key <= {'space case', 'kebab-case', snake_case, CamelCase}
+        'space case' != 'kebab-case' != 'snake_case' != 'CamelCase'
+      """)
+      expected = goal("""
+          model(space_case != kebab_case != snake_case != camelcase)
       """)
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Expr))
