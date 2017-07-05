@@ -3,7 +3,8 @@ import itertools
 
 import Numberjack
 
-from data.logic import _expr_transformer, _predicates, _reference, _util
+from data.logic import _expr_transformer, _predicates, _reference, _solver, \
+  _util
 
 
 class _Model(Numberjack.Model):
@@ -33,7 +34,8 @@ class _Model(Numberjack.Model):
   def load(self, solvername, X=None, encoding=None):
     # WARNING: Nothing prevents redundant dimensional constraints.
     self.add(self.dimension_constraints())
-    return super(_Model, self).load(solvername, X=X, encoding=encoding)
+    return _solver.Solver(
+        self, super(_Model, self).load(solvername, X=X, encoding=encoding))
 
   def _compile(self, expr):
     return self._expr_transformer.compile(expr)
