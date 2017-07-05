@@ -30,16 +30,14 @@ with description('zebra_puzzle'):
 
     with it('exports a model'):
       problem = self.subject.problems()[0]
-      # TODO: This is incorrect.
       expect(problem._solve()).to(equal((
         ['position', 'color', 'animal', 'cigarette', 'drink', 'nationality'],
-        [
-          [[1], ['Green'], ['Zebra'], ['Chesterfields'], ['Coffee'],
-            ['Norwegian']],
-          [[2], ['Blue'], ['Fox'], ['Parliaments'], ['Water'], ['Japanese']],
-          [[3], ['Yellow'], ['Dog'], ['Kools'], ['Milk'], ['Spaniard']],
-          [[4], ['Red'], ['Horse'], ['Lucky Strike'], ['Orange Juice'],
-            ['Englishman']],
-          [[5], ['Ivory'], ['Snails'], ['Old Gold'], ['Tea'], ['Ukrainian']]
+        [[[1], ['Yellow'], ['Fox'], ['Kools'], ['Water'], ['Norwegian']],
+          [[2], ['Blue'], ['Horse'], ['Chesterfields'], ['Tea'], ['Ukrainian']],
+          [[3], ['Red'], ['Snails'], ['Old Gold'], ['Milk'], ['Englishman']],
+          [[4], ['Ivory'], ['Dog'], ['Lucky Strike'], ['Orange Juice'],
+            ['Spaniard']],
+          [[5], ['Green'], ['Zebra'], ['Parliaments'], ['Coffee'],
+            ['Japanese']]
         ]
       )))

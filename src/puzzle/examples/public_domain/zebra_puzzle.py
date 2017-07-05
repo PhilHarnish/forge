@@ -22,6 +22,7 @@ Coffee == Green
 # The Ukrainian drinks tea.
 Ukrainian == Tea
 # The green house is immediately to the right of the ivory house.
+Green.position - 1 == Ivory.position
 # The Old Gold smoker owns snails.
 Old_Gold == Snails
 # Kools are smoked in the yellow house.
@@ -69,6 +70,7 @@ model(coffee == green)
 """# The Ukrainian drinks tea."""
 model(ukrainian == tea)
 """# The green house is immediately to the right of the ivory house."""
+model(green.position - 1 == ivory.position)
 """# The Old Gold smoker owns snails."""
 model(old_gold == snails)
 """# Kools are smoked in the yellow house."""
