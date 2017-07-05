@@ -7,10 +7,10 @@ def get():
 
 SOURCE = """
 # There are five houses.
-positions <= {Left, 'Middle Left', Middle, 'Middle Right', Right}
-colors <= {Yellow, Blue, Red, Ivory, Green}
-animals <= {Fox, Horse, Snails, Dog, Zebra}
-cigarettes <= {Kools, Chesterfields, 'Old Gold', 'Lucky Strike', Parliaments}
+position <= {1, 2, 3, 4, 5}
+color <= {Yellow, Blue, Red, Ivory, Green}
+animal <= {Fox, Horse, Snails, Dog, Zebra}
+cigarette <= {Kools, Chesterfields, 'Old Gold', 'Lucky Strike', Parliaments}
 drink <= {Water, Tea, Milk, 'Orange Juice', Coffee}
 nationality <= {Norwegian, Ukrainian, Englishman, Spaniard, Japanese}
 # The Englishman lives in the red house.
@@ -27,16 +27,19 @@ Old_Gold == Snails
 # Kools are smoked in the yellow house.
 Kools == Yellow
 # Milk is drunk in the middle house.
-Milk == Middle
+Milk == _3
 # The Norwegian lives in the first house.
-Norwegian == Left
+Norwegian == _1
 # The man who smokes Chesterfields lives in the house next to the man with the fox.
+abs(Chesterfields.position - Fox.position) == 1
 # Kools are smoked in the house next to the house where the horse is kept.
+abs(Kools.position - Horse.position) == 1
 # The Lucky Strike smoker drinks orange juice.
 Lucky_Strike == 'Orange Juice'
 # The Japanese smokes Parliaments.
 Japanese == Parliaments
 # The Norwegian lives next to the blue house.
+abs(Norwegian.position - Blue.position) == 1
 """
 
 PARSED = '''
@@ -44,44 +47,46 @@ from data.logic.dsl import *
 dimensions = DimensionFactory()
 model = Model(dimensions)
 """# There are five houses."""
-Left, Middle_Left, Middle, Middle_Right, Right = positions = dimensions(
-    positions=['Left', 'Middle Left', 'Middle', 'Middle Right', 'Right'])
-Yellow, Blue, Red, Ivory, Green = colors = dimensions(colors=['Yellow',
+_1, _2, _3, _4, _5 = position = dimensions(position=[1, 2, 3, 4, 5])
+yellow, blue, red, ivory, green = color = dimensions(color=['Yellow',
     'Blue', 'Red', 'Ivory', 'Green'])
-Fox, Horse, Snails, Dog, Zebra = animals = dimensions(animals=['Fox',
-    'Horse', 'Snails', 'Dog', 'Zebra'])
-Kools, Chesterfields, Old_Gold, Lucky_Strike, Parliaments = cigarettes = (
-    dimensions(cigarettes=['Kools', 'Chesterfields', 'Old Gold',
+fox, horse, snails, dog, zebra = animal = dimensions(animal=['Fox', 'Horse',
+    'Snails', 'Dog', 'Zebra'])
+kools, chesterfields, old_gold, lucky_strike, parliaments = cigarette = (
+    dimensions(cigarette=['Kools', 'Chesterfields', 'Old Gold',
     'Lucky Strike', 'Parliaments']))
-Water, Tea, Milk, Orange_Juice, Coffee = drink = dimensions(drink=['Water',
+water, tea, milk, orange_juice, coffee = drink = dimensions(drink=['Water',
     'Tea', 'Milk', 'Orange Juice', 'Coffee'])
-Norwegian, Ukrainian, Englishman, Spaniard, Japanese = nationality = (
+norwegian, ukrainian, englishman, spaniard, japanese = nationality = (
     dimensions(nationality=['Norwegian', 'Ukrainian', 'Englishman',
     'Spaniard', 'Japanese']))
 """# The Englishman lives in the red house."""
-model(Englishman == Red)
+model(englishman == red)
 """# The Spaniard owns the dog."""
-model(Spaniard == Dog)
+model(spaniard == dog)
 """# Coffee is drunk in the green house."""
-model(Coffee == Green)
+model(coffee == green)
 """# The Ukrainian drinks tea."""
-model(Ukrainian == Tea)
+model(ukrainian == tea)
 """# The green house is immediately to the right of the ivory house."""
 """# The Old Gold smoker owns snails."""
-model(Old_Gold == Snails)
+model(old_gold == snails)
 """# Kools are smoked in the yellow house."""
-model(Kools == Yellow)
+model(kools == yellow)
 """# Milk is drunk in the middle house."""
-model(Milk == Middle)
+model(milk == _3)
 """# The Norwegian lives in the first house."""
-model(Norwegian == Left)
+model(norwegian == _1)
 """# The man who smokes Chesterfields lives in the house next to the man with the fox."""
+model(abs(chesterfields.position - fox.position) == 1)
 """# Kools are smoked in the house next to the house where the horse is kept."""
+model(abs(kools.position - horse.position) == 1)
 """# The Lucky Strike smoker drinks orange juice."""
-model(Lucky_Strike == Orange_Juice)
+model(lucky_strike == orange_juice)
 """# The Japanese smokes Parliaments."""
-model(Japanese == Parliaments)
+model(japanese == parliaments)
 """# The Norwegian lives next to the blue house."""
+model(abs(norwegian.position - blue.position) == 1)
 '''
 
 SOLUTION = """

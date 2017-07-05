@@ -32,19 +32,14 @@ with description('zebra_puzzle'):
       problem = self.subject.problems()[0]
       # TODO: This is incorrect.
       expect(problem._solve()).to(equal((
-        ['positions', 'colors', 'animals', 'cigarettes', 'drink',
-          'nationality'],
+        ['position', 'color', 'animal', 'cigarette', 'drink', 'nationality'],
         [
-          [['Left'], ['Green'], ['Fox'], ['Chesterfields'], ['Coffee'],
+          [[1], ['Green'], ['Zebra'], ['Chesterfields'], ['Coffee'],
             ['Norwegian']],
-          [['Middle Left'], ['Red'], ['Horse'], ['Lucky Strike'],
-            ['Orange Juice'], ['Englishman']],
-          [['Middle'], ['Blue'], ['Zebra'], ['Parliaments'], ['Milk'],
-            ['Japanese']],
-          [['Middle Right'], ['Yellow'], ['Dog'], ['Kools'], ['Water'],
-            ['Spaniard']],
-          [['Right'], ['Ivory'], ['Snails'], ['Old Gold'], ['Tea'],
-            ['Ukrainian']]
-        ],
+          [[2], ['Blue'], ['Fox'], ['Parliaments'], ['Water'], ['Japanese']],
+          [[3], ['Yellow'], ['Dog'], ['Kools'], ['Milk'], ['Spaniard']],
+          [[4], ['Red'], ['Horse'], ['Lucky Strike'], ['Orange Juice'],
+            ['Englishman']],
+          [[5], ['Ivory'], ['Snails'], ['Old Gold'], ['Tea'], ['Ukrainian']]
+        ]
       )))
-
