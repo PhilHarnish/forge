@@ -14,7 +14,8 @@ class LogicProblem(problem.Problem):
     try:
       parsed = ast.parse(program)
       if isinstance(parsed, ast.Module):
-        return min(1, len(parsed.body) / 10)
+        n_lines = sum(line.startswith('#') for line in lines) + len(parsed.body)
+        return min(1, n_lines / 10)
     except:
       return 0
     return sys.float_info.epsilon
