@@ -99,7 +99,7 @@ class Acrostic(_base_acrostic.BaseAcrostic):
         item, weight = next_best_tuple
         # Cache the real data for this queue entry somewhere else.
         # cache[id] contains a tuple of (next_best_tuple, best_items)
-        heapq.heappush(best_phrases, (1/weight, len(cache)))
+        heapq.heappush(best_phrases, (-weight, len(cache)))
         cache.append((next_best_tuple, best_items))
     while best_phrases:
       _, cache_id = best_phrases[0]
@@ -111,7 +111,7 @@ class Acrostic(_base_acrostic.BaseAcrostic):
       else:
         item, weight = next_best_tuple
         cache[cache_id] = (next_best_tuple, best_items)
-        heapq.heapreplace(best_phrases, (1/weight, cache_id))
+        heapq.heapreplace(best_phrases, (-weight, cache_id))
 
 
 def _scored_solution(target_score, acc):
