@@ -92,9 +92,10 @@ model(abs(norwegian.position - blue.position) == 1)
 '''
 
 SOLUTION = """
-Left	Yellow	Fox	Kools	Water	Norwegian
-Middle left	Blue	Horse	Chesterfields	Tea	Ukrainian
-Middle	Red	Snails	Old Gold	Milk	Englishman
-Middle right	Ivory	Dog	Lucky Strike	Orange Juice	Spaniard
-Right	Green	Zebra	Parliaments	Coffee	Japanese
+position |  color | animal |     cigarette |        drink | nationality
+       1 | Yellow |    Fox |         Kools |        Water |   Norwegian
+       2 |   Blue |  Horse | Chesterfields |          Tea |   Ukrainian
+       3 |    Red | Snails |      Old Gold |         Milk |  Englishman
+       4 |  Ivory |    Dog |  Lucky Strike | Orange Juice |    Spaniard
+       5 |  Green |  Zebra |   Parliaments |       Coffee |    Japanese
 """

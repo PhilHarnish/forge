@@ -30,11 +30,4 @@ with _description('zebra_puzzle'):
 
     with it('exports a model'):
       problem = self.subject.problems()[0]
-      expect(problem.solution).to(look_like("""
-      position |  color | animal |     cigarette |        drink | nationality
-             1 | Yellow |    Fox |         Kools |        Water |   Norwegian
-             2 |   Blue |  Horse | Chesterfields |          Tea |   Ukrainian
-             3 |    Red | Snails |      Old Gold |         Milk |  Englishman
-             4 |  Ivory |    Dog |  Lucky Strike | Orange Juice |    Spaniard
-             5 |  Green |  Zebra |   Parliaments |       Coffee |    Japanese
-      """))
+      expect(problem.solution).to(look_like(zebra_puzzle.SOLUTION))
