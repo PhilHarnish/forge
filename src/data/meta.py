@@ -4,6 +4,7 @@ import collections
 class Meta(collections.OrderedDict):
   def __init__(self, *args, **kwargs):
     self._smallest = float('inf')
+    self._largest = 0
     self._ordered = True
     super(Meta, self).__init__(*args, **kwargs)
 
@@ -14,6 +15,8 @@ class Meta(collections.OrderedDict):
       self._ordered = False
     else:
       self._smallest = value
+    if value > self._largest:
+      self._largest = value
     super(Meta, self).__setitem__(key, value, *args, **kwargs)
     self._changed()
 
@@ -32,9 +35,7 @@ class Meta(collections.OrderedDict):
       return first
 
   def magnitude(self):
-    self._reorder()
-    for first in self:
-      return self[first]
+    return self._largest
 
   def _reorder(self):
     if self._ordered:
