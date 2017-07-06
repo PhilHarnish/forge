@@ -1,5 +1,6 @@
 import heapq
 
+from data import max_heap
 from data.seek_sets import base_seek_set
 
 
@@ -69,7 +70,7 @@ class Trie(object):
   def walk(self, seek_sets, exact_match=False):
     """Returns solutions matching `seek_sets`, ordered from high to low."""
     # TODO: Inline per findings from commit 47a736f.
-    fringe = _MaxHeap()
+    fringe = max_heap.MaxHeap()
     solutions = []
     acc = []
     fringe.push(float('inf'), (acc, self._index))
@@ -153,32 +154,3 @@ class Trie(object):
         cursor[word[i]] = new_cursor
         cursor = new_cursor
     self._len += 1
-
-
-class _MaxHeap(object):
-  def __init__(self):
-    self._heap = []
-    self._pool = []
-    self._free_positions = []
-
-  def __len__(self):
-    return len(self._heap)
-
-  def push(self, cost, o):
-    if self._free_positions:
-      idx = self._free_positions.pop()
-      self._pool[idx] = o
-    else:
-      idx = len(self._pool)
-      self._pool.append(o)
-    heapq.heappush(self._heap, (-cost, idx))
-
-  def best_weight(self):
-    return -self._heap[0][0]
-
-  def pop(self):
-    _, idx = heapq.heappop(self._heap)
-    result = self._pool[idx]
-    self._pool[idx] = None
-    self._free_positions.append(idx)
-    return result
