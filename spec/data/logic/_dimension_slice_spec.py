@@ -51,6 +51,20 @@ with description('_dimension_slice._DimensionSlice'):
         'fruit': 'cherries',
       }))
 
+    with it('accepts sub-slices on duplicate int values'):
+      andy, bob = self.factory(name=['andy', 'bob'])
+      _10, _ = self.factory(age=[10, 10])
+      expect(lambda: andy[10]).not_to(raise_error)
+      expect(andy[10]).to(be_a(_dimension_slice._DimensionSlice))
+      expect(bob[10].dimension_constraints()).to(equal({
+        'name': 'bob',
+        'age': 10,
+      }))
+      expect(_10['andy'].dimension_constraints()).to(equal({
+        'name': 'andy',
+        'age': 10,
+      }))
+
     with it('accepts slicing dimensions'):
       andy, = self.factory(name=['andy'])
       cherries, = self.factory(fruit=['cherries'])
