@@ -48,6 +48,18 @@ with description('_dimension_factory._DimensionFactory'):
         ([{'name': 'A', 'number': 2}, {'name': 'B', 'number': 2}], 1),
       ]))
 
+    with it('returns 2D rows and columns with duplicates'):
+      self.subject(name=['A', 'B'])
+      self.subject(number=[1, 1])
+      groups = self.subject.cardinality_groups()
+      expect(groups).to(equal([
+        # Only one value, cardinality is one.
+        ([{'name': 'A', 'number': 1}], 1),
+        ([{'name': 'B', 'number': 1}], 1),
+        # Both A and B will be 1, cardinality is 2.
+        ([{'name': 'A', 'number': 1}, {'name': 'B', 'number': 1}], 2)
+      ]))
+
     with it('returns 3D rows and columns'):
       self.subject(name=['A', 'B'])
       self.subject(number=[1, 2])
