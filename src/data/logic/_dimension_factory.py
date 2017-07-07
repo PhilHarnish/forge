@@ -9,7 +9,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     super(_DimensionFactory, self).__init__(self, {})
     self._dimensions = collections.OrderedDict()
     # Map of identifier: dimension.
-    self._id_to_dimension = {}
+    self._value_to_dimension = {}
+    self._value_cardinality = collections.defaultdict(int)
     # Cache of already-requested dimensions.
     self._slice_cache = {}
 
@@ -21,20 +22,23 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
         ', '.join(kwargs.keys())))
     for dimension, values in kwargs.items():
       if dimension in self._dimensions:
-        raise TypeError('Dimension %s already registered to %s' % (
+        raise TypeError('Dimension "%s" already registered to %s' % (
           dimension, self._dimensions[dimension]
         ))
       self._dimensions[dimension] = self._make_slices(dimension, values)
+      child_dimensions = []
       for value in values:
         if value in self._dimensions:
           raise TypeError('ID %s collides with dimension of same name' % (
             value))
-        if value in self._id_to_dimension:
+        if (value in self._value_to_dimension and
+            dimension != self._value_to_dimension[value]):
           raise TypeError('ID %s already reserved by %s' % (
-            value, self._id_to_dimension[value]))
-        self._id_to_dimension[value] = dimension
-      return _OriginalDimensionSlice(
-          self, {dimension: None}, self._dimensions[dimension].values())
+            value, self._value_to_dimension[value]))
+        self._value_to_dimension[value] = dimension
+        self._value_cardinality[value] += 1
+        child_dimensions.append(self._dimensions[dimension][value])
+      return _OriginalDimensionSlice(self, {dimension: None}, child_dimensions)
     raise TypeError('invalid call %s' % kwargs)
 
   def _make_slices(self, dimension, values):
@@ -47,8 +51,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     value = None
     if key in self._dimensions:
       dimension = key
-    elif key in self._id_to_dimension:
-      dimension = self._id_to_dimension[key]
+    elif key in self._value_to_dimension:
+      dimension = self._value_to_dimension[key]
       value = key
     else:
       raise KeyError('dimension key "%s" is unknown' % key)
@@ -80,7 +84,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       for x_value in x_values:
         constraint[x_key] = x_value
         group = []
-        result.append(group)
+        cardinality = self._value_cardinality[x_value]
+        result.append((group, cardinality))
         for y_value in y_values:
           constraint[y_key] = y_value
           group.append(constraint.copy())
@@ -88,7 +93,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       for y_value in y_values:
         constraint[y_key] = y_value
         group = []
-        result.append(group)
+        cardinality = self._value_cardinality[y_value]
+        result.append((group, cardinality))
         for x_value in x_values:
           constraint[x_key] = x_value
           group.append(constraint.copy())

@@ -75,7 +75,7 @@ with description('dsl'):
       expect(age_counter).to(equal({
         'age[12]': 1,
         'age[11]': 1,
-        'age[10]': 1
+        'age[10]': 1,
       }))
 
     with it('finds correct solution with constraints'):

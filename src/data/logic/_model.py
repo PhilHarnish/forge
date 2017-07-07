@@ -124,7 +124,7 @@ class _Model(Numberjack.Model):
 
   def _dimensional_cardinality_constraints(self):
     result = []
-    for group in self._dimension_factory.cardinality_groups():
+    for group, cardinality in self._dimension_factory.cardinality_groups():
       num_zeros = len(group) - 1
       if num_zeros == 0:
         continue
@@ -139,7 +139,7 @@ class _Model(Numberjack.Model):
             constraint
           )
           variables.append(variable[0])
-        result.append(Numberjack.Sum(variables) == 1)
+        result.append(Numberjack.Sum(variables) == cardinality)
     return _predicates.Predicates(result)
 
   def _dimensional_inference_constraints(self):

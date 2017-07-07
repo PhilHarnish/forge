@@ -25,9 +25,12 @@ with description('_dimension_factory._DimensionFactory'):
         for slice in dimension.values():
           expect(slice).to(be_a(_dimension_slice._DimensionSlice))
 
-    with it('prevents duplicate registration'):
+    with it('prevents duplicate dimension registration'):
       self.subject(name=['A', 'B'])
       expect(calling(self.subject, name=['A', 'B'])).to(raise_error(TypeError))
+
+    with it('allows duplicate value registration'):
+      expect(calling(self.subject, name=['A', 'B', 'B'])).not_to(raise_error)
 
   with description('cardinality groups'):
     with it('returns 2D rows and columns'):
@@ -36,13 +39,13 @@ with description('_dimension_factory._DimensionFactory'):
       groups = self.subject.cardinality_groups()
       expect(groups).to(equal([
         # Row A.
-        [{'name': 'A', 'number': 1}, {'name': 'A', 'number': 2}],
+        ([{'name': 'A', 'number': 1}, {'name': 'A', 'number': 2}], 1),
         # Row B.
-        [{'name': 'B', 'number': 1}, {'name': 'B', 'number': 2}],
+        ([{'name': 'B', 'number': 1}, {'name': 'B', 'number': 2}], 1),
         # Column 1.
-        [{'name': 'A', 'number': 1}, {'name': 'B', 'number': 1}],
+        ([{'name': 'A', 'number': 1}, {'name': 'B', 'number': 1}], 1),
         # Column 2.
-        [{'name': 'A', 'number': 2}, {'name': 'B', 'number': 2}]
+        ([{'name': 'A', 'number': 2}, {'name': 'B', 'number': 2}], 1),
       ]))
 
     with it('returns 3D rows and columns'):
@@ -51,15 +54,15 @@ with description('_dimension_factory._DimensionFactory'):
       self.subject(another=['x', 'y'])
       groups = self.subject.cardinality_groups()
       expect(groups).to(have_len(2 * 2 * 3))
-      expect(groups[4 * 0]).to(equal([
+      expect(groups[4 * 0][0]).to(equal([
         # Row A + number.
         {'name': 'A', 'number': 1}, {'name': 'A', 'number': 2}
       ]))
-      expect(groups[4 * 1]).to(equal([
+      expect(groups[4 * 1][0]).to(equal([
         # Row A + another.
         {'name': 'A', 'another': 'x'}, {'name': 'A', 'another': 'y'}
       ]))
-      expect(groups[4 * 2]).to(equal([
+      expect(groups[4 * 2][0]).to(equal([
         # Row number 1 + another.
         {'number': 1, 'another': 'x'}, {'number': 1, 'another': 'y'}
       ]))
@@ -98,6 +101,13 @@ with description('_dimension_factory._DimensionFactory'):
     with it('unpacks matched lengths'):
       def good():
         (_, _) = self.subject(key=['A', 'B'])
+
+
+      expect(good).not_to(raise_error)
+
+    with it('unpacks matched lengths with repeats'):
+      def good():
+        (_, _, _) = self.subject(key=['A', 'B', 'B'])
 
 
       expect(good).not_to(raise_error)

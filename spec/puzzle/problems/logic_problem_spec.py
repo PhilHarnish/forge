@@ -53,3 +53,31 @@ with description('LogicProblem solutions'):
         """,
     ])
     expect(set(problem.solutions().keys())).to(equal(expected))
+
+  with it('finds multiple solutions'):
+    program = """
+      name <= {Andy, Bob, Cynthia}
+      age <= {10, 10, 11}
+    """
+    problem = logic_problem.LogicProblem('test', program.split('\n'))
+    expected = set(textwrap.dedent(txt.strip('\n')) for txt in [
+        """
+            name | age
+            Andy |  10
+             Bob |  10
+         Cynthia |  11
+        """,
+        """
+            name | age
+            Andy |  10
+             Bob |  11
+         Cynthia |  10
+        """,
+        """
+            name | age
+            Andy |  11
+             Bob |  10
+         Cynthia |  10
+        """,
+    ])
+    expect(set(problem.solutions().keys())).to(equal(expected))
