@@ -112,11 +112,18 @@ class call(object):
     self._args = args
     self._kwargs = kwargs
     self._cached_value = _NOT_SET
+    self._cached_exception = None
 
   @property
   def _value(self):
+    if self._cached_exception:
+      raise self._cached_exception
     if self._cached_value is _NOT_SET:
-      self._cached_value = self._fn(*self._args, **self._kwargs)
+      try:
+        self._cached_value = self._fn(*self._args, **self._kwargs)
+      except Exception as e:
+        self._cached_exception = e
+        raise e
     return self._cached_value
 
   def __repr__(self):
