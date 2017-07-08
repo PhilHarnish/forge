@@ -13,6 +13,7 @@ _OPERATOR_MAP = {
   '>=': ast.GtE,
   '<': ast.Lt,
   '<=': ast.LtE,
+  '*': ast.Mult,
 }
 
 
@@ -46,6 +47,12 @@ class AccumulatingExpressionMixin(object):
 
   def __ne__(self, other):
     return compare(self, ['!='], [other])
+
+  def __mul__(self, other):
+    return bin_op(self, '*', other)
+
+  def __rmul__(self, other):
+    return bin_op(other, '*', self)
 
   def __or__(self, other):
     return bin_op(self, '|', other)
