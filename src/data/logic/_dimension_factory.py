@@ -167,6 +167,9 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
             ))
     return result
 
+  def value_cardinality(self, value):
+    return self._value_cardinality[value]
+
 
 class _OriginalDimensionSlice(_dimension_slice._DimensionSlice):
   def __init__(self, factory, constraints, children):

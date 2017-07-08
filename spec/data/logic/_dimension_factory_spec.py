@@ -32,6 +32,12 @@ with description('_dimension_factory._DimensionFactory'):
     with it('allows duplicate value registration'):
       expect(calling(self.subject, name=['A', 'B', 'B'])).not_to(raise_error)
 
+  with description('value_cardinality'):
+    with it('returns value cardinality for registered values'):
+      self.subject(name=['A', 'B', 'B'])
+      expect(self.subject.value_cardinality('A')).to(equal(1))
+      expect(self.subject.value_cardinality('B')).to(equal(2))
+
   with description('cardinality groups'):
     with it('returns 2D rows and columns'):
       self.subject(name=['A', 'B'])
