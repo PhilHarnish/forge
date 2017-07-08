@@ -86,21 +86,21 @@ with description('_dimension_factory._DimensionFactory'):
       ]))
 
   with description('resolve'):
-    with it('resolves dimensions'):
+    with it('resolves subslice dimensions'):
       self.subject(name=['a', 'b'])
       slice = _dimension_slice._DimensionSlice(self, {})
       resolved = self.subject.resolve(slice, 'name')
       expect(resolved).to(be_a(_dimension_slice._DimensionSlice))
       expect(resolved.dimension_constraints()).to(equal({'name': None}))
 
-    with it('resolves values'):
+    with it('resolves subslice values'):
       self.subject(name=['a', 'b'])
       slice = _dimension_slice._DimensionSlice(self, {})
       resolved = self.subject.resolve(slice, 'a')
       expect(resolved).to(be_a(_dimension_slice._DimensionSlice))
       expect(resolved.dimension_constraints()).to(equal({'name': 'a'}))
 
-    with it('resolves iteravely'):
+    with it('resolves subslices iteravely'):
       self.subject(name=['a', 'b'])
       self.subject(age=[10, 11])
       slice = _dimension_slice._DimensionSlice(self, {})
@@ -111,6 +111,10 @@ with description('_dimension_factory._DimensionFactory'):
         'name': 'a',
         'age': 11,
       }))
+
+    with it('resolves literal values when requested'):
+      age = self.subject(age=[10, 11])
+      expect(age[10].age).to(equal(10))
 
   with description('resolve_all'):
     with it('returns 1 slice for fixed dimension slices'):

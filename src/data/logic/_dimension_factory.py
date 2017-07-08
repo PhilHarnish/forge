@@ -59,11 +59,13 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       value = key
     else:
       raise KeyError('dimension key "%s" is unknown' % key)
-    address = slice.dimension_constraints()
-    if dimension not in address or address[dimension] is None:
-      address = address.copy()
-      address[dimension] = value
-      return self._get_slice(address)
+    constraints = slice.dimension_constraints()
+    if dimension not in constraints or constraints[dimension] is None:
+      constraints = constraints.copy()
+      constraints[dimension] = value
+      return self._get_slice(constraints)
+    elif value is None:
+      return constraints[dimension]
     else:
       raise KeyError('slice already constrained %s to %s' % (
         dimension, slice._constraints[dimension]))
