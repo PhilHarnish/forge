@@ -171,20 +171,29 @@ with description('_model._Model usage'):
 
     with it('enforces inference constraints'):
       result = self.model._dimensional_inference_constraints()
-      expect(result).to(have_len(9))
+      expect(result).to(have_len(18))
       s = '\n'.join(sorted(
           re.sub(r'\.|name|fruit|age', '', str(result)).split('\n')
       ))
       expect(s).to(look_like("""
         ((["andy"]["cherries"] + ["andy"][10] + ["cherries"][10]) != 2)
+        ((["andy"]["cherries"] - (["andy"][11] == ["cherries"][11])) <= 0)
         ((["andy"]["dates"] + ["andy"][10] + ["dates"][10]) != 2)
+        ((["andy"]["dates"] - (["andy"][11] == ["dates"][11])) <= 0)
         ((["andy"]["figs"] + ["andy"][10] + ["figs"][10]) != 2)
+        ((["andy"]["figs"] - (["andy"][11] == ["figs"][11])) <= 0)
         ((["bob"]["cherries"] + ["bob"][10] + ["cherries"][10]) != 2)
+        ((["bob"]["cherries"] - (["bob"][11] == ["cherries"][11])) <= 0)
         ((["bob"]["dates"] + ["bob"][10] + ["dates"][10]) != 2)
+        ((["bob"]["dates"] - (["bob"][11] == ["dates"][11])) <= 0)
         ((["bob"]["figs"] + ["bob"][10] + ["figs"][10]) != 2)
+        ((["bob"]["figs"] - (["bob"][11] == ["figs"][11])) <= 0)
         ((["cynthia"]["cherries"] + ["cynthia"][10] + ["cherries"][10]) != 2)
+        ((["cynthia"]["cherries"] - (["cynthia"][11] == ["cherries"][11])) <= 0)
         ((["cynthia"]["dates"] + ["cynthia"][10] + ["dates"][10]) != 2)
+        ((["cynthia"]["dates"] - (["cynthia"][11] == ["dates"][11])) <= 0)
         ((["cynthia"]["figs"] + ["cynthia"][10] + ["figs"][10]) != 2)
+        ((["cynthia"]["figs"] - (["cynthia"][11] == ["figs"][11])) <= 0)
       """))
 
   with description('load'):
@@ -196,4 +205,4 @@ with description('_model._Model usage'):
       """))
       expect(len(self.model.constraints)).to(be(0))
       self.model.load('Mistral')
-      expect(len(self.model.constraints)).to(be_above(20))
+      expect(len(self.model.constraints)).to(be_above(70))

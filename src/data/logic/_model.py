@@ -157,4 +157,15 @@ class _Model(Numberjack.Model):
           )
           variables.append(variable[0])
         result.append(Numberjack.Sum(variables) != 2)
+      elif list(sorted(group_cardinality)) == [1, 2, 2]:
+        # This is the only other supported configuration. If at least one slice
+        # in the group has a fixed solution then that solution implies the other
+        # solution at the other two slices are equal to each other.
+        # Move the fixed group to the front.
+        fixed, free_1, free_2 = map(
+            lambda i: self.get_variables(i[0]),
+            sorted(group, key=lambda i: i[1])
+        )
+        # This is equivalent to "if fixed then free_1 == free_2":
+        result.append((fixed - (free_1 == free_2)) <= 0)
     return _predicates.Predicates(result)

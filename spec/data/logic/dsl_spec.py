@@ -155,9 +155,9 @@ with description('dsl'):
       (self.Andy, self.Bob, self.Cathy) = self.name = self.dimensions(
           name=['Andy', 'Bob', 'Cathy'])
       (self.CEO, self.Project_Manager, self.Analyst) = self.occupation = (
-        self.dimensions(occupation=['CEO', 'Project Manager', 'analyst']))
-      (self._10, self._11, self._12) = self.age = self.dimensions(
-          age=[10, 11, 12])
+        self.dimensions(occupation=['CEO', 'Project Manager', 'Analyst']))
+      (self._10, self._11, self._11) = self.age = self.dimensions(
+          age=[10, 11, 11])
 
     with it('volunteers a valid solution without any context'):
       seen = collections.Counter()
@@ -168,62 +168,59 @@ with description('dsl'):
         if value.get_value():
           seen[x] += 1
           seen[y] += 1
-      # Each is "2" because each value is part of 2 tables.
+      # Each value is part of 2 tables except for 11 which appears 2x.
       expect(seen).to(equal({
         'name["Andy"]': 2, 'name["Bob"]': 2, 'name["Cathy"]': 2,
         'occupation["CEO"]': 2, 'occupation["Project Manager"]': 2,
-        'occupation["analyst"]': 2,
-        'age[10]': 2, 'age[11]': 2, 'age[12]': 2,
+        'occupation["Analyst"]': 2,
+        'age[10]': 2, 'age[11]': 4,
       }))
 
     with it('produces a correct solution with constraints'):
-      # CEO is the oldest.
-      self.model(self.CEO['age'] > self.Project_Manager['age'])
-      self.model(self.CEO['age'] > self.Analyst['age'])
+      # CEO is not the youngest.
+      self.model(self.CEO['age'] >= self.Project_Manager['age'])
+      self.model(self.CEO['age'] >= self.Analyst['age'])
       # Andy is a year younger than Bob.
       self.model(self.Andy['age'] + 1 == self.Bob['age'])
       # Cathy is older than the Project_Manager.
       self.model(self.Cathy['age'] > self.Project_Manager['age'])
-      # Bob is either the CEO or the accountant.
-      self.model(self.Bob['CEO'] | self.Bob['Project Manager'])
+      # Bob is either the CEO or the Project Manager.
+      self.model(self.Bob['Analyst'] | self.Bob['Project Manager'])
       solver = self.model.load('Mistral')
-      solver.solve()
-      expected = {
-        'occupation["CEO"].age[10]': 0,
-        'occupation["CEO"].age[11]': 0,
-        'occupation["CEO"].age[12]': 1,
-        'occupation["CEO"].age[None]': 12,
-        'occupation["Project Manager"].age[10]': 0,
-        'occupation["Project Manager"].age[11]': 1,
-        'occupation["Project Manager"].age[12]': 0,
-        'occupation["Project Manager"].age[None]': 11,
-        'occupation["analyst"].age[10]': 1,
-        'occupation["analyst"].age[11]': 0,
-        'occupation["analyst"].age[12]': 0,
-        'occupation["analyst"].age[None]': 10,
-        'name["Andy"].age[10]': 1,
-        'name["Andy"].age[11]': 0,
-        'name["Andy"].age[12]': 0,
-        'name["Andy"].age[None]': 0,
-        'name["Bob"].age[10]': 0,
-        'name["Bob"].age[11]': 1,
-        'name["Bob"].age[12]': 0,
-        'name["Bob"].age[None]': 11,
-        'name["Cathy"].age[10]': 0,
-        'name["Cathy"].age[11]': 0,
-        'name["Cathy"].age[12]': 1,
-        'name["Cathy"].age[None]': 12,
-        'name["Bob"].occupation["CEO"]': 0,
-        'name["Bob"].occupation["Project Manager"]': 1,
-        'name["Andy"].occupation["CEO"]': 0,
-        'name["Andy"].occupation["Project Manager"]': 0,
-        'name["Andy"].occupation["analyst"]': 1,
-        'name["Bob"].occupation["analyst"]': 0,
-        'name["Cathy"].occupation["CEO"]': 1,
-        'name["Cathy"].occupation["Project Manager"]': 0,
-        'name["Cathy"].occupation["analyst"]': 0
-      }
-      actual = {}
-      for key, value in self.model._variable_cache.items():
-        actual[key] = value.get_value()
-      expect(actual).to(equal(expected))
+      expect(solver.solve()).to(be_true)
+      expect(str(solver)).to(look_like("""
+           name |      occupation | age
+           Andy | Project Manager |  10
+            Bob |         Analyst |  11
+          Cathy |             CEO |  11
+      """))
+      # Verify there are no other solutions.
+      expect(solver.solve()).to(be_false)
+
+    with it('infers a solution despite duplicates'):
+      # Cathy is CEO (constrain the two values with cardinality of 1).
+      self.model(self.Cathy == self.CEO)
+      # CEO is older (constrains CEO to one of the 11 values).
+      self.model(self.CEO.age > self.Project_Manager.age)
+      solver = self.model.load('Mistral')
+      solutions = []
+      while solver.solve():
+        solutions.append(str(solver))
+      solutions = list(sorted(solutions))
+      expected_solutions = [
+        """
+           name |      occupation | age
+           Andy |         Analyst |  11
+            Bob | Project Manager |  10
+          Cathy |             CEO |  11
+        """,
+        """
+           name |      occupation | age
+           Andy | Project Manager |  10
+            Bob |         Analyst |  11
+          Cathy |             CEO |  11
+        """,
+      ]
+      expect(solutions).to(have_len(len(expected_solutions)))
+      for solution, expected in zip(solutions, expected_solutions):
+        expect(solution).to(look_like(expected))

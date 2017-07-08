@@ -9,7 +9,7 @@ class Solver(object):
       self._solved = True
       return self._solver.solve()
     elif not self._solver.is_unsat():
-      return self._solver.getNextSolution()
+      return bool(self._solver.getNextSolution())
     return False
 
   def solved(self):
