@@ -147,9 +147,19 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
           })
       # For each cell in board A set up inference with aligned rows and columns.
       for row_index, x_value in enumerate(x_values):
+        # TODO: Figure out inference for duplicates.
+        if self._value_cardinality[x_value] > 1:
+          continue
         for column_index, y_value in enumerate(y_values):
           assert len(rows[row_index]) == len(columns[column_index])
+          # TODO: Figure out inference for duplicates.
+          if self._value_cardinality[y_value] > 1:
+            continue
           for row, column in zip(rows[row_index], columns[column_index]):
+            z_value = row[z_key]
+            # TODO: Figure out inference for duplicates.
+            if self._value_cardinality[z_value] > 1:
+              continue
             # A1 + B1 + C1 != 2 -- A, top left #1  (see doc above).
             result.append(({x_key: x_value, y_key: y_value}, row, column))
     return result
