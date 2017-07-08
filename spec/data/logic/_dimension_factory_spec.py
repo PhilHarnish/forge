@@ -85,6 +85,46 @@ with description('_dimension_factory._DimensionFactory'):
         {'number': 1, 'another': 'x'}, {'number': 1, 'another': 'y'}
       ]))
 
+  with description('resolve'):
+    with it('resolves dimensions'):
+      self.subject(name=['a', 'b'])
+      slice = _dimension_slice._DimensionSlice(self, {})
+      resolved = self.subject.resolve(slice, 'name')
+      expect(resolved).to(be_a(_dimension_slice._DimensionSlice))
+      expect(resolved.dimension_constraints()).to(equal({'name': None}))
+
+    with it('resolves values'):
+      self.subject(name=['a', 'b'])
+      slice = _dimension_slice._DimensionSlice(self, {})
+      resolved = self.subject.resolve(slice, 'a')
+      expect(resolved).to(be_a(_dimension_slice._DimensionSlice))
+      expect(resolved.dimension_constraints()).to(equal({'name': 'a'}))
+
+    with it('resolves iteravely'):
+      self.subject(name=['a', 'b'])
+      self.subject(age=[10, 11])
+      slice = _dimension_slice._DimensionSlice(self, {})
+      resolved = self.subject.resolve(slice, 'a')
+      resolved = self.subject.resolve(resolved, 11)
+      expect(resolved).to(be_a(_dimension_slice._DimensionSlice))
+      expect(resolved.dimension_constraints()).to(equal({
+        'name': 'a',
+        'age': 11,
+      }))
+
+  with description('resolve_all'):
+    with it('returns 1 slice for fixed dimension slices'):
+      self.subject(name=['a', 'b'])
+      slice = _dimension_slice._DimensionSlice(self, {'name': 'a'})
+      expect(self.subject.resolve_all(slice)).to(equal([slice]))
+
+    with it('returns all unconstrained sub-slices'):
+      self.subject(name=['a', 'b'])
+      slice = _dimension_slice._DimensionSlice(self, {'name': None})
+      expect(list(map(str, self.subject.resolve_all(slice)))).to(equal([
+        'name["a"]', 'name["b"]'
+      ]))
+
   with description('inference groups'):
     with it('returns nothing for 2 dimensions'):
       self.subject(name=['A', 'B'])

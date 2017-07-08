@@ -44,10 +44,13 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
   def _make_slices(self, dimension, values):
     result = collections.OrderedDict()
     for value in values:
+      # Cannot use _get_slice here as it depends on address which requires
+      # a populated cache.
       result[value] = _dimension_slice._DimensionSlice(self, {dimension: value})
     return result
 
   def resolve(self, slice, key):
+    """Finds the best sub-slice of `slice` for `key`."""
     value = None
     if key in self._dimensions:
       dimension = key
@@ -64,6 +67,27 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     else:
       raise KeyError('slice already constrained %s to %s' % (
         dimension, slice._constraints[dimension]))
+
+  def resolve_all(self, slice):
+    template_constraints = {}
+    free_dimensions = []
+    for key, value in slice.dimension_constraints().items():
+      if value is None:
+        free_dimensions.append(key)
+      else:
+        template_constraints[key] = value
+    if not free_dimensions:
+      return [slice]
+    elif len(free_dimensions) > 1:
+      # Currently no known legitimate use case for multiple free dimensions.
+      # "Correct" implementation impossible without a reference use case.
+      raise KeyError('resolving multiple free dimensions')
+    children = []
+    for dimension in free_dimensions:
+      for value in self._dimensions[dimension]:
+        template_constraints[dimension] = value
+        children.append(self._get_slice(template_constraints.copy()))
+    return children
 
   def _get_slice(self, constraints):
     address = _util.address(self._dimensions, constraints)
@@ -172,6 +196,14 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
 
 
 class _OriginalDimensionSlice(_dimension_slice._DimensionSlice):
+  """Similar to _DimensionSlice except it remembers duplicate values.
+
+  Normally, dimension factory (and user code) has no use for redundantly
+  iterating duplicate values. However, when a dimension is created this syntax
+  is expected to work:
+      red, green, red, green = factory(color=['red', 'green', 'red', 'green'])
+  """
+
   def __init__(self, factory, constraints, children):
     super(_OriginalDimensionSlice, self).__init__(factory, constraints)
     self._children = children

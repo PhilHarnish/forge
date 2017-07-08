@@ -14,6 +14,15 @@ class _DimensionSlice(
   def __getitem__(self, item):
     return self._factory.resolve(self, item)
 
+  def __len__(self):
+    return len(self._constraints)
+
+  def __iter__(self):
+    return iter(self._factory.resolve_all(self))
+
+  def __str__(self):
+    return self.dimension_address()
+
   def dimension_constraints(self):
     return self._constraints
 

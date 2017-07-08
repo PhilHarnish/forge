@@ -75,7 +75,7 @@ with description('_dimension_slice._DimensionSlice'):
         'fruit': 'cherries',
       }))
 
-  with description('dimension_name'):
+  with description('dimension_address'):
     with it('produces fully qualified names'):
       andy, = self.factory(name=['andy'])
       cherries, = self.factory(fruit=['cherries'])
@@ -97,6 +97,10 @@ with description('_dimension_slice._DimensionSlice'):
           'name["andy"].fruit[None]'))
       expect(fruit['cherries'].dimension_address()).to(equal(
           'fruit["cherries"]'))
+
+    with it('is used for str()'):
+      cherries, = self.factory(fruit=['cherries'])
+      expect(str(cherries)).to(equal('fruit["cherries"]'))
 
   with description('cache'):
     with it('returns unique slices for new requests'):
@@ -131,6 +135,32 @@ with description('_dimension_slice._DimensionSlice'):
 
       with it('accumulates comparisons'):
         andy, bob = self.factory(name=['andy', 'bob'])
-        age = self.factory(age=[10, 11])
+        self.factory(age=[10, 11])
         expression = ((andy.age + 1) == bob)
         expect(expression).to(be_a(_ast_factory.AccumulatingExpr))
+
+    with description('iter'):
+      with it('iterates a created dimension with duplicates'):
+        color = self.factory(color=['red', 'green', 'red', 'green'])
+        expect(list(map(str, iter(color)))).to(equal([
+          'color["red"]', 'color["green"]',
+          'color["red"]', 'color["green"]',
+        ]))
+
+      with it('iterates a fixed dimension'):
+        fruit = self.factory(fruit=['apple', 'blueberry', 'cherry'])
+        expect(list(map(str, iter(fruit.apple)))).to(equal(['fruit["apple"]']))
+
+      with it('iterates a brand new, free dimension'):
+        self.factory(fruit=['apple', 'blueberry', 'cherry'])
+        slice = _dimension_slice._DimensionSlice(self.factory, {'fruit': None})
+        expect(list(map(str, iter(slice)))).to(equal([
+          'fruit["apple"]', 'fruit["blueberry"]', 'fruit["cherry"]'
+        ]))
+
+      with it('iterates a brand new, free dimension with duplicates'):
+        self.factory(color=['red', 'green', 'red', 'green'])
+        slice = _dimension_slice._DimensionSlice(self.factory, {'color': None})
+        expect(list(map(str, iter(slice)))).to(equal([
+          'color["red"]', 'color["green"]',
+        ]))
