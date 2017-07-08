@@ -122,6 +122,34 @@ with description('_model._Model usage'):
           '(10*name["bob"].age[10] in {0,1} + 11*name["bob"].age[11] in {0,1})'
       ))
 
+  with description('duplicate nouns with unique positions'):
+    with before.each:
+      self.gray, self.gray, self.blue = self.factory(
+          color=['gray', 'gray', 'blue'])
+      self._1, self._2, self._3 = self.factory(position=[1, 2, 3])
+
+    with it('still reifies the unique value'):
+      result = self.model.get_variables({
+        'color': 'blue',
+        'position': None,
+      })
+      expect(str(result)).to(equal(
+          '(color["blue"].position[1] in {0,1}'
+          ' + 2*color["blue"].position[2] in {0,1}'
+          ' + 3*color["blue"].position[3] in {0,1})'
+      ))
+
+    with it('reifies multiple variables for the duplicate value'):
+      result = self.model.get_variables({
+        'color': 'gray',
+        'position': None,
+      })
+      expect(str(result)).to(look_like("""
+        (color["gray"].position[1] * 1)
+        (color["gray"].position[2] * 2)
+        (color["gray"].position[3] * 3)
+      """))
+
   with description('get_solutions'):
     with it('returns a 4x3 table'):
       self.model(self.andy.cherries[10] == True)

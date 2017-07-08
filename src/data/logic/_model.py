@@ -93,7 +93,18 @@ class _Model(Numberjack.Model):
       # Constrain to this new value, temporarily.
       constraints[key2] = value
       variables.append(self.get_variables(constraints))
-    return Numberjack.Sum(variables, values)
+    if self._dimension_factory.value_cardinality(value1) == 1:
+      # value1 has a unique solution so we can create a single number from a
+      # product of row [var1, var2, var3] * column [pos1, pos2, pos3].
+      return Numberjack.Sum(variables, values)
+    else:
+      # Because duplicate, independent solutions are possible we must return
+      # all possible variables independently. The user will need to carefully
+      # qualify how some or all of these values are constrained.
+      return _predicates.Predicates([
+        variable * value for variable, value in zip(variables, values)
+      ])
+
 
   def get_solutions(self):
     column_headers = list(self._dimension_factory.dimensions().keys())
