@@ -9,6 +9,7 @@ _OPERATORS = {
   '__le__': '__ge__',
   # Binary operators.
   '__add__': '__radd__',
+  '__mul__': '__rmul__',
   '__sub__': '__rsub__',
   '__or__': '__ror__',
   '__xor__': '__rxor__',
@@ -61,6 +62,13 @@ class OverloadedSelfBase(object):
 
   def __radd__(self, other):
     return self
+
+  def __mul__(self, other):
+    return self
+
+  def __rmul__(self, other):
+    return self
+
   def __sub__(self, other):
     return self
 
