@@ -48,6 +48,8 @@ class ExprTransformer(ast.NodeTransformer):
       return left + right
     elif isinstance(op, ast.Sub):
       return left - right
+    elif isinstance(op, ast.Mult):
+      return left * right
     _fail(node, msg='Binary op %s unsupported' % op.__class__.__name__)
 
   def visit_Call(self, node):
@@ -87,6 +89,9 @@ class ExprTransformer(ast.NodeTransformer):
       return result
     # Every expression is implicitly true.
     return result == True
+
+  def visit_List(self, node):
+    return [self.visit(i) for i in node.elts]
 
   def visit_Name(self, node):
     if not isinstance(node.ctx, ast.Load):

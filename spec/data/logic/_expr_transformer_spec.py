@@ -107,3 +107,16 @@ with description('_expr_transformer.ExprTransformer'):
           '(2 - ('
           '10*name["andy"].age[10] in {0,1} + 11*name["andy"].age[11] in {0,1}'
           '))'))
+
+    with it('supports * operation, int on right'):
+      expr = self.name['andy'].age[10] * 10
+      compiled = self.transformer.compile(expr)
+      expect(compiled).to(be_a(_predicates.Predicates))
+      expect(str(compiled)).to(equal('(name["andy"].age[10] * 10)'))
+
+    with it('supports * operation, int on left'):
+      expr = 10 * self.name['andy'].age[10]
+      compiled = self.transformer.compile(expr)
+      expect(compiled).to(be_a(_predicates.Predicates))
+      # For some reason(?) the operations are switched here.
+      expect(str(compiled)).to(equal('(name["andy"].age[10] * 10)'))
