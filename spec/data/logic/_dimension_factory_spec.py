@@ -88,18 +88,18 @@ with description('_dimension_factory._DimensionFactory'):
 
     with it('returns results for 3 dimensions'):
       self.subject(a=['A', 'B'])
-      self.subject(b=[1, 2])
+      self.subject(b=[1, 1])
       self.subject(c=['x', 'y'])
       groups = self.subject.inference_groups()
       expect(groups).to(equal([
-        ({'a': 'A', 'b': 1}, {'a': 'A', 'c': 'x'}, {'b': 1, 'c': 'x'}),
-        ({'a': 'A', 'b': 1}, {'a': 'A', 'c': 'y'}, {'b': 1, 'c': 'y'}),
-        ({'a': 'A', 'b': 2}, {'a': 'A', 'c': 'x'}, {'b': 2, 'c': 'x'}),
-        ({'a': 'A', 'b': 2}, {'a': 'A', 'c': 'y'}, {'b': 2, 'c': 'y'}),
-        ({'a': 'B', 'b': 1}, {'a': 'B', 'c': 'x'}, {'b': 1, 'c': 'x'}),
-        ({'a': 'B', 'b': 1}, {'a': 'B', 'c': 'y'}, {'b': 1, 'c': 'y'}),
-        ({'a': 'B', 'b': 2}, {'a': 'B', 'c': 'x'}, {'b': 2, 'c': 'x'}),
-        ({'a': 'B', 'b': 2}, {'a': 'B', 'c': 'y'}, {'b': 2, 'c': 'y'})
+        (({'a': 'A', 'b': 1}, 2), ({'a': 'A', 'c': 'x'}, 1), (
+          {'c': 'x', 'b': 1}, 2)),
+        (({'a': 'A', 'b': 1}, 2), ({'a': 'A', 'c': 'y'}, 1), (
+          {'c': 'y', 'b': 1}, 2)),
+        (({'a': 'B', 'b': 1}, 2), ({'a': 'B', 'c': 'x'}, 1), (
+          {'c': 'x', 'b': 1}, 2)),
+        (({'a': 'B', 'b': 1}, 2), ({'a': 'B', 'c': 'y'}, 1), (
+          {'c': 'y', 'b': 1}, 2)),
       ]))
 
   with description('unpacking'):

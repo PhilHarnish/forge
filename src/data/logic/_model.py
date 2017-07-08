@@ -146,11 +146,15 @@ class _Model(Numberjack.Model):
     result = []
     for group in self._dimension_factory.inference_groups():
       variables = []
-      for constraint in group:
-        variable = self.get_variables(constraint)
-        assert len(variable) == 1, 'Enforcing cardinality impossible for %s' % (
-          constraint
-        )
-        variables.append(variable[0])
-      result.append(Numberjack.Sum(variables) != 2)
+      group_cardinality = [slice_cardinality for _, slice_cardinality in group]
+      if group_cardinality == [1, 1, 1]:
+        # This is a simple case where every value being inferred has exactly one
+        # solution.
+        for constraint, slice_cardinality in group:
+          variable = self.get_variables(constraint)
+          assert len(variable) == 1, 'Enforcing cardinality impossible for %s' % (
+            constraint
+          )
+          variables.append(variable[0])
+        result.append(Numberjack.Sum(variables) != 2)
     return _predicates.Predicates(result)

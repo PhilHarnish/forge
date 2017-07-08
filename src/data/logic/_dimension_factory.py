@@ -131,37 +131,40 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       for x_value in x_values:
         row = []
         rows.append(row)
+        x_value_cardinality = self._value_cardinality[x_value]
         for z_value in z_values:
-          row.append({
+          slice_cardinality = (
+            x_value_cardinality * self._value_cardinality[z_value])
+          row.append(({
             x_key: x_value,
             z_key: z_value,
-          })
+          }, slice_cardinality))
       columns = []
       for y_value in y_values:
         column = []
         columns.append(column)
+        y_value_cardinality = self._value_cardinality[y_value]
         for z_value in z_values:
-          column.append({
+          slice_cardinality = (
+            y_value_cardinality * self._value_cardinality[z_value])
+          column.append(({
             y_key: y_value,
             z_key: z_value,
-          })
+          }, slice_cardinality))
       # For each cell in board A set up inference with aligned rows and columns.
       for row_index, x_value in enumerate(x_values):
-        # TODO: Figure out inference for duplicates.
-        if self._value_cardinality[x_value] > 1:
-          continue
+        x_value_cardinality = self._value_cardinality[x_value]
         for column_index, y_value in enumerate(y_values):
+          y_value_cardinality = self._value_cardinality[y_value]
+          slice_cardinality = x_value_cardinality * y_value_cardinality
           assert len(rows[row_index]) == len(columns[column_index])
-          # TODO: Figure out inference for duplicates.
-          if self._value_cardinality[y_value] > 1:
-            continue
           for row, column in zip(rows[row_index], columns[column_index]):
-            z_value = row[z_key]
-            # TODO: Figure out inference for duplicates.
-            if self._value_cardinality[z_value] > 1:
-              continue
             # A1 + B1 + C1 != 2 -- A, top left #1  (see doc above).
-            result.append(({x_key: x_value, y_key: y_value}, row, column))
+            result.append((
+              ({x_key: x_value, y_key: y_value}, slice_cardinality),
+              row,
+              column,
+            ))
     return result
 
 
