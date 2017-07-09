@@ -118,6 +118,19 @@ with description('dsl'):
           Cathy |  10
       """))
 
+    with it('support for abs()'):
+      self.model(abs(self.name['Andy']['age'] - self.name['Cathy']['age']) == 2)
+      self.model(self.name['Cathy']['age'] > self.name['Andy']['age'])
+      solver = self.model.load('Mistral')
+      expect(solver.solve()).to(be_true)
+      expect(str(solver)).to(look_like("""
+           name | age
+           Andy |  10
+            Bob |  11
+          Cathy |  12
+      """))
+      expect(solver.solve()).to(be_false)
+
   with description('3D solutions'):
     with before.each:
       (self.Andy, self.Bob, self.Cathy) = self.name = self.dimensions(
