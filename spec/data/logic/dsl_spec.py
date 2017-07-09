@@ -85,70 +85,38 @@ with description('dsl'):
       # Force Cathy == 10
       self.model(self.name['Cathy'][11] == False)
       solver = self.model.load('Mistral')
-      solver.solve()
-      expected = {
-        'name["Andy"].age[12]': 0,
-        'name["Cathy"].age[12]': 0,
-        'name["Cathy"].age[11]': 0,
-        'name["Andy"].age[10]': 0,
-        'name["Andy"].age[11]': 1,
-        'name["Bob"].age[10]': 0,
-        'name["Bob"].age[11]': 0,
-        'name["Bob"].age[12]': 1,
-        'name["Cathy"].age[10]': 1,
-      }
-      actual = {}
-      for key, value in self.model._variable_cache.items():
-        actual[key] = value.get_value()
-      expect(actual).to(equal(expected))
+      expect(solver.solve()).to(be_true)
+      expect(str(solver)).to(look_like("""
+           name | age
+           Andy |  11
+            Bob |  12
+          Cathy |  10
+      """))
 
     with it('finds solutions with reified dimension inequalities'):
       # Force Andy between Cathy and Bob.
       self.model(self.name['Andy']['age'] > self.name['Cathy']['age'])
       self.model(self.name['Andy']['age'] < self.name['Bob']['age'])
       solver = self.model.load('Mistral')
-      solver.solve()
-      expected = {
-        'name["Andy"].age[10]': 0,
-        'name["Andy"].age[11]': 1,
-        'name["Andy"].age[12]': 0,
-        'name["Andy"].age[None]': 11,
-        'name["Cathy"].age[10]': 1,
-        'name["Cathy"].age[11]': 0,
-        'name["Cathy"].age[12]': 0,
-        'name["Cathy"].age[None]': 10,
-        'name["Bob"].age[10]': 0,
-        'name["Bob"].age[11]': 0,
-        'name["Bob"].age[12]': 1,
-        'name["Bob"].age[None]': 12
-      }
-      actual = {}
-      for key, value in self.model._variable_cache.items():
-        actual[key] = value.get_value()
-      expect(actual).to(equal(expected))
+      expect(solver.solve()).to(be_true)
+      expect(str(solver)).to(look_like("""
+           name | age
+           Andy |  11
+            Bob |  12
+          Cathy |  10
+      """))
 
     with it('finds solutions with reified dimension offsets'):
       # Cathy = Bob - 2.
       self.model(self.name['Cathy']['age'] == self.name['Bob']['age'] - 2)
       solver = self.model.load('Mistral')
-      solver.solve()
-      expected = {
-        'name["Bob"].age[10]': 0,
-        'name["Bob"].age[11]': 0,
-        'name["Bob"].age[12]': 1,
-        'name["Bob"].age[None]': 0,
-        'name["Cathy"].age[10]': 1,
-        'name["Cathy"].age[11]': 0,
-        'name["Cathy"].age[12]': 0,
-        'name["Cathy"].age[None]': 10,
-        'name["Andy"].age[10]': 0,
-        'name["Andy"].age[11]': 1,
-        'name["Andy"].age[12]': 0
-      }
-      actual = {}
-      for key, value in self.model._variable_cache.items():
-        actual[key] = value.get_value()
-      expect(actual).to(equal(expected))
+      expect(solver.solve()).to(be_true)
+      expect(str(solver)).to(look_like("""
+           name | age
+           Andy |  11
+            Bob |  12
+          Cathy |  10
+      """))
 
   with description('3D solutions'):
     with before.each:
