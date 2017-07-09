@@ -63,6 +63,9 @@ with description('_ast_factory'):
     with it('supports *'):
       expect(_ast_factory.bin_op(self.andy, '*', 12)).to(be_a(ast.Expr))
 
+    with it('supports &'):
+      expect(_ast_factory.bin_op(self.bob, '&', self.dates)).to(be_a(ast.Expr))
+
   with description('compare'):
     with it('rejects invalid input'):
       expect(calling(_ast_factory.compare, None, [], [])).to(raise_error)

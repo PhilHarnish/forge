@@ -4,6 +4,7 @@ from data.logic import _addressable_value
 
 _OPERATOR_MAP = {
   '+': ast.Add,
+  '&': ast.BitAnd,
   '==': ast.Eq,
   '!=': ast.NotEq,
   '|': ast.BitOr,
@@ -18,6 +19,12 @@ _OPERATOR_MAP = {
 
 
 class AccumulatingExpressionMixin(object):
+  def __and__(self, other):
+    return bin_op(self, '&', other)
+
+  def __rand__(self, other):
+    return bin_op(other, '&', self)
+
   def __add__(self, other):
     return bin_op(self, '+', other)
 
