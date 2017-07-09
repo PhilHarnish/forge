@@ -8,6 +8,7 @@ _OPERATORS = {
   '__lt__': '__gt__',
   '__le__': '__ge__',
   # Binary operators.
+  '__and__': '__rand__',
   '__add__': '__radd__',
   '__mul__': '__rmul__',
   '__sub__': '__rsub__',
@@ -16,8 +17,18 @@ _OPERATORS = {
 }
 
 
-def _reversed_operator(op):
+def _reversed_operator(name, op):
   def reversed(left, right):
+    # If possible, explicitly call left.__rop__(right).
+    # The native rop(right, left) can silently un-reverse arguments.
+    if hasattr(left, name):
+      # We must implement the "NotImplented" semantics ourselves.
+      try:
+        result = getattr(left, name)(right)
+        if result is not NotImplemented:
+          return result
+      except NotImplementedError:
+        pass
     return op(right, left)
 
   return reversed
@@ -30,7 +41,7 @@ def overload_with_fn(fn):
       if hasattr(operator, rop):
         rop_fn = getattr(operator, rop)
       else:
-        rop_fn = _reversed_operator(op_fn)
+        rop_fn = _reversed_operator(rop, op_fn)
       setattr(cls, op, fn(op_fn, rop_fn))
       if op != rop:
         setattr(cls, rop, fn(rop_fn, op_fn))
