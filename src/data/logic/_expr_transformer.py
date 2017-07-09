@@ -16,8 +16,6 @@ class ExprTransformer(ast.NodeTransformer):
     self._model = model
 
   def compile(self, node):
-    if not isinstance(node, ast.Expr):
-      raise TypeError('%s cannot be compiled' % node)
     result = self.visit(node)
     if not isinstance(result, (Numberjack.Predicate, _predicates.Predicates)):
       _fail(node, msg='Failed to compile. %s (%s) remains' % (
@@ -35,12 +33,19 @@ class ExprTransformer(ast.NodeTransformer):
     # All visited nodes must be supported.
     _fail(node)
 
+  def visit__DimensionSlice(self, slice):
+    # This can happen when a slice is being used without any comparisons.
+    # We can assume this slice is intended to be true.
+    return self.visit(slice == True)
+
   def visit_BinOp(self, node):
     left = self.visit(node.left)
     right = self.visit(node.right)
     op = node.op
-    if isinstance(op, ast.BitOr):
-      return (left == True) | (right == True)
+    if isinstance(op, ast.BitAnd):
+      return left & right
+    elif isinstance(op, ast.BitOr):
+      return left | right
     elif isinstance(op, ast.BitXor):
       # This shortcut may not always work. When does it fail?
       return left + right == 1
