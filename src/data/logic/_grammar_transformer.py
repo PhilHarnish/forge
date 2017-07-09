@@ -25,6 +25,7 @@ _REFERENCE_TYPES = (
 
 
 _CONSTRAINT_TYPES = (
+  ast.Call,
   ast.Compare,
   ast.BinOp,
 )
@@ -147,6 +148,7 @@ def _canonical_reference_name(value):
   if isinstance(value, str):
     return value.replace(' ', '_').replace('-', '_').lower()
   return '_%s' % value
+
 
 def _constrain_comparison(node):
   if not isinstance(node, _CONSTRAINT_TYPES):
