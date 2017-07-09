@@ -1,6 +1,7 @@
+import ast
 import re
 
-from data.logic import _dimension_factory, _model, _reference
+from data.logic import _dimension_factory, _model, _reference, _sugar
 from spec.mamba import *
 
 with description('_model._Model constructor'):
@@ -47,6 +48,45 @@ with description('_model._Model usage'):
           (name["andy"].fruit["cherries"] == True)
           (name["bob"].fruit["dates"] == True)
           (name["bob"].fruit["cherries"] == False)
+      """))
+
+    with it('accumulates AST expressions'):
+      self.model(
+          ast.parse('11 == "cherries"').body
+      )
+      expect(self.model.constraints).to(have_len(1))
+      expect(str(self.model)).to(look_like("""
+        assign:
+          fruit["cherries"].age[11] in {0,1}
+        
+        subject to:
+          (fruit["cherries"].age[11] == True)
+      """))
+
+    with it('accumulates AST calls'):
+      self.model(
+          ast.parse('Conjunction([11 == "cherries" == True])').body
+      )
+      expect(self.model.constraints).to(have_len(2))
+      expect(str(self.model)).to(look_like("""
+        assign:
+          fruit["cherries"].age[11] in {0,1}
+        
+        subject to:
+          AND((fruit["cherries"].age[11] == True))
+      """))
+
+    with it('accumulates sugared calls'):
+      self.model(
+          _sugar.sugar_all([self.cherries == 11])
+      )
+      expect(self.model.constraints).to(have_len(2))
+      expect(str(self.model)).to(look_like("""
+        assign:
+          fruit["cherries"].age[11] in {0,1}
+
+        subject to:
+          AND((fruit["cherries"].age[11] == True))
       """))
 
   with description('resolve'):

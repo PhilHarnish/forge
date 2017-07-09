@@ -23,7 +23,7 @@ class _Model(Numberjack.Model):
     for arg in args:
       if isinstance(arg, (list, tuple, _predicates.Predicates)):
         self.add(*arg)
-      elif isinstance(arg, ast.Expr):
+      elif isinstance(arg, ast.AST):
         converted.append(self._compile(arg))
       elif isinstance(arg, Numberjack.Predicate):
         converted.append(arg)
