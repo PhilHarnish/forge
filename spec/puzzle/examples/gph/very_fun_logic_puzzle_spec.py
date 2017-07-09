@@ -6,32 +6,55 @@ from puzzle.problems import logic_problem
 from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
-with _description('very_fun_logic_puzzle'):
-  with description('solution'):
-    with before.all:
-      warehouse.save()
-      prod_config.init()
-      self.subject = very_fun_logic_puzzle.get()
+with description('very_fun_logic_puzzle'):
+  with before.all:
+    warehouse.save()
+    prod_config.init()
+    self.houses = very_fun_logic_puzzle.get_houses()
+    self.roses = very_fun_logic_puzzle.get_roses()
 
-    with after.all:
-      prod_config.reset()
-      warehouse.restore()
+  with after.all:
+    prod_config.reset()
+    warehouse.restore()
 
+  with description('house solution'):
     with it('scores the source as a LogicProblem'):
       expect(logic_problem.LogicProblem.score(
-          very_fun_logic_puzzle.SOURCE.split('\n'))).to(equal(1))
+          very_fun_logic_puzzle.HOUSE_SOURCE.split('\n'))).to(equal(1))
 
     with it('identifies puzzle type'):
-      problems = self.subject.problems()
+      problems = self.houses.problems()
       expect(problems).to(have_len(1))
       problem = problems[0]
       expect(problem).to(be_a(logic_problem.LogicProblem))
 
     with it('parses expressions'):
-      problem = self.subject.problems()[0]
+      problem = self.houses.problems()[0]
       expect(astor.to_source(problem._parse())).to(
-          look_like(very_fun_logic_puzzle.PARSED))
+          look_like(very_fun_logic_puzzle.HOUSE_PARSED))
 
     with it('exports a solution'):
-      problem = self.subject.problems()[0]
-      expect(problem.solution).to(look_like(very_fun_logic_puzzle.SOLUTION))
+      problem = self.houses.problems()[0]
+      expect(problem.solution).to(look_like(
+          very_fun_logic_puzzle.HOUSE_SOLUTION))
+
+  with description('rose solution'):
+    with it('scores the source as a LogicProblem'):
+      expect(logic_problem.LogicProblem.score(
+          very_fun_logic_puzzle.ROSE_SOURCE.split('\n'))).to(equal(1))
+
+    with it('identifies puzzle type'):
+      problems = self.roses.problems()
+      expect(problems).to(have_len(1))
+      problem = problems[0]
+      expect(problem).to(be_a(logic_problem.LogicProblem))
+
+    with it('parses expressions'):
+      problem = self.roses.problems()[0]
+      expect(astor.to_source(problem._parse())).to(
+          look_like(very_fun_logic_puzzle.ROSE_PARSED))
+
+    with it('exports a solution'):
+      problem = self.roses.problems()[0]
+      expect(problem.solution).to(look_like(
+          very_fun_logic_puzzle.ROSE_SOLUTION))
