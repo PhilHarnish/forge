@@ -20,6 +20,9 @@ class ValueReference(operator_overloading.OverloadedSelfBase):
       return self._value
     raise TypeError('%s does not have a value' % self)
 
+  def __str__(self):
+    return str(self.value())
+
 
 class Reference(ValueReference):
   """Holds a reference to a dimension Name."""

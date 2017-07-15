@@ -74,6 +74,14 @@ with description('_reference.Reference'):
       }).value()
       expect(value).to(be_a(Numberjack.Variable))
 
+  with description('str'):
+    with it('ValueReference'):
+      expect(str(_reference.ValueReference(self.model, 11))).to(equal('11'))
+
+    with it('Reference'):
+      value = _reference.Reference(self.model, {})
+      expect(str(value)).to(equal('x in {0,1}'))
+
   with description('modeling'):
     with it('raises exception when modeled'):
       value = _reference.Reference(self.model, {})
