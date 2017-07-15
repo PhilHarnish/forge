@@ -15,23 +15,23 @@ with description('LogicProblem score'):
       'this', 'has', 'many', 'lines',
     ])).to(be_above(0))
 
-with description('LogicProblem constructor'):
+with description('LogicProblem parsing'):
   with it('parses empty input'):
-    problem = logic_problem.LogicProblem('test', [''])
-    expect(problem._parse()).to(be_a(ast.Module))
+    lines = ['']
+    expect(logic_problem._parse(lines)).to(be_a(ast.Module))
 
   with it('parses comments'):
-    problem = logic_problem.LogicProblem('test', [
+    lines = [
       '# This is a comment.'
-    ])
-    expect(problem._parse()).to(be_a(ast.Module))
+    ]
+    expect(logic_problem._parse(lines)).to(be_a(ast.Module))
 
   with it('parses statements'):
-    problem = logic_problem.LogicProblem('test', [
+    lines = [
       '# This is a comment.',
       'ages <= {10, 11, 12}'
-    ])
-    expect(problem._parse()).to(be_a(ast.Module))
+    ]
+    expect(logic_problem._parse(lines)).to(be_a(ast.Module))
 
 with description('LogicProblem solutions'):
   with it('finds multiple solutions'):

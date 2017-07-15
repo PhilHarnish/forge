@@ -29,9 +29,9 @@ with description('very_fun_logic_puzzle'):
       expect(problem).to(be_a(logic_problem.LogicProblem))
 
     with it('parses expressions'):
-      problem = self.houses.problems()[0]
-      expect(astor.to_source(problem._parse())).to(
-          look_like(very_fun_logic_puzzle.HOUSE_PARSED))
+      expect(astor.to_source(logic_problem._parse(
+          very_fun_logic_puzzle.HOUSE_SOURCE.split('\n')))
+      ).to(look_like(very_fun_logic_puzzle.HOUSE_PARSED))
 
     with it('exports a solution'):
       problem = self.houses.problems()[0]
@@ -50,9 +50,9 @@ with description('very_fun_logic_puzzle'):
       expect(problem).to(be_a(logic_problem.LogicProblem))
 
     with it('parses expressions'):
-      problem = self.roses.problems()[0]
-      expect(astor.to_source(problem._parse())).to(
-          look_like(very_fun_logic_puzzle.ROSE_PARSED))
+      expect(astor.to_source(logic_problem._parse(
+          very_fun_logic_puzzle.ROSE_SOURCE.split('\n')))
+      ).to(look_like(very_fun_logic_puzzle.ROSE_PARSED))
 
     with it('exports a solution'):
       problem = self.roses.problems()[0]

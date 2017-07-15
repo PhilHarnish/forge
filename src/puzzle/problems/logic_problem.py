@@ -20,15 +20,24 @@ class LogicProblem(problem.Problem):
       return 0
     return sys.float_info.epsilon
 
-  def _parse(self):
-    return _grammar_transformer.transform('\n'.join(self.lines))
-
   def _solve_iter(self):
-    parsed = self._parse()
-    compiled = compile(parsed, '<string>', 'exec')
-    variables = {}
-    exec(compiled, variables)
-    model = variables['model']
-    solver = model.load('Mistral')
+    model = _model(self.lines)
+    solver = _solver(model)
     while solver.solve():
       yield str(solver), 1
+
+
+def _parse(lines):
+  return _grammar_transformer.transform('\n'.join(lines))
+
+
+def _model(lines):
+  parsed = _parse(lines)
+  compiled = compile(parsed, '<string>', 'exec')
+  variables = {}
+  exec(compiled, variables)
+  return variables['model']
+
+
+def _solver(model):
+  return model.load('Mistral')
