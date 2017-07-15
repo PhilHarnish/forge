@@ -47,6 +47,21 @@ with description('_ast_factory'):
       expect(calling(_ast_factory.coerce_value, node)).not_to(raise_error)
       expect(_ast_factory.coerce_value(node)).to(be_a(ast.Load))
 
+    with it('supports lists'):
+      value = [1, 2, 3, 4]
+      expect(calling(_ast_factory.coerce_value, value)).not_to(raise_error)
+      expect(_ast_factory.coerce_value(value)).to(be_a(ast.List))
+
+    with it('supports tuples'):
+      value = (1, 2, 3, 4)
+      expect(calling(_ast_factory.coerce_value, value)).not_to(raise_error)
+      expect(_ast_factory.coerce_value(value)).to(be_a(ast.List))
+
+    with it('supports generators'):
+      value = range(5)
+      expect(calling(_ast_factory.coerce_value, value)).not_to(raise_error)
+      expect(_ast_factory.coerce_value(value)).to(be_a(ast.List))
+
   with description('binary operations'):
     with it('supports +'):
       expect(_ast_factory.bin_op(self.andy, '+', 1)).to(be_a(ast.Expr))
