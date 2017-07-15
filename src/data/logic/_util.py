@@ -1,4 +1,7 @@
 import ast
+import operator
+
+import Numberjack
 
 
 def address(dimensions, constraints):
@@ -32,3 +35,35 @@ def combine(a, b):
         key, combined[key], value,
       ))
   return combined
+
+
+_NUMBERJACK_OPERATOR_VALUE_MAP = {
+  'sum': operator.add,
+}
+
+
+def numberjack_solution(expr):
+  if isinstance(expr, (int, str, bool)):
+    return expr
+  elif hasattr(expr, 'is_built') and expr.is_built():
+    return expr.get_value()
+  elif isinstance(expr, Numberjack.Variable):
+    raise ValueError('expr "%s" is not built' % expr)
+  elif isinstance(expr, Numberjack.Predicate):
+    val_result = list([numberjack_solution(child) for child in expr.children])
+    val_op_key = expr.operator.lower()
+    if val_op_key in _NUMBERJACK_OPERATOR_VALUE_MAP:
+      val_op = _NUMBERJACK_OPERATOR_VALUE_MAP[val_op_key]
+    else:
+      val_op = getattr(operator, '__%s__' % val_op_key)
+    if expr.has_parameters():
+      # A - B is implemented as Sum(1*A + -1*B).
+      parameters = expr.parameters[0]
+    else:
+      parameters = [1] * len(val_result)
+    value = parameters[0] * val_result[0]
+    for i, v in enumerate(val_result[1:]):
+      value = val_op(value, parameters[i + 1] * v)
+    return value
+  else:
+    raise TypeError('Unable to val/str %s' % expr)

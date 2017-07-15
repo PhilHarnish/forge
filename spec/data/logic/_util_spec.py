@@ -1,3 +1,5 @@
+import Numberjack
+
 from data.logic import _util
 from spec.mamba import *
 
@@ -44,3 +46,43 @@ with description('_util'):
 
     with it('merges non-overlapping dimensions'):
       expect(_util.combine({'a': 1}, {'b': 2})).to(equal({'a': 1, 'b': 2}))
+
+  with description('numberjack_solution'):
+    with before.each:
+      self.a = Numberjack.Variable('a')
+      self.b = Numberjack.Variable('b')
+      self.c = Numberjack.Variable('c')
+      self.model = Numberjack.Model()
+      self.solve = lambda: self.model.load('Mistral').solve()
+
+    with it('raises if unsolved'):
+      expect(calling(_util.numberjack_solution, self.a)).to(
+          raise_error(ValueError))
+
+    with it('raises if given garbage input'):
+      expect(calling(_util.numberjack_solution, None)).to(
+          raise_error(TypeError))
+
+    with it('returns primitives'):
+      expect(calling(_util.numberjack_solution, True)).to(equal(True))
+      expect(calling(_util.numberjack_solution, 1)).to(equal(1))
+      expect(calling(_util.numberjack_solution, 'asdf')).to(equal('asdf'))
+
+    with it('returns solutions'):
+      self.model.add(self.a == self.b)
+      self.model.add(self.b == True)
+      self.solve()
+      expect(calling(_util.numberjack_solution, self.a)).to(equal(True))
+
+    with it('returns compound expressions'):
+      self.model.add(self.a + self.b + self.c == 3)
+      self.solve()
+      expect(calling(_util.numberjack_solution, self.a)).to(equal(True))
+
+    with it('returns intermediate fn expressions'):
+      intermediate1 = Numberjack.Sum([self.a, self.b, self.c], [1, 2, 3])
+      intermediate2 = Numberjack.Abs(intermediate1 - 10)
+      self.model.add(intermediate2 == 4)
+      self.solve()
+      expect(intermediate1.is_built()).to(be_false)
+      expect(calling(_util.numberjack_solution, intermediate1)).to(equal(6))
