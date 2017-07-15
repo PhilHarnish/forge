@@ -1,7 +1,7 @@
 import ast
 import re
 
-from data.logic import _dimension_factory, _model, _reference, _sugar
+from data.logic import _dimension_factory, _model, _reference, dsl
 from spec.mamba import *
 
 with description('_model._Model constructor'):
@@ -78,15 +78,15 @@ with description('_model._Model usage'):
 
     with it('accumulates sugared calls'):
       self.model(
-          _sugar.sugar_all([self.cherries == 11])
+          dsl.all([self.cherries == 11])
       )
-      expect(self.model.constraints).to(have_len(2))
+      expect(self.model.constraints).to(have_len(1))
       expect(str(self.model)).to(look_like("""
         assign:
           fruit["cherries"].age[11] in {0,1}
 
         subject to:
-          AND((fruit["cherries"].age[11] == True))
+          AND(fruit["cherries"].age[11])
       """))
 
   with description('resolve'):

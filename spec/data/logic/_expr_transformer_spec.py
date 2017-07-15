@@ -1,7 +1,7 @@
 import ast
 
 from data.logic import _dimension_factory, _expr_transformer, _model, \
-  _predicates, _reference, _sugar
+  _predicates, _reference, dsl
 from spec.mamba import *
 
 with description('_expr_transformer.ExprTransformer'):
@@ -128,7 +128,7 @@ with description('compile'):
         '((name["andy"].age[10] == True) & (name["bob"].age[11] == True))'))
 
   with it('supports call expressions'):
-    expr = _sugar.sugar_abs(self.andy.age - self.bob.age)
+    expr = dsl.abs(self.andy.age - self.bob.age)
     compiled = self.transformer.compile(expr)
     expect(compiled).to(be_a(_predicates.Predicates))
     # For some reason(?) the operations are switched here.

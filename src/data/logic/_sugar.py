@@ -11,59 +11,24 @@ class _AccumulatingCall(ast.Call, _ast_factory.AccumulatingExpressionMixin):
 _AccumulatingCall.__name__ = 'Call'
 
 
-def sugar_abs(value):
-  if not isinstance(value, ast.AST):
-    return abs(value)
-  return _AccumulatingCall(
-      func=ast.Name(
-          id='Abs',
-          ctx=ast.Load(),
-      ),
-      args=[value],
-      keywords=[],
-  )
+def wrapped_call(fn):
+  def wrapper(*args, **kwargs):
+    args = [_ast_factory.coerce_value(arg) for arg in args]
+    keywords = []
+    for k, v in kwargs.items():
+      keywords.append(ast.keyword(arg=k, value=_ast_factory.coerce_value(v)))
+    return _AccumulatingCall(
+        func=fn,  # This is a function pointer and normally illegal.
+        args=args,
+        keywords=keywords,
+    )
+  return wrapper
 
 
-def sugar_all(iterable):
-  args = ast.List(
-      elts=list(iterable),
-      ctx=ast.Load(),
-  )
-  return _AccumulatingCall(
-      func=ast.Name(
-          id='Conjunction',
-          ctx=ast.Load(),
-      ),
-      args=[args],
-      keywords=[],
-  )
+def deferred_call(fn):
+  def deferred_fn(*args, **kwargs):
+    def final_call():
+      return fn(*args, **kwargs)
+    return final_call
 
-
-def sugar_any(iterable):
-  args = ast.List(
-      elts=list(iterable),
-      ctx=ast.Load(),
-  )
-  return _AccumulatingCall(
-      func=ast.Name(
-          id='Disjunction',
-          ctx=ast.Load(),
-      ),
-      args=[args],
-      keywords=[],
-  )
-
-
-def sugar_sum(iterable):
-  args = ast.List(
-      elts=list(iterable),
-      ctx=ast.Load(),
-  )
-  return _AccumulatingCall(
-      func=ast.Name(
-          id='Sum',
-          ctx=ast.Load(),
-      ),
-      args=[args],
-      keywords=[],
-  )
+  return wrapped_call(deferred_fn)
