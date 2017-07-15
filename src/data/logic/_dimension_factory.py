@@ -8,8 +8,11 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
   def __init__(self):
     super(_DimensionFactory, self).__init__(self, {})
     self._dimensions = collections.OrderedDict()
+    # Map of dimension: size (range of accepted values, including duplicates).
+    self._dimension_size = {}
     # Map of identifier: dimension.
     self._value_to_dimension = {}
+    # Map of value: cardinality (number of duplicates).
     self._value_cardinality = collections.defaultdict(int)
     # Cache of already-requested dimensions.
     self._slice_cache = {}
@@ -26,6 +29,14 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
           dimension, self._dimensions[dimension]
         ))
       self._dimensions[dimension] = self._make_slices(dimension, values)
+      dimension_size = len(values)
+      self._dimension_size[dimension] = dimension_size
+      max_dimension_size = max(self._dimension_size.values())
+      if dimension_size < max_dimension_size:
+        # There could be up to `max_dimension_size` duplicates.
+        max_cardinality = max_dimension_size
+      else:
+        max_cardinality = 1
       child_dimensions = []
       for value in values:
         if value in self._dimensions:
@@ -34,10 +45,13 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
         if (value in self._value_to_dimension and
             dimension != self._value_to_dimension[value]):
           raise TypeError('ID %s already reserved by %s' % (
-            value, self._value_to_dimension[value]))
+              value, self._value_to_dimension[value]))
         self._value_to_dimension[value] = dimension
         self._value_cardinality[value] += 1
         child_dimensions.append(self._dimensions[dimension][value])
+      for value in values:
+        self._value_cardinality[value] = max(
+            max_cardinality, self._value_cardinality[value])
       return _OriginalDimensionSlice(self, {dimension: None}, child_dimensions)
     raise TypeError('invalid call %s' % kwargs)
 
@@ -106,24 +120,28 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     for (x_key, x_values), (y_key, y_values) in itertools.combinations(
         self._dimensions.items(), 2):
       constraint = {}
-      # Rows.
-      for x_value in x_values:
-        constraint[x_key] = x_value
-        group = []
-        cardinality = self._value_cardinality[x_value]
-        result.append((group, cardinality))
-        for y_value in y_values:
-          constraint[y_key] = y_value
-          group.append(constraint.copy())
-      # Columns.
-      for y_value in y_values:
-        constraint[y_key] = y_value
-        group = []
-        cardinality = self._value_cardinality[y_value]
-        result.append((group, cardinality))
+      if self._dimension_size[x_key] >= self._dimension_size[y_key]:
+        # Rows: there are more (or equal) x values than y values.
+        # This implies y values should not repeat for this row.
         for x_value in x_values:
           constraint[x_key] = x_value
-          group.append(constraint.copy())
+          group = []
+          cardinality = self._value_cardinality[x_value]
+          result.append((group, cardinality))
+          for y_value in y_values:
+            constraint[y_key] = y_value
+            group.append(constraint.copy())
+      if self._dimension_size[y_key] >= self._dimension_size[x_key]:
+        # Rows: there are more (or equal) y values than x values.
+        # This implies x values should not repeat for this column.
+        for y_value in y_values:
+          constraint[y_key] = y_value
+          group = []
+          cardinality = self._value_cardinality[y_value]
+          result.append((group, cardinality))
+          for x_value in x_values:
+            constraint[x_key] = x_value
+            group.append(constraint.copy())
     return result
 
   def inference_groups(self):

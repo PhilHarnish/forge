@@ -66,6 +66,16 @@ with description('_dimension_factory._DimensionFactory'):
         ([{'name': 'A', 'number': 1}, {'name': 'B', 'number': 1}], 2)
       ]))
 
+    with it('returns 2D rows and columns with different sizes'):
+      self.subject(name=['A', 'B', 'C'])
+      self.subject(number=[5, 6])
+      groups = self.subject.cardinality_groups()
+      expect(groups).to(equal([
+        ([{'name': 'A', 'number': 5}, {'name': 'A', 'number': 6}], 1),
+        ([{'name': 'B', 'number': 5}, {'name': 'B', 'number': 6}], 1),
+        ([{'name': 'C', 'number': 5}, {'name': 'C', 'number': 6}], 1)
+      ]))
+
     with it('returns 3D rows and columns'):
       self.subject(name=['A', 'B'])
       self.subject(number=[1, 2])
@@ -83,6 +93,43 @@ with description('_dimension_factory._DimensionFactory'):
       expect(groups[4 * 2][0]).to(equal([
         # Row number 1 + another.
         {'number': 1, 'another': 'x'}, {'number': 1, 'another': 'y'}
+      ]))
+
+  with description('inference groups'):
+    with it('returns nothing for 2 dimensions'):
+      self.subject(name=['A', 'B'])
+      self.subject(number=[1, 2])
+      groups = self.subject.inference_groups()
+      expect(groups).to(equal([]))
+
+    with it('returns results for 3 dimensions with duplicates'):
+      self.subject(a=['A', 'B'])
+      self.subject(b=[1, 1])
+      self.subject(c=['x', 'y'])
+      groups = self.subject.inference_groups()
+      expect(groups).to(equal([
+        (({'a': 'A', 'b': 1}, 2), ({'a': 'A', 'c': 'x'}, 1), (
+          {'c': 'x', 'b': 1}, 2)),
+        (({'a': 'A', 'b': 1}, 2), ({'a': 'A', 'c': 'y'}, 1), (
+          {'c': 'y', 'b': 1}, 2)),
+        (({'a': 'B', 'b': 1}, 2), ({'a': 'B', 'c': 'x'}, 1), (
+          {'c': 'x', 'b': 1}, 2)),
+        (({'a': 'B', 'b': 1}, 2), ({'a': 'B', 'c': 'y'}, 1), (
+          {'c': 'y', 'b': 1}, 2)),
+      ]))
+
+    with it('returns results for 3 dimensions with uneven sizes'):
+      self.subject(a=['A', 'B', 'C'])
+      self.subject(b=['x'])
+      self.subject(c=['y'])
+      groups = self.subject.inference_groups()
+      expect(groups).to(equal([
+        (({'a': 'A', 'b': 'x'}, 3), ({'a': 'A', 'c': 'y'}, 3), (
+          {'b': 'x', 'c': 'y'}, 9)),
+        (({'a': 'B', 'b': 'x'}, 3), ({'a': 'B', 'c': 'y'}, 3), (
+          {'b': 'x', 'c': 'y'}, 9)),
+        (({'a': 'C', 'b': 'x'}, 3), ({'a': 'C', 'c': 'y'}, 3), (
+          {'b': 'x', 'c': 'y'}, 9))
       ]))
 
   with description('resolve'):
@@ -127,29 +174,6 @@ with description('_dimension_factory._DimensionFactory'):
       slice = _dimension_slice._DimensionSlice(self, {'name': None})
       expect(list(map(str, self.subject.resolve_all(slice)))).to(equal([
         'name["a"]', 'name["b"]'
-      ]))
-
-  with description('inference groups'):
-    with it('returns nothing for 2 dimensions'):
-      self.subject(name=['A', 'B'])
-      self.subject(number=[1, 2])
-      groups = self.subject.inference_groups()
-      expect(groups).to(equal([]))
-
-    with it('returns results for 3 dimensions'):
-      self.subject(a=['A', 'B'])
-      self.subject(b=[1, 1])
-      self.subject(c=['x', 'y'])
-      groups = self.subject.inference_groups()
-      expect(groups).to(equal([
-        (({'a': 'A', 'b': 1}, 2), ({'a': 'A', 'c': 'x'}, 1), (
-          {'c': 'x', 'b': 1}, 2)),
-        (({'a': 'A', 'b': 1}, 2), ({'a': 'A', 'c': 'y'}, 1), (
-          {'c': 'y', 'b': 1}, 2)),
-        (({'a': 'B', 'b': 1}, 2), ({'a': 'B', 'c': 'x'}, 1), (
-          {'c': 'x', 'b': 1}, 2)),
-        (({'a': 'B', 'b': 1}, 2), ({'a': 'B', 'c': 'y'}, 1), (
-          {'c': 'y', 'b': 1}, 2)),
       ]))
 
   with description('unpacking'):
