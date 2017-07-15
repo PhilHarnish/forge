@@ -1,16 +1,20 @@
 class Solver(object):
-  def __init__(self, model, solver):
+  def __init__(self, model, solver, deferred):
     self._model = model
     self._solver = solver
     self._solved = False
+    self._deferred = deferred
 
   def solve(self):
+    solved = False
     if not self._solved:
       self._solved = True
-      return self._solver.solve()
+      solved = self._solver.solve()
     elif not self._solver.is_unsat():
-      return bool(self._solver.getNextSolution())
-    return False
+      solved = bool(self._solver.getNextSolution())
+    if solved:
+      self._process_deferred()
+    return solved
 
   def solved(self):
     return self._solved and self._solver.is_sat() or not self._solver.is_unsat()
@@ -38,3 +42,7 @@ class Solver(object):
       result.append(' | '.join(result_row))
       result.append('\n')
     return ''.join(result)
+
+  def _process_deferred(self):
+    for fn in self._deferred:
+      fn()

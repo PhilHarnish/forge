@@ -10,6 +10,7 @@ with description('_solver'):
             get_solutions=lambda: self.solutions,
         ),
         solver=self.solver,
+        deferred=[],
     )
 
   with it('calls solve only once'):
@@ -51,3 +52,9 @@ with description('_solver'):
       header |   wide header
        value | 1, 2, 3, 4, 5
     """))
+
+  with it('queues functions to run after each solution'):
+    deferred = mock.Mock()
+    self.subject._deferred.append(deferred)
+    self.subject.solve()
+    expect(deferred).to(have_been_called)
