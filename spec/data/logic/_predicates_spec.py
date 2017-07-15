@@ -1,3 +1,5 @@
+import Numberjack
+
 from data.logic import _predicates
 from spec.mamba import *
 
@@ -7,6 +9,13 @@ with description('_predicates'):
 
   with it('handles simple input'):
     expect(calling(_predicates.Predicates, [1, 2, 3])).not_to(raise_error)
+
+  with it('resists nesting'):
+    o = _predicates.Predicates([13])
+    for _ in range(5):
+      o = _predicates.Predicates(o)
+    expect(o).to(have_len(1))
+    expect(o[0]).to(equal(13))
 
   with it('handles == operator overloading'):
     predicates = _predicates.Predicates([1, 2, 3]) == 2
@@ -56,6 +65,12 @@ with description('_predicates'):
     with it('produces strings for multiple predicates'):
       predicates = _predicates.Predicates(['first', 'second'])
       expect(str(predicates)).to(equal('first\nsecond'))
+
+    with it('produces Numberjack expressions'):
+      x = Numberjack.Variable('var')
+      expect(str(x)).to(equal('var in {0,1}'))
+      Numberjack.Model(x == True).load('Mistral').solve()
+      expect(str(x)).to(equal('1'))
 
   with description('priorities'):
     with before.all:
