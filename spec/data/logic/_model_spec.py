@@ -65,15 +65,15 @@ with description('_model._Model usage'):
 
     with it('accumulates AST calls'):
       self.model(
-          ast.parse('Conjunction([11 == "cherries" == True])').body
+          ast.parse('max(10, 11) == "cherries" == True').body
       )
-      expect(self.model.constraints).to(have_len(2))
+      expect(self.model.constraints).to(have_len(1))
       expect(str(self.model)).to(look_like("""
         assign:
           fruit["cherries"].age[11] in {0,1}
         
         subject to:
-          AND((fruit["cherries"].age[11] == True))
+          (fruit["cherries"].age[11] == True)
       """))
 
     with it('accumulates sugared calls'):
@@ -111,6 +111,18 @@ with description('_model._Model usage'):
       reference = self.model.resolve_value(11)
       expect(reference).to(be_a(_reference.ValueReference))
       expect(reference.value()).to(equal(11))
+
+  with description('coerce_value'):
+    with it('converts value references back to values'):
+      reference = self.model.resolve_value(11)
+      expect(self.model.coerce_value(reference)).to(equal(11))
+
+    with it('converts references back to values'):
+      reference = (self.model.resolve_value('andy') ==
+          self.model.resolve_value('cherries'))
+      expect(str(self.model.coerce_value(reference))).to(equal(
+        'name["andy"].fruit["cherries"] in {0,1}'
+      ))
 
   with description('get_variables'):
     with it('returns empty result for empty query'):

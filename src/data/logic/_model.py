@@ -14,6 +14,7 @@ class _Model(Numberjack.Model):
     self._expr_transformer = _expr_transformer.ExprTransformer(self)
     self._variable_cache = {}
     self._constraints = []
+    self._deferred = []
 
   def __call__(self, *args):
     self.add(*args)
@@ -24,9 +25,11 @@ class _Model(Numberjack.Model):
       if isinstance(arg, (list, tuple, _predicates.Predicates)):
         self.add(*arg)
       elif isinstance(arg, ast.AST):
-        converted.append(self._compile(arg))
+        self.add(self._compile(arg))
       elif isinstance(arg, Numberjack.Predicate):
         converted.append(arg)
+      elif callable(arg):
+        self._deferred.append(arg)
       else:
         raise TypeError('Model only accepts expressions (given %s)' % arg)
     super(_Model, self).add(converted)
@@ -35,7 +38,8 @@ class _Model(Numberjack.Model):
     # WARNING: Nothing prevents redundant dimensional constraints.
     self.add(self.dimension_constraints())
     return _solver.Solver(
-        self, super(_Model, self).load(solvername, X=X, encoding=encoding))
+        self, super(_Model, self).load(solvername, X=X, encoding=encoding),
+        self._deferred)
 
   def _compile(self, expr):
     return self._expr_transformer.compile(expr)
@@ -51,6 +55,9 @@ class _Model(Numberjack.Model):
       # Not a specific dimension. It seems like returning "value" is possible
       # if the __r*__ operators are specified.
       return _reference.ValueReference(self, value)
+
+  def coerce_value(self, value):
+    return _reference.coerce_value(value)
 
   def get_variables(self, constraints):
     results = []
@@ -105,7 +112,6 @@ class _Model(Numberjack.Model):
         variable * value for variable, value in zip(variables, values)
       ])
 
-
   def get_solutions(self):
     column_headers = list(self._dimension_factory.dimensions().keys())
     cells = []
@@ -140,6 +146,7 @@ class _Model(Numberjack.Model):
       if num_zeros == 0:
         continue
       elif num_zeros == 1:
+        # This implies the group is size 2 and behaves like a boolean.
         a, b = group
         result.append(self.get_variables(a) != self.get_variables(b))
       else:
@@ -168,7 +175,7 @@ class _Model(Numberjack.Model):
           )
           variables.append(variable[0])
         result.append(Numberjack.Sum(variables) != 2)
-      elif list(sorted(group_cardinality)) == [1, 2, 2]:
+      elif list(sorted(group_cardinality))[0] == 1:
         # This is the only other supported configuration. If at least one slice
         # in the group has a fixed solution then that solution implies the other
         # solution at the other two slices are equal to each other.
