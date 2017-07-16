@@ -25,6 +25,15 @@ with description('msp2017_06_21_pride_parade'):
       problem = problems[0]
       expect(problem).to(be_a(logic_problem.LogicProblem))
 
+    with _it('parses puzzle'):
+      parsed = logic_problem._parse(msp2017_06_21_pride_parade.SOURCE.split('\n'))
+      expect(str(parsed)).to(equal(""""""))
+
+    with it('models puzzle'):
+      model = logic_problem._model(msp2017_06_21_pride_parade.SOURCE.split('\n'))
+      print(str(model))
+      expect(str(model)).to(equal(""""""))
+
     with it('exports a solution'):
       problem = self.puzzle.problems()[0]
       expect(problem.solution).to(look_like(
