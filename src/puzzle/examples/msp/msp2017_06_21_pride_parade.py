@@ -26,7 +26,7 @@ orange_sees > phyllis_sees
 x = orange_sees - phyllis_sees
 
 # If the blue and violet floats are facing the same direction, then Patria is in one of those floats; otherwise, Patria is in the green float.
-if (blue.left == True) == (violet.left == True):
+if blue.left == violet.left:
   Patria.blue or Patria.violet
 else:
   Patria.green == True
@@ -36,10 +36,10 @@ else:
 # If x == 2: blue sees Li.
 if blue.left:
   blue[1] == False
-  all((Li[i - 1] == True) == (blue[i] == True) for i in range(2, 8))
+  all(Li[i - 1] == blue[i] for i in range(2, 8))
 else:
   blue[7] == False
-  all((Li[i + 1] == True) == (blue[i] == True) for i in range(1, 7))
+  all(Li[i + 1] == blue[i] for i in range(1, 7))
 float_distance = abs(Harvey.position - pink.position) - 1
 (float_distance == 2) ^ (float_distance == 4)
 
@@ -66,13 +66,13 @@ else:
 
 # The people in the orange and pink floats can see the blue float somewhere ahead.
 blue_left_of_orange = blue.position < orange.position
-(orange.left == True) == blue_left_of_orange
+orange.left == blue_left_of_orange
 blue_right_of_orange = blue.position > orange.position
-(orange.right == True) == blue_right_of_orange
+orange.right == blue_right_of_orange
 blue_left_of_pink = blue.position < pink.position
-(pink.left == True) == blue_left_of_pink
+pink.left == blue_left_of_pink
 blue_right_of_pink = blue.position > pink.position
-(pink.right == True) == blue_right_of_pink
+pink.right == blue_right_of_pink
 
 # If Li’s float is east of Harvey’s, then Li’s float is either orange or pink.
 if Li.position > Harvey.position:
@@ -85,7 +85,7 @@ if Harvey.red or Harvey.orange:
 # If the red and yellow floats are next to each other, then the person in the red float can see fewer than y other floats, where y = x + 1.
 red_yellow_neighbors = abs(red.position - yellow.position) == 1
 red_left_sees = red.left * (red.position - 1)
-red_right_sees = (red.left == False) * (7 - red.position)
+red_right_sees = red.right * (7 - red.position)
 red_sees = red_left_sees + red_right_sees
 y = x + 1
 if red_yellow_neighbors:
@@ -111,8 +111,8 @@ z = x * y
 (red == Harvey) or (red == Patria)
 
 # The pink, violet, and green floats are facing the same direction.
-(pink.left == True) == (violet.left == True)
-(violet.left == True) == (green.left == True)
+pink.left == violet.left
+violet.left == green.left
 """
 
 SOLUTION = """

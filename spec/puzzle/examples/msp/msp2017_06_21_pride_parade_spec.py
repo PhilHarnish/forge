@@ -33,4 +33,8 @@ with description('msp2017_06_21_pride_parade'):
       problem = self.puzzle.problems()[0]
       expect(problem.solution).to(look_like(
           msp2017_06_21_pride_parade.SOLUTION))
-      expect(problem.solutions()).to(have_len(1))
+      solutions = problem.solutions()
+      if len(solutions) > 1:
+        for solution in solutions:
+          print(solution)
+      expect(solutions).to(have_len(1))
