@@ -156,6 +156,20 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.Expr))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('converts if->then/else statements with longer bodies'):
+      node = _grammar_transformer.transform("""
+        if A:
+          B1
+          B2
+        else:
+          C1
+          C2
+      """)
+      expected = goal('model((A <= B1 & B2) & (A + (C1 & C2) >= 1))')
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))
+
   with description('reference aliases'):
     with it('no-op for well-defined references'):
       node = _grammar_transformer.transform("""

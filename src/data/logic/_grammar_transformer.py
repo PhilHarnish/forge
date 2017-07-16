@@ -116,29 +116,16 @@ class _GrammarTransformer(ast.NodeTransformer):
 
   def visit_If(self, node):
     """Converts "if A: B" to "A <= B"."""
-    if (len(node.body) > 1 or not isinstance(node.body[0], ast.Expr) or
-        len(node.orelse) > 1 or (
-          len(node.orelse) == 1 and not isinstance(node.orelse[0], ast.Expr))):
-      raise _fail(node, msg='if statement has unexpected AST')
     condition = self.visit(node.test)
-    implication = self.visit(node.body[0].value)
+    implication = self.visit(_combine_expressions(node.body))
     result = ast.Compare(
         left=condition,
         ops=[ast.LtE()],
         comparators=[implication],
     )
-    result2 = ast.Compare(
-        left=ast.BinOp(
-            left=condition,
-            op=ast.Sub(),
-            right=implication,
-        ),
-        ops=[ast.LtE()],
-        comparators=[ast.Num(n=0)],
-    )
     if node.orelse:
       # Convert "else: C" into "A + C >= 1".
-      implication = self.visit(node.orelse[0].value)
+      implication = self.visit(_combine_expressions(node.orelse))
       else_result = ast.Compare(
           left=ast.BinOp(
               left=condition,
@@ -257,3 +244,17 @@ def _dimension_value(dimension, values):
         )
       ],
   )
+
+
+def _combine_expressions(exprs):
+  if (not all(isinstance(expr, ast.Expr) for expr in exprs)):
+    _fail(ast.Module(body=exprs), 'Unable to combine expressions')
+  if len(exprs) > 1:
+    # Multiple expressions should be AND'd.
+    return ast.BoolOp(
+        op=ast.And(),
+        values=[
+          expr.value for expr in exprs
+        ]
+    )
+  return exprs[0].value
