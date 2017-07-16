@@ -25,9 +25,11 @@ _REFERENCE_TYPES = (
 
 
 _CONSTRAINT_TYPES = (
+  ast.BinOp,
+  # NB: Do not add ast.BoolOp: the "or" and "and" operators cannot be overriden
+  # and must be converted to | and &.
   ast.Call,
   ast.Compare,
-  ast.BinOp,
 )
 
 
@@ -111,6 +113,47 @@ class _GrammarTransformer(ast.NodeTransformer):
       )
       return node
     _fail(node)
+
+  def visit_If(self, node):
+    """Converts "if A: B" to "A <= B"."""
+    if (len(node.body) > 1 or not isinstance(node.body[0], ast.Expr) or
+        len(node.orelse) > 1 or (
+          len(node.orelse) == 1 and not isinstance(node.orelse[0], ast.Expr))):
+      raise _fail(node, msg='if statement has unexpected AST')
+    condition = self.visit(node.test)
+    implication = self.visit(node.body[0].value)
+    result = ast.Compare(
+        left=condition,
+        ops=[ast.LtE()],
+        comparators=[implication],
+    )
+    result2 = ast.Compare(
+        left=ast.BinOp(
+            left=condition,
+            op=ast.Sub(),
+            right=implication,
+        ),
+        ops=[ast.LtE()],
+        comparators=[ast.Num(n=0)],
+    )
+    if node.orelse:
+      # Convert "else: C" into "A + C >= 1".
+      implication = self.visit(node.orelse[0].value)
+      else_result = ast.Compare(
+          left=ast.BinOp(
+              left=condition,
+              op=ast.Add(),
+              right=implication,
+          ),
+          ops=[ast.GtE()],
+          comparators=[ast.Num(n=1)],
+      )
+      result = ast.BinOp(
+          left=result,
+          op=ast.BitAnd(),
+          right=else_result,
+      )
+    return ast.Expr(value=result)
 
   def visit_Name(self, node):
     canonical_reference_name = _canonical_reference_name(node.id)
