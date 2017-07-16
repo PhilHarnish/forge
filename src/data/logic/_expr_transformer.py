@@ -1,9 +1,17 @@
 import ast
+import builtins
+import types
 
 import Numberjack
 import astor
 
 from data.logic import _predicates
+
+_EXPECTED_COMPILE_OUTPUT = (
+  types.FunctionType,
+  Numberjack.Predicate,
+  _predicates.Predicates,
+)
 
 
 class ExprTransformer(ast.NodeTransformer):
@@ -17,7 +25,7 @@ class ExprTransformer(ast.NodeTransformer):
 
   def compile(self, node):
     result = self.visit(node)
-    if not isinstance(result, (Numberjack.Predicate, _predicates.Predicates)):
+    if not isinstance(result, _EXPECTED_COMPILE_OUTPUT):
       _fail(node, msg='Failed to compile. %s (%s) remains' % (
           type(result), result))
     return result
@@ -58,15 +66,17 @@ class ExprTransformer(ast.NodeTransformer):
     _fail(node, msg='Binary op %s unsupported' % op.__class__.__name__)
 
   def visit_Call(self, node):
-    if not isinstance(node.func, ast.Name):
-      _fail(node.func, msg='func is %s, not ast.Name' % type(node.func))
-    fn = node.func.id
-    if not hasattr(Numberjack, fn) or not callable(getattr(Numberjack, fn)):
-      _fail(node.func, msg='Unable to resolve fn %s on Numberjack' % fn)
     args = [self.visit(arg) for arg in node.args]
+    kwargs = {}  # TODO: Support kwargs.
+    if isinstance(node.func, ast.Name):
+      fn = getattr(builtins, node.func.id)
+    elif callable(node.func):  # Normally illegal. See _sugar.py.
+      fn = node.func
+    else:
+      raise _fail(node, msg='Unsupported ast.Call function')
     # Wrap result in a Predicates object so that our operator overloading takes
     # precedence.
-    return _predicates.Predicates([getattr(Numberjack, fn)(*args)])
+    return _predicates.Predicates([fn(*args, **kwargs)])
 
   def visit_Compare(self, node):
     left = self.visit(node.left)
@@ -96,7 +106,9 @@ class ExprTransformer(ast.NodeTransformer):
     return result == True
 
   def visit_List(self, node):
-    return [self.visit(i) for i in node.elts]
+    # We assume list values will not participate in more accumulating
+    # expressions. Coerce them to their final values.
+    return [self._model.coerce_value(self.visit(i)) for i in node.elts]
 
   def visit_Name(self, node):
     if not isinstance(node.ctx, ast.Load):

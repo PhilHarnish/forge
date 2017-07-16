@@ -146,3 +146,19 @@ with description('compile'):
     # For some reason(?) the operations are switched here.
     s = str(compiled).replace(' in {0,1}', '')
     expect(s).to(equal('(name["andy"].age[10] == True)'))
+
+  with it('supports Call with builtin functions'):
+    expr = ast.parse('max(1, 3)').body[0]
+    compiled = self.transformer.compile(expr)
+    expect(str(compiled)).to(equal('3'))
+
+  with it('supports Call with function pointers'):
+    fn = mock.Mock(return_value=3)
+    expr = ast.Call(
+        func=fn,
+        args=[],
+        keywords=[],
+    )
+    compiled = self.transformer.compile(expr)
+    expect(fn).to(have_been_called)
+    expect(str(compiled)).to(equal('3'))
