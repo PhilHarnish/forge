@@ -9,8 +9,6 @@ def get():
 # The pink, violet, and green floats are facing the same direction.
 # pink.direction == violet.direction
 # violet.direction == green.direction
-# if Harvey.right == True:
-#   (all(Harvey[i] - Kimball[i + 1] <= 0 for i in range(1, 7)) == True)
 SOURCE = """
 position <= {1, 2, 3, 4, 5, 6, 7}
 color <= {orange, blue, violet, green, pink, red, yellow}
@@ -35,17 +33,12 @@ else:
 # The person in the blue float can see, directly in front of it, another float whose driver has x letters in his/her name.
 # NOTE: Names are 2, 6, 7, 11 so x == 2 or x == 6. 6 is too big for z.
 (x == 2)
-
-# Blue needs 1+ person in front of them.
-if blue.left:
-  blue[1] == False
-else:
-  blue[7] == False
-
 # If x == 2: blue sees Li.
 if blue.left:
+  blue[1] == False
   all((Li[i - 1] == True) == (blue[i] == True) for i in range(2, 8))
 else:
+  blue[7] == False
   all((Li[i + 1] == True) == (blue[i] == True) for i in range(1, 7))
 float_distance = abs(Harvey.position - pink.position) - 1
 (float_distance == 2) ^ (float_distance == 4)
@@ -61,12 +54,12 @@ if c_is_bovg:
   c_left_neighbor_has_y or c_right_neighbor_has_y
 
 # Harvey can see Kimball’s float directly in front of him.
-if Harvey.left == True:
+if Harvey.left:
   Harvey[1] == False
-if Harvey.left == True:
   all(Harvey[i] - Kimball[i - 1] <= 0 for i in range(2, 8))
-if Harvey.right == True:
-  (all(Harvey[i] - Kimball[i + 1] <= 0 for i in range(1, 7)) == True)
+else:
+  Harvey[7] == False
+  all(Harvey[i] - Kimball[i + 1] <= 0 for i in range(1, 7))
 
 # The violet float is next to the yellow float if and only if Li’s float is pink.
 (Li == pink) == (abs(violet.position - yellow.position) == 1)
@@ -87,7 +80,7 @@ if Li.position > Harvey.position:
 
 # If Harvey’s float is red or orange, then Kimball’s float is a primary color.
 if Harvey.red or Harvey.orange:
-  (Kimball.red == True) or (Kimball.blue == True)
+  Kimball.red or Kimball.blue
 
 # If the red and yellow floats are next to each other, then the person in the red float can see fewer than y other floats, where y = x + 1.
 red_yellow_neighbors = abs(red.position - yellow.position) == 1
