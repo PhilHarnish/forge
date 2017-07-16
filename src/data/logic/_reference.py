@@ -38,9 +38,14 @@ class Reference(ValueReference):
   def __eq__(self, other):
     """Merge constraints."""
     if isinstance(other, Reference):
-      return Reference(
-          self._model,
-          _util.combine(self._constraints, other._constraints))
+      try:
+        return Reference(
+            self._model,
+            _util.combine(self._constraints, other._constraints))
+      except KeyError:
+        # If self and other are both constrained on similar dimensions then
+        # combining them is impossible and ordinary equality should be used.
+        pass
     return super(Reference, self).__eq__(other)
 
   def __ne__(self, other):

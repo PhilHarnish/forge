@@ -1,3 +1,5 @@
+import itertools
+
 import Numberjack
 
 from data.logic import _reference
@@ -5,9 +7,12 @@ from spec.mamba import *
 
 with description('_reference.Reference'):
   with before.each:
+    counter = itertools.count()
+    def name():
+      return 'x%s' % next(counter)
     self.model = mock.Mock(
         __name__='_model._Model',
-        get_variables=lambda *args: Numberjack.Variable(),
+        get_variables=lambda *args: Numberjack.Variable(name()),
         side_effect=lambda *args: [a.ident for a in args]
     )
 
@@ -56,7 +61,20 @@ with description('_reference.Reference'):
       b = _reference.Reference(self.model, {'key_b': 'value_b'})
       c = a != b
       expect(c).to(be_a(Numberjack.Predicate))
-      expect(str(c)).to(equal('(x == False)'))
+      expect(str(c)).to(equal('(x0 == False)'))
+
+    with it('performs comparisons between two well-constrained references'):
+      a = _reference.Reference(self.model, {
+        'key1': 'value_a',
+        'key2': 'value_a',
+      })
+      b = _reference.Reference(self.model, {
+        'key1': 'value_b',
+        'key2': 'value_b',
+      })
+      c = a == b
+      expect(c).to(be_a(Numberjack.Predicate))
+      expect(str(c)).to(equal('(x0 == x1)'))
 
   with description('value'):
     with it('returned from ValueReference matches input'):
@@ -80,7 +98,7 @@ with description('_reference.Reference'):
 
     with it('Reference'):
       value = _reference.Reference(self.model, {})
-      expect(str(value)).to(equal('x in {0,1}'))
+      expect(str(value)).to(equal('x0 in {0,1}'))
 
   with description('modeling'):
     with it('raises exception when modeled'):
