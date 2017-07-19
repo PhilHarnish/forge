@@ -180,6 +180,38 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.If))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('supports if/else assignments'):
+      node = _grammar_transformer.transform("""
+        if A:
+          x = 1
+        else:
+          x = 2
+      """)
+      expected = goal("""
+        if "A":
+          x = (A == True) * 1 + (A == False) * 2
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.If))
+      expect(to_source(assignment)).to(look_like(expected))
+
+    with it('supports if/else mixed condition and assignments'):
+      node = _grammar_transformer.transform("""
+        if A:
+          A > B
+          x = 1
+        else:
+          x = 2
+      """)
+      expected = goal("""
+        if "A":
+          x = (A == True) * 1 + (A == False) * 2
+          model(A <= (A > B))
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.If))
+      expect(to_source(assignment)).to(look_like(expected))
+
   with description('reference aliases'):
     with it('no-op for well-defined references'):
       node = _grammar_transformer.transform("""

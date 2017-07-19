@@ -148,10 +148,7 @@ class _GrammarTransformer(ast.NodeTransformer):
   def visit_Module(self, node):
     body = _HEADER.copy()
     for expr in node.body:
-      expr = self.visit(expr)
-      if isinstance(expr, ast.Expr):
-        expr.value = _constrain_comparison(expr.value)
-      body.append(expr)
+      body.append(_constrain_expr(self.visit(expr)))
     node.body = body
     return node
 
@@ -274,14 +271,45 @@ def _combine_expressions(body):
 
 
 def _collect_conditional_assignments(condition, body, orelse):
-  # TODO: Implement.
-  del condition
-  remaining_body = body
-  remaining_orelse = orelse
-  return [], remaining_body, remaining_orelse
+  """Produces x = A * valueA + !A * notValueA."""
+  assign_body, remaining_body = _collect_assignments(body)
+  assign_orelse, remaining_orelse = _collect_assignments(orelse)
+  assert assign_body.keys() == assign_orelse.keys()
+  result = []
+  for key in assign_body.keys():
+    body_value = assign_body[key]
+    orelse_value = assign_orelse[key]
+    body_conditional_value = _conditional_value_if_bool(
+        condition, body_value, True)
+    orelse_conditional_value = _conditional_value_if_bool(
+        condition, orelse_value, False)
+    value_combined = ast.BinOp(
+        left=body_conditional_value,
+        op=ast.Add(),
+        right=orelse_conditional_value,
+    )
+    result.append(ast.Assign(
+        targets=[ast.Name(id=key, ctx=ast.Store())],
+        value=value_combined,
+    ))
+  return result, remaining_body, remaining_orelse
+
+
+def _collect_assignments(collection):
+  assign = {}
+  remaining = []
+  for expr in collection:
+    if isinstance(expr, ast.Assign):
+      if len(expr.targets) != 1:
+        _fail(expr, 'Multiple conditional assignments unsupported')
+      assign[expr.targets[0].id] = expr.value
+    else:
+      remaining.append(expr)
+  return assign, remaining
 
 
 def _collect_conditional_constraints(condition, body, orelse):
+  """Produces model(ifA <= thenB), model(ifNotA + thenB >= 1)."""
   body_implication, remaining_body = _combine_expressions(body)
   result = []
   if body_implication:
@@ -314,3 +342,15 @@ def _collect_conditional_constraints(condition, body, orelse):
   else:
     remaining_orelse = orelse
   return result, remaining_body, remaining_orelse
+
+
+def _conditional_value_if_bool(condition, value, boolean):
+  return ast.BinOp(
+      left=ast.Compare(
+          left=condition,
+          ops=[ast.Eq()],
+          comparators=[ast.NameConstant(value=boolean)],
+      ),
+      op=ast.Mult(),
+      right=value,
+  )
