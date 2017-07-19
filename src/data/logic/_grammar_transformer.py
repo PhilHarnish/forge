@@ -116,31 +116,28 @@ class _GrammarTransformer(ast.NodeTransformer):
 
   def visit_If(self, node):
     """Converts "if A: B" to "A <= B"."""
-    condition = self.visit(node.test)
-    implication = self.visit(_combine_expressions(node.body))
-    result = ast.Compare(
-        left=condition,
-        ops=[ast.LtE()],
-        comparators=[implication],
+    if len(node.body) == 0:
+      _fail(node, msg='If statement missing body expressions')
+    test = self.visit(node.test)
+    body = node.body
+    orelse = node.orelse
+    assignments, body, orelse = _collect_conditional_assignments(
+        test, body, orelse)
+    constraints, body, orelse = _collect_conditional_constraints(
+        test, body, orelse)
+    if body or orelse:
+      remaining = ast.If(test=node.test, body=body, orelse=orelse)
+      _fail(remaining, msg='if statement expressions unconverted')
+    result = []
+    for assignment in assignments:
+      result.append(self.visit(assignment))
+    for constraint in constraints:
+      result.append(_constrain_expr(self.visit(constraint)))
+    return ast.If(
+        test=ast.Str(s=astor.to_source(node.test).replace('\n', ' ').strip()),
+        body=result,
+        orelse=[],
     )
-    if node.orelse:
-      # Convert "else: C" into "A + C >= 1".
-      implication = self.visit(_combine_expressions(node.orelse))
-      else_result = ast.Compare(
-          left=ast.BinOp(
-              left=condition,
-              op=ast.Add(),
-              right=implication,
-          ),
-          ops=[ast.GtE()],
-          comparators=[ast.Num(n=1)],
-      )
-      result = ast.BinOp(
-          left=result,
-          op=ast.BitAnd(),
-          right=else_result,
-      )
-    return ast.Expr(value=result)
 
   def visit_Name(self, node):
     canonical_reference_name = _canonical_reference_name(node.id)
@@ -178,6 +175,12 @@ def _canonical_reference_name(value):
   if isinstance(value, str):
     return value.replace(' ', '_').replace('-', '_').lower()
   return '_%s' % value
+
+
+def _constrain_expr(node):
+  if isinstance(node, ast.Expr):
+    node.value = _constrain_comparison(node.value)
+  return node
 
 
 def _constrain_comparison(node):
@@ -246,15 +249,68 @@ def _dimension_value(dimension, values):
   )
 
 
-def _combine_expressions(exprs):
-  if (not all(isinstance(expr, ast.Expr) for expr in exprs)):
-    _fail(ast.Module(body=exprs), 'Unable to combine expressions')
-  if len(exprs) > 1:
+def _combine_expressions(body):
+  exprs = []
+  remaining = []
+  for expr in body:
+    if isinstance(expr, ast.Expr):
+      exprs.append(expr)
+    else:
+      remaining.append(expr)
+  if len(exprs) == 0:
+    converted = None
+  elif len(exprs) == 1:
+    # Solitary expressions can be simply returned.
+    converted = exprs[0].value
+  else:
     # Multiple expressions should be AND'd.
-    return ast.BoolOp(
+    converted = ast.BoolOp(
         op=ast.And(),
         values=[
           expr.value for expr in exprs
         ]
     )
-  return exprs[0].value
+  return converted, remaining
+
+
+def _collect_conditional_assignments(condition, body, orelse):
+  # TODO: Implement.
+  del condition
+  remaining_body = body
+  remaining_orelse = orelse
+  return [], remaining_body, remaining_orelse
+
+
+def _collect_conditional_constraints(condition, body, orelse):
+  body_implication, remaining_body = _combine_expressions(body)
+  result = []
+  if body_implication:
+    result.append(
+        ast.Expr(
+            value=ast.Compare(
+                left=condition,
+                ops=[ast.LtE()],
+                comparators=[body_implication],
+            )
+        )
+    )
+  if orelse:
+    # Convert "else: C" into "A + C >= 1".
+    orelse_implication, remaining_orelse = _combine_expressions(orelse)
+    if orelse_implication:
+      result.append(
+          ast.Expr(
+              ast.Compare(
+                  left=ast.BinOp(
+                      left=condition,
+                      op=ast.Add(),
+                      right=orelse_implication,
+                  ),
+                  ops=[ast.GtE()],
+                  comparators=[ast.Num(n=1)],
+              )
+          )
+      )
+  else:
+    remaining_orelse = orelse
+  return result, remaining_body, remaining_orelse
