@@ -15,13 +15,16 @@ color <= {orange, blue, violet, green, pink, red, yellow}
 name <= {Phyllis, Patria, Harvey, Courtney, Kimball, Li, Christopher}
 direction <= {left, right}
 
+def sees(dimension):
+  if dimension.left:
+    result = dimension.position - 1
+  else:
+    result = 7 - dimension.position
+  return result
+
 # The person in the orange float can see exactly x floats more than Phyllis can, where x is some number.
-orange_left_sees = orange.left * (orange.position - 1)
-orange_right_sees = orange.right * (7 - orange.position)
-orange_sees = orange_left_sees + orange_right_sees
-phyllis_left_sees = Phyllis.left * (Phyllis.position - 1)
-phyllis_right_sees = Phyllis.right * (7 - Phyllis.position)
-phyllis_sees = phyllis_left_sees + phyllis_right_sees
+orange_sees = sees(orange)
+phyllis_sees = sees(Phyllis)
 orange_sees > phyllis_sees
 x = orange_sees - phyllis_sees
 
@@ -84,23 +87,14 @@ if Harvey.red or Harvey.orange:
 
 # If the red and yellow floats are next to each other, then the person in the red float can see fewer than y other floats, where y = x + 1.
 red_yellow_neighbors = abs(red.position - yellow.position) == 1
-red_left_sees = red.left * (red.position - 1)
-red_right_sees = red.right * (7 - red.position)
-red_sees = red_left_sees + red_right_sees
+red_sees = sees(red)
 y = x + 1
 if red_yellow_neighbors:
   red_sees < y
 
 # If Christopher’s float is a secondary color, then he can see more floats than Courtney can.
-chris_secondary = Christopher.violet or Christopher.orange or Christopher.green
-chris_left_sees = Christopher.left * Christopher.position - 1
-chris_right_sees = Christopher.right * (7 - Christopher.position)
-chris_sees = chris_left_sees + chris_right_sees
-courtney_left_sees = Courtney.left * (Courtney.position - 1)
-courtney_right_sees = Courtney.right * (7 - Courtney.position)
-courtney_sees = courtney_left_sees + courtney_right_sees
-if chris_secondary:
-  chris_sees > courtney_sees
+if Christopher.violet or Christopher.orange or Christopher.green:
+  sees(Christopher) > sees(Courtney)
 
 # The person in the red float has a name that is z letters long, where z = x * y.
 # x = 2 or 6
