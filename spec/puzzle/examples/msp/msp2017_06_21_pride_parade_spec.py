@@ -4,7 +4,7 @@ from puzzle.problems import logic_problem
 from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
-with description('msp2017_06_21_pride_parade'):
+with _description('msp2017_06_21_pride_parade'):
   with before.all:
     warehouse.save()
     prod_config.init()
