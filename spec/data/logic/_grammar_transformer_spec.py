@@ -61,6 +61,15 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.Assign))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('detects dimension using "in" keyword'):
+      node = _grammar_transformer.transform('name in {a, b, c}')
+      expected = goal("""
+          a, b, c = name = dimensions(name=['a', 'b', 'c'])
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Assign))
+      expect(to_source(assignment)).to(look_like(expected))
+
     with it('compiles dimensions'):
       node = _grammar_transformer.transform('name <= {1, Ex, "Multi Word"}')
       expect(calling(compile, node, '<string>', 'exec')).not_to(raise_error)

@@ -36,6 +36,12 @@ _CONSTRAINT_TYPES = (
 _COMMENT_REGEX = re.compile(r'^(\s*)(#.*)$')
 
 
+_DIMENSION_DEFINITION_OPERATORS = (
+  ast.LtE,
+  ast.In,
+)
+
+
 def transform(program):
   cleaned = textwrap.dedent(program.strip('\n'))
   lines = cleaned.split('\n')
@@ -54,12 +60,16 @@ class _GrammarTransformer(ast.NodeTransformer):
     self._references = {}
 
   def _dimension_definitions(self, node):
-    if (not isinstance(node, ast.Compare) or
-        not isinstance(node.left, ast.Name) or
-        len(node.ops) != 1 or
-        not isinstance(node.ops[0], ast.LtE) or
-        len(node.comparators) != 1 or
-        not isinstance(node.comparators[0], ast.Set)):
+    # a <= {1, 2, 3} style OR a in {1, 2, 3} style.
+    compare_set = (
+        isinstance(node, ast.Compare) and
+        isinstance(node.left, ast.Name) and
+        len(node.ops) == 1 and
+        isinstance(node.ops[0], _DIMENSION_DEFINITION_OPERATORS) and
+        len(node.comparators) == 1 and
+        isinstance(node.comparators[0], ast.Set)
+    )
+    if not compare_set:
       return None
     values = node.comparators[0].elts
     if not all(isinstance(value, _REFERENCE_TYPES) for value in values):
