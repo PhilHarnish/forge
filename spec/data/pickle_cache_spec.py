@@ -26,6 +26,7 @@ with description('pickle_cache'):
     pickle_path_patch.stop()
     open_patch.stop()
     os_patch.stop()
+    self.patched_os.stop()
 
   with description('_sanitize'):
     with it('sanitizes empty input'):
@@ -85,3 +86,34 @@ with description('pickle_cache'):
           'patched/prefix/1/key-value.pkl', 'wb'))
       expect(self.patched_pickle.dump).to(have_been_called_with(
           ((1,), {'key': 'value'}), '<opened pkl>'))
+
+  with description('cache_from_file'):
+    with before.each:
+      self.pkl_time = 0
+      self.src_time = 0
+      def stub_getmtime(path):
+        if path.endswith('.pkl'):
+          return self.pkl_time
+        return self.src_time
+
+
+      self.patched_os.path.getmtime.side_effect = stub_getmtime
+
+      @pickle_cache.cache_from_file('prefix', lambda path: path)
+      def fn(path):
+        return path
+
+
+      self.fn = fn
+
+    with it('ignores pkl if src is newer'):
+      self.pkl_time = 0
+      self.src_time = 20170101
+      self.fn('file.py')
+      expect(self.patched_pickle.load).not_to(have_been_called)
+
+    with it('uses pkl if pkl is newer than src'):
+      self.pkl_time = 201701010
+      self.src_time = 0
+      self.fn('file.py')
+      expect(self.patched_pickle.load).to(have_been_called)

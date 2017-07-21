@@ -2,6 +2,7 @@ import hashlib
 import os
 import pickle
 import re
+import sys
 
 from data import data
 
@@ -10,13 +11,33 @@ _SANITIZE_RE = re.compile(r'[^A-Za-z1-9]')
 
 
 def cache(prefix):
+  def test_fn(pickle_source, args, kwargs):
+    del args, kwargs
+    # Always use pickle_source if present.
+    return os.path.exists(pickle_source)
+  return _cache(prefix, test_fn)
+
+
+def cache_from_file(prefix, path_fn):
+  def test_fn(pickle_source, args, kwargs):
+    file_source = path_fn(*args, **kwargs)
+    if 'pickle_cache_spec' in file_source:
+      return False  # Quick fix to make testing easy.
+    resolved_file = _resolve_path(file_source)
+    if not os.path.exists(pickle_source):
+      return False
+    return os.path.getmtime(pickle_source) > os.path.getmtime(resolved_file)
+  return _cache(prefix, test_fn)
+
+
+def _cache(prefix, test_fn):
   def decorator(fn):
     def fn_wrapper(*args, **kwargs):
       pickle_src = _path_for_prefix_and_args(prefix, args, kwargs)
       parent_dir = os.path.dirname(pickle_src)
       if not os.path.exists(parent_dir):
         os.makedirs(parent_dir, exist_ok=True)
-      if os.path.exists(pickle_src):
+      if test_fn(pickle_src, args, kwargs):
         result = pickle.load(_open_pkl_path(pickle_src, 'rb'))
       else:
         result = fn(*args, **kwargs)
@@ -26,6 +47,15 @@ def cache(prefix):
     return fn_wrapper
 
   return decorator
+
+
+
+def _resolve_path(file_source):
+  for base in sys.path:
+    candidate = os.path.join(base, file_source)
+    if os.path.exists(candidate):
+      return candidate
+  raise IOError('Unable to stat %s' % file_source)
 
 
 def _open_pkl_path(path, mode):
@@ -51,6 +81,8 @@ def _sanitize(o):
   elif o == '':
     return '_empty_str'
   as_str = repr(o)
+  if as_str.startswith('<') and as_str.endswith('>'):
+    as_str = as_str.strip('<>').split(' object at ')[0]
   sanitized = _SANITIZE_RE.sub('', as_str)
   if sanitized:
     return sanitized
