@@ -38,7 +38,7 @@ with description('very_fun_logic_puzzle'):
       expect(problem.solution).to(look_like(
           very_fun_logic_puzzle.HOUSE_SOLUTION))
 
-  with description('rose solution'):
+  with _description('rose solution'):
     with it('scores the source as a LogicProblem'):
       expect(logic_problem.LogicProblem.score(
           very_fun_logic_puzzle.ROSE_SOURCE.split('\n'))).to(equal(1))

@@ -57,10 +57,10 @@ class Reference(ValueReference):
     return super(Reference, self).__ne__(other)
 
   def __lshift__(self, other):
-    pass
+    return self  # TODO: Implement.
 
   def __rshift__(self, other):
-    pass
+    return self  # TODO: Implement.
 
   def value(self):
     # If the Reference is under-constrained there won't be any matching

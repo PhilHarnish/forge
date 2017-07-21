@@ -15,9 +15,11 @@ _OPERATOR_MAP = {
   '-': ast.Sub,
   '>': ast.Gt,
   '>=': ast.GtE,
+  '<<': ast.LShift,
   '<': ast.Lt,
   '<=': ast.LtE,
   '*': ast.Mult,
+  '>>': ast.RShift,
 }
 
 
@@ -63,6 +65,12 @@ class AccumulatingExpressionMixin(object):
 
   def __rmul__(self, other):
     return bin_op(other, '*', self)
+
+  def __lshift__(self, other):
+    return bin_op(self, '<<', other)
+
+  def __rshift__(self, other):
+    return bin_op(self, '>>', other)
 
   def __or__(self, other):
     return bin_op(self, '|', other)

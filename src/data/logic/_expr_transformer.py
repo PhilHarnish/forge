@@ -63,6 +63,10 @@ class ExprTransformer(ast.NodeTransformer):
       return left - right
     elif isinstance(op, ast.Mult):
       return left * right
+    elif isinstance(op, ast.LShift):
+      return left << right
+    elif isinstance(op, ast.RShift):
+      return left >> right
     _fail(node, msg='Binary op %s unsupported' % op.__class__.__name__)
 
   def visit_Call(self, node):

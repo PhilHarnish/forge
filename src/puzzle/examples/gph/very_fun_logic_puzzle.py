@@ -10,7 +10,7 @@ def get_roses():
 
 
 HOUSE_SOURCE = """
-names <= {
+name in {
   Abby,
   Charles,
   Danielle,
@@ -24,7 +24,7 @@ names <= {
   Stuart,
   Thomas,
 }
-colors <= {
+color in {
   Black,
   Green,
   Gray,
@@ -40,33 +40,51 @@ colors <= {
 }
 
 # A Green house is next to a Cyan house.
+# Green >> Cyan
 # Abby shares a picket fence with Charles.
+# Abby >> Charles
 # Both Abby and Danielle live next to the Cyan house.
+# (Abby, Danielle) >> Cyan
 # Charles and Freya are good friends.
+# Charles >> Freya
 # Elizabeth and Freya like to shout things to each other from their second floor windows.
+# Elizabeth >> Freya
 # Freya is neighbors with Howard and Thomas.
+# Freya >> (Howard, Thomas)
 # Gray and Cyan houses appear next to each other.
+# Gray >> Cyan
 # Howard lives in the Purple house.
 Howard == Purple
 # If you lived in the Magenta house, Ophelia would be your neighbor.
+# Magenta >> Ophelia
 # Martin lives next to the Yellow house.
+# Martin >> Yellow
 # Only Abby lives in the Black house.
 Abby == Black
 # Ophelia lives in a lovely, Red Victorian house.
 Ophelia == Red
 # Orange is next to White.
+# Orange >> White
 # People live next to the people they like. They do not live next to people they hate.
+# No-op.
 # Rochelle and Charles got in a fight years ago and haven't spoken since.
+# (Rochelle >> Charles) == False
 # Stuart loves his Cyan home.
 Stuart == Cyan
 # Stuart refuses to have anything to do with Howard or Howard's neighbors.
+# Stuart >> any >> any >> Howard
 # The Black house is on the opposite side from Elizabeth's house.
+# Black >> max >> Elizabeth
 # The Brown house is occupied by Rochelle.
 Brown == Rochelle
 # The Red house neighbors the Gray house, the Cyan house, the house Philip lives in, the Orange house, and the house Thomas lives in.
+# Red >> (Gray, Cyan, Philip, Orange, Thomas)
 # The White and Blue houses are not adjacent.
+# (White >> Blue) == False
 # There is one house of each color, and exactly one person lives in each house.
+# No-op.
 # You can see the Magenta house from the Brown house.
+# Magenta >> Brown
 """
 
 
@@ -75,46 +93,64 @@ from data.logic.dsl import *
 dimensions = DimensionFactory()
 model = Model(dimensions)
 (abby, charles, danielle, elizabeth, freya, howard, martin, ophelia, philip,
-    rochelle, stuart, thomas) = (names) = (dimensions(names=['Abby',
+    rochelle, stuart, thomas) = (name) = (dimensions(name=['Abby',
     'Charles', 'Danielle', 'Elizabeth', 'Freya', 'Howard', 'Martin',
     'Ophelia', 'Philip', 'Rochelle', 'Stuart', 'Thomas']))
 (black, green, gray, orange, yellow, purple, blue, red, magenta, brown,
-    cyan, white) = (colors) = (dimensions(colors=['Black', 'Green', 'Gray',
+    cyan, white) = (color) = (dimensions(color=['Black', 'Green', 'Gray',
     'Orange', 'Yellow', 'Purple', 'Blue', 'Red', 'Magenta', 'Brown', 'Cyan',
     'White']))
 """# A Green house is next to a Cyan house."""
+"""# Green >> Cyan"""
 """# Abby shares a picket fence with Charles."""
+"""# Abby >> Charles"""
 """# Both Abby and Danielle live next to the Cyan house."""
+"""# (Abby, Danielle) >> Cyan"""
 """# Charles and Freya are good friends."""
+"""# Charles >> Freya"""
 """# Elizabeth and Freya like to shout things to each other from their second floor windows."""
+"""# Elizabeth >> Freya"""
 """# Freya is neighbors with Howard and Thomas."""
+"""# Freya >> (Howard, Thomas)"""
 """# Gray and Cyan houses appear next to each other."""
+"""# Gray >> Cyan"""
 """# Howard lives in the Purple house."""
 model(howard == purple)
 """# If you lived in the Magenta house, Ophelia would be your neighbor."""
+"""# Magenta >> Ophelia"""
 """# Martin lives next to the Yellow house."""
+"""# Martin >> Yellow"""
 """# Only Abby lives in the Black house."""
 model(abby == black)
 """# Ophelia lives in a lovely, Red Victorian house."""
 model(ophelia == red)
 """# Orange is next to White."""
+"""# Orange >> White"""
 """# People live next to the people they like. They do not live next to people they hate."""
+"""# No-op."""
 """# Rochelle and Charles got in a fight years ago and haven't spoken since."""
+"""# (Rochelle >> Charles) == False"""
 """# Stuart loves his Cyan home."""
 model(stuart == cyan)
 """# Stuart refuses to have anything to do with Howard or Howard's neighbors."""
+"""# Stuart >> any >> any >> Howard"""
 """# The Black house is on the opposite side from Elizabeth's house."""
+"""# Black >> max >> Elizabeth"""
 """# The Brown house is occupied by Rochelle."""
 model(brown == rochelle)
 """# The Red house neighbors the Gray house, the Cyan house, the house Philip lives in, the Orange house, and the house Thomas lives in."""
+"""# Red >> (Gray, Cyan, Philip, Orange, Thomas)"""
 """# The White and Blue houses are not adjacent."""
+"""# (White >> Blue) == False"""
 """# There is one house of each color, and exactly one person lives in each house."""
+"""# No-op."""
 """# You can see the Magenta house from the Brown house."""
+"""# Magenta >> Brown"""
 '''
 
 
 HOUSE_SOLUTION = """
-    names |  colors
+     name |   color
      Abby |   Black
   Charles |   White
  Danielle |   Green
@@ -132,8 +168,8 @@ Elizabeth | Magenta
 
 # TODO: Cyan.position > Green.position > Orange.position > Black.position > Red.position
 ROSE_SOURCE = """
-position <= {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
-color <= {
+position in {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
+color in {
   Magenta,
   Gray,
   Red,
