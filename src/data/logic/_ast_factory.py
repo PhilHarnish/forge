@@ -1,3 +1,6 @@
+"""Classes and methods for accumulating AST nodes at runtime."""
+
+
 import ast
 
 from data.logic import _addressable_value

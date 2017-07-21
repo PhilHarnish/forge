@@ -56,6 +56,12 @@ class Reference(ValueReference):
           _util.combine(self._constraints, other._constraints)) == False
     return super(Reference, self).__ne__(other)
 
+  def __lshift__(self, other):
+    pass
+
+  def __rshift__(self, other):
+    pass
+
   def value(self):
     # If the Reference is under-constrained there won't be any matching
     # variables. However, an unconstrained Reference may have one constraint

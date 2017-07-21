@@ -1,3 +1,6 @@
+"""Base class for a value with an address and constraints."""
+
+
 class AddressableValue(object):
   """Base class for addressable values.
 
