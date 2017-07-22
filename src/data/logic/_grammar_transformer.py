@@ -105,6 +105,24 @@ class _GrammarTransformer(ast.NodeTransformer):
       )
     return node
 
+  def visit_Compare(self, node):
+    if len(node.ops) == 1:
+      return self.generic_visit(node)
+    exprs = []
+    last = node.left
+    comparators = node.comparators
+    for op, right in zip(node.ops, comparators):
+      exprs.append(ast.Compare(
+          left=last,
+          ops=[op],
+          comparators=[right],
+      ))
+      last = right
+    return self.visit(ast.Tuple(
+        elts=exprs,
+        ctx=ast.Load(),
+    ))
+
   def visit_Expr(self, node):
     # This may be a dimensions definition.
     value = node.value
@@ -158,7 +176,13 @@ class _GrammarTransformer(ast.NodeTransformer):
   def visit_Module(self, node):
     body = _HEADER.copy()
     for expr in node.body:
-      body.append(_constrain_expr(self.visit(expr)))
+      result = self.visit(expr)
+      # Unwind multiple expressions.
+      if isinstance(result, ast.Expr) and isinstance(result.value, ast.Tuple):
+        for child in result.value.elts:
+          body.append(_constrain_expr(ast.Expr(value=child)))
+      else:
+        body.append(_constrain_expr(result))
     node.body = body
     return node
 

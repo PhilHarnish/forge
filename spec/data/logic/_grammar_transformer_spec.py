@@ -89,6 +89,26 @@ with description('_GrammarTransformer'):
         'multi_word': 'multi_word'
       }))
 
+  with description('rewrite'):
+    with it('free tuples into multi-line expressions'):
+      node = _grammar_transformer.transform('A, B, C')
+      expected = goal("""
+          A
+          B
+          C
+      """)
+      node.body = node.body[-3:]
+      expect(to_source(node)).to(look_like(expected))
+
+    with it('multi-variable comparisons into pairwise comparisons'):
+      node = _grammar_transformer.transform('A > B > C')
+      expected = goal("""
+          model(A > B)
+          model(B > C)
+      """)
+      node.body = node.body[-2:]
+      expect(to_source(node)).to(look_like(expected))
+
   with description('model constraints'):
     with it('constrains A == B'):
       node = _grammar_transformer.transform('A == B')
@@ -239,10 +259,10 @@ with description('_GrammarTransformer'):
       node = _grammar_transformer.transform("""
         name <= {andy, bob, cynthia}
         color <= {red, green, 'sky blue'}
-        andy == 'sky blue' & bob != sky_blue
+        andy == 'sky blue' and bob != sky_blue
       """)
       expected = goal("""
-          model(andy == sky_blue & bob != sky_blue)
+          model((andy == sky_blue) & (bob != sky_blue))
       """)
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Expr))
@@ -254,8 +274,9 @@ with description('_GrammarTransformer'):
         'space case' != 'kebab-case' != 'snake_case' != 'CamelCase'
       """)
       expected = goal("""
-          model(space_case != kebab_case != snake_case != camelcase)
+        model(space_case != kebab_case)
+        model(kebab_case != snake_case)
+        model(snake_case != camelcase)
       """)
-      assignment = node.body[-1]
-      expect(assignment).to(be_a(ast.Expr))
-      expect(to_source(assignment)).to(look_like(expected))
+      node.body = node.body[-3:]
+      expect(to_source(node)).to(look_like(expected))
