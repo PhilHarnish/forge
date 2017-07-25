@@ -4,6 +4,8 @@ import textwrap
 
 import astor
 
+from data.logic import _ast_factory
+
 _HEADER = ast.parse("""
 from data.logic.dsl import *
 dimensions = DimensionFactory()
@@ -59,26 +61,6 @@ class _GrammarTransformer(ast.NodeTransformer):
     super(_GrammarTransformer, self).__init__()
     self._references = {}
 
-  def _dimension_definitions(self, node):
-    # a <= {1, 2, 3} style OR a in {1, 2, 3} style.
-    compare_set = (
-        isinstance(node, ast.Compare) and
-        isinstance(node.left, ast.Name) and
-        len(node.ops) == 1 and
-        isinstance(node.ops[0], _DIMENSION_DEFINITION_OPERATORS) and
-        len(node.comparators) == 1 and
-        isinstance(node.comparators[0], ast.Set)
-    )
-    if not compare_set:
-      return None
-    values = node.comparators[0].elts
-    if not all(isinstance(value, _REFERENCE_TYPES) for value in values):
-      return None
-    dimension = node.left.id
-    return {
-      dimension: [_dimension_name(value) for value in values]
-    }
-
   def _register_references(self, *references):
     for reference in references:
       canonical_reference_name = _canonical_reference_name(reference)
@@ -126,17 +108,22 @@ class _GrammarTransformer(ast.NodeTransformer):
   def visit_Expr(self, node):
     # This may be a dimensions definition.
     value = node.value
-    dimensions = self._dimension_definitions(value)
+    dimensions = _dimension_definitions(value)
     if not dimensions:
       return self.generic_visit(node)
     elif len(dimensions) == 1:
       dimension, values = next(iter(dimensions.items()))
-      self._register_references(dimension, *values)
+      targets = []
+      try:
+        # Treat "values" like an iterable.
+        self._register_references(dimension, *values)
+        targets.append(_dimension_target_tuple(values))
+      except TypeError:
+        # Otherwise assume "values" cannot be unpacked.
+        self._register_references(dimension)
+      targets.append(_dimension_target_dimension(dimension))
       node = ast.Assign(
-          targets=[
-            _dimension_target_tuple(values),
-            _dimension_target_dimension(dimension),
-          ],
+          targets=targets,
           value=_dimension_value(dimension, values),
       )
       return node
@@ -227,6 +214,35 @@ def _constrain_comparison(node):
   )
 
 
+def _dimension_definitions(node):
+  # a <= {1, 2, 3} style OR a in {1, 2, 3} style.
+  compare_match = (
+      isinstance(node, ast.Compare) and
+      isinstance(node.left, ast.Name) and
+      len(node.ops) == 1 and
+      isinstance(node.ops[0], _DIMENSION_DEFINITION_OPERATORS) and
+      len(node.comparators) == 1
+  )
+  if not compare_match:
+    return None
+  dimension = node.left.id
+  comparator = node.comparators[0]
+  if isinstance(comparator, ast.Set):
+    values = comparator.elts
+    if not all(isinstance(value, _REFERENCE_TYPES) for value in values):
+      return None
+    return {
+      dimension: [_dimension_name(value) for value in values]
+    }
+  elif (isinstance(comparator, ast.Call) and
+      isinstance(comparator.func, ast.Attribute) and
+      isinstance(comparator.func.value, ast.Name) and
+      comparator.func.value.id == 'networkx'):
+    return {
+      dimension: comparator,
+    }
+
+
 def _dimension_name(node):
   if isinstance(node, ast.Name):
     return node.id
@@ -256,12 +272,6 @@ def _dimension_target_dimension(dimension):
 
 
 def _dimension_value(dimension, values):
-  dimensions = []
-  for value in values:
-    if isinstance(value, str):
-      dimensions.append(ast.Str(s=value))
-    else:
-      dimensions.append(ast.Num(n=value))
   return ast.Call(
       func=ast.Name(
           id='dimensions',
@@ -271,10 +281,7 @@ def _dimension_value(dimension, values):
       keywords=[
         ast.keyword(
             arg=dimension,
-            value=ast.List(
-                elts=dimensions,
-                ctx=ast.Load(),
-            )
+            value=_ast_factory.coerce_value(values),
         )
       ],
   )

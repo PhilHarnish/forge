@@ -70,6 +70,18 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.Assign))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('detects dimension created from function calls'):
+      node = _grammar_transformer.transform("""
+        import networkx
+        position in networkx.icosahedral_graph()
+      """)
+      expected = goal("""
+          position = dimensions(position=networkx.icosahedral_graph())
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Assign))
+      expect(to_source(assignment)).to(look_like(expected))
+
     with it('compiles dimensions'):
       node = _grammar_transformer.transform('name <= {1, Ex, "Multi Word"}')
       expect(calling(compile, node, '<string>', 'exec')).not_to(raise_error)
