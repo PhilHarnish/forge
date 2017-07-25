@@ -100,6 +100,15 @@ with description('_reference.Reference'):
       value = _reference.Reference(self.model, {})
       expect(str(value)).to(equal('x0 in {0,1}'))
 
+  with description('repr'):
+    with it('ValueReference'):
+      expect(repr(_reference.ValueReference(self.model, 11))).to(
+          equal('<ValueReference 11>'))
+
+    with it('Reference'):
+      value = _reference.Reference(self.model, {})
+      expect(repr(value)).to(equal('<Reference x0 in {0,1}>'))
+
   with description('modeling'):
     with it('raises exception when modeled'):
       value = _reference.Reference(self.model, {})

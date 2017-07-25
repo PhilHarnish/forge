@@ -1,7 +1,6 @@
 from data import operator_overloading
 from data.logic import _util
 
-
 _UNDEFINED = {}
 
 
@@ -22,6 +21,9 @@ class ValueReference(operator_overloading.OverloadedSelfBase):
 
   def __str__(self):
     return str(self.value())
+
+  def __repr__(self):
+    return '<%s %s>' % (self.__class__.__name__, self)
 
 
 class Reference(ValueReference):
@@ -55,12 +57,6 @@ class Reference(ValueReference):
           self._model,
           _util.combine(self._constraints, other._constraints)) == False
     return super(Reference, self).__ne__(other)
-
-  def __lshift__(self, other):
-    return self  # TODO: Implement.
-
-  def __rshift__(self, other):
-    return self  # TODO: Implement.
 
   def value(self):
     # If the Reference is under-constrained there won't be any matching
