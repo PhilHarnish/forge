@@ -5,10 +5,6 @@ def get():
   return puzzle.Puzzle('Pride Parade', SOURCE)
 
 
-# TODO:
-# The pink, violet, and green floats are facing the same direction.
-# pink.direction == violet.direction
-# violet.direction == green.direction
 SOURCE = """
 position <= {1, 2, 3, 4, 5, 6, 7}
 color <= {orange, blue, violet, green, pink, red, yellow}
@@ -105,8 +101,7 @@ z = x * y
 (red == Harvey) or (red == Patria)
 
 # The pink, violet, and green floats are facing the same direction.
-pink.left == violet.left
-violet.left == green.left
+pink.left == violet.left == violet.left == green.left
 """
 
 SOLUTION = """
