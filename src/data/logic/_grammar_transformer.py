@@ -234,10 +234,7 @@ def _dimension_definitions(node):
     return {
       dimension: [_dimension_name(value) for value in values]
     }
-  elif (isinstance(comparator, ast.Call) and
-      isinstance(comparator.func, ast.Attribute) and
-      isinstance(comparator.func.value, ast.Name) and
-      comparator.func.value.id == 'networkx'):
+  elif isinstance(comparator, ast.Call):
     return {
       dimension: comparator,
     }

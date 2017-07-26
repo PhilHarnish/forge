@@ -70,13 +70,24 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.Assign))
       expect(to_source(assignment)).to(look_like(expected))
 
-    with it('detects dimension created from function calls'):
+    with it('detects dimension created from networkx graphs'):
       node = _grammar_transformer.transform("""
         import networkx
         position in networkx.icosahedral_graph()
       """)
       expected = goal("""
           position = dimensions(position=networkx.icosahedral_graph())
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Assign))
+      expect(to_source(assignment)).to(look_like(expected))
+
+    with it('detects dimension created from other calls'):
+      node = _grammar_transformer.transform("""
+        position in range(26)
+      """)
+      expected = goal("""
+          position = dimensions(position=range(26))
       """)
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Assign))
