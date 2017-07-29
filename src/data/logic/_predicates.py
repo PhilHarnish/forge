@@ -43,3 +43,7 @@ class Predicates(list):
       else:
         result.append(str(value))
     return '\n'.join(result)
+
+  def value(self):
+    assert len(self) == 1, 'Only able to evaluate predicate with one expression'
+    return _util.numberjack_solution(self[0])

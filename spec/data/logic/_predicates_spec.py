@@ -72,6 +72,31 @@ with description('_predicates'):
       Numberjack.Model(x == True).load('Mistral').solve()
       expect(str(x)).to(equal('1'))
 
+  with description('value'):
+    with it('refuses to get value for multiple predicates'):
+      predicates = _predicates.Predicates([])
+      expect(calling(predicates.value)).to(raise_error(AssertionError))
+
+    with it('returns primitive values'):
+      predicates = _predicates.Predicates([13])
+      expect(predicates.value()).to(equal(13))
+
+    with it('returns Numberjack leaves'):
+      x = Numberjack.Variable(15)
+      m = Numberjack.Model()
+      m.add(x == 14)
+      m.load('Mistral').solve()
+      predicates = _predicates.Predicates([x])
+      expect(predicates.value()).to(equal(14))
+
+    with it('returns Numberjack sub-expressions'):
+      x = Numberjack.Variable(15)
+      m = Numberjack.Model()
+      m.add(x == 14)
+      m.load('Mistral').solve()
+      predicates = _predicates.Predicates([x == 14])
+      expect(predicates.value()).to(equal(True))
+
   with description('priorities'):
     with before.all:
       FAIL = {}
