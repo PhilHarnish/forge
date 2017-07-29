@@ -6,7 +6,7 @@ from puzzle.problems import logic_problem
 from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
-with description('very_fun_logic_puzzle'):
+with _description('very_fun_logic_puzzle'):
   with before.all:
     warehouse.save()
     prod_config.init()
@@ -38,7 +38,7 @@ with description('very_fun_logic_puzzle'):
       expect(problem.solution).to(look_like(
           very_fun_logic_puzzle.HOUSE_SOLUTION))
 
-  with _description('rose solution'):
+  with description('rose solution'):
     with it('scores the source as a LogicProblem'):
       expect(logic_problem.LogicProblem.score(
           very_fun_logic_puzzle.ROSE_SOURCE.split('\n'))).to(equal(1))
