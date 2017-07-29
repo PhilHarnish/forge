@@ -23,7 +23,14 @@ class LogicProblem(problem.Problem):
   def _solve_iter(self):
     model = _model(self.lines)
     solver = _solver(model)
+    seen = set()
     while solver.solve():
+      solution = str(solver)
+      if solution in seen:
+        # FIXME: No idea why this happens with some compacted problems.
+        # Finding out why would be exhausting.
+        continue
+      seen.add(solution)
       yield str(solver), 1
 
 
