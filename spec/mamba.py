@@ -194,7 +194,8 @@ class look_like(equal):
   def _match(self, subject):
     cleaned = self._clean(subject)
     success, _ = super(look_like, self)._match(cleaned)
-    return success, cleaned.split('\n')
+    error_lines = ['looks like:'] + textwrap.indent(cleaned, ' ').split('\n')
+    return success, error_lines
 
   def _clean(self, s):
     return textwrap.dedent(s.rstrip(' ').strip('\n'))
