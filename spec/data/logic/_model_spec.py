@@ -54,7 +54,6 @@ with description('_model._Model usage'):
       self.model(
           ast.parse('11 == "cherries"').body
       )
-      expect(self.model.constraints).to(have_len(1))
       expect(str(self.model)).to(look_like("""
         assign:
           fruit["cherries"].age[11] in {0,1}
@@ -67,7 +66,6 @@ with description('_model._Model usage'):
       self.model(
           ast.parse('max(10, 11) == "cherries" == True').body
       )
-      expect(self.model.constraints).to(have_len(1))
       expect(str(self.model)).to(look_like("""
         assign:
           fruit["cherries"].age[11] in {0,1}
@@ -80,7 +78,6 @@ with description('_model._Model usage'):
       self.model(
           dsl.all([self.cherries == 11])
       )
-      expect(self.model.constraints).to(have_len(1))
       expect(str(self.model)).to(look_like("""
         assign:
           fruit["cherries"].age[11] in {0,1}
@@ -224,9 +221,8 @@ with description('_model._Model usage'):
       ]))
 
   with description('dimension_constraints'):
-    with it('enforces cardinality constraints'):
+    with it('enforces cardinality constraints (with duplicate scalar values)'):
       result = self.model._dimensional_cardinality_constraints()
-      expect(result).to(have_len(16))
       s = '\n'.join(sorted(
           str(result).replace(' | 0 in [1,1] 1 in [1,1] ', '').split('\n')
       ))
@@ -248,6 +244,28 @@ with description('_model._Model usage'):
         (name["bob"].age[10] != name["bob"].age[11])
         (name["cynthia"].age[10] != name["cynthia"].age[11])
       """))
+
+    with it('enforces cardinality constraints (with unique scalar values)'):
+      self.factory = _dimension_factory._DimensionFactory()
+      self.model = _model._Model(self.factory)
+      self.factory(age=[10, 11, 12])
+      self.factory(name=['andy', 'bob', 'cynthia'])
+      self.factory(fruit=['cherries', 'dates', 'figs'])
+      result = self.model._dimensional_cardinality_constraints()
+      s = '\n'.join(sorted(
+          str(result).replace(' | 0 in [1,1] 1 in [1,1] ', '').split('\n')
+      ))
+      expect(s).to(look_like("""
+          ((name["andy"].fruit["cherries"] + name["andy"].fruit["dates"] + name["andy"].fruit["figs"]) == 1)
+          ((name["andy"].fruit["cherries"] + name["bob"].fruit["cherries"] + name["cynthia"].fruit["cherries"]) == 1)
+          ((name["andy"].fruit["dates"] + name["bob"].fruit["dates"] + name["cynthia"].fruit["dates"]) == 1)
+          ((name["andy"].fruit["figs"] + name["bob"].fruit["figs"] + name["cynthia"].fruit["figs"]) == 1)
+          ((name["bob"].fruit["cherries"] + name["bob"].fruit["dates"] + name["bob"].fruit["figs"]) == 1)
+          ((name["cynthia"].fruit["cherries"] + name["cynthia"].fruit["dates"] + name["cynthia"].fruit["figs"]) == 1)
+          AllDiff(age[None].fruit["cherries"], age[None].fruit["dates"], age[None].fruit["figs"])
+          AllDiff(age[None].name["andy"], age[None].name["bob"], age[None].name["cynthia"])
+      """))
+
 
     with it('enforces inference constraints'):
       result = self.model._dimensional_inference_constraints()

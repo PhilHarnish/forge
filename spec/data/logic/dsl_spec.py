@@ -35,19 +35,15 @@ with description('dsl'):
       expect(str(self.model)).to(look_like("""
         assign:
           name["Andy"].occupation["analyst"] in {0,1}
-          name["Bob"].age[11] in {0,1}
-          occupation["analyst"].age[11] in {0,1}
-          occupation["CEO"].age[10] in {0,1}
-          occupation["CEO"].age[11] in {0,1}
-          occupation["CEO"].age[12] in {0,1}
-          name["Andy"].age[10] in {0,1}
-          name["Andy"].age[11] in {0,1}
-          name["Andy"].age[12] in {0,1}
-          
+          name["Bob"].age[None] in {10..12}
+          occupation["analyst"].age[None] in {10..12}
+          name["Andy"].age[None] in {10..12}
+          occupation["CEO"].age[None] in {10..12}
+        
         subject to:
           (name["Andy"].occupation["analyst"] == True)
-          ((name["Bob"].age[11] + occupation["analyst"].age[11]) == 1)
-          (((10*occupation["CEO"].age[10] + 11*occupation["CEO"].age[11] + 12*occupation["CEO"].age[12]) + 2) == (10*name["Andy"].age[10] + 11*name["Andy"].age[11] + 12*name["Andy"].age[12]))
+          (((name["Bob"].age[None] == 11) + (occupation["analyst"].age[None] == 11)) == 1)
+          (name["Andy"].age[None] == (occupation["CEO"].age[None] + 2))
       """))
 
   with description('2D solutions'):
@@ -62,21 +58,12 @@ with description('dsl'):
       age_counter = collections.Counter()
       solver = self.model.load('Mistral')
       solver.solve()
-      for variable_name, value in self.model._variable_cache.items():
-        name, age = variable_name.split('.')
-        if value.get_value():
-          name_counter[name] += 1
-          age_counter[age] += 1
-      expect(name_counter).to(equal({
-        'name["Andy"]': 1,
-        'name["Bob"]': 1,
-        'name["Cathy"]': 1
-      }))
-      expect(age_counter).to(equal({
-        'age[12]': 1,
-        'age[11]': 1,
-        'age[10]': 1,
-      }))
+      expect(str(solver)).to(look_like("""
+           name | age
+           Andy |  10
+            Bob |  11
+          Cathy |  12
+      """))
 
     with it('finds correct solution with constraints'):
       # Force Bob == 12.

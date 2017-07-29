@@ -122,32 +122,20 @@ with description('LogicProblem solutions'):
     model = logic_problem._model(program.split('\n'))
     expect(str(model)).to(look_like("""
       assign:
-        occupation["CEO"].age[10] in {0,1}
-        occupation["CEO"].age[11] in {0,1}
-        occupation["CEO"].age[12] in {0,1}
-        occupation["ProjectManager"].age[10] in {0,1}
-        occupation["ProjectManager"].age[11] in {0,1}
-        occupation["ProjectManager"].age[12] in {0,1}
-        occupation["Analyst"].age[10] in {0,1}
-        occupation["Analyst"].age[11] in {0,1}
-        occupation["Analyst"].age[12] in {0,1}
-        name["Andy"].age[10] in {0,1}
-        name["Andy"].age[11] in {0,1}
-        name["Andy"].age[12] in {0,1}
-        name["Bob"].age[10] in {0,1}
-        name["Bob"].age[11] in {0,1}
-        name["Bob"].age[12] in {0,1}
-        name["Cathy"].age[10] in {0,1}
-        name["Cathy"].age[11] in {0,1}
-        name["Cathy"].age[12] in {0,1}
+        occupation["CEO"].age[None] in {10..12}
+        occupation["ProjectManager"].age[None] in {10..12}
+        occupation["Analyst"].age[None] in {10..12}
+        name["Bob"].age[None] in {10..12}
+        name["Andy"].age[None] in {10..12}
+        name["Cathy"].age[None] in {10..12}
         name["Bob"].occupation["CEO"] in {0,1}
         name["Bob"].occupation["ProjectManager"] in {0,1}
-      
+
       subject to:
-        ((10*occupation["CEO"].age[10] + 11*occupation["CEO"].age[11] + 12*occupation["CEO"].age[12]) > (10*occupation["ProjectManager"].age[10] + 11*occupation["ProjectManager"].age[11] + 12*occupation["ProjectManager"].age[12]))
-        ((10*occupation["CEO"].age[10] + 11*occupation["CEO"].age[11] + 12*occupation["CEO"].age[12]) > (10*occupation["Analyst"].age[10] + 11*occupation["Analyst"].age[11] + 12*occupation["Analyst"].age[12]))
-        (((10*name["Andy"].age[10] + 11*name["Andy"].age[11] + 12*name["Andy"].age[12]) + 1) == (10*name["Bob"].age[10] + 11*name["Bob"].age[11] + 12*name["Bob"].age[12]))
-        ((10*name["Cathy"].age[10] + 11*name["Cathy"].age[11] + 12*name["Cathy"].age[12]) > (10*occupation["ProjectManager"].age[10] + 11*occupation["ProjectManager"].age[11] + 12*occupation["ProjectManager"].age[12]))
+        (occupation["CEO"].age[None] > occupation["ProjectManager"].age[None])
+        (occupation["CEO"].age[None] > occupation["Analyst"].age[None])
+        (name["Bob"].age[None] == (name["Andy"].age[None] + 1))
+        (name["Cathy"].age[None] > occupation["ProjectManager"].age[None])
         ((name["Bob"].occupation["CEO"] + name["Bob"].occupation["ProjectManager"]) == 1)
     """))
     expect(problem.solution).to(look_like("""

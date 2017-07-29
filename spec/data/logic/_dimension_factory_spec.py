@@ -44,14 +44,7 @@ with description('_dimension_factory._DimensionFactory'):
       self.subject(number=[1, 2])
       groups = self.subject.cardinality_groups()
       expect(groups).to(equal([
-        # Row A.
-        ([{'name': 'A', 'number': 1}, {'name': 'A', 'number': 2}], 1),
-        # Row B.
-        ([{'name': 'B', 'number': 1}, {'name': 'B', 'number': 2}], 1),
-        # Column 1.
-        ([{'name': 'A', 'number': 1}, {'name': 'B', 'number': 1}], 1),
-        # Column 2.
-        ([{'name': 'A', 'number': 2}, {'name': 'B', 'number': 2}], 1),
+        ([{'number': None, 'name': 'A'}, {'number': None, 'name': 'B'}], 0)
       ]))
 
     with it('returns 2D rows and columns with duplicates'):
@@ -73,26 +66,21 @@ with description('_dimension_factory._DimensionFactory'):
       expect(groups).to(equal([
         ([{'name': 'A', 'number': 5}, {'name': 'A', 'number': 6}], 1),
         ([{'name': 'B', 'number': 5}, {'name': 'B', 'number': 6}], 1),
-        ([{'name': 'C', 'number': 5}, {'name': 'C', 'number': 6}], 1)
+        ([{'name': 'C', 'number': 5}, {'name': 'C', 'number': 6}], 1),
       ]))
 
     with it('returns 3D rows and columns'):
-      self.subject(name=['A', 'B'])
-      self.subject(number=[1, 2])
-      self.subject(another=['x', 'y'])
+      self.subject(a=['A', 'B'])
+      self.subject(b=[1, 2])
+      self.subject(c=['x', 'y'])
       groups = self.subject.cardinality_groups()
-      expect(groups).to(have_len(2 * 2 * 3))
-      expect(groups[4 * 0][0]).to(equal([
-        # Row A + number.
-        {'name': 'A', 'number': 1}, {'name': 'A', 'number': 2}
-      ]))
-      expect(groups[4 * 1][0]).to(equal([
-        # Row A + another.
-        {'name': 'A', 'another': 'x'}, {'name': 'A', 'another': 'y'}
-      ]))
-      expect(groups[4 * 2][0]).to(equal([
-        # Row number 1 + another.
-        {'number': 1, 'another': 'x'}, {'number': 1, 'another': 'y'}
+      expect(groups).to(equal([
+        ([{'b': None, 'a': 'A'}, {'b': None, 'a': 'B'}], 0),
+        ([{'a': 'A', 'c': 'x'}, {'a': 'A', 'c': 'y'}], 1),
+        ([{'a': 'B', 'c': 'x'}, {'a': 'B', 'c': 'y'}], 1),
+        ([{'a': 'A', 'c': 'x'}, {'a': 'B', 'c': 'x'}], 1),
+        ([{'a': 'A', 'c': 'y'}, {'a': 'B', 'c': 'y'}], 1),
+        ([{'b': None, 'c': 'x'}, {'b': None, 'c': 'y'}], 0),
       ]))
 
   with description('inference groups'):

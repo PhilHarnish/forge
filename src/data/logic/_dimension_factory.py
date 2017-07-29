@@ -8,6 +8,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
   def __init__(self):
     super(_DimensionFactory, self).__init__(self, {})
     self._dimensions = collections.OrderedDict()
+    # Set of dimensions which can be optimized to compact scalars.
+    self._compact_dimensions = set()
     # Map of dimension: size (range of accepted values, including duplicates).
     self._dimension_size = {}
     # Map of identifier: dimension.
@@ -38,20 +40,24 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       else:
         max_cardinality = 1
       child_dimensions = []
+      duplicates = False
       for value in values:
         if value in self._dimensions:
           raise TypeError('ID %s collides with dimension of same name' % (
             value))
-        if (value in self._value_to_dimension and
-            dimension != self._value_to_dimension[value]):
-          raise TypeError('ID %s already reserved by %s' % (
-              value, self._value_to_dimension[value]))
+        if value in self._value_to_dimension:
+          duplicates = True
+          if dimension != self._value_to_dimension[value]:
+            raise TypeError('ID %s already reserved by %s' % (
+                value, self._value_to_dimension[value]))
         self._value_to_dimension[value] = dimension
         self._value_cardinality[value] += 1
         child_dimensions.append(self._dimensions[dimension][value])
       for value in values:
         self._value_cardinality[value] = max(
             max_cardinality, self._value_cardinality[value])
+      if not duplicates and all(isinstance(i, int) for i in values):
+        self._compact_dimensions.add(dimension)
       return _OriginalDimensionSlice(self, {dimension: None}, child_dimensions)
     raise TypeError('invalid call %s' % kwargs)
 
@@ -115,11 +121,49 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
   def dimensions(self):
     return self._dimensions
 
+  def compact_dimensions(self, x, y):
+    """Analyzes x, y dimensions to decide if they should be compacted.
+
+    Returns:
+      (compact, swap). If `swap` is True then x is the dimension compacted.
+    """
+    if len(self._dimensions) > 3:
+      # Do not attempt compaction for so many dimensions. Inference breaks down.
+      return False, False
+    if (self._dimension_size[x] == self._dimension_size[y] and
+        len(self._dimensions[x]) == len(self._dimensions[y])):
+      # Only attempt to use compacted dimensions when the two dimensions are
+      # both the same size, without duplicates.
+      if x in self._compact_dimensions:
+        return True, True
+      return y in self._compact_dimensions, False
+    return False, False
+
   def cardinality_groups(self):
     result = []
     for (x_key, x_values), (y_key, y_values) in itertools.combinations(
         self._dimensions.items(), 2):
       constraint = {}
+      is_compact = False
+      # Only attempt to use compacted dimensions when the two dimensions are
+      # both the same size, without duplicates.
+      if (self._dimension_size[x_key] == self._dimension_size[y_key] and
+          len(self._dimensions[x_key]) == len(self._dimensions[y_key])):
+        if x_key in self._compact_dimensions:
+          # Move compact values to the end.
+          (x_key, x_values), (y_key, y_values) = (y_key, y_values), (x_key, x_values)
+          is_compact = True
+        else:
+          is_compact = y_key in self._compact_dimensions
+      if is_compact:
+        cardinality = 0  # 0 indicates all scalars have unique values.
+        constraint[y_key] = None
+        group = []
+        result.append((group, cardinality))
+        for x_value in x_values:
+          constraint[x_key] = x_value
+          group.append(constraint.copy())
+        continue
       if self._dimension_size[x_key] >= self._dimension_size[y_key]:
         # Rows: there are more (or equal) x values than y values.
         # This implies y values should not repeat for this row.

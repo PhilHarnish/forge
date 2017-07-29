@@ -74,33 +74,51 @@ class _Model(Numberjack.Model):
           self._dimension_factory.dimensions(), variable_constraints)
       if address in self._variable_cache:
         pass
-      elif value1 is not None and value2 is not None:
-        # Create a boolean variable for address.
-        self._variable_cache[address] = Numberjack.Variable(address)
-      else:
+      elif value1 is None or value2 is None:
         self._variable_cache[address] = self._reify_constraints(
-            variable_constraints)
+            variable_constraints, address)
+      else:
+        compact, swap = self._dimension_factory.compact_dimensions(key1, key2)
+        if not compact:
+          # Create a boolean variable for address.
+          self._variable_cache[address] = Numberjack.Variable(address)
+        elif swap:
+          variable_constraints[key1] = None
+          self._variable_cache[address] = (
+              self.get_variables(variable_constraints) == value1)
+        else:
+          variable_constraints[key2] = None
+          self._variable_cache[address] = (
+              self.get_variables(variable_constraints) == value2)
       results.append(self._variable_cache[address])
     return _predicates.Predicates(results)
 
-  def _reify_constraints(self, constraints):
+  def _reify_constraints(self, constraints, address):
     assert len(constraints) == 2
     (key1, value1), (key2, value2) = constraints.items()
-    if value1 is None:
+    compact, swap = self._dimension_factory.compact_dimensions(key1, key2)
+    if swap or value1 is None:
       # Swap values so key1/value1 are fully constrained.
-      (key1, value1), (key2, value2) =  (key2, value2), (key1, value1)
+      (key1, value1), (key2, value2) = (key2, value2), (key1, value1)
     assert value2 is None and value1 is not None
+    values = list(self._dimension_factory.dimensions()[key2].keys())
+    value_cardinality = self._dimension_factory.value_cardinality(value1)
+    if compact:
+      # The range of values are contiguous (i.e. no holes) and well suited for
+      # a single Numberjack.Variable.
+      min_value = min(values)
+      max_value = max(values)
+      return Numberjack.Variable(min_value, max_value, address)
     variables = []
     # These are the values which are unconstrained.
-    values = list(self._dimension_factory.dimensions()[key2].keys())
     for value in values:
       if not isinstance(value, (int, float)):
         raise TypeError('Unable to reify %s dimension, %s is not a number' % (
-            key2, value))
+          key2, value))
       # Constrain to this new value, temporarily.
       constraints[key2] = value
       variables.append(self.get_variables(constraints))
-    if self._dimension_factory.value_cardinality(value1) == 1:
+    if value_cardinality == 1:
       # value1 has a unique solution so we can create a single number from a
       # product of row [var1, var2, var3] * column [pos1, pos2, pos3].
       return Numberjack.Sum(variables, values)
@@ -128,8 +146,7 @@ class _Model(Numberjack.Model):
             first_header: first_value,
             column_header: column_value,
           })
-          assert len(variable) == 1, 'Constraint error for %s' % variable
-          if variable[0].get_value() == 1:
+          if variable.value() == 1:
             true_values.append(column_value)
     return column_headers, cells
 
@@ -157,7 +174,12 @@ class _Model(Numberjack.Model):
             constraint
           )
           variables.append(variable[0])
-        result.append(Numberjack.Sum(variables) == cardinality)
+        if cardinality:
+          # Expect to find `cardinality` matches for `variables`.
+          result.append(Numberjack.Sum(variables) == cardinality)
+        else:
+          # This signifies group is a set of unique scalar Variables.
+          result.append(Numberjack.AllDiff(variables))
     return _predicates.Predicates(result)
 
   def _dimensional_inference_constraints(self):

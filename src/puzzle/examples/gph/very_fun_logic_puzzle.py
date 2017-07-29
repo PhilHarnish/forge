@@ -10,6 +10,8 @@ def get_roses():
 
 
 HOUSE_SOURCE = """
+import networkx
+position in networkx.icosahedral_graph()
 name in {
   Abby,
   Charles,
@@ -40,51 +42,51 @@ color in {
 }
 
 # A Green house is next to a Cyan house.
-# Green >> Cyan
+# Green >= Cyan
 # Abby shares a picket fence with Charles.
-# Abby >> Charles
+# Abby >= Charles
 # Both Abby and Danielle live next to the Cyan house.
-# (Abby, Danielle) >> Cyan
+# (Abby, Danielle) >= Cyan
 # Charles and Freya are good friends.
-# Charles >> Freya
+# Charles >= Freya
 # Elizabeth and Freya like to shout things to each other from their second floor windows.
-# Elizabeth >> Freya
+# Elizabeth >= Freya
 # Freya is neighbors with Howard and Thomas.
-# Freya >> (Howard, Thomas)
+# Freya >= (Howard, Thomas)
 # Gray and Cyan houses appear next to each other.
-# Gray >> Cyan
+# Gray >= Cyan
 # Howard lives in the Purple house.
 Howard == Purple
 # If you lived in the Magenta house, Ophelia would be your neighbor.
-# Magenta >> Ophelia
+# Magenta >= Ophelia
 # Martin lives next to the Yellow house.
-# Martin >> Yellow
+# Martin >= Yellow
 # Only Abby lives in the Black house.
 Abby == Black
 # Ophelia lives in a lovely, Red Victorian house.
 Ophelia == Red
 # Orange is next to White.
-# Orange >> White
+# Orange >= White
 # People live next to the people they like. They do not live next to people they hate.
 # No-op.
 # Rochelle and Charles got in a fight years ago and haven't spoken since.
-# (Rochelle >> Charles) == False
+# (Rochelle >= Charles) == False
 # Stuart loves his Cyan home.
 Stuart == Cyan
 # Stuart refuses to have anything to do with Howard or Howard's neighbors.
-# Stuart >> any >> any >> Howard
+# Stuart >= any >= any >= Howard
 # The Black house is on the opposite side from Elizabeth's house.
-# Black >> max >> Elizabeth
+# Black >= max >= Elizabeth
 # The Brown house is occupied by Rochelle.
 Brown == Rochelle
 # The Red house neighbors the Gray house, the Cyan house, the house Philip lives in, the Orange house, and the house Thomas lives in.
-# Red >> (Gray, Cyan, Philip, Orange, Thomas)
+# Red >= (Gray, Cyan, Philip, Orange, Thomas)
 # The White and Blue houses are not adjacent.
-# (White >> Blue) == False
+# (White >= Blue) == False
 # There is one house of each color, and exactly one person lives in each house.
 # No-op.
 # You can see the Magenta house from the Brown house.
-# Magenta >> Brown
+# Magenta >= Brown
 """
 
 
@@ -166,7 +168,6 @@ Elizabeth | Magenta
 """
 
 
-# TODO: Cyan.position > Green.position > Orange.position > Black.position > Red.position
 ROSE_SOURCE = """
 position in {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
 color in {
@@ -200,10 +201,7 @@ sum(Gray[i] for i in range(8, 15)) == 0
 # Four roses lie between two Gray roses.
 any(Gray.position[i] and Gray.position[i + 5] for i in range(1, 9))
 # From right to left, these roses appear in this order, but not necessarily consecutively: Cyan, Green, Orange, Black, Red.
-Cyan.position > Green.position
-Green.position > Orange.position
-Orange.position > Black.position
-Black.position > Red.position
+Cyan.position > Green.position > Orange.position > Black.position > Red.position
 # The middle roses are Gray and Purple.
 (Gray[7] & Purple[8]) | (Purple[7] & Gray[8])
 # The rose in the middle of the left half of the row is Brown.

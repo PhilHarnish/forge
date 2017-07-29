@@ -18,6 +18,111 @@ def sees(dimension):
     result = 7 - dimension.position
   return result
 
+def dist(a, b):
+  return abs(a.position - b.position) - 1
+
+# The person in the orange float can see exactly x floats more than Phyllis can, where x is some number.
+orange_sees = sees(orange)
+phyllis_sees = sees(Phyllis)
+orange_sees > phyllis_sees
+# x == 2.
+x = orange_sees - phyllis_sees
+
+# If the blue and violet floats are facing the same direction, then Patria is in one of those floats; otherwise, Patria is in the green float.
+if blue.left == violet.left:
+  Patria.blue or Patria.violet
+else:
+  Patria.green
+# The person in the blue float can see, directly in front of it, another float whose driver has x letters in his/her name.
+# NOTE: Names are 2, 6, 7, 11 so x == 2 or x == 6. 6 is too big for z.
+(x == 2)
+# If x == 2: blue sees Li.
+#if blue.left:
+#  blue[1] == False
+#  Li.position == blue.position - 1
+#else:
+#  blue[7] == False
+Li.position == blue.position + 1
+blue.right == True
+
+# There is an even number of floats between Harvey’s and the pink float (not including themselves).
+float_distance = dist(Harvey, pink)
+(float_distance == 2) or (float_distance == 4)
+
+# The red float is the farthest west.
+red.position[1] == True
+
+# If Courtney’s float is blue, orange, violet, or green, then at least one of Courtney’s neighbors has a name containing the letter Y.
+c_is_bovg = (Courtney.blue or Courtney.orange or Courtney.violet or Courtney.green)
+if c_is_bovg:
+  dist(Phyllis, Courtney) == 0 or dist(Harvey, Courtney) == 0
+
+# Harvey can see Kimball’s float directly in front of him.
+Kimball.position == Harvey.position + 1
+Harvey.right == True
+#(Harvey.left * (Kimball.position == Harvey.position - 1)) or (Harvey.right * (Kimball.position == Harvey.position + 1))
+#if Harvey.left:
+#  Kimball.position == Harvey.position - 1
+#else:
+#  Kimball.position == Harvey.position + 1
+
+# The violet float is next to the yellow float if and only if Li’s float is pink.
+(Li == pink) == (abs(violet.position - yellow.position) == 1)
+
+# The people in the orange and pink floats can see the blue float somewhere ahead.
+blue_left_of_orange = blue.position < orange.position
+orange.left == blue_left_of_orange
+blue_right_of_orange = blue.position > orange.position
+orange.right == blue_right_of_orange
+blue_left_of_pink = blue.position < pink.position
+pink.left == blue_left_of_pink
+blue_right_of_pink = blue.position > pink.position
+pink.right == blue_right_of_pink
+
+# If Li’s float is east of Harvey’s, then Li’s float is either orange or pink.
+if Li.position > Harvey.position:
+  Li.orange or Li.pink
+
+# If Harvey’s float is red or orange, then Kimball’s float is a primary color.
+if Harvey.red or Harvey.orange:
+  Kimball.red or Kimball.blue
+
+# If the red and yellow floats are next to each other, then the person in the red float can see fewer than y other floats, where y = x + 1.
+red_yellow_neighbors = abs(red.position - yellow.position) == 1
+red_sees = sees(red)
+y = x + 1
+if red_yellow_neighbors:
+  red_sees < y
+
+# If Christopher’s float is a secondary color, then he can see more floats than Courtney can.
+if Christopher.violet or Christopher.orange or Christopher.green:
+  sees(Christopher) > sees(Courtney)
+
+# The person in the red float has a name that is z letters long, where z = x * y.
+# x = 2 or 6
+# y = 3 or 7
+# z = 6, 14, 18, 42
+# Only "6" works.
+z = x * y
+(red == Harvey) or (red == Patria)
+
+# The pink, violet, and green floats are facing the same direction.
+pink.left == violet.left == violet.left == green.left
+"""
+
+SOURCE = """
+position in range(1, 7 + 1)
+color in {orange, blue, violet, green, pink, red, yellow}
+name in {Phyllis, Patria, Harvey, Courtney, Kimball, Li, Christopher}
+direction in {left, right}
+
+def sees(dimension):
+  if dimension.left:
+    result = dimension.position - 1
+  else:
+    result = 7 - dimension.position
+  return result
+
 # The person in the orange float can see exactly x floats more than Phyllis can, where x is some number.
 orange_sees = sees(orange)
 phyllis_sees = sees(Phyllis)
@@ -103,6 +208,7 @@ z = x * y
 # The pink, violet, and green floats are facing the same direction.
 pink.left == violet.left == violet.left == green.left
 """
+
 
 SOLUTION = """
 position |  color |        name | direction
