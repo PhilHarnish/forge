@@ -75,45 +75,45 @@ with description('compile'):
     expr = self.name['andy'].age + 2
     compiled = self.transformer.compile(expr)
     expect(compiled).to(be_a(_predicates.Predicates))
-    expect(str(compiled)).to(equal('(name["andy"].age[None] in {10,11} + 2)'))
+    expect(str(compiled)).to(equal('(name["andy"].age in {10,11} + 2)'))
 
   with it('supports + operation, int on left'):
     expr = 2 + self.name['andy'].age
     compiled = self.transformer.compile(expr)
     expect(compiled).to(be_a(_predicates.Predicates))
-    expect(str(compiled)).to(equal('(2 + name["andy"].age[None] in {10,11})'))
+    expect(str(compiled)).to(equal('(2 + name["andy"].age in {10,11})'))
 
   with it('supports - operation, int on right'):
     expr = self.name['andy'].age - 2
     compiled = self.transformer.compile(expr)
     expect(compiled).to(be_a(_predicates.Predicates))
-    expect(str(compiled)).to(equal('(name["andy"].age[None] in {10,11} - 2)'))
+    expect(str(compiled)).to(equal('(name["andy"].age in {10,11} - 2)'))
 
   with it('supports - operation, int on left'):
     expr = 2 - self.name['andy'].age
     compiled = self.transformer.compile(expr)
     expect(compiled).to(be_a(_predicates.Predicates))
-    expect(str(compiled)).to(equal('(2 - name["andy"].age[None] in {10,11})'))
+    expect(str(compiled)).to(equal('(2 - name["andy"].age in {10,11})'))
 
   with it('supports * operation, int on right'):
     expr = self.name['andy'].age[10] * 10
     compiled = self.transformer.compile(expr)
     expect(compiled).to(be_a(_predicates.Predicates))
-    expect(str(compiled)).to(equal('((name["andy"].age[None] == 10) * 10)'))
+    expect(str(compiled)).to(equal('((name["andy"].age == 10) * 10)'))
 
   with it('supports * operation, int on left'):
     expr = 10 * self.name['andy'].age[10]
     compiled = self.transformer.compile(expr)
     expect(compiled).to(be_a(_predicates.Predicates))
     # For some reason(?) the operations are switched here.
-    expect(str(compiled)).to(equal('((name["andy"].age[None] == 10) * 10)'))
+    expect(str(compiled)).to(equal('((name["andy"].age == 10) * 10)'))
 
   with it('supports & operation'):
     expr = self.andy[10] & self.bob[11]
     compiled = self.transformer.compile(expr)
     expect(compiled).to(be_a(_predicates.Predicates))
     expect(str(compiled)).to(equal(
-        '((name["andy"].age[None] == 10) & (name["bob"].age[None] == 11))'))
+        '((name["andy"].age == 10) & (name["bob"].age == 11))'))
 
   with it('supports call expressions'):
     expr = dsl.abs(self.andy.age - self.bob.age)
@@ -122,15 +122,15 @@ with description('compile'):
     # For some reason(?) the operations are switched here.
     s = str(compiled).replace(' in {0,1}', '')
     expect(s).to(equal(
-        'Abs((name["andy"].age[None] in {10,11} -'
-        ' name["bob"].age[None] in {10,11}))'
+        'Abs((name["andy"].age in {10,11} -'
+        ' name["bob"].age in {10,11}))'
     ))
 
   with it('supports naked _DimensionSlice expressions'):
     expr = self.name['andy'].age[10]
     compiled = self.transformer.compile(expr)
     expect(compiled).to(be_a(_predicates.Predicates))
-    expect(str(compiled)).to(equal('((name["andy"].age[None] == 10) == True)'))
+    expect(str(compiled)).to(equal('((name["andy"].age == 10) == True)'))
 
   with it('supports Call with builtin functions'):
     expr = ast.parse('max(1, 3)').body[0]

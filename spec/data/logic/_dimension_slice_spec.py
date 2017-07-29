@@ -94,7 +94,7 @@ with description('_dimension_slice._DimensionSlice'):
       age = self.factory(age=[10])
       expect(name['andy'].dimension_address()).to(equal('name["andy"]'))
       expect(name['andy'].fruit.dimension_address()).to(equal(
-          'name["andy"].fruit[None]'))
+          'name["andy"].fruit'))
       expect(fruit['cherries'].dimension_address()).to(equal(
           'fruit["cherries"]'))
 

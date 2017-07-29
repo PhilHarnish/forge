@@ -9,16 +9,23 @@ def address(dimensions, constraints):
   address_parts = []
   for dimension in dimensions:
     if dimension in constraints:
-      address_parts.append('%s[%s]' % (
-        dimension, repr(constraints[dimension]).replace('\'', '"')))
+      if constraints[dimension] is None:
+        address_parts.append(dimension)
+      else:
+        address_parts.append('%s[%s]' % (
+            dimension, repr(constraints[dimension]).replace('\'', '"')))
   return '.'.join(address_parts)
 
 
 def parse(address):
   result = {}
   for subscript in address.split('.'):
-    key, value_str = subscript.rstrip(']').split('[')
-    value = ast.literal_eval(value_str)
+    if '[' in subscript and ']' in subscript:
+      key, value_str = subscript.rstrip(']').split('[')
+      value = ast.literal_eval(value_str)
+    else:
+      key = subscript
+      value = None
     result[key] = value
   return result
 

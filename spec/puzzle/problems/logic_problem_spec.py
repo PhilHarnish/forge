@@ -122,20 +122,20 @@ with description('LogicProblem solutions'):
     model = logic_problem._model(program.split('\n'))
     expect(str(model)).to(look_like("""
       assign:
-        occupation["CEO"].age[None] in {10..12}
-        occupation["ProjectManager"].age[None] in {10..12}
-        occupation["Analyst"].age[None] in {10..12}
-        name["Bob"].age[None] in {10..12}
-        name["Andy"].age[None] in {10..12}
-        name["Cathy"].age[None] in {10..12}
+        occupation["CEO"].age in {10..12}
+        occupation["ProjectManager"].age in {10..12}
+        occupation["Analyst"].age in {10..12}
+        name["Bob"].age in {10..12}
+        name["Andy"].age in {10..12}
+        name["Cathy"].age in {10..12}
         name["Bob"].occupation["CEO"] in {0,1}
         name["Bob"].occupation["ProjectManager"] in {0,1}
 
       subject to:
-        (occupation["CEO"].age[None] > occupation["ProjectManager"].age[None])
-        (occupation["CEO"].age[None] > occupation["Analyst"].age[None])
-        (name["Bob"].age[None] == (name["Andy"].age[None] + 1))
-        (name["Cathy"].age[None] > occupation["ProjectManager"].age[None])
+        (occupation["CEO"].age > occupation["ProjectManager"].age)
+        (occupation["CEO"].age > occupation["Analyst"].age)
+        (name["Bob"].age == (name["Andy"].age + 1))
+        (name["Cathy"].age > occupation["ProjectManager"].age)
         ((name["Bob"].occupation["CEO"] + name["Bob"].occupation["ProjectManager"]) == 1)
     """))
     expect(problem.solution).to(look_like("""

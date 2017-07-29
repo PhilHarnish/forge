@@ -262,8 +262,8 @@ with description('_model._Model usage'):
           ((name["andy"].fruit["figs"] + name["bob"].fruit["figs"] + name["cynthia"].fruit["figs"]) == 1)
           ((name["bob"].fruit["cherries"] + name["bob"].fruit["dates"] + name["bob"].fruit["figs"]) == 1)
           ((name["cynthia"].fruit["cherries"] + name["cynthia"].fruit["dates"] + name["cynthia"].fruit["figs"]) == 1)
-          AllDiff(age[None].fruit["cherries"], age[None].fruit["dates"], age[None].fruit["figs"])
-          AllDiff(age[None].name["andy"], age[None].name["bob"], age[None].name["cynthia"])
+          AllDiff(age.fruit["cherries"], age.fruit["dates"], age.fruit["figs"])
+          AllDiff(age.name["andy"], age.name["bob"], age.name["cynthia"])
       """))
 
 

@@ -35,15 +35,15 @@ with description('dsl'):
       expect(str(self.model)).to(look_like("""
         assign:
           name["Andy"].occupation["analyst"] in {0,1}
-          name["Bob"].age[None] in {10..12}
-          occupation["analyst"].age[None] in {10..12}
-          name["Andy"].age[None] in {10..12}
-          occupation["CEO"].age[None] in {10..12}
+          name["Bob"].age in {10..12}
+          occupation["analyst"].age in {10..12}
+          name["Andy"].age in {10..12}
+          occupation["CEO"].age in {10..12}
         
         subject to:
           (name["Andy"].occupation["analyst"] == True)
-          (((name["Bob"].age[None] == 11) + (occupation["analyst"].age[None] == 11)) == 1)
-          (name["Andy"].age[None] == (occupation["CEO"].age[None] + 2))
+          (((name["Bob"].age == 11) + (occupation["analyst"].age == 11)) == 1)
+          (name["Andy"].age == (occupation["CEO"].age + 2))
       """))
 
   with description('2D solutions'):
