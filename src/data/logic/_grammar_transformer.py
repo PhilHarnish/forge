@@ -129,6 +129,25 @@ class _GrammarTransformer(ast.NodeTransformer):
       return node
     _fail(node)
 
+  def visit_GeneratorExp(self, node):
+    if len(node.generators) > 1:
+      _fail(node, msg='Generators with multiple comprehensions unsupported')
+    if not isinstance(node.generators[0], ast.comprehension):
+      raise _fail(node)
+    generator = self.visit(node.generators[0])
+    if not generator.ifs:
+      return self.generic_visit(node)
+    if len(generator.ifs) > 1:
+      _fail(node, msg='Only one generator conditional supported')
+    condition = generator.ifs[0]
+    generator.ifs.clear()
+    node.elt = ast.Compare(
+        left=condition,
+        ops=[ast.LtE()],
+        comparators=[self.visit(node.elt)],
+    )
+    return node
+
   def visit_If(self, node):
     """Converts "if A: B" to "A <= B"."""
     if len(node.body) == 0:

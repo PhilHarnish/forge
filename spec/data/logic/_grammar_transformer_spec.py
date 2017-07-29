@@ -264,6 +264,17 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.If))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('supports if statements in generators'):
+      node = _grammar_transformer.transform("""
+        all(implication[i] for i in range(10) if condition) 
+      """)
+      expected = goal("""
+        model(all(condition <= implication[i] for i in range(10)))
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Expr))
+      expect(to_source(assignment)).to(look_like(expected))
+
   with description('reference aliases'):
     with it('no-op for well-defined references'):
       node = _grammar_transformer.transform("""
