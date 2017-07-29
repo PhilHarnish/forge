@@ -55,9 +55,7 @@ names = {
 }
 
 
-model = Numberjack.Model(
-    Numberjack.AllDiff(names.values())
-)
+model = Numberjack.Model()
 
 def gap(a, b, n=None):
   if n is not None:
@@ -144,7 +142,8 @@ model.add(gap(Yolanda, Christine, 0))
 # “There are exactly three people between Yolanda and me, not including ourselves.” — Zachary
 model.add(gap(Zachary, Yolanda, 3))
 
-
+model.add(Numberjack.AllDiff(names.values()))
+print(str(model))
 solver = model.load('Mistral')
 solver.solve()
 

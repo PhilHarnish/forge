@@ -54,7 +54,7 @@ dist(Vanessa, Hattie) < dist(Bob, Vanessa)
 gap(Christine, 0, Hattie) or gap(Christine, 0, Eleanor)
 
 # “I am sitting next to at least one of Greg, Andrea, and Patrick.” — Diane
-gap(Diane, 0, Greg) | gap(Diane, 0, Andrea) | gap(Diane, 0, Patrick)
+gap(Diane, 0, Greg) + gap(Diane, 0, Andrea) + gap(Diane, 0, Patrick) >= 1
 
 # “Both of my neighbors come after me alphabetically.” — Eleanor
 gap(Eleanor, 0, Andrea) + gap(Eleanor, 0, Bob) + gap(Eleanor, 0, Christine) + gap(Eleanor, 0, Diane) == 0
@@ -63,19 +63,19 @@ gap(Eleanor, 0, Andrea) + gap(Eleanor, 0, Bob) + gap(Eleanor, 0, Christine) + ga
 Felicia.position * 2 == Maddie.position + Wilma.position
 
 # “I am sitting at one of the ends of the swing.” — Greg
-Greg == 1 or Greg == 25
+(Greg == 1) | (Greg == 25)
 
 # “Yolanda is at one of the ends of the swing.” — Hattie
-Yolanda == 1 or Yolanda == 25
+(Yolanda == 1) | (Yolanda == 25)
 
 # “I am sitting between Patrick and Lawrence.” — Ignatio
 between(Patrick, Ignatio, Lawrence)
 
 # “There are either four or five people between Greg and me, not including ourselves.” — Joshua
-gap(Greg, 4, Joshua) or gap(Greg, 5, Joshua)
+gap(Greg, 4, Joshua) | gap(Greg, 5, Joshua)
 
 # “I am next to at least one person whose name starts with a vowel.” — Kaitlyn
-gap(Kaitlyn, 0, Andrea) + gap(Kaitlyn, 0, Eleanor) + gap(Kaitlyn, 0, Ignatio) + gap(Kaitlyn, 0, Olaf) + gap(Kaitlyn, 0, Ulysses) > 0
+gap(Kaitlyn, 0, Andrea) | gap(Kaitlyn, 0, Eleanor) | gap(Kaitlyn, 0, Ignatio) | gap(Kaitlyn, 0, Olaf) | gap(Kaitlyn, 0, Ulysses)
 
 # “Vanessa is sitting between Christine and myself.” — Lawrence
 between(Christine, Vanessa, Lawrence)
@@ -85,7 +85,7 @@ gap(Kaitlyn, 7, Maddie)
 
 # “There are at least five people between me and each end of the swing.” — Nelson
 Nelson.position > 5
-Nelson.position < 25 - 5
+Nelson.position < 25 - 5 + 1
 
 # “I am next to two of Eleanor, Rachel, or Zachary.” — Olaf
 gap(Olaf, 0, Eleanor) + gap(Olaf, 0, Rachel) + gap(Olaf, 0, Zachary) >= 2
@@ -113,7 +113,7 @@ dist(Vanessa, Lawrence) > 0
 dist(Vanessa, Lawrence) <= 7
 
 # “I am next to at least one of Bob and Andrea.” — Wilma
-gap(Wilma, 0, Bob) | gap(Wilma, 0, Andrea)
+gap(Wilma, 0, Bob) + gap(Wilma, 0, Andrea) >= 1
 
 # “I am next to Christine.” — Yolanda
 gap(Yolanda, 0, Christine)
