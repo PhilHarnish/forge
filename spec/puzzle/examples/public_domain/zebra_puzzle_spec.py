@@ -24,10 +24,13 @@ with _description('zebra_puzzle'):
       expect(problem).to(be_a(logic_problem.LogicProblem))
 
     with it('parses expressions'):
-      problem = self.subject.problems()[0]
-      expect(astor.to_source(problem._parse())).to(
-          look_like(zebra_puzzle.PARSED))
+      parsed = logic_problem._parse(zebra_puzzle.SOURCE.split('\n'))
+      expect(astor.to_source(parsed)).to(look_like(zebra_puzzle.PARSED))
 
-    with it('exports a model'):
+    with it('models puzzle'):
+      model = logic_problem._model(zebra_puzzle.SOURCE.split('\n'))
+      print(str(model))
+
+    with it('exports a solution'):
       problem = self.subject.problems()[0]
       expect(problem.solution).to(look_like(zebra_puzzle.SOLUTION))
