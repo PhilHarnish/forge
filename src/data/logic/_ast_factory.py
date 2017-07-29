@@ -133,6 +133,6 @@ def coerce_value(value):
         elts=list(coerce_value(v) for v in value),
         ctx=ast.Load(),
     )
-  except:
+  except TypeError:
     pass
   raise TypeError('unable to coerce %s' % value)
