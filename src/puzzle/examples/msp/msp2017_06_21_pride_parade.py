@@ -6,10 +6,10 @@ def get():
 
 
 SOURCE = """
-position <= {1, 2, 3, 4, 5, 6, 7}
-color <= {orange, blue, violet, green, pink, red, yellow}
-name <= {Phyllis, Patria, Harvey, Courtney, Kimball, Li, Christopher}
-direction <= {left, right}
+position in range(1, 7 + 1)
+color in {orange, blue, violet, green, pink, red, yellow}
+name in {Phyllis, Patria, Harvey, Courtney, Kimball, Li, Christopher}
+direction in {left, right}
 
 def sees(dimension):
   if dimension.left:
@@ -28,7 +28,7 @@ x = orange_sees - phyllis_sees
 if blue.left == violet.left:
   Patria.blue or Patria.violet
 else:
-  Patria.green == True
+  Patria.green
 # The person in the blue float can see, directly in front of it, another float whose driver has x letters in his/her name.
 # NOTE: Names are 2, 6, 7, 11 so x == 2 or x == 6. 6 is too big for z.
 (x == 2)
@@ -47,18 +47,18 @@ red.position[1] == True
 
 # If Courtney’s float is blue, orange, violet, or green, then at least one of Courtney’s neighbors has a name containing the letter Y.
 c_is_bovg = (Courtney.blue or Courtney.orange or Courtney.violet or Courtney.green)
-c_left_neighbor_has_y = all(Courtney[i] - (Phyllis[i - 1] or Harvey[i - 1]) <= 0 for i in range(2, 8))
-c_right_neighbor_has_y = all(Courtney[i] - (Phyllis[i + 1] or Harvey[i + 1]) <= 0 for i in range(1, 7))
+c_left_neighbor_has_y = all(Phyllis[i - 1] or Harvey[i - 1] for i in range(2, 8) if Courtney[i])
+c_right_neighbor_has_y = all(Phyllis[i + 1] or Harvey[i + 1] for i in range(1, 7) if Courtney[i])
 if c_is_bovg:
   c_left_neighbor_has_y or c_right_neighbor_has_y
 
 # Harvey can see Kimball’s float directly in front of him.
 if Harvey.left:
   Harvey[1] == False
-  all(Harvey[i] - Kimball[i - 1] <= 0 for i in range(2, 8))
+  all(Kimball[i - 1] for i in range(2, 8) if Harvey[i])
 else:
   Harvey[7] == False
-  all(Harvey[i] - Kimball[i + 1] <= 0 for i in range(1, 7))
+  all(Kimball[i + 1] for i in range(1, 7) if Harvey[i])
 
 # The violet float is next to the yellow float if and only if Li’s float is pink.
 (Li == pink) == (abs(violet.position - yellow.position) == 1)
