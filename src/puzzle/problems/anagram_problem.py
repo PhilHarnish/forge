@@ -9,7 +9,6 @@ class AnagramProblem(problem.Problem):
 
   @staticmethod
   def score(lines):
-    # TODO: Support more input.
     if len(lines) > 1:
       return 0
     return analyze_word.score_anagram(lines[0])
@@ -20,6 +19,5 @@ class AnagramProblem(problem.Problem):
       return {}
     results = collections.OrderedDict()
     for index, word in enumerate(index[self.lines[0]]):
-      # TODO: Use frequency for score.
       results[word] = 1 / (index + 1)
     return results
