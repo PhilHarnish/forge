@@ -36,5 +36,12 @@ with description('analyze_word'):
       expect(call(analyze_word.score_cryptogram, '')).to(equal(0))
       expect(call(analyze_word.score_cryptogram, '$#!7')).to(equal(0))
 
+    with it('rejects 3+ repeated characters'):
+      expect(call(analyze_word.score_cryptogram, 'aaabaaa')).to(equal(0))
+
+    with it('rejects words with numerous repeats'):
+      expect(call(analyze_word.score_cryptogram, 'banana')).to(be_above(0))
+      expect(call(analyze_word.score_cryptogram, 'banananana')).to(equal(0))
+
     with it('considers jibberish to be plausible'):
       expect(call(analyze_word.score_cryptogram, 'jibberish')).to(be_above(0))

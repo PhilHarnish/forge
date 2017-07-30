@@ -1,3 +1,4 @@
+import collections
 import re
 
 from data import warehouse
@@ -38,6 +39,23 @@ def score_anagram(word):
 def score_cryptogram(word):
   if not _valid(word):
     return 0
-  # TODO: Analyze letter frequencies.
-  # TODO: Reject words which have impossible patterns (e.g. 'aaabaaa').
+  last = word[0]
+  streak = 1
+  for c in word[1:]:
+    if c == last:
+      streak += 1
+    else:
+      last = c
+      streak = 1
+    if streak >= 3:
+      return 0
+  c = collections.Counter(word)
+  length = len(word)
+  threshold = length // 2
+  n_letters = len(c)
+  if length > 5 and (
+      max(c.values()) > threshold or
+      n_letters < threshold
+  ):
+    return 0
   return .1
