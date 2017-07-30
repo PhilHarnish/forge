@@ -32,7 +32,7 @@ BITFIELD_ALPHABET = [
   't',  # 30: ⠞ 2345
   'q',  # 31: ⠟ 12345
   '|',  # 32: ⠠ 6  (nonstandard)
-  '\\',  # 33: ⠡ 16  (technically, ⠸⠡	456 16)
+  'ch',  # 33: ⠡ 16  (technically, ⠸⠡	456 16)
   '?',  # 34: ⠢ 26  (nonstandard)
   None,  # 35: ⠣ 126
   '-',  # 36: ⠤ 36
@@ -40,13 +40,13 @@ BITFIELD_ALPHABET = [
   '?',  # 38: ⠦ 236
   'v',  # 39: ⠧ 1236
   None,  # 40: ⠨ 46
-  None,  # 41: ⠩ 146
+  'sh',  # 41: ⠩ 146
   None,  # 42: ⠪ 246
   None,  # 43: ⠫ 1246
   None,  # 44: ⠬ 346
   'x',  # 45: ⠭ 1346
   None,  # 46: ⠮ 2346
-  None,  # 47: ⠯ 12346
+  'and',  # 47: ⠯ 12346
   None,  # 48: ⠰ 56
   None,  # 49: ⠱ 156
   '.',  # 50: ⠲ 256
@@ -56,7 +56,7 @@ BITFIELD_ALPHABET = [
   '"',  # 54: ⠶ 2356  (technically, ⠄⠶	3 2356)
   None,  # 55: ⠷ 12356
   None,  # 56: ⠸ 456
-  None,  # 57: ⠹ 1456
+  'th',  # 57: ⠹ 1456
   'w',  # 58: ⠺ 2456
   None,  # 59: ⠻ 12456
   '#',  # 60: ⠼ 3456
@@ -64,8 +64,6 @@ BITFIELD_ALPHABET = [
   None,  # 62: ⠾ 23456
   None,  # 63: ⠿ 123456
 ]
-
-# TODO: Convert numbers.
 
 
 if __name__ == '__main__':
