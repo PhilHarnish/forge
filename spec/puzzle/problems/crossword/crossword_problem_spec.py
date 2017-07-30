@@ -29,6 +29,10 @@ with description('CrosswordProblem'):
     expect(crossword_problem.CrosswordProblem.score(
         ['A quick brown fox jumps over the lazy dog'])).to(be_above(.25))
 
+  with it('boosts questions with common crossword indicators'):
+    expect(crossword_problem.CrosswordProblem.score(
+        ['abbreviation of the French honorific "Madame"'])).to(be_above(.75))
+
   with it('matches a real question with punctuation'):
     expect(crossword_problem.CrosswordProblem.score(
         ['Apparatus with "Yes", "No", and "Good Bye"'])).to(be_above(.25))
