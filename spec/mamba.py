@@ -1,3 +1,4 @@
+import builtins
 import textwrap
 
 import mock
@@ -6,7 +7,34 @@ from expects import matchers
 
 from spec.data import fixtures
 
+# Convenience.
 fixtures.init()
+
+def _init_breakpoint_global():
+  setattr(builtins, 'breakpoint', lambda: None)
+
+
+class _Breakpoints(object):
+  """Allows for conditional breakpointing.
+
+  Usage (in tests):
+    with breakpoints:
+      some_code()
+
+  Usage (in code):
+    breakpoint()  # Executes breakpoint() iff inside of with `breakpoints`.
+  """
+  def __enter__(self):
+    def breakpoint():
+      """Set breakpoint on this line."""
+      print('Breakpoint here.')
+    setattr(builtins, 'breakpoint', breakpoint)
+
+  def __exit__(self):
+    _init_breakpoint_global()
+
+breakpoints = _Breakpoints()
+_init_breakpoint_global()
 
 # Mamba.
 self = {}
