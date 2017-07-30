@@ -5,8 +5,6 @@ def get():
   return puzzle.Puzzle('Puzzle of the day', SOURCE, hint='crossword')
 
 
-# TODO: The "." character breaks the parser.
-
 SOURCE = """
 Winner or advocate (4|2)
 Criticize small details (3|2)
