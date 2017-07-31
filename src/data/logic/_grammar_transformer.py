@@ -129,6 +129,19 @@ class _GrammarTransformer(ast.NodeTransformer):
       return node
     _fail(node)
 
+  def visit_For(self, node):
+    node.target = self.visit(node.target)
+    node.iter = self.visit(node.iter)
+    body = []
+    for expr in node.body:
+      body.append(_constrain_expr(self.visit(expr)))
+    node.body = body
+    orelse = []
+    for expr in node.orelse:
+      orelse.append(_constrain_expr(self.visit(expr)))
+    node.orelse = orelse
+    return node
+
   def visit_GeneratorExp(self, node):
     if len(node.generators) > 1:
       _fail(node, msg='Generators with multiple comprehensions unsupported')

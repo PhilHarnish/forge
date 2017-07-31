@@ -6,6 +6,7 @@ from puzzle.problems import problem
 
 # These are specific enough to rarely appear.
 _CONCLUSIVE_TOP_LEVEL_NODES = (
+  ast.For,  # for x in y:.
   ast.FunctionDef,  # def foo():.
   ast.If,  # If statements.
 )

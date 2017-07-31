@@ -187,6 +187,19 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.Expr))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('constrains for loop body'):
+      node = _grammar_transformer.transform("""
+        for a in range(5):
+          a < b
+      """)
+      expected = goal("""
+        for a in range(5):
+          model(a < b)
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.For))
+      expect(to_source(assignment)).to(look_like(expected))
+
   with description('if'):
     with it('converts if->then statements'):
       node = _grammar_transformer.transform('if A: B')
