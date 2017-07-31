@@ -72,7 +72,13 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
   def resolve(self, slice, key):
     """Finds the best sub-slice of `slice` for `key`."""
     value = None
-    if key in self._dimensions:
+    if isinstance(key, _dimension_slice._DimensionSlice):
+      if len(key) > 1:
+        raise KeyError(
+            'Attempted to resolve multiple dimensions at once: %s',
+            key.dimension_constraints())
+      dimension, value = list(key.dimension_constraints().items())[0]
+    elif key in self._dimensions:
       dimension = key
     elif key in self._value_to_dimension:
       dimension = self._value_to_dimension[key]

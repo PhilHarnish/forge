@@ -135,6 +135,14 @@ with description('_dimension_factory._DimensionFactory'):
       expect(resolved).to(be_a(_dimension_slice._DimensionSlice))
       expect(resolved.dimension_constraints()).to(equal({'name': 'a'}))
 
+    with it('resolves subslice using another dimension slice'):
+      self.subject(name=['a', 'b'])
+      slice1 = _dimension_slice._DimensionSlice(self, {})
+      slice2 = _dimension_slice._DimensionSlice(self, {'name': 'a'})
+      resolved = self.subject.resolve(slice1, slice2)
+      expect(resolved).to(be_a(_dimension_slice._DimensionSlice))
+      expect(resolved.dimension_constraints()).to(equal({'name': 'a'}))
+
     with it('resolves subslices iteravely'):
       self.subject(name=['a', 'b'])
       self.subject(age=[10, 11])
