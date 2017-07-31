@@ -277,6 +277,29 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.If))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('supports nested if statements'):
+      node = _grammar_transformer.transform("""
+        if A:
+          if B:
+            if C:
+              x == 3
+            else:
+              x == 2
+          else:
+            x == 1
+        else:
+          x == 0
+      """)
+      expected = goal("""
+        if 'A':
+          model(A <= (B <= (C <= (x == 3)) & (C + (x == 2) >= 1)) & (B + (x == 1) >= 1)
+              )
+          model(A + (x == 0) >= 1)
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.If))
+      expect(to_source(assignment)).to(look_like(expected))
+
     with it('supports if statements in generators'):
       node = _grammar_transformer.transform("""
         all(implication[i] for i in range(10) if condition) 

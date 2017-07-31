@@ -28,10 +28,13 @@ _REFERENCE_TYPES = (
 
 _CONSTRAINT_TYPES = (
   ast.BinOp,
-  # NB: Do not add ast.BoolOp: the "or" and "and" operators cannot be overriden
+  # NB: Do not add ast.BoolOp: the "or" and "and" operators cannot be overridden
   # and must be converted to | and &.
   ast.Call,
   ast.Compare,
+  # NB: Do not add ast.Not: the "not" operator cannot be overridden and must be
+  # be converted to ~.
+  ast.UnaryOp,
 )
 
 
@@ -166,8 +169,8 @@ class _GrammarTransformer(ast.NodeTransformer):
     if len(node.body) == 0:
       _fail(node, msg='If statement missing body expressions')
     test = self.visit(node.test)
-    body = node.body
-    orelse = node.orelse
+    body = self.visit_if_body(node.body)
+    orelse = self.visit_if_body(node.orelse)
     assignments, body, orelse = _collect_conditional_assignments(
         test, body, orelse)
     constraints, body, orelse = _collect_conditional_constraints(
@@ -185,6 +188,24 @@ class _GrammarTransformer(ast.NodeTransformer):
         body=result,
         orelse=[],
     )
+
+  def visit_if_body(self, nodes):
+    result = []
+    for child in nodes:
+      if isinstance(child, ast.If):
+        constraints, body, orelse = _collect_conditional_constraints(
+            child.test,
+            self.visit_if_body(child.body),
+            self.visit_if_body(child.orelse))
+        if body or orelse:
+          remaining = ast.If(
+              test=child.test, body=child.body, orelse=child.orelse)
+          _fail(remaining, msg='inner if statement expressions unconverted')
+        for constraint in constraints:
+          result.append(self.visit(constraint))
+      else:
+        result.append(child)
+    return result
 
   def visit_Name(self, node):
     canonical_reference_name = _canonical_reference_name(node.id)
@@ -209,6 +230,12 @@ class _GrammarTransformer(ast.NodeTransformer):
     canonical_reference_name = _canonical_reference_name(node.s)
     if canonical_reference_name in self._references:
       return self._references[canonical_reference_name]
+    return self.generic_visit(node)
+
+  def visit_UnaryOp(self, node):
+    # Rewrite "not" to "~" so that operator overloading works.
+    if isinstance(node.op, ast.Not):
+      node.op = ast.Invert()
     return self.generic_visit(node)
 
 
