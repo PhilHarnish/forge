@@ -43,7 +43,9 @@ def _update_solutions_for_problem(table, best_solution, problem):
   data = []
   for solution, score in solutions.items():
     data.append([
-      round(score, 3), solution, '<br />'.join(problem.notes_for(solution))
+      round(score, 3),
+      _format_solution(solution),
+      '<br />'.join(problem.notes_for(solution))
     ])
   table.update_data(data, headers=headers)
 
@@ -56,3 +58,7 @@ def _observable_for_widget(widget):
     widget.observe(_on_change, names='value')
 
   return rx.AnonymousObservable(subscribe)
+
+
+def _format_solution(solution):
+  return '<pre>%s</pre>' % solution.replace('\n', '<br />')
