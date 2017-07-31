@@ -21,13 +21,17 @@ ANAGRAM_INDICATORS = frozenset([
   'off',
   'out',
   'put',
+  'roll',
   'round',
   'transform',
   'upset',
+  'wander',
+  'wandering',
 ])
 # Solution appears in clue.
 EMBEDDED_INDICATORS = frozenset([
   'bit',
+  'circling',
   'in',
   'part',
   'partly',

@@ -56,7 +56,7 @@ with description('CrypticCrosswordProblem'):
         all_clues.append(fixture.clue)
         self.problems[fixture.name] = cryptic_problem.CrypticProblem(
             fixture.name, [fixture.clue])
-      expect(all_clues).to(have_len(51))  # Make fail to see output.
+      # expect(all_clues).to(have_len(51))  # Make fail to see output.
       warehouse.save()
       d = dict([
         (fixture.name.lower(), 100000) for fixture in self.fixtures.values()

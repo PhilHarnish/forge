@@ -149,7 +149,7 @@ def _visit_embedded(tokens, positions, solutions):
           base_weight *= .9
         # Score = % of word not banned by `positions`.
         score = base_weight * (
-                              sum(i not in positions for i in
+                              sum(pos_map[i] not in positions for i in
                               range(offset, offset + result_length))
                             ) / result_length
         start_pos = pos_map[offset]
