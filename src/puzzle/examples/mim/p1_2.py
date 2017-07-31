@@ -2,7 +2,7 @@ from puzzle.puzzlepedia import puzzle
 
 
 def get():
-  return puzzle.Puzzle('Puzzle 1.1: Meet the Guests', SOURCE)
+  return puzzle.Puzzle('Puzzle 1.2: True-False Test', SOURCE)
 
 
 SOURCE = """
