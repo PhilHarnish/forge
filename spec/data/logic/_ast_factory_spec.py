@@ -81,6 +81,10 @@ with description('_ast_factory'):
     with it('supports &'):
       expect(_ast_factory.bin_op(self.bob, '&', self.dates)).to(be_a(ast.Expr))
 
+  with description('unary operations'):
+    with it('supports ~'):
+      expect(_ast_factory.unary_op('~', self.andy)).to(be_a(ast.Expr))
+
   with description('compare'):
     with it('rejects invalid input'):
       expect(calling(_ast_factory.compare, None, [], [])).to(raise_error)

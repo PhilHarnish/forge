@@ -15,6 +15,7 @@ _OPERATOR_MAP = {
   '-': ast.Sub,
   '>': ast.Gt,
   '>=': ast.GtE,
+  '~': ast.Invert,
   '<<': ast.LShift,
   '<': ast.Lt,
   '<=': ast.LtE,
@@ -78,6 +79,9 @@ class AccumulatingExpressionMixin(object):
   def __xor__(self, other):
     return bin_op(self, '^', other)
 
+  def __invert__(self):
+    return unary_op('~', self)
+
 
 class AccumulatingExpr(ast.Expr, AccumulatingExpressionMixin):
   """Overloads operators and accumulate expressions at runtime."""
@@ -93,6 +97,15 @@ def bin_op(left, op, right):
           left=coerce_value(left),
           op=coerce_operator(op),
           right=coerce_value(right),
+      )
+  )
+
+
+def unary_op(op, operand):
+  return AccumulatingExpr(
+      value=ast.UnaryOp(
+          op=coerce_operator(op),
+          operand=coerce_value(operand),
       )
   )
 
