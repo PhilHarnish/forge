@@ -115,6 +115,13 @@ with description('compile'):
     expect(str(compiled)).to(equal(
         '((name["andy"].age == 10) & (name["bob"].age == 11))'))
 
+  with it('supports ~ operation'):
+    expr = ~self.andy[10]
+    compiled = self.transformer.compile(expr)
+    expect(compiled).to(be_a(_predicates.Predicates))
+    expect(str(compiled)).to(equal(
+        '(1 - (name["andy"].age == 10))'))
+
   with it('supports call expressions'):
     expr = dsl.abs(self.andy.age - self.bob.age)
     compiled = self.transformer.compile(expr)

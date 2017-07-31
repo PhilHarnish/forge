@@ -128,6 +128,13 @@ class ExprTransformer(ast.NodeTransformer):
   def visit_Str(self, node):
     return self._model.resolve_value(node.s)
 
+  def visit_UnaryOp(self, node):
+    op = node.op
+    result = self.visit(node.operand)
+    if isinstance(op, ast.Invert):
+      return 1 - result
+    _fail(node, msg='Unary operator %s unsupported' % op.__class__.__name__)
+
 
 def _fail(node, msg='Visit error'):
   try:
