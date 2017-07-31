@@ -12,10 +12,12 @@ with description('LogicProblem score'):
   with it('rejects a single line'):
     expect(logic_problem.LogicProblem.score(['a single line'])).to(equal(0))
 
-  with it('assigns a non-zero score to many lines'):
-    expect(logic_problem.LogicProblem.score([
-      'this', 'has', 'many', 'lines',
-    ])).to(be_above(0))
+  with it('positively identifies a real logic problem'):
+    expect(logic_problem.LogicProblem.score(textwrap.dedent("""
+      name in {Beth, Charles, David, Frank, Jessica, Karen, Taylor}
+      state in {CA, FL, KY, MT, NY, TX, WI}
+      position in range(1, 7 + 1)
+    """).split('\n'))).to(equal(1))
 
 with description('LogicProblem parsing'):
   with it('parses empty input'):

@@ -38,5 +38,4 @@ with _description('msp2017_07_12_nebraska'):
 
     with it('exports a solution'):
       problem = self.puzzle.problems()[0]
-      expect(problem.solution).to(look_like(
-          msp2017_07_12_nebraska.SOLUTION))
+      expect(problem.solution).to(look_like(msp2017_07_12_nebraska.SOLUTION))

@@ -4,6 +4,23 @@ import sys
 from data.logic import _grammar_transformer
 from puzzle.problems import problem
 
+# These are specific enough to rarely appear.
+_CONCLUSIVE_TOP_LEVEL_NODES = (
+  ast.FunctionDef,  # def foo():.
+  ast.If,  # If statements.
+)
+# These are less conclusive.
+_INTERESTING_TOP_LEVEL_NODES = (
+  ast.Assign,
+)
+_INTERESTING_TOP_LEVEL_EXPRESSIONS = (
+  ast.BinOp,  # a | b.
+  ast.Compare,  # Dimensions, X <= Y.
+)
+
+
+_SOLUTION_LIMIT = 3  # Solutions should be unique, after all.
+
 
 class LogicProblem(problem.Problem):
   @staticmethod
@@ -14,9 +31,8 @@ class LogicProblem(problem.Problem):
     try:
       parsed = ast.parse(program)
       if isinstance(parsed, ast.Module):
-        n_lines = sum(line.startswith('#') for line in lines) + len(parsed.body)
-        return min(1, n_lines / 10)
-    except:
+        return min(1, _program_interesting_ratio(parsed) * 1.25)
+    except SyntaxError:
       return 0
     return sys.float_info.epsilon
 
@@ -25,6 +41,8 @@ class LogicProblem(problem.Problem):
     solver = _solver(model)
     seen = set()
     while solver.solve():
+      if len(seen) >= _SOLUTION_LIMIT:
+        break
       solution = str(solver)
       if solution in seen:
         # FIXME: No idea why this happens with some compacted problems.
@@ -48,3 +66,17 @@ def _model(lines):
 
 def _solver(model):
   return model.load('Mistral')
+
+
+def _program_interesting_ratio(module):
+  interesting = 0
+  for node in module.body:
+    if isinstance(node, _CONCLUSIVE_TOP_LEVEL_NODES):
+      return 1
+    elif isinstance(node, _INTERESTING_TOP_LEVEL_NODES):
+      interesting +=1
+    elif not isinstance(node, ast.Expr):
+      continue
+    elif isinstance(node.value, _INTERESTING_TOP_LEVEL_EXPRESSIONS):
+      interesting += 1
+  return interesting / len(module.body)
