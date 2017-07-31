@@ -144,18 +144,12 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     for (x_key, x_values), (y_key, y_values) in itertools.combinations(
         self._dimensions.items(), 2):
       constraint = {}
-      is_compact = False
+      compact, swap = self.compact_dimensions(x_key, y_key)
       # Only attempt to use compacted dimensions when the two dimensions are
       # both the same size, without duplicates.
-      if (self._dimension_size[x_key] == self._dimension_size[y_key] and
-          len(self._dimensions[x_key]) == len(self._dimensions[y_key])):
-        if x_key in self._compact_dimensions:
-          # Move compact values to the end.
-          (x_key, x_values), (y_key, y_values) = (y_key, y_values), (x_key, x_values)
-          is_compact = True
-        else:
-          is_compact = y_key in self._compact_dimensions
-      if is_compact:
+      if swap:
+        (x_key, x_values), (y_key, y_values) = (y_key, y_values), (x_key, x_values)
+      if compact:
         cardinality = 0  # 0 indicates all scalars have unique values.
         constraint[y_key] = None
         group = []
