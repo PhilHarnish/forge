@@ -1,11 +1,13 @@
 # Puzzlepedia
 
 ## TODO
-* Alphabets
-  * Roman numerals
-  * Time as semaphore
 * Documentation
   * Document supported puzzle types
+* Import
+  * Scanning images + OCR
+  * Alphabets
+    * Roman numerals
+    * Time as semaphore
 * Puzzle types
   * Acrostic crossords
   * Wordsearch
