@@ -6,7 +6,7 @@ from puzzle.problems import logic_problem
 from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
-with description('p1_3'):
+with _description('p1_3'):
   with before.all:
     warehouse.save()
     prod_config.init()
