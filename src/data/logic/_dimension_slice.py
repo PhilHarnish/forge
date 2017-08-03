@@ -23,6 +23,9 @@ class _DimensionSlice(
   def __str__(self):
     return self.dimension_address()
 
+  def __hash__(self):
+    return hash(str(self))
+
   def dimension_constraints(self):
     return self._constraints
 

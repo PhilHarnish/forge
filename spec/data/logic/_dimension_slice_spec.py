@@ -102,6 +102,25 @@ with description('_dimension_slice._DimensionSlice'):
       cherries, = self.factory(fruit=['cherries'])
       expect(str(cherries)).to(equal('fruit["cherries"]'))
 
+  with description('__hash__'):
+    with it('is used to store slices in dicts'):
+      cherries, apples = self.factory(fruit=['cherries', 'apples'])
+      d = {
+        cherries: 1,
+        apples: 2,
+      }
+      expect(d).to(have_len(2))
+      expect(d).to(have_key(apples))
+
+    with it('is used to store slices in sets'):
+      cherries, apples = self.factory(fruit=['cherries', 'apples'])
+      d = {
+        cherries,
+        apples,
+      }
+      expect(d).to(have_len(2))
+      expect(d).to(contain(apples))
+
   with description('cache'):
     with it('returns unique slices for new requests'):
       andy, bob = self.factory(name=['andy', 'bob'])
