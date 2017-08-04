@@ -32,12 +32,13 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
         dimension, self._dimensions[dimension]
       ))
     inputs = list(values for name, values in dimensions)
+    # A list of (id, source) tuples.
     values = []
     for input in itertools.product(*inputs):
       if len(input) > 1:
-        values.append(''.join(map(str, input)))
+        values.append((''.join(map(str, input)), input))
       else:
-        values.append(input[0])
+        values.append((input[0], input))
     self._dimensions[dimension] = self._make_slices(dimension, values)
     dimension_size = len(values)
     self._dimension_size[dimension] = dimension_size
@@ -49,7 +50,7 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       max_cardinality = 1
     child_dimensions = []
     duplicates = False
-    for value in values:
+    for value, source in values:
       if value in self._dimensions:
         raise TypeError('ID %s collides with dimension of same name' % (
           value))
@@ -60,17 +61,21 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
               value, self._value_to_dimension[value]))
       self._value_to_dimension[value] = dimension
       self._value_cardinality[value] += 1
-      child_dimensions.append(self._dimensions[dimension][value])
-    for value in values:
+      child_dimensions.append((self._dimensions[dimension][value], source))
+    for value, _ in values:
       self._value_cardinality[value] = max(
           max_cardinality, self._value_cardinality[value])
-    if not duplicates and all(isinstance(i, int) for i in values):
+    if not duplicates and all(isinstance(i, int) for i, _ in values):
       self._compact_dimensions.add(dimension)
-    return _OriginalDimensionSlice(self, {dimension: None}, child_dimensions)
+    if len(inputs) == 1:
+      return _dimension_slice._OriginalDimensionSlice(
+          self, {dimension: None}, child_dimensions)
+    return [_dimension_slice._DimensionFilterSlice(
+        self, {dimension: None}, child_dimensions)] * len(inputs)
 
   def _make_slices(self, dimension, values):
     result = collections.OrderedDict()
-    for value in values:
+    for value, _ in values:
       # Cannot use _get_slice here as it depends on address which requires
       # a populated cache.
       result[value] = _dimension_slice._DimensionSlice(self, {dimension: value})
@@ -266,20 +271,3 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
 
   def value_cardinality(self, value):
     return self._value_cardinality[value]
-
-
-class _OriginalDimensionSlice(_dimension_slice._DimensionSlice):
-  """Similar to _DimensionSlice except it remembers duplicate values.
-
-  Normally, dimension factory (and user code) has no use for redundantly
-  iterating duplicate values. However, when a dimension is created this syntax
-  is expected to work:
-      red, green, red, green = factory(color=['red', 'green', 'red', 'green'])
-  """
-
-  def __init__(self, factory, constraints, children):
-    super(_OriginalDimensionSlice, self).__init__(factory, constraints)
-    self._children = children
-
-  def __iter__(self):
-    return iter(self._children)

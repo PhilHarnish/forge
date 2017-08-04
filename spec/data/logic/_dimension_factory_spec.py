@@ -230,3 +230,31 @@ with description('_dimension_factory._DimensionFactory'):
 
 
       expect(good).not_to(raise_error)
+
+    with it('unpacks cross-product dimensions'):
+      def good():
+        _ = (_, _, _) = ((_, _, _, _, _, _, _, _), _, _) = self.subject(
+          ('room', ['A', 'B']),
+          ('floor', [1, 2]),
+          ('side', ['L', 'R']),
+        )
+
+
+      expect(good).not_to(raise_error)
+
+    with it('unpacked cross-product dimensions are also correct'):
+      room_floor_side = (room, floor, side) = ((
+        A1N, A1S, A1E, A1W,
+        A2N, A2S, A2E, A2W,
+        A3N, A3S, A3E, A3W,
+        B1N, B1S, B1E, B1W,
+        B2N, B2S, B2E, B2W,
+        B3N, B3S, B3E, B3W,
+      ), _, _) = self.subject(
+        ('room', ['A', 'B']),
+        ('floor', [1, 2, 3]),
+        ('direction', ['N', 'S', 'E', 'W']),
+      )
+      expect(list(room)).to(have_len(2 * 3 * 4))
+      for r in room:
+        expect(r).to(be_a(_dimension_slice._DimensionSlice))

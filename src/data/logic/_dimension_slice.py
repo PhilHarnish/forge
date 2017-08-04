@@ -31,3 +31,39 @@ class _DimensionSlice(
 
   def dimension_address(self):
     return _util.address(self._factory.dimensions(), self._constraints)
+
+
+class _OriginalDimensionSlice(_DimensionSlice):
+  """Similar to _DimensionSlice except it remembers duplicate values.
+
+  Normally, dimension factory (and user code) has no use for redundantly
+  iterating duplicate values. However, when a dimension is created this syntax
+  is expected to work:
+      red, green, red, green = factory(color=['red', 'green', 'red', 'green'])
+  """
+
+  def __init__(self, factory, constraints, children):
+    super(_OriginalDimensionSlice, self).__init__(factory, constraints)
+    self._children = children
+
+  def __iter__(self):
+    return iter(child for child, source in self._children)
+
+
+class _DimensionFilterSlice(_OriginalDimensionSlice):
+  """Adds cross-product sub-slicing to _OriginalDimensionSlice.
+
+  Given a list of children, return a sub-slice of children.
+  """
+  def __init__(self, factory, constraints, children, filter=None):
+    super(_DimensionFilterSlice, self).__init__(factory, constraints, children)
+    if filter:
+      self._filter = filter.copy()
+    else:
+      self._filter = set()
+
+  def __getattr__(self, item):
+    raise NotImplementedError()
+
+  def __getitem__(self, item):
+    raise NotImplementedError()
