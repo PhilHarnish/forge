@@ -104,10 +104,14 @@ class ExprTransformer(ast.NodeTransformer):
 
   def visit_Expr(self, node):
     result = self.visit(node.value)  # Expr is a wrapper on `value`.
-    if isinstance(result, (_predicates.Predicates, Numberjack.Predicate)):
-      return result
-    # Every expression is implicitly true.
-    return result == True
+    # Unary inputs and predicate outputs require bool coercion.
+    requires_coercion = isinstance(node.value, ast.UnaryOp) or not isinstance(
+        result, (_predicates.Predicates, Numberjack.Predicate))
+    if requires_coercion:
+      # Every expression is implicitly true. Attempt to coerce it to a boolean.
+      return result == True
+    # No extra work required for most other expressions.
+    return result
 
   def visit_List(self, node):
     # We assume list values will not participate in more accumulating

@@ -67,10 +67,20 @@ with description('dsl'):
 
     with it('finds correct solution with constraints'):
       # Force Bob == 12.
-      self.model(self.Andy[12] == False)
-      self.model(self.Cathy[12] == False)
+      self.model(~self.Andy[12])
+      self.model(~self.Cathy[12])
       # Force Cathy == 10
-      self.model(self.name['Cathy'][11] == False)
+      self.model(~self.name['Cathy'][11])
+      expect(str(self.model)).to(look_like("""
+          assign:
+            name["Andy"].age in {10..12}
+            name["Cathy"].age in {10..12}
+         
+          subject to:
+            ((1 - (name["Andy"].age == 12)) == True)
+            ((1 - (name["Cathy"].age == 12)) == True)
+            ((1 - (name["Cathy"].age == 11)) == True)
+      """))
       solver = self.model.load('Mistral')
       expect(solver.solve()).to(be_true)
       expect(str(solver)).to(look_like("""
