@@ -1,7 +1,9 @@
+import itertools
+
 from data.logic import _ast_factory, _dimension_factory, _dimension_slice
 from spec.mamba import *
 
-with description('_dimension_slice._DimensionSlice'):
+with description('_DimensionSlice'):
   with before.each:
     self.factory = _dimension_factory._DimensionFactory()
 
@@ -183,3 +185,53 @@ with description('_dimension_slice._DimensionSlice'):
         expect(list(map(str, iter(slice)))).to(equal([
           'color["red"]', 'color["green"]',
         ]))
+
+with description('_OriginalDimensionSlice'):
+  with before.each:
+    self.factory = _dimension_factory._DimensionFactory()
+    self.make_values = lambda values: [(v, [v]) for v in values]
+
+  with it('unpacks matched lengths'):
+    def good():
+      (_, _) = _dimension_slice._OriginalDimensionSlice(
+          self.factory, {}, self.make_values(['A', 'B']))
+
+
+    expect(good).not_to(raise_error)
+
+  with it('unpacks matched lengths with repeats'):
+    def good():
+      (_, _, _) = _dimension_slice._OriginalDimensionSlice(
+          self.factory, {}, self.make_values(['A', 'B', 'C']))
+
+
+    expect(good).not_to(raise_error)
+
+
+with description('_DimensionFilterSlice'):
+  with before.each:
+    product = itertools.product('a', [1, 2], 'xyz')
+    children = [(''.join(map(str, src)), src) for src in product]
+    self.subject = _dimension_slice._DimensionFilterSlice(
+        factory=_dimension_factory._DimensionFactory(),
+        constraints={},
+        children=children,
+        filter=None
+    )
+
+  with it('unpacks cross-product dimensions'):
+    def good():
+      (_, _, _, _, _, _) = self.subject
+
+
+    expect(good).not_to(raise_error)
+
+  with it('sub-slicing to filter'):
+    expect(list(self.subject.a)).to(have_len(2 * 3))
+    for s in self.subject.a:
+      expect(s).to(contain('a'))
+    expect(list(self.subject.a[1])).to(have_len(3))
+    for s in self.subject.a[1]:
+      expect(s).to(contain('a1'))
+    expect(list(self.subject.a[1].x)).to(have_len(1))
+    expect(list(self.subject.a[1].x)).to(equal(['a1x']))

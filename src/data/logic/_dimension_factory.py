@@ -61,7 +61,7 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
               value, self._value_to_dimension[value]))
       self._value_to_dimension[value] = dimension
       self._value_cardinality[value] += 1
-      child_dimensions.append((self._dimensions[dimension][value], source))
+      child_dimensions.append((self._dimensions[dimension][value], set(source)))
     for value, _ in values:
       self._value_cardinality[value] = max(
           max_cardinality, self._value_cardinality[value])

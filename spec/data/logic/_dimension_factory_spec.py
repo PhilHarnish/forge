@@ -258,3 +258,20 @@ with description('_dimension_factory._DimensionFactory'):
       expect(list(room)).to(have_len(2 * 3 * 4))
       for r in room:
         expect(r).to(be_a(_dimension_slice._DimensionSlice))
+
+    with it('unpacked cross-product dimensions can be sub-sliced'):
+      (room, _, _) = self.subject(
+        ('room', ['A', 'B']),
+        ('floor', [1, 2, 3]),
+        ('direction', ['N', 'S', 'E', 'W']),
+      )
+      expect(list(room['A'])).to(have_len(3 * 4))
+      for r in room['A']:
+        constraints = r.dimension_constraints()
+        expect(constraints).to(have_key('room_floor_direction'))
+        expect(constraints['room_floor_direction']).to(contain('A'))
+      expect(list(room['A'][1])).to(have_len(4))
+      for r in room['A'][1]:
+        constraints = r.dimension_constraints()
+        expect(constraints).to(have_key('room_floor_direction'))
+        expect(constraints['room_floor_direction']).to(contain('A1'))

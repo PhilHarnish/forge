@@ -11,8 +11,7 @@ class _DimensionSlice(
   def __getattr__(self, item):
     return self._factory.resolve(self, item)
 
-  def __getitem__(self, item):
-    return self._factory.resolve(self, item)
+  __getitem__ = __getattr__
 
   def __len__(self):
     return len(self._constraints)
@@ -63,7 +62,14 @@ class _DimensionFilterSlice(_OriginalDimensionSlice):
       self._filter = set()
 
   def __getattr__(self, item):
-    raise NotImplementedError()
+    return _DimensionFilterSlice(
+        self._factory, self._constraints, self._children,
+        self._filter.union((item,)))
 
-  def __getitem__(self, item):
-    raise NotImplementedError()
+  __getitem__ = __getattr__
+
+  def __iter__(self):
+    needed = len(self._filter)
+    for child, source in self._children:
+      if not needed or needed == len(self._filter.intersection(source)):
+        yield child
