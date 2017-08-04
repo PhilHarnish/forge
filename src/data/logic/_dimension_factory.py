@@ -171,7 +171,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
           constraint[x_key] = x_value
           group = []
           cardinality = self._value_cardinality[x_value]
-          result.append((group, cardinality))
+          # The maximum sum is # of values in the group.
+          result.append((group, min(cardinality, len(y_values))))
           for y_value in y_values:
             constraint[y_key] = y_value
             group.append(constraint.copy())
@@ -182,7 +183,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
           constraint[y_key] = y_value
           group = []
           cardinality = self._value_cardinality[y_value]
-          result.append((group, cardinality))
+          # The maximum sum is # of values in the group.
+          result.append((group, min(cardinality, len(x_values))))
           for x_value in x_values:
             constraint[x_key] = x_value
             group.append(constraint.copy())

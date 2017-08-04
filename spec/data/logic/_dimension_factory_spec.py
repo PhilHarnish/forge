@@ -83,6 +83,25 @@ with description('_dimension_factory._DimensionFactory'):
         ([{'b': None, 'c': 'x'}, {'b': None, 'c': 'y'}], 0),
       ]))
 
+    with it('returns 3D rows and columns with different sizes'):
+      self.subject(d1=['A', 'B', 'C', 'D'])
+      self.subject(d2=[1, 2, 3])
+      self.subject(d3=['x', 'y'])
+      groups = self.subject.cardinality_groups()
+      expect(groups).to(equal([
+        ([{'d1': 'A', 'd2': 1}, {'d1': 'A', 'd2': 2}, {'d1': 'A', 'd2': 3}], 1),
+        ([{'d1': 'B', 'd2': 1}, {'d1': 'B', 'd2': 2}, {'d1': 'B', 'd2': 3}], 1),
+        ([{'d1': 'C', 'd2': 1}, {'d1': 'C', 'd2': 2}, {'d1': 'C', 'd2': 3}], 1),
+        ([{'d1': 'D', 'd2': 1}, {'d1': 'D', 'd2': 2}, {'d1': 'D', 'd2': 3}], 1),
+        ([{'d1': 'A', 'd3': 'x'}, {'d1': 'A', 'd3': 'y'}], 1),
+        ([{'d1': 'B', 'd3': 'x'}, {'d1': 'B', 'd3': 'y'}], 1),
+        ([{'d1': 'C', 'd3': 'x'}, {'d1': 'C', 'd3': 'y'}], 1),
+        ([{'d1': 'D', 'd3': 'x'}, {'d1': 'D', 'd3': 'y'}], 1),
+        ([{'d2': 1, 'd3': 'x'}, {'d2': 1, 'd3': 'y'}], 2),
+        ([{'d2': 2, 'd3': 'x'}, {'d2': 2, 'd3': 'y'}], 2),
+        ([{'d2': 3, 'd3': 'x'}, {'d2': 3, 'd3': 'y'}], 2),
+      ]))
+
   with description('inference groups'):
     with it('returns nothing for 2 dimensions'):
       self.subject(name=['A', 'B'])
