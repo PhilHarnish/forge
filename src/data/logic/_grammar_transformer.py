@@ -287,7 +287,18 @@ def _dimension_definitions(node):
   dimension = node.left.id
   comparator = node.comparators[0]
   if isinstance(comparator, ast.Set):
-    values = comparator.elts
+    values = []
+    for value in comparator.elts:
+      if isinstance(value, _REFERENCE_TYPES):
+        values.append(value)
+      elif (isinstance(value, ast.BinOp) and
+          isinstance(value.op, ast.Mult) and
+          isinstance(value.left, _REFERENCE_TYPES) and
+          isinstance(value.right, ast.Num)):
+        for i in range(value.right.n):
+          values.append(value.left)
+      else:
+        _fail(value, msg='Unable to parse dimension definition value')
     if not all(isinstance(value, _REFERENCE_TYPES) for value in values):
       return None
     return {

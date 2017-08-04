@@ -70,6 +70,15 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.Assign))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('supports *N repeats as shorthand'):
+      node = _grammar_transformer.transform('name in {a, b, c*3}')
+      expected = goal("""
+          a, b, c, c, c = name = dimensions(name=['a', 'b', 'c', 'c', 'c'])
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Assign))
+      expect(to_source(assignment)).to(look_like(expected))
+
     with it('detects dimension created from networkx graphs'):
       node = _grammar_transformer.transform("""
         import networkx
