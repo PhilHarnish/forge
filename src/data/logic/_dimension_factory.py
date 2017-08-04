@@ -19,47 +19,54 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     # Cache of already-requested dimensions.
     self._slice_cache = {}
 
-  def __call__(self, **kwargs):
-    if not kwargs:
-      raise TypeError('kwarg is required')
+  def __call__(self, *args, **kwargs):
+    if bool(args) == bool(kwargs):
+      raise TypeError('args OR kwarg is required')
     elif len(kwargs) > 1:
       raise TypeError('Register only one dimension at a time (%s given)' % (
         ', '.join(kwargs.keys())))
-    for dimension, values in kwargs.items():
-      if dimension in self._dimensions:
-        raise TypeError('Dimension "%s" already registered to %s' % (
-          dimension, self._dimensions[dimension]
-        ))
-      self._dimensions[dimension] = self._make_slices(dimension, values)
-      dimension_size = len(values)
-      self._dimension_size[dimension] = dimension_size
-      max_dimension_size = max(self._dimension_size.values())
-      if dimension_size < max_dimension_size:
-        # There could be up to `max_dimension_size` duplicates.
-        max_cardinality = max_dimension_size
+    dimensions = list(args) + list(kwargs.items())
+    dimension = '_'.join(name for name, values in dimensions)
+    if dimension in self._dimensions:
+      raise TypeError('Dimension "%s" already registered to %s' % (
+        dimension, self._dimensions[dimension]
+      ))
+    inputs = list(values for name, values in dimensions)
+    values = []
+    for input in itertools.product(*inputs):
+      if len(input) > 1:
+        values.append(''.join(map(str, input)))
       else:
-        max_cardinality = 1
-      child_dimensions = []
-      duplicates = False
-      for value in values:
-        if value in self._dimensions:
-          raise TypeError('ID %s collides with dimension of same name' % (
-            value))
-        if value in self._value_to_dimension:
-          duplicates = True
-          if dimension != self._value_to_dimension[value]:
-            raise TypeError('ID %s already reserved by %s' % (
-                value, self._value_to_dimension[value]))
-        self._value_to_dimension[value] = dimension
-        self._value_cardinality[value] += 1
-        child_dimensions.append(self._dimensions[dimension][value])
-      for value in values:
-        self._value_cardinality[value] = max(
-            max_cardinality, self._value_cardinality[value])
-      if not duplicates and all(isinstance(i, int) for i in values):
-        self._compact_dimensions.add(dimension)
-      return _OriginalDimensionSlice(self, {dimension: None}, child_dimensions)
-    raise TypeError('invalid call %s' % kwargs)
+        values.append(input[0])
+    self._dimensions[dimension] = self._make_slices(dimension, values)
+    dimension_size = len(values)
+    self._dimension_size[dimension] = dimension_size
+    max_dimension_size = max(self._dimension_size.values())
+    if dimension_size < max_dimension_size:
+      # There could be up to `max_dimension_size` duplicates.
+      max_cardinality = max_dimension_size
+    else:
+      max_cardinality = 1
+    child_dimensions = []
+    duplicates = False
+    for value in values:
+      if value in self._dimensions:
+        raise TypeError('ID %s collides with dimension of same name' % (
+          value))
+      if value in self._value_to_dimension:
+        duplicates = True
+        if dimension != self._value_to_dimension[value]:
+          raise TypeError('ID %s already reserved by %s' % (
+              value, self._value_to_dimension[value]))
+      self._value_to_dimension[value] = dimension
+      self._value_cardinality[value] += 1
+      child_dimensions.append(self._dimensions[dimension][value])
+    for value in values:
+      self._value_cardinality[value] = max(
+          max_cardinality, self._value_cardinality[value])
+    if not duplicates and all(isinstance(i, int) for i in values):
+      self._compact_dimensions.add(dimension)
+    return _OriginalDimensionSlice(self, {dimension: None}, child_dimensions)
 
   def _make_slices(self, dimension, values):
     result = collections.OrderedDict()

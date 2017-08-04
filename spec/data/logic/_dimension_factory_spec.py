@@ -6,8 +6,15 @@ with description('_dimension_factory._DimensionFactory'):
     self.subject = _dimension_factory._DimensionFactory()
 
   with description('constructor'):
-    with it('handles empty input'):
+    with it('rejects empty input'):
       expect(calling(self.subject)).to(raise_error)
+
+    with it('accepts args'):
+      expect(calling(self.subject, ('name', ['A']))).not_to(raise_error)
+
+    with it('accepts multiple args'):
+      expect(calling(self.subject, ('name', ['A']), ('age', [1]))).not_to(
+          raise_error)
 
     with it('handles kwargs'):
       expect(calling(self.subject, name=['A'])).not_to(raise_error)
@@ -24,6 +31,17 @@ with description('_dimension_factory._DimensionFactory'):
         expect(dimension).to(have_len(2))
         for slice in dimension.values():
           expect(slice).to(be_a(_dimension_slice._DimensionSlice))
+
+    with it('supports cross-product dimensions'):
+      self.subject(
+          ('room', ['A', 'B']),
+          ('floor', [1, 2]),
+          ('side', ['L', 'R']),
+      )
+      dimensions = self.subject.dimensions()
+      expect(dimensions).to(have_key('room_floor_side'))
+      expect(list(dimensions['room_floor_side'].keys())).to(equal(
+          ['A1L', 'A1R', 'A2L', 'A2R', 'B1L', 'B1R', 'B2L', 'B2R']))
 
     with it('prevents duplicate dimension registration'):
       self.subject(name=['A', 'B'])
