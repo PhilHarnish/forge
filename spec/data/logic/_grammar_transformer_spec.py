@@ -79,6 +79,18 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.Assign))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('supports cross-product dimensions'):
+      node = _grammar_transformer.transform('(a, b) in ({x, y}, {1, 2, 3})')
+      expected = goal("""
+          (x1, x2, x3, y1, y2, y3), _ = a, b = a_b = dimensions(
+              ['a', ['x', 'y']],
+              ['b', [1, 2, 3]],
+          )
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Assign))
+      expect(to_source(assignment)).to(look_like(expected))
+
     with it('detects dimension created from networkx graphs'):
       node = _grammar_transformer.transform("""
         import networkx

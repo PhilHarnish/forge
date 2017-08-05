@@ -1,4 +1,5 @@
 import ast
+import itertools
 import re
 import textwrap
 
@@ -47,6 +48,9 @@ _DIMENSION_DEFINITION_OPERATORS = (
 )
 
 
+_STORE = ast.Store()
+
+
 def transform(program):
   cleaned = textwrap.dedent(program.strip('\n'))
   lines = cleaned.split('\n')
@@ -64,13 +68,22 @@ class _GrammarTransformer(ast.NodeTransformer):
     super(_GrammarTransformer, self).__init__()
     self._references = {}
 
-  def _register_references(self, *references):
-    for reference in references:
-      canonical_reference_name = _canonical_reference_name(reference)
-      self._references[canonical_reference_name] = ast.Name(
-          id=canonical_reference_name,
-          ctx=ast.Load(),
-      )
+  def _register_reference(self, reference):
+    if reference == '_':
+      return
+    canonical_reference_name = _canonical_reference_name(reference)
+    self._references[canonical_reference_name] = ast.Name(
+        id=canonical_reference_name,
+        ctx=ast.Load(),
+    )
+
+  def _find_and_register_references(self, targets):
+    for target in targets:
+      if isinstance(target, ast.Tuple):
+        self._find_and_register_references(target.elts)
+      elif isinstance(target, ast.Name):
+        self._register_reference(target.id)
+
 
   def visit_BoolOp(self, node):
     self.generic_visit(node)
@@ -114,23 +127,38 @@ class _GrammarTransformer(ast.NodeTransformer):
     dimensions = _dimension_definitions(value)
     if not dimensions:
       return self.generic_visit(node)
-    elif len(dimensions) == 1:
+    elif isinstance(dimensions, dict):
+      if len(dimensions) > 1:
+        _fail(node,
+            msg='For cross-product dimensions use {a, b} in ([...], [...])')
       dimension, values = next(iter(dimensions.items()))
       targets = []
+      self._register_reference(dimension)
       try:
         # Treat "values" like an iterable.
-        self._register_references(dimension, *values)
+        for reference in values:
+          self._register_reference(reference)
         targets.append(_dimension_target_tuple(values))
       except TypeError:
         # Otherwise assume "values" cannot be unpacked.
-        self._register_references(dimension)
+        pass
       targets.append(_dimension_target_dimension(dimension))
-      node = ast.Assign(
+      return ast.Assign(
           targets=targets,
           value=_dimension_value(dimension, values),
       )
-      return node
-    _fail(node)
+    elif isinstance(dimensions, tuple):
+      targets, args = dimensions
+      self._find_and_register_references(targets)
+      return ast.Assign(
+          targets=targets,
+          value=ast.Call(
+              func=ast.Name(id='dimensions', ctx=ast.Load()),
+              args=args,
+              keywords=[],
+          )
+      )
+    _fail(node, msg='Unable to transform dimension definition')
 
   def visit_For(self, node):
     node.target = self.visit(node.target)
@@ -249,9 +277,9 @@ def _fail(node, msg='Visit error'):
 
 
 def _canonical_reference_name(value):
-  if isinstance(value, str):
-    return value.replace(' ', '_').replace('-', '_').lower()
-  return '_%s' % value
+  if not isinstance(value, str) or value[0].isdigit():
+    value = '_%s' % value
+  return value.replace(' ', '_').replace('-', '_').lower()
 
 
 def _constrain_expr(node):
@@ -277,18 +305,85 @@ def _dimension_definitions(node):
   # a <= {1, 2, 3} style OR a in {1, 2, 3} style.
   compare_match = (
       isinstance(node, ast.Compare) and
-      isinstance(node.left, ast.Name) and
       len(node.ops) == 1 and
       isinstance(node.ops[0], _DIMENSION_DEFINITION_OPERATORS) and
       len(node.comparators) == 1
   )
   if not compare_match:
     return None
+  if isinstance(node.left, ast.Name):
+    return _single_dimension_definition(node)
+  if isinstance(node.left, ast.Tuple):
+    return _cross_product_dimension_definition(node)
+  return None
+
+
+def _single_dimension_definition(node):
   dimension = node.left.id
   comparator = node.comparators[0]
-  if isinstance(comparator, ast.Set):
+  values = _dimension_values(comparator)
+  if values:
+    return {
+      dimension: values
+    }
+  return None
+
+
+def _cross_product_dimension_definition(node):
+  if (not isinstance(node.left, ast.Tuple) or
+      len(node.comparators) != 1 or
+      not isinstance(node.comparators[0], ast.Tuple) or
+      len(node.left.elts) != len(node.comparators[0].elts) or
+      not all(isinstance(n, ast.Name) for n in node.left.elts) or
+      not all(isinstance(n, ast.Set) for n in node.comparators[0].elts)):
+    _fail(node, 'Invalid cross-product dimension definition')
+  ref = ast.parse('(a, b) in ({x, y}, {1, 2, 3})').body[0].value
+  goal = ast.parse("""
+(x1, x2, x3, y1, y2, y3), _ = a, b = a_b = dimensions(
+    ('a', ['x', 'y']),
+    ('b', [1, 2, 3]),
+)
+      """).body[0]
+  targets = []
+  dimension_names = [n.id for n in node.left.elts]
+  dimension_values = [_dimension_values(n) for n in node.comparators[0].elts]
+  # Goal: (x1, x2, x3, y1, y2, y3), _, ... = a, b, ... = a_b_...
+  # 1: (x1, x2, x3, y1, y2, y3), _, ...
+  # 1a: ^---^---^---^---^---^...
+  elts = []
+  for parts in itertools.product(*dimension_values):
+    elts.append(_dimension_target_dimension(''.join(map(str, parts))))
+  # 1: (x1, x2, x3, y1, y2, y3), _, ...
+  # 1b: ^------------------------^--^...
+  group_elts = [
+    ast.Tuple(
+        elts=elts,
+        ctx=_STORE,
+    )
+  ] + [ast.Name(id='_', ctx=_STORE)] * (len(dimension_names) - 1)
+  targets.append(
+      ast.Tuple(
+          elts=group_elts,
+          ctx=_STORE,
+      )
+  )
+  # 2: a, b, ...
+  targets.append(ast.Tuple(
+      elts=[_dimension_target_dimension(name) for name in dimension_names],
+      ctx=_STORE,
+  ))
+  # 3: a_b_...
+  targets.append(_dimension_target_dimension('_'.join(dimension_names)))
+  # Goal args: [('a', ['x', 'y']), ('b', [1, 2, 3]), ...
+  dimension_args = zip(dimension_names, dimension_values)
+  args = [_ast_factory.coerce_value(arg) for arg in dimension_args]
+  return targets, args
+
+
+def _dimension_values(node):
+  if isinstance(node, ast.Set):
     values = []
-    for value in comparator.elts:
+    for value in node.elts:
       if isinstance(value, _REFERENCE_TYPES):
         values.append(value)
       elif (isinstance(value, ast.BinOp) and
@@ -301,13 +396,10 @@ def _dimension_definitions(node):
         _fail(value, msg='Unable to parse dimension definition value')
     if not all(isinstance(value, _REFERENCE_TYPES) for value in values):
       return None
-    return {
-      dimension: [_dimension_name(value) for value in values]
-    }
-  elif isinstance(comparator, ast.Call):
-    return {
-      dimension: comparator,
-    }
+    return [_dimension_name(value) for value in values]
+  elif isinstance(node, ast.Call):
+    return node
+  return None
 
 
 def _dimension_name(node):
@@ -323,19 +415,15 @@ def _dimension_name(node):
 def _dimension_target_tuple(values):
   targets = []
   for value in values:
-    name = _canonical_reference_name(value)
-    targets.append(ast.Name(
-        id=name,
-        ctx=ast.Store(),
-    ))
+    targets.append(_dimension_target_dimension(value))
   return ast.Tuple(
       elts=targets,
-      ctx=ast.Store(),
+      ctx=_STORE,
   )
 
 
 def _dimension_target_dimension(dimension):
-  return ast.Name(id=dimension, ctx=ast.Store())
+  return ast.Name(id=_canonical_reference_name(dimension), ctx=_STORE)
 
 
 def _dimension_value(dimension, values):
@@ -397,7 +485,7 @@ def _collect_conditional_assignments(condition, body, orelse):
         right=orelse_conditional_value,
     )
     result.append(ast.Assign(
-        targets=[ast.Name(id=key, ctx=ast.Store())],
+        targets=[ast.Name(id=key, ctx=_STORE)],
         value=value_combined,
     ))
   return result, remaining_body, remaining_orelse
