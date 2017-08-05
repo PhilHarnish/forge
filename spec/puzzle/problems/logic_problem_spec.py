@@ -147,3 +147,12 @@ with description('LogicProblem solutions'):
       Cathy |            CEO |  12
     """))
     expect(problem.solutions()).to(have_len(1))
+
+  with it('tries multiple solvers'):
+    solver = mock.Mock(solve=lambda: False)
+    with mock.patch(
+        'puzzle.problems.logic_problem._solver', return_value=solver
+    ) as solver_fn:
+      problem = logic_problem.LogicProblem('test', [])
+      problem.solutions()
+      expect(solver_fn).to(have_been_called_times(2))

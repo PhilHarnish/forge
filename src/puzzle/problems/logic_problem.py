@@ -39,18 +39,20 @@ class LogicProblem(problem.Problem):
 
   def _solve_iter(self):
     model = _model(self.lines)
-    solver = _solver(model)
     seen = set()
-    while solver.solve():
-      if len(seen) >= _SOLUTION_LIMIT:
-        break
-      solution = str(solver)
-      if solution in seen:
-        # FIXME: No idea why this happens with some compacted problems.
-        # Finding out why would be exhausting.
-        continue
-      seen.add(solution)
-      yield str(solver), 1
+    solvers = ['Mistral', 'MiniSat']
+    while not seen and solvers:
+      solver = _solver(model, solvers.pop(0))
+      while solver.solve():
+        if len(seen) >= _SOLUTION_LIMIT:
+          break
+        solution = str(solver)
+        if solution in seen:
+          # FIXME: No idea why this happens with some compacted problems.
+          # Finding out why would be exhausting.
+          continue
+        seen.add(solution)
+        yield str(solver), 1
 
 
 def _parse(lines):
@@ -65,8 +67,8 @@ def _model(lines):
   return variables['model']
 
 
-def _solver(model):
-  return model.load('Mistral')
+def _solver(model, engine):
+  return model.load(engine)
 
 
 def _program_interesting_ratio(module):
