@@ -31,7 +31,7 @@ class _Model(Numberjack.Model):
       elif callable(arg):
         self._deferred.append(arg)
       else:
-        raise TypeError('Model only accepts expressions (given %s)' % arg)
+        raise TypeError('Model only accepts expressions (given "%s")' % arg)
     super(_Model, self).add(converted)
 
   def load(self, solvername, X=None, encoding=None):
