@@ -17,6 +17,7 @@ _INTERESTING_TOP_LEVEL_NODES = (
 _INTERESTING_TOP_LEVEL_EXPRESSIONS = (
   ast.BinOp,  # a | b.
   ast.Compare,  # Dimensions, X <= Y.
+  ast.Call,  # print(...).
 )
 
 

@@ -19,6 +19,19 @@ with description('LogicProblem score'):
       position in range(1, 7 + 1)
     """).split('\n'))).to(equal(1))
 
+  with it('positively identifies a WIP logic problem (with many comments)'):
+    expect(logic_problem.LogicProblem.score(textwrap.dedent("""
+      name in {Beth, Charles, David, Frank, Jessica, Karen, Taylor}
+      movie in {M4a*4, M4b*4, M3*3, M2a*2, M2b*2, M1a, M1b, M1c, M1d, M1e, M1f}
+      # Setup:
+      # Each person listed 3.
+      #for n in name:
+      #  sum(n[m] for m in movie) >= 0
+      #sum(Beth[m] for m in movie)
+      print('Beth', sum(Beth[m] for m in movie))
+      #print('Taylor', sum(Taylor[m] for m in movie))
+    """).split('\n'))).to(equal(1))
+
 with description('LogicProblem parsing'):
   with it('parses empty input'):
     lines = ['']
