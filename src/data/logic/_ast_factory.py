@@ -23,6 +23,8 @@ _OPERATOR_MAP = {
   '>>': ast.RShift,
 }
 
+_LOAD = ast.Load()
+
 
 class AccumulatingExpressionMixin(object):
   def __and__(self, other):
@@ -139,12 +141,12 @@ def coerce_value(value):
   elif isinstance(value, str):
     return ast.Str(s=value)
   elif isinstance(value, _addressable_value.AddressableValue):
-    return ast.Name(id=value.dimension_address(), ctx=ast.Load())
+    return ast.Name(id=value.dimension_address(), ctx=_LOAD)
   # It may be a generator, list, tuple, etc.
   try:
     return ast.List(
         elts=list(coerce_value(v) for v in value),
-        ctx=ast.Load(),
+        ctx=_LOAD,
     )
   except TypeError:
     pass
