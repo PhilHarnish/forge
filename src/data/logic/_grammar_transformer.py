@@ -337,13 +337,6 @@ def _cross_product_dimension_definition(node):
       not all(isinstance(n, ast.Name) for n in node.left.elts) or
       not all(isinstance(n, ast.Set) for n in node.comparators[0].elts)):
     _fail(node, 'Invalid cross-product dimension definition')
-  ref = ast.parse('(a, b) in ({x, y}, {1, 2, 3})').body[0].value
-  goal = ast.parse("""
-(x1, x2, x3, y1, y2, y3), _ = a, b = a_b = dimensions(
-    ('a', ['x', 'y']),
-    ('b', [1, 2, 3]),
-)
-      """).body[0]
   targets = []
   dimension_names = [n.id for n in node.left.elts]
   dimension_values = [_dimension_values(n) for n in node.comparators[0].elts]
