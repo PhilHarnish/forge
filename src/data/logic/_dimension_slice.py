@@ -55,6 +55,7 @@ class _DimensionFilterSlice(_OriginalDimensionSlice):
   Given a list of children, return a sub-slice of children.
   """
   def __init__(self, factory, constraints, children, filter=None):
+    children = [(child, _normalize_ids(source)) for child, source in children]
     super(_DimensionFilterSlice, self).__init__(factory, constraints, children)
     if filter:
       self._filter = filter.copy()
@@ -64,12 +65,26 @@ class _DimensionFilterSlice(_OriginalDimensionSlice):
   def __getattr__(self, item):
     return _DimensionFilterSlice(
         self._factory, self._constraints, self._children,
-        self._filter.union((item,)))
+        self._filter.union(_normalize_ids([item,])))
 
   __getitem__ = __getattr__
 
   def __iter__(self):
     needed = len(self._filter)
+    results = False
     for child, source in self._children:
       if not needed or needed == len(self._filter.intersection(source)):
         yield child
+        results = True
+    if not results:
+      raise AttributeError('No variables match %s' % self._filter)
+
+
+def _normalize_ids(ids):
+  result = []
+  for id in ids:
+    if isinstance(id, str):
+      result.append(id.lower())
+    else:
+      result.append(id)
+  return result

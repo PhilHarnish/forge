@@ -235,3 +235,11 @@ with description('_DimensionFilterSlice'):
       expect(s).to(contain('a1'))
     expect(list(self.subject.a[1].x)).to(have_len(1))
     expect(list(self.subject.a[1].x)).to(equal(['a1x']))
+
+  with it('filter is not case sensitive'):
+    expect(list(self.subject.A)).to(have_len(2 * 3))
+    for s in self.subject.A:
+      expect(s).to(contain('a'))
+
+  with it('raises exception for invalid filters'):
+    expect(lambda: list(self.subject.ASDF)).to(raise_error)
