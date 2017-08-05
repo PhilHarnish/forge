@@ -42,7 +42,8 @@ class LogicProblem(problem.Problem):
     seen = set()
     solvers = ['Mistral', 'MiniSat']
     while not seen and solvers:
-      solver = _solver(model, solvers.pop(0))
+      engine = solvers.pop(0)
+      solver = _solver(model, engine)
       while solver.solve():
         if len(seen) >= _SOLUTION_LIMIT:
           break
@@ -52,6 +53,7 @@ class LogicProblem(problem.Problem):
           # Finding out why would be exhausting.
           continue
         seen.add(solution)
+        self._notes[solution] = ['Solved with %s' % engine]
         yield str(solver), 1
 
 
