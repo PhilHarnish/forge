@@ -67,6 +67,12 @@ class _GrammarTransformer(ast.NodeTransformer):
   def __init__(self):
     super(_GrammarTransformer, self).__init__()
     self._references = {}
+    self._auto_constrain = True
+
+  def _constrain_expr(self, expr):
+    if self._auto_constrain:
+      return _constrain_expr(expr)
+    return expr
 
   def _register_reference(self, reference):
     if reference == '_':
@@ -165,11 +171,11 @@ class _GrammarTransformer(ast.NodeTransformer):
     node.iter = self.visit(node.iter)
     body = []
     for expr in node.body:
-      body.append(_constrain_expr(self.visit(expr)))
+      body.append(self._constrain_expr(self.visit(expr)))
     node.body = body
     orelse = []
     for expr in node.orelse:
-      orelse.append(_constrain_expr(self.visit(expr)))
+      orelse.append(self._constrain_expr(self.visit(expr)))
     node.orelse = orelse
     return node
 
@@ -210,7 +216,7 @@ class _GrammarTransformer(ast.NodeTransformer):
     for assignment in assignments:
       result.append(self.visit(assignment))
     for constraint in constraints:
-      result.append(_constrain_expr(self.visit(constraint)))
+      result.append(self._constrain_expr(self.visit(constraint)))
     return ast.If(
         test=ast.Str(s=astor.to_source(node.test).replace('\n', ' ').strip()),
         body=result,
@@ -248,9 +254,9 @@ class _GrammarTransformer(ast.NodeTransformer):
       # Unwind multiple expressions.
       if isinstance(result, ast.Expr) and isinstance(result.value, ast.Tuple):
         for child in result.value.elts:
-          body.append(_constrain_expr(ast.Expr(value=child)))
+          body.append(self._constrain_expr(ast.Expr(value=child)))
       else:
-        body.append(_constrain_expr(result))
+        body.append(self._constrain_expr(result))
     node.body = body
     return node
 
@@ -265,6 +271,13 @@ class _GrammarTransformer(ast.NodeTransformer):
     if isinstance(node.op, ast.Not):
       node.op = ast.Invert()
     return self.generic_visit(node)
+
+  def visit_With(self, node):
+    original_value = self._auto_constrain
+    self._auto_constrain = False
+    result = self.generic_visit(node)
+    self._auto_constrain = original_value
+    return result
 
 
 def _fail(node, msg='Visit error'):

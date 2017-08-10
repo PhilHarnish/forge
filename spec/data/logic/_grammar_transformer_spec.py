@@ -385,3 +385,23 @@ with description('_GrammarTransformer'):
       """)
       node.body = node.body[-3:]
       expect(to_source(node)).to(look_like(expected))
+
+  with description('visit_With'):
+    with it('ignores constraints inside of `with init`: blocks'):
+      node = _grammar_transformer.transform("""
+        with init:
+          a = []
+          for a, b in foo:
+            local_variable = 'value'
+            a.append(name)
+      """)
+      expected = goal("""
+        with init:
+          a = []
+          for a, b in foo:
+            local_variable = 'value'
+            a.append(name)
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.With))
+      expect(to_source(assignment)).to(look_like(expected))
