@@ -30,7 +30,7 @@ class _Breakpoints(object):
       print('Breakpoint here.')
     setattr(builtins, 'breakpoint', breakpoint)
 
-  def __exit__(self):
+  def __exit__(self, exc_type, exc_val, exc_tb):
     _init_breakpoint_global()
 
 breakpoints = _Breakpoints()
