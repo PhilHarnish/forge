@@ -12,6 +12,7 @@ _CONCLUSIVE_TOP_LEVEL_NODES = (
 )
 # These are less conclusive.
 _INTERESTING_TOP_LEVEL_NODES = (
+  ast.Import,
   ast.Assign,
 )
 _INTERESTING_TOP_LEVEL_EXPRESSIONS = (

@@ -32,6 +32,17 @@ with description('LogicProblem score'):
       #print('Taylor', sum(Taylor[m] for m in movie))
     """).split('\n'))).to(equal(1))
 
+  with it('positively identifies a WIP logic problem (with import)'):
+    expect(logic_problem.LogicProblem.score(textwrap.dedent("""
+      import itertools
+      # 7 rounds.
+      round in range(1, 7 + 1)
+      # One person sits out each round
+      bye in {Beth, Charles, David, Frank, Jessica, Karen, Taylor}
+      # Matches: every pair of people.
+      match in itertools.combinations('BCDFJKT', 2)
+    """).split('\n'))).to(equal(1))
+
 with description('LogicProblem parsing'):
   with it('parses empty input'):
     lines = ['']
