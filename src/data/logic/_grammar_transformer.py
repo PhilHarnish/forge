@@ -57,7 +57,7 @@ def transform(program):
   for i, line in enumerate(lines):
     match = _COMMENT_REGEX.match(line)
     if match and match.groups():
-      lines[i] = repr(match.groups()[1])
+      lines[i] = '%s%s' % (match.groups()[0], repr(match.groups()[1]))
   visited = _GrammarTransformer().visit(ast.parse('\n'.join(lines)))
   ast.fix_missing_locations(visited)
   return visited
@@ -277,7 +277,7 @@ def _fail(node, msg='Visit error'):
 
 
 def _canonical_reference_name(value):
-  if not isinstance(value, str) or value[0].isdigit():
+  if not isinstance(value, str) or (value and value[0].isdigit()):
     value = '_%s' % value
   return value.replace(' ', '_').replace('-', '_').lower()
 

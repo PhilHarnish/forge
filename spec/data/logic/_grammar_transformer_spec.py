@@ -28,6 +28,20 @@ with description('_GrammarTransformer'):
     expect(assignment).to(be_a(ast.Expr))
     expect(to_source(assignment)).to(look_like(expected))
 
+  with it('preserves comment indentation'):
+    program = """
+      with indented:
+        # Example is indented.
+    """
+    node = _grammar_transformer.transform(program)
+    expected = goal('''
+      with indented:
+        """# Example is indented."""
+    ''')
+    assignment = node.body[-1]
+    expect(assignment).to(be_a(ast.With))
+    expect(to_source(assignment)).to(look_like(expected))
+
   with description('visit_Module'):
     with it('prepends header'):
       node = _grammar_transformer.transform('')
