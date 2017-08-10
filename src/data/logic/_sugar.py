@@ -32,3 +32,15 @@ def deferred_call(fn):
     return final_call
 
   return wrapped_call(deferred_fn)
+
+
+class _Init(object):
+  """Implements `with setup:` syntactic sugar in DSL."""
+
+  def __enter__(self):
+    pass
+
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    pass
+
+init = _Init()

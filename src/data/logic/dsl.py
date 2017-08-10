@@ -10,3 +10,5 @@ all = _sugar.wrapped_call(Numberjack.Conjunction)
 any = _sugar.wrapped_call(Numberjack.Disjunction)
 sum = _sugar.wrapped_call(Numberjack.Sum)
 print = _sugar.deferred_call(print)
+
+init = _sugar.init
