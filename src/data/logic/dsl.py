@@ -12,3 +12,5 @@ sum = _sugar.wrapped_call(Numberjack.Sum)
 print = _sugar.deferred_call(print)
 
 init = _sugar.init
+
+variable = _sugar.Variable

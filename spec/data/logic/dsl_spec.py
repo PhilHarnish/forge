@@ -202,3 +202,25 @@ with description('dsl'):
       expect(solutions).to(have_len(len(expected_solutions)))
       for solution, expected in zip(solutions, expected_solutions):
         expect(solution).to(look_like(expected))
+
+    with it('models additional variables'):
+      # Cathy is CEO (constrain the two values with cardinality of 1).
+      self.model(self.Cathy == self.CEO)
+      # CEO is older (constrains CEO to one of the 11 values).
+      self.model(self.CEO.age > self.Project_Manager.age)
+      ceo_is_old = variable('ceo_is_old')
+      self.model(ceo_is_old == (self.CEO == self._11))
+      expect(str(self.model)).to(look_like("""
+      assign:
+        name["Cathy"].occupation["CEO"] in {0,1}
+        occupation["CEO"].age[10] in {0,1}
+        occupation["CEO"].age[11] in {0,1}
+        occupation["Project Manager"].age[10] in {0,1}
+        occupation["Project Manager"].age[11] in {0,1}
+        ceo_is_old in {0,1}
+     
+      subject to:
+        (name["Cathy"].occupation["CEO"] == True)
+        ((10*occupation["CEO"].age[10] + 11*occupation["CEO"].age[11]) > (10*occupation["Project Manager"].age[10] + 11*occupation["Project Manager"].age[11]))
+        (occupation["CEO"].age[11] == ceo_is_old)
+      """))
