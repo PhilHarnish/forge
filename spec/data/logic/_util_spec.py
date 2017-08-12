@@ -1,3 +1,5 @@
+import ast
+
 import Numberjack
 
 from data.logic import _util
@@ -85,3 +87,32 @@ with description('_util'):
       self.solve()
       expect(intermediate1.is_built()).to(be_false)
       expect(calling(_util.numberjack_solution, intermediate1)).to(equal(6))
+
+with description('literal_value'):
+  with before.each:
+    self.node = lambda v: ast.parse(repr(v)).body[0].value
+
+  with it('handles constants'):
+    examples = [None, True, False]
+    for example in examples:
+      expect(call(_util.literal_value, self.node(example))).to(equal(example))
+
+  with it('handles strings'):
+    examples = ['', 'asdf']
+    for example in examples:
+      expect(call(_util.literal_value, self.node(example))).to(equal(example))
+
+  with it('handles numbers'):
+    examples = [0, 1, 1.1]
+    for example in examples:
+      expect(call(_util.literal_value, self.node(example))).to(equal(example))
+
+  with it('handles lists'):
+    examples = [[], [1], [1, False]]
+    for example in examples:
+      expect(call(_util.literal_value, self.node(example))).to(equal(example))
+
+  with it('handles tuples'):
+    examples = [(), (1,), (1, False)]
+    for example in examples:
+      expect(call(_util.literal_value, self.node(example))).to(equal(example))

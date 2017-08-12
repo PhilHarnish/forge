@@ -74,3 +74,18 @@ def numberjack_solution(expr):
     return value
   else:
     raise TypeError('Unable to val/str %s' % expr)
+
+
+def literal_value(node):
+  """Given an AST node returns the python literal value."""
+  if isinstance(node, ast.NameConstant):
+    return node.value
+  elif isinstance(node, ast.Str):
+    return node.s
+  elif isinstance(node, ast.Num):
+    return node.n
+  elif isinstance(node, ast.List):
+    return list(literal_value(v) for v in node.elts)
+  elif isinstance(node, ast.Tuple):
+    return tuple(literal_value(v) for v in node.elts)
+  raise TypeError('Unable to convert literal value %s' % node)
