@@ -1,11 +1,12 @@
 import ast
+import collections
 import itertools
 import re
 import textwrap
 
 import astor
 
-from data.logic import _ast_factory
+from data.logic import _ast_factory, _util
 
 _HEADER = ast.parse("""
 from data.logic.dsl import *
@@ -45,7 +46,16 @@ _COMMENT_REGEX = re.compile(r'^(\s*)(#.*)$')
 _DIMENSION_DEFINITION_OPERATORS = (
   ast.LtE,
   ast.In,
+  ast.Is,
 )
+
+
+_CrossProductDimension = collections.namedtuple(
+    '_CrossProductDimension', ['targets', 'args'])
+_SingleDimension = collections.namedtuple(
+    '_SingleDimension', ['targets', 'args'])
+_VariableDimension = collections.namedtuple(
+    '_VariableDimension', ['targets', 'args'])
 
 
 _STORE = ast.Store()
@@ -90,7 +100,6 @@ class _GrammarTransformer(ast.NodeTransformer):
       elif isinstance(target, ast.Name):
         self._register_reference(target.id)
 
-
   def visit_BoolOp(self, node):
     self.generic_visit(node)
     values = node.values
@@ -133,11 +142,8 @@ class _GrammarTransformer(ast.NodeTransformer):
     dimensions = _dimension_definitions(value)
     if not dimensions:
       return self.generic_visit(node)
-    elif isinstance(dimensions, dict):
-      if len(dimensions) > 1:
-        _fail(node,
-            msg='For cross-product dimensions use {a, b} in ([...], [...])')
-      dimension, values = next(iter(dimensions.items()))
+    elif isinstance(dimensions, _SingleDimension):
+      dimension, values = dimensions
       targets = []
       self._register_reference(dimension)
       try:
@@ -153,13 +159,24 @@ class _GrammarTransformer(ast.NodeTransformer):
           targets=targets,
           value=_dimension_value(dimension, values),
       )
-    elif isinstance(dimensions, tuple):
+    elif isinstance(dimensions, _CrossProductDimension):
       targets, args = dimensions
       self._find_and_register_references(targets)
       return ast.Assign(
           targets=targets,
           value=ast.Call(
               func=ast.Name(id='dimensions', ctx=ast.Load()),
+              args=args,
+              keywords=[],
+          )
+      )
+    elif isinstance(dimensions, _VariableDimension):
+      targets, args = dimensions
+      self._find_and_register_references(targets)
+      return ast.Assign(
+          targets=targets,
+          value=ast.Call(
+              func=ast.Name(id='variable', ctx=ast.Load()),
               args=args,
               keywords=[],
           )
@@ -324,6 +341,8 @@ def _dimension_definitions(node):
   )
   if not compare_match:
     return None
+  if isinstance(node.ops[0], ast.Is):
+    return _variable_definition(node)
   if isinstance(node.left, ast.Name):
     return _single_dimension_definition(node)
   if isinstance(node.left, ast.Tuple):
@@ -331,14 +350,29 @@ def _dimension_definitions(node):
   return None
 
 
+def _variable_definition(node):
+  dimension = node.left
+  targets = [_dimension_target_dimension(dimension.id)]
+  args = []
+  comparator = node.comparators[0]
+  if isinstance(comparator, ast.Name) and comparator.id == 'bool':
+    pass  # "bool" is the default Variable type.
+  elif (
+      isinstance(comparator, ast.Call) and
+      isinstance(comparator.func, ast.Name) and
+      comparator.func.id == 'range'):
+    args.extend(comparator.args)
+  # Name always last argument.
+  args.append(_ast_factory.coerce_value(dimension.id))
+  return _VariableDimension(targets, args)
+
+
 def _single_dimension_definition(node):
   dimension = node.left.id
   comparator = node.comparators[0]
   values = _dimension_values(comparator)
   if values:
-    return {
-      dimension: values
-    }
+    return _SingleDimension(dimension, values)
   return None
 
 
@@ -383,7 +417,7 @@ def _cross_product_dimension_definition(node):
   # Goal args: [('a', ['x', 'y']), ('b', [1, 2, 3]), ...
   dimension_args = zip(dimension_names, dimension_values)
   args = [_ast_factory.coerce_value(arg) for arg in dimension_args]
-  return targets, args
+  return _CrossProductDimension(targets, args)
 
 
 def _dimension_values(node):
@@ -410,12 +444,12 @@ def _dimension_values(node):
 
 def _dimension_name(node):
   if isinstance(node, ast.Name):
-    return node.id
-  elif isinstance(node, ast.Str):
-    return node.s
-  elif isinstance(node, ast.Num):
-    return node.n
-  _fail(node, msg='Unable to identify dimension node name')
+    result = node.id
+  else:
+    result = _util.literal_value(node)
+  if not isinstance(result, (str, int)):
+    _fail(node, msg='Unable to identify dimension node name')
+  return result
 
 
 def _dimension_target_tuple(values):

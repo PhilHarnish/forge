@@ -147,6 +147,34 @@ with description('_GrammarTransformer'):
         'multi_word': 'multi_word'
       }))
 
+  with description('variable definitions'):
+    with it('creates variables from `bool`'):
+      node = _grammar_transformer.transform('foo is bool')
+      expected = goal("""
+          foo = variable('foo')
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Assign))
+      expect(to_source(assignment)).to(look_like(expected))
+
+    with it('creates variables from `range(N)`'):
+      node = _grammar_transformer.transform('foo is range(10)')
+      expected = goal("""
+          foo = variable(10, 'foo')
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Assign))
+      expect(to_source(assignment)).to(look_like(expected))
+
+    with it('creates variables from `range(N, M)`'):
+      node = _grammar_transformer.transform('foo is range(1, 10)')
+      expected = goal("""
+          foo = variable(1, 10, 'foo')
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Assign))
+      expect(to_source(assignment)).to(look_like(expected))
+
   with description('rewrite'):
     with it('free tuples into multi-line expressions'):
       node = _grammar_transformer.transform('A, B, C')
