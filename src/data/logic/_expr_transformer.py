@@ -124,7 +124,7 @@ class ExprTransformer(ast.NodeTransformer):
     return self._model.resolve(node.id)
 
   def visit_NameConstant(self, node):
-    return node.value
+    return self._model.resolve_value(node.value)
 
   def visit_Num(self, node):
     return self._model.resolve_value(node.n)
@@ -142,8 +142,7 @@ class ExprTransformer(ast.NodeTransformer):
 
 def _fail(node, msg='Visit error'):
   try:
-    raise NotImplementedError('%s (in ast.%s). Source:\n\t\t\t%s' % (
-      msg, node.__class__.__name__, astor.to_source(node)))
+    raise NotImplementedError('%s (in %s). Source:\n\t\t\t%s' % (
+      msg, node.__class__, astor.to_source(node)))
   except:  # Astor was unable to convert the source.
-    raise NotImplementedError('%s (in ast.%s).' % (
-        msg, node.__class__.__name__))
+    raise NotImplementedError('%s (in %s).' % (msg, node.__class__))
