@@ -40,11 +40,11 @@ with description('compile'):
     expect(transformed._constraints).to(equal({'fruit': 'cherries'}))
 
   with it('fails to visit unsupported nodes'):
-    expect(calling(self.transformer.compile, ast.Await)).to(
+    expect(calling(self.transformer.compile, ast.Await())).to(
         raise_error(NotImplementedError))
-    expect(calling(self.transformer.visit, ast.Await)).to(
+    expect(calling(self.transformer.visit, ast.Await())).to(
         raise_error(NotImplementedError))
-    expect(calling(self.transformer.generic_visit, ast.Await)).to(
+    expect(calling(self.transformer.generic_visit, ast.Await())).to(
         raise_error(NotImplementedError))
 
   with it('supports precise (2d) assignment'):
