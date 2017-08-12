@@ -58,6 +58,7 @@ _VariableDimension = collections.namedtuple(
     '_VariableDimension', ['targets', 'args'])
 
 
+_LOAD = ast.Load()
 _STORE = ast.Store()
 
 
@@ -87,11 +88,8 @@ class _GrammarTransformer(ast.NodeTransformer):
   def _register_reference(self, reference):
     if reference == '_':
       return
-    canonical_reference_name = _canonical_reference_name(reference)
-    self._references[canonical_reference_name] = ast.Name(
-        id=canonical_reference_name,
-        ctx=ast.Load(),
-    )
+    name = _dimension_name(reference, ctx=_LOAD)
+    self._references[name.id] = name
 
   def _find_and_register_references(self, targets):
     for target in targets:
@@ -154,7 +152,7 @@ class _GrammarTransformer(ast.NodeTransformer):
       except TypeError:
         # Otherwise assume "values" cannot be unpacked.
         pass
-      targets.append(_dimension_target_dimension(dimension))
+      targets.append(_dimension_name(dimension, _STORE))
       return ast.Assign(
           targets=targets,
           value=_dimension_value(dimension, values),
@@ -165,7 +163,7 @@ class _GrammarTransformer(ast.NodeTransformer):
       return ast.Assign(
           targets=targets,
           value=ast.Call(
-              func=ast.Name(id='dimensions', ctx=ast.Load()),
+              func=ast.Name(id='dimensions', ctx=_LOAD),
               args=args,
               keywords=[],
           )
@@ -176,7 +174,7 @@ class _GrammarTransformer(ast.NodeTransformer):
       return ast.Assign(
           targets=targets,
           value=ast.Call(
-              func=ast.Name(id='variable', ctx=ast.Load()),
+              func=ast.Name(id='variable', ctx=_LOAD),
               args=args,
               keywords=[],
           )
@@ -352,7 +350,7 @@ def _dimension_definitions(node):
 
 def _variable_definition(node):
   dimension = node.left
-  targets = [_dimension_target_dimension(dimension.id)]
+  targets = [_dimension_name(dimension.id, _STORE)]
   args = []
   comparator = node.comparators[0]
   if isinstance(comparator, ast.Name) and comparator.id == 'bool':
@@ -392,7 +390,7 @@ def _cross_product_dimension_definition(node):
   # 1a: ^---^---^---^---^---^...
   elts = []
   for parts in itertools.product(*dimension_values):
-    elts.append(_dimension_target_dimension(''.join(map(str, parts))))
+    elts.append(_dimension_name(''.join(map(str, parts)), _STORE))
   # 1: (x1, x2, x3, y1, y2, y3), _, ...
   # 1b: ^------------------------^--^...
   group_elts = [
@@ -409,11 +407,11 @@ def _cross_product_dimension_definition(node):
   )
   # 2: a, b, ...
   targets.append(ast.Tuple(
-      elts=[_dimension_target_dimension(name) for name in dimension_names],
+      elts=[_dimension_name(name, _STORE) for name in dimension_names],
       ctx=_STORE,
   ))
   # 3: a_b_...
-  targets.append(_dimension_target_dimension('_'.join(dimension_names)))
+  targets.append(_dimension_name('_'.join(dimension_names), _STORE))
   # Goal args: [('a', ['x', 'y']), ('b', [1, 2, 3]), ...
   dimension_args = zip(dimension_names, dimension_values)
   args = [_ast_factory.coerce_value(arg) for arg in dimension_args]
@@ -436,13 +434,13 @@ def _dimension_values(node):
         _fail(value, msg='Unable to parse dimension definition value')
     if not all(isinstance(value, _REFERENCE_TYPES) for value in values):
       return None
-    return [_dimension_name(value) for value in values]
+    return [_dimension_name_value(value) for value in values]
   elif isinstance(node, ast.Call):
     return node
   return None
 
 
-def _dimension_name(node):
+def _dimension_name_value(node):
   if isinstance(node, ast.Name):
     result = node.id
   else:
@@ -453,17 +451,14 @@ def _dimension_name(node):
 
 
 def _dimension_target_tuple(values):
-  targets = []
-  for value in values:
-    targets.append(_dimension_target_dimension(value))
   return ast.Tuple(
-      elts=targets,
+      elts=[_dimension_name(value, _STORE) for value in values],
       ctx=_STORE,
   )
 
 
-def _dimension_target_dimension(dimension):
-  return ast.Name(id=_canonical_reference_name(dimension), ctx=_STORE)
+def _dimension_name(dimension, ctx):
+  return ast.Name(id=_canonical_reference_name(dimension), ctx=ctx)
 
 
 def _dimension_value(dimension, values):
