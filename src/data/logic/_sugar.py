@@ -1,5 +1,7 @@
 import ast
 
+import Numberjack
+
 from data.logic import _ast_factory
 
 
@@ -9,6 +11,17 @@ class _AccumulatingCall(ast.Call, _ast_factory.AccumulatingExpressionMixin):
 
 # Cloak as an "Expr" object to blend in with AST libraries.
 _AccumulatingCall.__name__ = 'Call'
+
+
+class Variable(ast.NameConstant, _ast_factory.AccumulatingExpressionMixin):
+  """Overloads operators and accumulate expressions at runtime."""
+
+  def __init__(self, *args):
+    super(Variable, self).__init__(value=Numberjack.Variable(*args))
+
+
+# Cloak as an "NameConstant" object to blend in with AST libraries.
+Variable.__name__ = 'NameConstant'
 
 
 def wrapped_call(fn):
