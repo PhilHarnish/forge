@@ -87,6 +87,20 @@ with description('_dimension_factory._DimensionFactory'):
         ([{'name': 'C', 'number': 5}, {'name': 'C', 'number': 6}], 1),
       ]))
 
+    with it('returns 2D rows and columns with different number of duplicates'):
+      # 2-3 of each of these.
+      self.subject(dupes=[3, 3, 2, 2, 2, 1, 1])
+      # Only 1 "B".
+      self.subject(one=['A', 'A', 'A', 'A', 'A', 'A', 'B'])
+      groups = self.subject.cardinality_groups()
+      expect(groups).to(equal([
+        ([{'dupes': 3, 'one': 'A'}, {'dupes': 2, 'one': 'A'},
+          {'dupes': 1, 'one': 'A'}], 3),
+        # This ensures B appears in only one of 1, 2, or 3 (1 time).
+        ([{'dupes': 3, 'one': 'B'}, {'dupes': 2, 'one': 'B'},
+          {'dupes': 1, 'one': 'B'}], 1)
+      ]))
+
     with it('returns 3D rows and columns'):
       self.subject(a=['A', 'B'])
       self.subject(b=[1, 2])

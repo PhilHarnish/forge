@@ -161,7 +161,6 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     result = []
     for (x_key, x_values), (y_key, y_values) in itertools.combinations(
         self._dimensions.items(), 2):
-      constraint = {}
       compact, swap = self.compact_dimensions(x_key, y_key)
       # Only attempt to use compacted dimensions when the two dimensions are
       # both the same size, without duplicates.
@@ -169,38 +168,48 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
         (x_key, x_values), (y_key, y_values) = (y_key, y_values), (x_key, x_values)
       if compact:
         cardinality = 0  # 0 indicates all scalars have unique values.
-        constraint[y_key] = None
+        constraint = {
+          y_key: None,
+        }
         group = []
         result.append((group, cardinality))
         for x_value in x_values:
           constraint[x_key] = x_value
           group.append(constraint.copy())
-        continue
-      if self._dimension_size[x_key] >= self._dimension_size[y_key]:
-        # Rows: there are more (or equal) x values than y values.
-        # This implies y values should not repeat for this row.
-        for x_value in x_values:
-          constraint[x_key] = x_value
-          group = []
-          cardinality = self._value_cardinality[x_value]
-          # The maximum sum is # of values in the group.
-          result.append((group, min(cardinality, len(y_values))))
-          for y_value in y_values:
-            constraint[y_key] = y_value
-            group.append(constraint.copy())
-      if self._dimension_size[y_key] >= self._dimension_size[x_key]:
-        # Rows: there are more (or equal) y values than x values.
-        # This implies x values should not repeat for this column.
-        for y_value in y_values:
-          constraint[y_key] = y_value
-          group = []
-          cardinality = self._value_cardinality[y_value]
-          # The maximum sum is # of values in the group.
-          result.append((group, min(cardinality, len(x_values))))
-          for x_value in x_values:
-            constraint[x_key] = x_value
-            group.append(constraint.copy())
+      else:
+        self._append_cardinality_group(result, x_key, x_values, y_key, y_values)
+        self._append_cardinality_group(result, y_key, y_values, x_key, x_values)
     return result
+
+  def _append_cardinality_group(
+      self, result, major_key, major_values, minor_key, minor_values):
+    if self._dimension_size[major_key] < self._dimension_size[minor_key]:
+      return
+    min_major_cardinality = min(
+        self._value_cardinality[major_value] for major_value in major_values)
+    min_minor_cardinality = min(
+        self._value_cardinality[minor_value] for minor_value in minor_values)
+    max_minor_cardinality = max(
+        self._value_cardinality[minor_value] for minor_value in minor_values)
+    # Rows: there are more (or equal) major values than minor values.
+    # This implies minor values should not repeat.
+    constraint = {}
+    for major_value in major_values:
+      constraint[major_key] = major_value
+      group = []
+      cardinality = self._value_cardinality[major_value]
+      if min_major_cardinality <= min_minor_cardinality:
+        # The major values are rare enough that they cannot fill up the smallest
+        # minor values set. Okay to proceed.
+        pass
+      elif max_minor_cardinality > cardinality:
+        # There is a minor value which could (theoretically) fill the entire
+        # major set. No sense in proceeding.
+        continue
+      result.append((group, min(cardinality, len(minor_values))))
+      for minor_value in minor_values:
+        constraint[minor_key] = minor_value
+        group.append(constraint.copy())
 
   def inference_groups(self):
     """Aligned cells between 3 boards must not sum to 2.
