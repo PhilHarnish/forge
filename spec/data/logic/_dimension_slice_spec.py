@@ -104,6 +104,15 @@ with description('_DimensionSlice'):
       cherries, = self.factory(fruit=['cherries'])
       expect(str(cherries)).to(equal('fruit["cherries"]'))
 
+  with description('__repr__'):
+    with it('returns address'):
+      cherries, _ = self.factory(fruit=['cherries', 'apples'])
+      expect(repr(cherries)).to(equal('fruit["cherries"]'))
+
+    with it('returns address which evaluates to original'):
+      fruit = cherries, _ = self.factory(fruit=['cherries', 'apples'])
+      expect(eval(repr(cherries))).to(equal(cherries))
+
   with description('__hash__'):
     with it('is used to store slices in dicts'):
       cherries, apples = self.factory(fruit=['cherries', 'apples'])

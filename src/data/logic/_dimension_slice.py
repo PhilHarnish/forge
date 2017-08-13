@@ -20,9 +20,8 @@ class _DimensionSlice(
     return iter(self._factory.resolve_all(self))
 
   def __repr__(self):
-    if len(self._constraints) == 1:
-      return next(iter(self._constraints.values()))
-    return '_DimensionSlice(%s)' % str(self._constraints)
+    """Evaluating dimension address locates `self` in any Logic Problem."""
+    return self.dimension_address()
 
   def __str__(self):
     return self.dimension_address()
