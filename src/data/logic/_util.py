@@ -53,7 +53,10 @@ def numberjack_solution(expr):
   if isinstance(expr, (int, str, bool)):
     return expr
   elif hasattr(expr, 'is_built') and expr.is_built():
-    return expr.get_value()
+    result = expr.get_value()
+    if result is None:
+      raise ValueError('Result for %s is None' % expr)
+    return result
   elif isinstance(expr, Numberjack.Variable):
     raise ValueError('expr "%s" is not built' % expr)
   elif isinstance(expr, Numberjack.Predicate):
