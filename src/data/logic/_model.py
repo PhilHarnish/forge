@@ -207,5 +207,5 @@ class _Model(Numberjack.Model):
             sorted(group, key=lambda i: i[1])
         )
         # This is equivalent to "if fixed then free_1 == free_2":
-        result.append((fixed - (free_1 == free_2)) <= 0)
+        result.append(fixed <= (free_1 == free_2))
     return _predicates.Predicates(result)
