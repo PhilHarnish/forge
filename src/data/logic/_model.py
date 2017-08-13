@@ -162,7 +162,7 @@ class _Model(Numberjack.Model):
       num_zeros = len(group) - 1
       if num_zeros == 0:
         continue
-      elif num_zeros == 1:
+      elif num_zeros == 1 and cardinality == 1:
         # This implies the group is size 2 and behaves like a boolean.
         a, b = group
         result.append(self.get_variables(a) != self.get_variables(b))
