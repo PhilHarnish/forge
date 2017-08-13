@@ -433,3 +433,22 @@ with description('_GrammarTransformer'):
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.With))
       expect(to_source(assignment)).to(look_like(expected))
+
+    with it('ignores if statements inside of `with init`: blocks'):
+      node = _grammar_transformer.transform("""
+        with init:
+          if some_condition:
+            a = 1
+          else:
+            a = 2
+      """)
+      expected = goal("""
+        with init:
+          if some_condition:
+            a = 1
+          else:
+            a = 2
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.With))
+      expect(to_source(assignment)).to(look_like(expected))

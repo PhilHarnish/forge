@@ -215,6 +215,8 @@ class _GrammarTransformer(ast.NodeTransformer):
 
   def visit_If(self, node):
     """Converts "if A: B" to "A <= B"."""
+    if not self._auto_constrain:
+      return self.generic_visit(node)
     if len(node.body) == 0:
       _fail(node, msg='If statement missing body expressions')
     test = self.visit(node.test)
