@@ -199,3 +199,9 @@ both cases the output should produce correct results. Something like this:
        Andy |   Analyst, CEO |  11
         Bob | ProjectManager |  11
       Cathy |            CTO |  12
+
+
+# TODO
+
+* Support `if cond: {A, B, C} == {X, Y, Z}`.
+* Optimize `a.reified == b.reified` to `all(a[x] == b[x] for x in reified)`.
