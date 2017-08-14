@@ -139,6 +139,9 @@ class _GrammarTransformer(ast.NodeTransformer):
     value = node.value
     dimensions = _dimension_definitions(value)
     if not dimensions:
+      result = _mutual_equality_expression(node)
+      if result != node:
+        return self.visit(result)
       return self.generic_visit(node)
     elif isinstance(dimensions, _SingleDimension):
       dimension, values = dimensions
@@ -586,4 +589,56 @@ def _conditional_value_if_bool(condition, value, boolean):
       ),
       op=ast.Mult(),
       right=value,
+  )
+
+
+def _mutual_equality_expression(node):
+  result = _mutual_equality_expression_value(node.value)
+  return result or node
+
+
+def _mutual_equality_expression_value(node):
+  if not (isinstance(node, ast.Compare) and
+    isinstance(node.left, ast.Set) and len(node.ops) == 1 and
+    isinstance(node.ops[0], ast.Eq) and
+    isinstance(node.comparators[0], ast.Set)):
+    return None
+  return _mutual_equality_for(node.left, node.comparators[0])
+
+def _mutual_equality_for(a, b):
+  if len(a.elts) > len(b.elts):
+    a, b = b, a
+  return ast.For(
+      target=ast.Name(id='__x', ctx=_STORE),
+      iter=a,
+      body=[
+        ast.Expr(value=ast.Compare(
+            left=ast.Call(
+                func=ast.Name(id='sum', ctx=_LOAD),
+                args=[
+                  ast.GeneratorExp(
+                      elt=ast.Subscript(
+                          value=ast.Name(id='__x', ctx=_LOAD),
+                          slice=ast.Index(
+                              value=ast.Name(id='__y', ctx=_LOAD),
+                          ),
+                          ctx=_LOAD,
+                      ),
+                      generators=[
+                        ast.comprehension(
+                            target=ast.Name(id='__y', ctx=_STORE),
+                            iter=b,
+                            ifs=[],
+                            is_async=0,
+                        ),
+                      ],
+                  ),
+                ],
+                keywords=[],
+            ),
+            ops=[ast.Eq()],
+            comparators=[ast.Num(n=1)],
+        )),
+      ],
+      orelse=[],
   )
