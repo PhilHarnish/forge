@@ -48,6 +48,10 @@ with description('_util'):
     with it('merges non-overlapping dimensions'):
       expect(_util.combine({'a': 1}, {'b': 2})).to(equal({'a': 1, 'b': 2}))
 
+    with it('rejects duplicates'):
+      expect(calling(_util.combine, {'a': 1}, {'a': 2})).to(
+          raise_error(KeyError))
+
   with description('numberjack_solution'):
     with before.each:
       self.a = Numberjack.Variable('a')

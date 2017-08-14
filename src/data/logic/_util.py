@@ -37,7 +37,7 @@ def combine(a, b):
       combined[key] = value
     elif value is None:
       pass  # combined already has a more specific version of key.
-    elif combined[key] != value:
+    else:
       raise KeyError('%s is over constrained (both %s and %s)' % (
         key, combined[key], value,
       ))
