@@ -12,6 +12,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     self._compact_dimensions = set()
     # Map of dimension: size (range of accepted values, including duplicates).
     self._dimension_size = {}
+    # Maximum dimension size seen. Largest dimension should be first.
+    self._max_dimension_size = 0
     # Map of identifier: dimension.
     self._value_to_dimension = {}
     # Map of value: cardinality (number of duplicates).
@@ -42,10 +44,16 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     self._dimensions[dimension] = self._make_slices(dimension, values)
     dimension_size = len(values)
     self._dimension_size[dimension] = dimension_size
-    max_dimension_size = max(self._dimension_size.values())
-    if dimension_size < max_dimension_size:
+    if not self._max_dimension_size:
+      self._max_dimension_size = dimension_size
+    elif dimension_size > self._max_dimension_size:
+      raise ValueError(
+          '"%s" exceeds max dimension size (%x) set by first dimension %s' % (
+            dimension, self._max_dimension_size, next(iter(self._dimensions)),
+          ))
+    if dimension_size < self._max_dimension_size:
       # There could be up to `max_dimension_size` duplicates.
-      max_cardinality = max_dimension_size
+      max_cardinality = self._max_dimension_size
     else:
       max_cardinality = 1
     child_dimensions = []
@@ -166,6 +174,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       # both the same size, without duplicates.
       if swap:
         (x_key, x_values), (y_key, y_values) = (y_key, y_values), (x_key, x_values)
+      x_size = self._dimension_size[x_key]
+      y_size = self._dimension_size[y_key]
       if compact:
         cardinality = 0  # 0 indicates all scalars have unique values.
         constraint = {
@@ -176,6 +186,12 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
         for x_value in x_values:
           constraint[x_key] = x_value
           group.append(constraint.copy())
+      elif (x_size < self._max_dimension_size and
+          y_size < self._max_dimension_size and
+          x_size * y_size > self._max_dimension_size):
+        # If x and y have duplicates and fewer than max dimensions no
+        # enforcement is possible.
+        self._append_cardinality_max(result, x_key, x_values, y_key, y_values)
       else:
         self._append_cardinality_group(result, x_key, x_values, y_key, y_values)
         self._append_cardinality_group(result, y_key, y_values, x_key, x_values)
@@ -210,6 +226,17 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       for minor_value in minor_values:
         constraint[minor_key] = minor_value
         group.append(constraint.copy())
+
+  def _append_cardinality_max(
+      self, result, major_key, major_values, minor_key, minor_values):
+    group = []
+    result.append((group, self._max_dimension_size))
+    for major_value in major_values:
+      for minor_value in minor_values:
+        group.append({
+          major_key: major_value,
+          minor_key: minor_value,
+        })
 
   def inference_groups(self):
     """Aligned cells between 3 boards must not sum to 2.
