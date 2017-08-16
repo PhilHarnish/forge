@@ -204,7 +204,6 @@ with description('_model._Model usage'):
       self.model(self.andy.cherries[10] == True)
       self.model(self.bob.dates[11] == True)
       self.model(self.cynthia.figs[11] == True)
-      # TODO: Fix dimensional inference.
       expect(self.model.load('Mistral').solve()).to(be_true)
       column_headings, cells = self.model.get_solutions()
       expect(column_headings).to(have_len(3))
@@ -219,6 +218,22 @@ with description('_model._Model usage'):
         [['bob'], ['dates'], [11]],
         [['cynthia'], ['figs'], [11]]
       ]))
+
+  with description('get_solutions_grid'):
+    with it('returns a 4x3 table'):
+      self.model(self.andy.cherries[10] == True)
+      self.model(self.bob.dates[11] == True)
+      self.model(self.cynthia.figs[11] == True)
+      expect(self.model.load('Mistral').solve()).to(be_true)
+      expect(self.model.get_solutions_grid()).to(look_like("""
+      *	cherries	dates	figs		10	11	
+      andy	o	x	x		o	x	
+      bob	x	o	x		x	o	
+      cynthia	x	x	o		x	o	
+
+      10	o	x	x	
+      11	x	o	o	
+      """))
 
   with description('dimension_constraints'):
     with it('enforces cardinality constraints (with duplicate scalar values)'):

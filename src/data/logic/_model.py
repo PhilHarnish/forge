@@ -131,13 +131,14 @@ class _Model(Numberjack.Model):
       ])
 
   def get_solutions(self):
+    """Returns table headers and rows."""
     column_headers = list(self._dimension_factory.dimensions().keys())
-    cells = []
+    rows = []
     dimensions = list(self._dimension_factory.dimensions().items())
     first_header, first_values = dimensions[0]
     for first_value in first_values:
       row = [[first_value]]
-      cells.append(row)
+      rows.append(row)
       for column_header, column_values in dimensions[1:]:
         true_values = []
         row.append(true_values)
@@ -148,7 +149,46 @@ class _Model(Numberjack.Model):
           })
           if variable.value() == 1:
             true_values.append(column_value)
-    return column_headers, cells
+    return column_headers, rows
+
+  def get_solutions_grid(self):
+    """Returns a large, traditional logic puzzle grid in tab-separated str.
+
+    Intended to be used with spreadsheet software.
+    """
+    # Result with multiple dimensions is organized like so:
+    # Columns: 0, n, n-1, n-2, ... 2
+    # Rows: 1, 2, 3, ..., n
+    dimensions = list(self._dimension_factory.dimensions().items())
+    rows = []
+    headers = ['*']
+    for y_group in range(1, len(dimensions)):
+      _, y_values = dimensions[y_group]
+      for y_value in y_values:
+        headers.append(str(y_value))
+      headers.append('')
+    rows.append('\t'.join(headers))
+    for x_group in [0] + list(range(len(dimensions) - 1, 1, -1)):
+      x_value_key, x_values = dimensions[x_group]
+      for x_value in x_values:
+        row = [str(x_value)]
+        for y_group in range(1, len(dimensions)):
+          y_value_key, y_values = dimensions[y_group]
+          if x_value_key == y_value_key:
+            break
+          for y_value in y_values:
+            variable = self.get_variables({
+              x_value_key: x_value,
+              y_value_key: y_value,
+            })
+            if variable.value() == 1:
+              row.append('o')
+            else:
+              row.append('x')
+          row.append('')  # Spacer between groups.
+        rows.append('\t'.join(row))
+      rows.append('')  # Spacer between groups.
+    return '\n'.join(rows)
 
   def dimension_constraints(self):
     return (
