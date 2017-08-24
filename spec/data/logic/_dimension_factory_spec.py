@@ -164,14 +164,18 @@ with description('_dimension_factory._DimensionFactory'):
       self.subject(c=['x', 'y'])
       groups = self.subject.inference_groups()
       expect(groups).to(equal([
-        (({'a': 'A', 'b': 1}, 2), ({'a': 'A', 'c': 'x'}, 1), (
-          {'c': 'x', 'b': 1}, 2)),
-        (({'a': 'A', 'b': 1}, 2), ({'a': 'A', 'c': 'y'}, 1), (
-          {'c': 'y', 'b': 1}, 2)),
-        (({'a': 'B', 'b': 1}, 2), ({'a': 'B', 'c': 'x'}, 1), (
-          {'c': 'x', 'b': 1}, 2)),
-        (({'a': 'B', 'b': 1}, 2), ({'a': 'B', 'c': 'y'}, 1), (
-          {'c': 'y', 'b': 1}, 2)),
+        _dimension_factory.Inference(group=[
+          {'a': 'A', 'c': 'x'}, {'a': 'A', 'b': 1}, {'b': 1, 'c': 'x'}
+        ], cardinalities=[1, 2, 2]),
+        _dimension_factory.Inference(group=[
+          {'a': 'A', 'c': 'y'}, {'a': 'A', 'b': 1}, {'b': 1, 'c': 'y'}
+        ], cardinalities=[1, 2, 2]),
+        _dimension_factory.Inference(group=[
+          {'a': 'B', 'c': 'x'}, {'a': 'B', 'b': 1}, {'b': 1, 'c': 'x'}
+        ], cardinalities=[1, 2, 2]),
+        _dimension_factory.Inference(group=[
+          {'a': 'B', 'c': 'y'}, {'a': 'B', 'b': 1}, {'b': 1, 'c': 'y'}
+        ], cardinalities=[1, 2, 2])
       ]))
 
     with it('returns results for 3 dimensions with uneven sizes'):
@@ -180,12 +184,15 @@ with description('_dimension_factory._DimensionFactory'):
       self.subject(c=['y'])
       groups = self.subject.inference_groups()
       expect(groups).to(equal([
-        (({'a': 'A', 'b': 'x'}, 3), ({'a': 'A', 'c': 'y'}, 3), (
-          {'b': 'x', 'c': 'y'}, 9)),
-        (({'a': 'B', 'b': 'x'}, 3), ({'a': 'B', 'c': 'y'}, 3), (
-          {'b': 'x', 'c': 'y'}, 9)),
-        (({'a': 'C', 'b': 'x'}, 3), ({'a': 'C', 'c': 'y'}, 3), (
-          {'b': 'x', 'c': 'y'}, 9))
+        _dimension_factory.Inference(group=[
+          {'a': 'A', 'b': 'x'}, {'a': 'A', 'c': 'y'}, {'b': 'x', 'c': 'y'}
+        ], cardinalities=[3, 3, 9]),
+        _dimension_factory.Inference(group=[
+          {'a': 'B', 'b': 'x'}, {'a': 'B', 'c': 'y'}, {'b': 'x', 'c': 'y'}
+        ], cardinalities=[3, 3, 9]),
+        _dimension_factory.Inference(group=[
+          {'a': 'C', 'b': 'x'}, {'a': 'C', 'c': 'y'}, {'b': 'x', 'c': 'y'}
+        ], cardinalities=[3, 3, 9])
       ]))
 
   with description('resolve'):

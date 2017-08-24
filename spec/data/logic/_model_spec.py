@@ -236,8 +236,13 @@ with description('_model._Model usage'):
       """))
 
   with description('dimension_constraints'):
+
+
     with it('enforces cardinality constraints (with duplicate scalar values)'):
-      result = self.model._dimensional_cardinality_constraints()
+      result = self.model.dimension_constraints(types=(
+        _dimension_factory.Cardinality,
+        _dimension_factory.UniqueCardinality,
+      ))
       s = '\n'.join(sorted(
           str(result).replace(' | 0 in [1,1] 1 in [1,1] ', '').split('\n')
       ))
@@ -266,7 +271,10 @@ with description('_model._Model usage'):
       self.factory(age=[10, 11, 12])
       self.factory(name=['andy', 'bob', 'cynthia'])
       self.factory(fruit=['cherries', 'dates', 'figs'])
-      result = self.model._dimensional_cardinality_constraints()
+      result = self.model.dimension_constraints(types=(
+        _dimension_factory.Cardinality,
+        _dimension_factory.UniqueCardinality,
+      ))
       s = '\n'.join(sorted(
           str(result).replace(' | 0 in [1,1] 1 in [1,1] ', '').split('\n')
       ))
@@ -283,7 +291,8 @@ with description('_model._Model usage'):
 
 
     with it('enforces inference constraints'):
-      result = self.model._dimensional_inference_constraints()
+      result = self.model.dimension_constraints(
+          types=_dimension_factory.Inference)
       expect(result).to(have_len(18))
       s = '\n'.join(sorted(
           re.sub(r'\.|name|fruit|age', '', str(result)).split('\n')

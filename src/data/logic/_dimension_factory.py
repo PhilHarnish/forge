@@ -10,7 +10,7 @@ UniqueCardinality = collections.namedtuple(
 MaxCardinality = collections.namedtuple(
     'MaxCardinality', field_names=['group', 'max_cardinality'])
 Inference = collections.namedtuple(
-    'Cardinality', field_names=['group', 'cardinality'])
+    'Inference', field_names=['group', 'cardinalities'])
 
 
 class _DimensionFactory(_dimension_slice._DimensionSlice):
@@ -117,7 +117,10 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     constraints = slice.dimension_constraints()
     if dimension not in constraints or constraints[dimension] is None:
       constraints = constraints.copy()
-      constraints[dimension] = value
+      try:
+        constraints[dimension] = value
+      except:
+        print('wtf')
       return self._get_slice(constraints)
     elif value is None:
       return constraints[dimension]
@@ -173,6 +176,9 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
         return True, True
       return y in self._compact_dimensions, False
     return False, False
+
+  def dimension_constraint_groups(self):
+    return self.cardinality_groups() + self.inference_groups()
 
   def cardinality_groups(self):
     result = []
@@ -297,11 +303,16 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
           slice_cardinality = x_value_cardinality * y_value_cardinality
           assert len(rows[row_index]) == len(columns[column_index])
           for row, column in zip(rows[row_index], columns[column_index]):
-            # A1 + B1 + C1 != 2 -- A, top left #1  (see doc above).
-            result.append((
+            # Sort groups by slice_cardinality, smallest first.
+            group = list(sorted([
               ({x_key: x_value, y_key: y_value}, slice_cardinality),
               row,
               column,
+            ], key=lambda i: i[1]))
+            # A1 + B1 + C1 != 2 -- A, top left #1  (see doc above).
+            result.append(Inference(
+              [group[0][0], group[1][0], group[2][0]],
+              [group[0][1], group[1][1], group[2][1]],
             ))
     return result
 

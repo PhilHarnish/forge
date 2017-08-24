@@ -190,15 +190,11 @@ class _Model(Numberjack.Model):
       rows.append('')  # Spacer between groups.
     return '\n'.join(rows)
 
-  def dimension_constraints(self):
-    return (
-      self._dimensional_cardinality_constraints(),
-      self._dimensional_inference_constraints(),
-    )
-
-  def _dimensional_cardinality_constraints(self):
+  def dimension_constraints(self, types=None):
     result = []
-    for group in self._dimension_factory.cardinality_groups():
+    for group in self._dimension_factory.dimension_constraint_groups():
+      if types and not isinstance(group, types):
+        continue
       variables = []
       for constraint in group.group:
         variable = self.get_variables(constraint)
@@ -220,35 +216,27 @@ class _Model(Numberjack.Model):
           result.append(Numberjack.Sum(variables) == cardinality)
       elif isinstance(group, _dimension_factory.MaxCardinality):
         result.append(Numberjack.Sum(variables) <= group.cardinality)
-      else:
-        raise NotImplementedError(
-            '%s cardinality constraint unsupported' % group)
-    return _predicates.Predicates(result)
-
-  def _dimensional_inference_constraints(self):
-    result = []
-    for group in self._dimension_factory.inference_groups():
-      variables = []
-      group_cardinality = [slice_cardinality for _, slice_cardinality in group]
-      if group_cardinality == [1, 1, 1]:
-        # This is a simple case where every value being inferred has exactly one
-        # solution.
-        for constraint, slice_cardinality in group:
+      elif isinstance(group, _dimension_factory.Inference):
+        variables = []
+        for constraint in group.group:
           variable = self.get_variables(constraint)
-          assert len(variable) == 1, 'Enforcing cardinality impossible for %s' % (
+          assert len(
+              variable) == 1, 'Enforcing cardinality impossible for %s' % (
             constraint
           )
           variables.append(variable[0])
-        result.append(Numberjack.Sum(variables) != 2)
-      elif list(sorted(group_cardinality))[0] == 1:
-        # This is the only other supported configuration. If at least one slice
-        # in the group has a fixed solution then that solution implies the other
-        # solution at the other two slices are equal to each other.
-        # Move the fixed group to the front.
-        fixed, free_1, free_2 = map(
-            lambda i: self.get_variables(i[0]),
-            sorted(group, key=lambda i: i[1])
-        )
-        # This is equivalent to "if fixed then free_1 == free_2":
-        result.append(fixed <= (free_1 == free_2))
+        if group.cardinalities == [1, 1, 1]:
+          # This is a simple case where every value being inferred has exactly one
+          # solution.
+          result.append(Numberjack.Sum(variables) != 2)
+        elif group.cardinalities[0] == 1:
+          # This is the only other supported configuration. If at least one slice
+          # in the group has a fixed solution then that solution implies the other
+          # solution at the other two slices are equal to each other.
+          # Move the fixed group to the front.
+          fixed, free_1, free_2 = variables
+          # This is equivalent to "if fixed then free_1 == free_2":
+          result.append(fixed <= (free_1 == free_2))
+      else:
+        raise NotImplementedError('%s dimension constraint unsupported' % group)
     return _predicates.Predicates(result)
