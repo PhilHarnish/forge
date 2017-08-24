@@ -3,6 +3,13 @@ import itertools
 
 from data.logic import _dimension_slice, _util
 
+Cardinality = collections.namedtuple(
+    'Cardinality', field_names=['group', 'cardinality'])
+MaxCardinality = collections.namedtuple(
+    'MaxCardinality', field_names=['group', 'max_cardinality'])
+Inference = collections.namedtuple(
+    'Cardinality', field_names=['group', 'cardinality'])
+
 
 class _DimensionFactory(_dimension_slice._DimensionSlice):
   def __init__(self):
@@ -222,7 +229,7 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
         # There is a minor value which could (theoretically) fill the entire
         # major set. No sense in proceeding.
         continue
-      result.append((group, min(cardinality, len(minor_values))))
+      result.append(Cardinality(group, min(cardinality, len(minor_values))))
       for minor_value in minor_values:
         constraint[minor_key] = minor_value
         group.append(constraint.copy())
@@ -230,7 +237,7 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
   def _append_cardinality_max(
       self, result, major_key, major_values, minor_key, minor_values):
     group = []
-    result.append((group, self._max_dimension_size))
+    result.append(MaxCardinality(group, self._max_dimension_size))
     for major_value in major_values:
       for minor_value in minor_values:
         group.append({
@@ -253,16 +260,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     z C3C4       A2 + B2 + C4 != 2 -- A, top right, #2
     """
     result = []
-    visited_triplets = set()
     for x, y, z in itertools.combinations(self._dimensions.items(), 3):
       (x_key, x_values), (y_key, y_values), (z_key, z_values) = x, y, z
-      board_a = (x_key, y_key)
-      board_b = (x_key, z_key)
-      board_c = (y_key, z_key)
-      triplet = ','.join(map(str, sorted([board_a, board_b, board_c])))
-      if triplet in visited_triplets:
-        raise Exception('Redundant work performed?')
-      visited_triplets.add(triplet)
       # Prefetch all of the rows from board B and columns from board C as they
       # will be needed repeatedly.
       rows = []
