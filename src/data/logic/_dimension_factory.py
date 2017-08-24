@@ -5,6 +5,8 @@ from data.logic import _dimension_slice, _util
 
 Cardinality = collections.namedtuple(
     'Cardinality', field_names=['group', 'cardinality'])
+UniqueCardinality = collections.namedtuple(
+    'UniqueCardinality', field_names=['group'])
 MaxCardinality = collections.namedtuple(
     'MaxCardinality', field_names=['group', 'max_cardinality'])
 Inference = collections.namedtuple(
@@ -184,12 +186,11 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       x_size = self._dimension_size[x_key]
       y_size = self._dimension_size[y_key]
       if compact:
-        cardinality = 0  # 0 indicates all scalars have unique values.
         constraint = {
           y_key: None,
         }
         group = []
-        result.append((group, cardinality))
+        result.append(UniqueCardinality(group))
         for x_value in x_values:
           constraint[x_key] = x_value
           group.append(constraint.copy())
@@ -219,7 +220,6 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     constraint = {}
     for major_value in major_values:
       constraint[major_key] = major_value
-      group = []
       cardinality = self._value_cardinality[major_value]
       if min_major_cardinality <= min_minor_cardinality:
         # The major values are rare enough that they cannot fill up the smallest
@@ -229,6 +229,7 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
         # There is a minor value which could (theoretically) fill the entire
         # major set. No sense in proceeding.
         continue
+      group = []
       result.append(Cardinality(group, min(cardinality, len(minor_values))))
       for minor_value in minor_values:
         constraint[minor_key] = minor_value
