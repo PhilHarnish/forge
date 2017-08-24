@@ -3,8 +3,8 @@ import itertools
 
 import Numberjack
 
-from data.logic import _expr_transformer, _predicates, _reference, _solver, \
-  _util
+from data.logic import _dimension_factory, _expr_transformer, _predicates, \
+  _reference, _solver, _util
 
 
 class _Model(Numberjack.Model):
@@ -198,28 +198,31 @@ class _Model(Numberjack.Model):
 
   def _dimensional_cardinality_constraints(self):
     result = []
-    for group, cardinality in self._dimension_factory.cardinality_groups():
-      num_zeros = len(group) - 1
-      if num_zeros == 0:
-        continue
-      elif num_zeros == 1 and cardinality == 1:
-        # This implies the group is size 2 and behaves like a boolean.
-        a, b = group
-        result.append(self.get_variables(a) != self.get_variables(b))
-      else:
-        variables = []
-        for constraint in group:
-          variable = self.get_variables(constraint)
-          assert len(variable) == 1, 'Enforcing cardinality impossible for %s' % (
-            constraint
-          )
-          variables.append(variable[0])
-        if cardinality:
+    for group in self._dimension_factory.cardinality_groups():
+      variables = []
+      for constraint in group.group:
+        variable = self.get_variables(constraint)
+        assert len(variable) == 1, 'Enforcing cardinality impossible for %s' % (
+          constraint
+        )
+        variables.append(variable[0])
+      if isinstance(group, _dimension_factory.UniqueCardinality):
+        # This signifies group is a set of unique scalar Variables.
+        result.append(Numberjack.AllDiff(variables))
+      elif isinstance(group, _dimension_factory.Cardinality):
+        cardinality = group.cardinality
+        if len(variables) == 2 and cardinality == 1:
+          # This implies the group is size 2 and behaves like a boolean.
+          a, b = variables
+          result.append(a != b)
+        else:
           # Expect to find `cardinality` matches for `variables`.
           result.append(Numberjack.Sum(variables) == cardinality)
-        else:
-          # This signifies group is a set of unique scalar Variables.
-          result.append(Numberjack.AllDiff(variables))
+      elif isinstance(group, _dimension_factory.MaxCardinality):
+        result.append(Numberjack.Sum(variables) <= group.cardinality)
+      else:
+        raise NotImplementedError(
+            '%s cardinality constraint unsupported' % group)
     return _predicates.Predicates(result)
 
   def _dimensional_inference_constraints(self):
