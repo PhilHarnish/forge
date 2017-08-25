@@ -117,10 +117,7 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     constraints = slice.dimension_constraints()
     if dimension not in constraints or constraints[dimension] is None:
       constraints = constraints.copy()
-      try:
-        constraints[dimension] = value
-      except:
-        print('wtf')
+      constraints[dimension] = value
       return self._get_slice(constraints)
     elif value is None:
       return constraints[dimension]
