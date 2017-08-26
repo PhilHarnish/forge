@@ -214,8 +214,10 @@ class _Model(Numberjack.Model):
         else:
           # Expect to find `cardinality` matches for `variables`.
           result.append(Numberjack.Sum(variables) == cardinality)
-      elif isinstance(group, _dimension_factory.MaxCardinality):
-        result.append(Numberjack.Sum(variables) <= group.cardinality)
+      elif isinstance(group, _dimension_factory.CardinalityRange):
+        s = Numberjack.Sum(variables)
+        result.append(s >= group.min_cardinality)
+        result.append(s <= group.max_cardinality)
       elif isinstance(group, _dimension_factory.Inference):
         variables = []
         for constraint in group.group:

@@ -64,7 +64,7 @@ with description('_dimension_factory._DimensionFactory'):
     with it('returns 2D rows and columns'):
       self.subject(name=['A', 'B'])
       self.subject(number=[1, 2])
-      groups = self.subject.cardinality_groups()
+      groups = self.subject._append_cardinality_groups()
       expect(groups).to(equal([
         _dimension_factory.UniqueCardinality(group=[
           {'number': None, 'name': 'A'}, {'number': None, 'name': 'B'}
@@ -74,7 +74,7 @@ with description('_dimension_factory._DimensionFactory'):
     with it('returns 2D rows and columns with duplicates'):
       self.subject(name=['A', 'B'])
       self.subject(number=[1, 1])
-      groups = self.subject.cardinality_groups()
+      groups = self.subject._append_cardinality_groups()
       expect(groups).to(equal([
         # Only one value, cardinality is one.
         ([{'name': 'A', 'number': 1}], 1),
@@ -86,7 +86,7 @@ with description('_dimension_factory._DimensionFactory'):
     with it('returns 2D rows and columns with different sizes'):
       self.subject(name=['A', 'B', 'C'])
       self.subject(number=[5, 6])
-      groups = self.subject.cardinality_groups()
+      groups = self.subject._append_cardinality_groups()
       expect(groups).to(equal([
         ([{'name': 'A', 'number': 5}, {'name': 'A', 'number': 6}], 1),
         ([{'name': 'B', 'number': 5}, {'name': 'B', 'number': 6}], 1),
@@ -98,7 +98,7 @@ with description('_dimension_factory._DimensionFactory'):
       self.subject(dupes=[3, 3, 2, 2, 2, 1, 1])
       # Only 1 "B".
       self.subject(one=['A', 'A', 'A', 'A', 'A', 'A', 'B'])
-      groups = self.subject.cardinality_groups()
+      groups = self.subject._append_cardinality_groups()
       expect(groups).to(equal([
         ([{'dupes': 3, 'one': 'A'}, {'dupes': 2, 'one': 'A'},
           {'dupes': 1, 'one': 'A'}], 3),
@@ -111,7 +111,7 @@ with description('_dimension_factory._DimensionFactory'):
       self.subject(a=['A', 'B'])
       self.subject(b=[1, 2])
       self.subject(c=['x', 'y'])
-      groups = self.subject.cardinality_groups()
+      groups = self.subject._append_cardinality_groups()
       expect(groups).to(equal([
         _dimension_factory.UniqueCardinality(group=[
           {'b': None, 'a': 'A'}, {'b': None, 'a': 'B'}
@@ -137,32 +137,50 @@ with description('_dimension_factory._DimensionFactory'):
       self.subject(d1=['A', 'B', 'C', 'D'])
       self.subject(d2=[1, 2, 3])
       self.subject(d3=['x', 'y'])
-      groups = self.subject.cardinality_groups()
+      groups = self.subject._append_cardinality_groups()
       expect(groups).to(equal([
-        ([{'d1': 'A', 'd2': 1}, {'d1': 'A', 'd2': 2}, {'d1': 'A', 'd2': 3}], 1),
-        ([{'d1': 'B', 'd2': 1}, {'d1': 'B', 'd2': 2}, {'d1': 'B', 'd2': 3}], 1),
-        ([{'d1': 'C', 'd2': 1}, {'d1': 'C', 'd2': 2}, {'d1': 'C', 'd2': 3}], 1),
-        ([{'d1': 'D', 'd2': 1}, {'d1': 'D', 'd2': 2}, {'d1': 'D', 'd2': 3}], 1),
-        ([{'d1': 'A', 'd3': 'x'}, {'d1': 'A', 'd3': 'y'}], 1),
-        ([{'d1': 'B', 'd3': 'x'}, {'d1': 'B', 'd3': 'y'}], 1),
-        ([{'d1': 'C', 'd3': 'x'}, {'d1': 'C', 'd3': 'y'}], 1),
-        ([{'d1': 'D', 'd3': 'x'}, {'d1': 'D', 'd3': 'y'}], 1),
-        ([{'d2': 1, 'd3': 'x'}, {'d2': 1, 'd3': 'y'}, {'d2': 2, 'd3': 'x'},
-          {'d2': 2, 'd3': 'y'}, {'d2': 3, 'd3': 'x'}, {'d2': 3, 'd3': 'y'}], 4)
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'A', 'd2': 1}, {'d1': 'A', 'd2': 2}, {'d1': 'A', 'd2': 3},
+        ], cardinality=1),
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'B', 'd2': 1}, {'d1': 'B', 'd2': 2}, {'d1': 'B', 'd2': 3},
+        ], cardinality=1),
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'C', 'd2': 1}, {'d1': 'C', 'd2': 2}, {'d1': 'C', 'd2': 3},
+        ], cardinality=1),
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'D', 'd2': 1}, {'d1': 'D', 'd2': 2}, {'d1': 'D', 'd2': 3},
+        ], cardinality=1),
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'A', 'd3': 'x'}, {'d1': 'A', 'd3': 'y'}], cardinality=1,
+        ),
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'B', 'd3': 'x'}, {'d1': 'B', 'd3': 'y'},
+        ], cardinality=1),
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'C', 'd3': 'x'}, {'d1': 'C', 'd3': 'y'}], cardinality=1,
+        ),
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'D', 'd3': 'x'}, {'d1': 'D', 'd3': 'y'},
+        ], cardinality=1),
+        _dimension_factory.CardinalityRange(group=[
+          {'d2': 1, 'd3': 'x'}, {'d2': 1, 'd3': 'y'}, {'d2': 2, 'd3': 'x'},
+          {'d2': 2, 'd3': 'y'}, {'d2': 3, 'd3': 'x'}, {'d2': 3, 'd3': 'y'},
+        ], min_cardinality=1, max_cardinality=4),
       ]))
 
   with description('inference groups'):
     with it('returns nothing for 2 dimensions'):
       self.subject(name=['A', 'B'])
       self.subject(number=[1, 2])
-      groups = self.subject.inference_groups()
+      groups = self.subject._append_inference_groups()
       expect(groups).to(equal([]))
 
     with it('returns results for 3 dimensions with duplicates'):
       self.subject(a=['A', 'B'])
       self.subject(b=[1, 1])
       self.subject(c=['x', 'y'])
-      groups = self.subject.inference_groups()
+      groups = self.subject._append_inference_groups()
       expect(groups).to(equal([
         _dimension_factory.Inference(group=[
           {'a': 'A', 'c': 'x'}, {'a': 'A', 'b': 1}, {'b': 1, 'c': 'x'}
@@ -182,7 +200,7 @@ with description('_dimension_factory._DimensionFactory'):
       self.subject(a=['A', 'B', 'C'])
       self.subject(b=['x'])
       self.subject(c=['y'])
-      groups = self.subject.inference_groups()
+      groups = self.subject._append_inference_groups()
       expect(groups).to(equal([
         _dimension_factory.Inference(group=[
           {'a': 'A', 'b': 'x'}, {'a': 'A', 'c': 'y'}, {'b': 'x', 'c': 'y'}

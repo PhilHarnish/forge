@@ -7,8 +7,9 @@ Cardinality = collections.namedtuple(
     'Cardinality', field_names=['group', 'cardinality'])
 UniqueCardinality = collections.namedtuple(
     'UniqueCardinality', field_names=['group'])
-MaxCardinality = collections.namedtuple(
-    'MaxCardinality', field_names=['group', 'max_cardinality'])
+CardinalityRange = collections.namedtuple(
+    'CardinalityRange',
+    field_names=['group', 'min_cardinality', 'max_cardinality'])
 Inference = collections.namedtuple(
     'Inference', field_names=['group', 'cardinalities'])
 
@@ -175,10 +176,15 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     return False, False
 
   def dimension_constraint_groups(self):
-    return self.cardinality_groups() + self.inference_groups()
-
-  def cardinality_groups(self):
     result = []
+    self._append_cardinality_groups(result)
+    self._append_inference_groups(result)
+    self._append_ambiguous_groups(result)
+    return result
+
+  def _append_cardinality_groups(self, result=None):
+    if result is None:
+      result = []
     for (x_key, x_values), (y_key, y_values) in itertools.combinations(
         self._dimensions.items(), 2):
       compact, swap = self.compact_dimensions(x_key, y_key)
@@ -241,7 +247,7 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
   def _append_cardinality_max(
       self, result, major_key, major_values, minor_key, minor_values):
     group = []
-    result.append(MaxCardinality(group, self._max_dimension_size))
+    result.append(CardinalityRange(group, 1, self._max_dimension_size))
     for major_value in major_values:
       for minor_value in minor_values:
         group.append({
@@ -249,7 +255,7 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
           minor_key: minor_value,
         })
 
-  def inference_groups(self):
+  def _append_inference_groups(self, result=None):
     """Aligned cells between 3 boards must not sum to 2.
 
     Consider: Andy is 10, 10's favorite color is red -> Andy's is red. This
@@ -263,7 +269,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     z C1C2       A2 + B1 + C2 != 2 -- A, top right, #1
     z C3C4       A2 + B2 + C4 != 2 -- A, top right, #2
     """
-    result = []
+    if result is None:
+      result = []
     for x, y, z in itertools.combinations(self._dimensions.items(), 3):
       (x_key, x_values), (y_key, y_values), (z_key, z_values) = x, y, z
       # Prefetch all of the rows from board B and columns from board C as they
@@ -311,6 +318,11 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
               [group[0][0], group[1][0], group[2][0]],
               [group[0][1], group[1][1], group[2][1]],
             ))
+    return result
+
+  def _append_ambiguous_groups(self, result):
+    if result is None:
+      result = []
     return result
 
   def value_cardinality(self, value):
