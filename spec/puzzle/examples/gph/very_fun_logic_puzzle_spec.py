@@ -17,7 +17,7 @@ with _description('very_fun_logic_puzzle'):
     prod_config.reset()
     warehouse.restore()
 
-  with description('house solution'):
+  with _description('house solution'):
     with it('scores the source as a LogicProblem'):
       expect(logic_problem.LogicProblem.score(
           very_fun_logic_puzzle.HOUSE_SOURCE.split('\n'))).to(equal(1))

@@ -38,5 +38,4 @@ with _description('p3_1'):
 
     with it('exports a solution'):
       problem = self.puzzle.problems()[0]
-      with breakpoints():
-        expect(problem.solution).to(look_like(p3_1.SOLUTION))
+      expect(problem.solution).to(look_like(p3_1.SOLUTION))

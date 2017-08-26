@@ -27,13 +27,12 @@ with _description('p3_4'):
       problem = problems[0]
       expect(problem).to(be_a(logic_problem.LogicProblem))
 
-    with it('parses puzzle'):
+    with _it('parses puzzle'):
       node = logic_problem._parse(p3_4.SOURCE.split('\n'))
       print(astor.to_source(node))
 
     with _it('models puzzle'):
       model = logic_problem._model(p3_4.SOURCE.split('\n'))
-      #model.add(model.dimension_constraints())
       print(str(model))
 
     with it('exports a solution'):

@@ -38,5 +38,4 @@ with _description('p1_2'):
 
     with it('exports a solution'):
       problem = self.puzzle.problems()[0]
-      expect(problem.solution).to(look_like(
-          p1_2.SOLUTION))
+      expect(problem.solution).to(look_like(p1_2.SOLUTION))

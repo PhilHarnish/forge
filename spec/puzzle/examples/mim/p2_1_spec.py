@@ -27,11 +27,11 @@ with _description('p2_1'):
       problem = problems[0]
       expect(problem).to(be_a(logic_problem.LogicProblem))
 
-    with it('parses puzzle'):
+    with _it('parses puzzle'):
       node = logic_problem._parse(p2_1.SOURCE.split('\n'))
       print(astor.to_source(node))
 
-    with it('models puzzle'):
+    with _it('models puzzle'):
       model = logic_problem._model(p2_1.SOURCE.split('\n'))
       model.add(model.dimension_constraints())
       print(str(model))
