@@ -14,6 +14,8 @@ CardinalityRange = collections.namedtuple(
     field_names=['group', 'min_cardinality', 'max_cardinality'])
 Inference = collections.namedtuple(
     'Inference', field_names=['group', 'cardinalities'])
+ValueSumsInference = collections.namedtuple(
+    'ValueSumsInference', field_names=['groups', 'scores'])
 
 
 class _DimensionFactory(_dimension_slice._DimensionSlice):
@@ -181,8 +183,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     result = []
     self._append_cardinality_groups(result)
     self._append_inference_groups(result)
-    self._append_ambiguous_groups(result)
     self._append_group_sums(result)
+    self._append_value_sums_inference(result)
     return result
 
   def _append_cardinality_groups(self, result=None):
@@ -323,11 +325,6 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
             ))
     return result
 
-  def _append_ambiguous_groups(self, result):
-    if result is None:
-      result = []
-    return result
-
   def _append_group_sums(self, result):
     for (x_key, x_values), (y_key, y_values) in itertools.combinations(
         self._dimensions.items(), 2):
@@ -341,6 +338,41 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
           x_key: x,
           y_key: y,
         })
+    return result
+
+  def _append_value_sums_inference(self, result):
+    """Sum of grid values along a column should always match."""
+    for primary_key, primary_values in self._dimensions.items():
+      if self._dimension_size[primary_key] == self._max_dimension_size:
+        # A well-constrained dimension doesn't need sum inference.
+        continue
+      for primary_value in primary_values:
+        groups = []
+        scores = []
+        for secondary_key, secondary_values in self._dimensions.items():
+          score = 0
+          if primary_key == secondary_key:
+            continue
+          elif self._dimension_size[secondary_key] == self._max_dimension_size:
+            # This is a good reference.
+            score = 1
+          group = []
+          has_duplicate = False
+          for secondary_value in secondary_values:
+            if self._value_cardinality[secondary_value] > 1:
+              has_duplicate = True
+            group.append({
+              primary_key: primary_value,
+              secondary_key: secondary_value,
+            })
+          if not has_duplicate:
+            score = 2
+          groups.append(group)
+          scores.append(score)
+        if len(groups) <= 1:
+          continue
+        result.append(ValueSumsInference(groups, scores))
+    return result
 
   def value_cardinality(self, value):
     return self._value_cardinality[value]

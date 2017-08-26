@@ -197,13 +197,10 @@ class _Model(Numberjack.Model):
     for group in self._dimension_factory.dimension_constraint_groups():
       if types and not isinstance(group, types):
         continue
-      variables = []
-      for constraint in group.group:
-        variable = self.get_variables(constraint)
-        assert len(variable) == 1, 'Enforcing cardinality impossible for %s' % (
-          constraint
-        )
-        variables.append(variable[0])
+      if hasattr(group, 'group'):
+        variables = self._resolve_variables(group.group)
+      else:
+        variables = None
       if isinstance(group, _dimension_factory.UniqueCardinality):
         # This signifies group is a set of unique scalar Variables.
         result.append(Numberjack.AllDiff(variables))
@@ -235,7 +232,30 @@ class _Model(Numberjack.Model):
           fixed, free_1, free_2 = variables
           # This is equivalent to "if fixed then free_1 == free_2":
           result.append(fixed <= (free_1 == free_2))
+      elif isinstance(group, _dimension_factory.ValueSumsInference):
+        group_variables = map(self._resolve_variables, group.groups)
+        group_sums = map(Numberjack.Sum, group_variables)
+        constraints = sorted(
+            zip(group_sums, group.scores), key=lambda x: x[1])
+        reference, best_score = constraints.pop()
+        for other, score in constraints:
+          if best_score == 2 and score in (1, 2):
+            # If both scores are 2 then there is no need for inference.
+            # Inference from 2 to 1 results in too many constraints for
+            # Numberjack to finish.
+            continue
+          result.append(reference == other)
       else:
         raise NotImplementedError(
             '%s dimension constraint unsupported' % str(group))
     return _predicates.Predicates(result)
+
+  def _resolve_variables(self, group):
+    variables = []
+    for constraint in group:
+      variable = self.get_variables(constraint)
+      assert len(variable) == 1, 'Enforcing cardinality impossible for %s' % (
+        constraint
+      )
+      variables.append(variable[0])
+    return variables

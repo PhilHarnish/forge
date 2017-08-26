@@ -361,7 +361,10 @@ with description('_model._Model usage'):
 
     with it('enforces inference constraints'):
       result = self.model.dimension_constraints(
-          types=_dimension_factory.Inference)
+          types=(
+            _dimension_factory.Inference,
+            _dimension_factory.ValueSumsInference,
+          ))
       expect(result).to(have_len(18))
       s = '\n'.join(sorted(
           re.sub(r'\.|name|fruit|age', '', str(result)).split('\n')
@@ -385,6 +388,27 @@ with description('_model._Model usage'):
         (["cynthia"]["cherries"] <= (["cynthia"][11] == ["cherries"][11]))
         (["cynthia"]["dates"] <= (["cynthia"][11] == ["dates"][11]))
         (["cynthia"]["figs"] <= (["cynthia"][11] == ["figs"][11]))
+      """))
+
+    with it('enforces inference constraints (for ambiguous values)'):
+      self.factory = _dimension_factory._DimensionFactory()
+      self.model = _model._Model(self.factory)
+      self.factory(name=['andy', 'bob', 'cynthia'])
+      self.factory(color=['gray', 'blue'])
+      self.factory(food=['apple', 'banana'])
+      result = self.model.dimension_constraints(
+          types=(
+            _dimension_factory.Inference,
+            _dimension_factory.ValueSumsInference,
+          ))
+      s = '\n'.join(sorted(
+          re.sub(r'\.|name|fruit|age', '', str(result)).split('\n')
+      ))
+      expect(s).to(look_like("""
+        ((["andy"]color["blue"] + ["bob"]color["blue"] + ["cynthia"]color["blue"]) == (color["blue"]food["apple"] + color["blue"]food["banana"]))
+        ((["andy"]color["gray"] + ["bob"]color["gray"] + ["cynthia"]color["gray"]) == (color["gray"]food["apple"] + color["gray"]food["banana"]))
+        ((["andy"]food["apple"] + ["bob"]food["apple"] + ["cynthia"]food["apple"]) == (color["gray"]food["apple"] + color["blue"]food["apple"]))
+        ((["andy"]food["banana"] + ["bob"]food["banana"] + ["cynthia"]food["banana"]) == (color["gray"]food["banana"] + color["blue"]food["banana"]))
       """))
 
   with description('load'):
