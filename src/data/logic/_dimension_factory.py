@@ -62,8 +62,10 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
             dimension, self._max_dimension_size, next(iter(self._dimensions)),
           ))
     if dimension_size < self._max_dimension_size:
-      # There could be up to `max_dimension_size` duplicates.
-      max_cardinality = self._max_dimension_size
+      # At least one of each `dimension_size` must be chosen, after which this
+      # value may be chosen repeatedly. For example, if max is 7 and this
+      # dimension size is 3 then either choice can be up to 5.
+      max_cardinality = self._max_dimension_size - (dimension_size - 1)
     else:
       max_cardinality = 1
     child_dimensions = []
