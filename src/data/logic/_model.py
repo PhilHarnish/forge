@@ -216,19 +216,13 @@ class _Model(Numberjack.Model):
         else:
           # Expect to find `cardinality` matches for `variables`.
           result.append(Numberjack.Sum(variables) == cardinality)
+      elif isinstance(group, _dimension_factory.TotalCardinality):
+        result.append(Numberjack.Sum(variables) == group.total)
       elif isinstance(group, _dimension_factory.CardinalityRange):
         s = Numberjack.Sum(variables)
         result.append(s >= group.min_cardinality)
         result.append(s <= group.max_cardinality)
       elif isinstance(group, _dimension_factory.Inference):
-        variables = []
-        for constraint in group.group:
-          variable = self.get_variables(constraint)
-          assert len(
-              variable) == 1, 'Enforcing cardinality impossible for %s' % (
-            constraint
-          )
-          variables.append(variable[0])
         if group.cardinalities == [1, 1, 1]:
           # This is a simple case where every value being inferred has exactly one
           # solution.
@@ -242,5 +236,6 @@ class _Model(Numberjack.Model):
           # This is equivalent to "if fixed then free_1 == free_2":
           result.append(fixed <= (free_1 == free_2))
       else:
-        raise NotImplementedError('%s dimension constraint unsupported' % group)
+        raise NotImplementedError(
+            '%s dimension constraint unsupported' % str(group))
     return _predicates.Predicates(result)

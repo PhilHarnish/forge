@@ -111,6 +111,7 @@ with description('_DimensionSlice'):
 
     with it('returns address which evaluates to original'):
       fruit = cherries, _ = self.factory(fruit=['cherries', 'apples'])
+      len(fruit)  # No-op expression to satisfy linter. `fruit` needed by eval.
       expect(eval(repr(cherries))).to(equal(cherries))
 
   with description('__hash__'):

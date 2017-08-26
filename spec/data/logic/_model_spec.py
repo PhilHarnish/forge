@@ -286,6 +286,7 @@ with description('_model._Model usage'):
       result = self.model.dimension_constraints(types=(
         _dimension_factory.Cardinality,
         _dimension_factory.UniqueCardinality,
+        _dimension_factory.TotalCardinality,
       ))
       s = '\n'.join(sorted(
           str(result).replace(' | 0 in [1,1] 1 in [1,1] ', '').split('\n')
@@ -318,6 +319,7 @@ with description('_model._Model usage'):
       result = self.model.dimension_constraints(types=(
         _dimension_factory.Cardinality,
         _dimension_factory.UniqueCardinality,
+        _dimension_factory.TotalCardinality,
       ))
       s = '\n'.join(sorted(
           str(result).replace(' | 0 in [1,1] 1 in [1,1] ', '').split('\n')
@@ -333,6 +335,29 @@ with description('_model._Model usage'):
           AllDiff(age.name["andy"], age.name["bob"], age.name["cynthia"])
       """))
 
+    with it('enforces cardinality constraints (with ambiguous scalar values)'):
+      self.factory = _dimension_factory._DimensionFactory()
+      self.model = _model._Model(self.factory)
+      self.factory(name=['andy', 'bob', 'cynthia'])
+      self.factory(color=['gray', 'blue'])
+      self.factory(food=['apple', 'banana'])
+      result = self.model.dimension_constraints(types=(
+        _dimension_factory.Cardinality,
+        _dimension_factory.UniqueCardinality,
+        _dimension_factory.TotalCardinality,
+      ))
+      s = '\n'.join(sorted(
+          str(result).replace(' | 0 in [1,1] 1 in [1,1] ', '').split('\n')
+      ))
+      expect(s).to(look_like("""
+        ((color["gray"].food["apple"] + color["gray"].food["banana"] + color["blue"].food["apple"] + color["blue"].food["banana"]) == 3)
+        (name["andy"].color["gray"] != name["andy"].color["blue"])
+        (name["andy"].food["apple"] != name["andy"].food["banana"])
+        (name["bob"].color["gray"] != name["bob"].color["blue"])
+        (name["bob"].food["apple"] != name["bob"].food["banana"])
+        (name["cynthia"].color["gray"] != name["cynthia"].color["blue"])
+        (name["cynthia"].food["apple"] != name["cynthia"].food["banana"])
+      """))
 
     with it('enforces inference constraints'):
       result = self.model.dimension_constraints(

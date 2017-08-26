@@ -5,6 +5,8 @@ from data.logic import _dimension_slice, _util
 
 Cardinality = collections.namedtuple(
     'Cardinality', field_names=['group', 'cardinality'])
+TotalCardinality = collections.namedtuple(
+    'TotalCardinality', field_names=['group', 'total'])
 UniqueCardinality = collections.namedtuple(
     'UniqueCardinality', field_names=['group'])
 CardinalityRange = collections.namedtuple(
@@ -180,6 +182,7 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     self._append_cardinality_groups(result)
     self._append_inference_groups(result)
     self._append_ambiguous_groups(result)
+    self._append_group_sums(result)
     return result
 
   def _append_cardinality_groups(self, result=None):
@@ -324,6 +327,20 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     if result is None:
       result = []
     return result
+
+  def _append_group_sums(self, result):
+    for (x_key, x_values), (y_key, y_values) in itertools.combinations(
+        self._dimensions.items(), 2):
+      if (self._max_dimension_size == self._dimension_size[x_key] or
+          self._max_dimension_size == self._dimension_size[y_key]):
+        continue
+      group = []
+      result.append(TotalCardinality(group, self._max_dimension_size))
+      for x, y in itertools.product(x_values, y_values):
+        group.append({
+          x_key: x,
+          y_key: y,
+        })
 
   def value_cardinality(self, value):
     return self._value_cardinality[value]
