@@ -55,12 +55,10 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     dimension_size = len(values)
     self._dimension_size[dimension] = dimension_size
     if not self._max_dimension_size:
+      # Use first dimension to establish max dimension size.
+      # Apparently, future dimensions can be larger without breaking later
+      # assumptions.
       self._max_dimension_size = dimension_size
-    elif dimension_size > self._max_dimension_size:
-      raise ValueError(
-          '"%s" exceeds max dimension size (%x) set by first dimension %s' % (
-            dimension, self._max_dimension_size, next(iter(self._dimensions)),
-          ))
     if dimension_size < self._max_dimension_size:
       # At least one of each `dimension_size` must be chosen, after which this
       # value may be chosen repeatedly. For example, if max is 7 and this

@@ -22,10 +22,6 @@ with description('_dimension_factory._DimensionFactory'):
     with it('rejects multiple kwargs'):
       expect(calling(self.subject, name=['A'], age=[1])).to(raise_error)
 
-    with it('rejects increasing dimension size'):
-      expect(calling(self.subject, first=['A'])).not_to(raise_error)
-      expect(calling(self.subject, second=['X', 'Y'])).to(raise_error)
-
   with description('registering'):
     with it('remembers registered dimensions'):
       self.subject(name=['A', 'B'])
