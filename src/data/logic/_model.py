@@ -80,8 +80,13 @@ class _Model(Numberjack.Model):
       else:
         compact, swap = self._dimension_factory.compact_dimensions(key1, key2)
         if not compact:
-          # Create a boolean variable for address.
-          self._variable_cache[address] = Numberjack.Variable(address)
+          # Create a variable for address.
+          upper_bound = min(
+              self._dimension_factory.value_cardinality(value1),
+              self._dimension_factory.value_cardinality(value2),
+          )
+          self._variable_cache[address] = Numberjack.Variable(
+              0, upper_bound, address)
         elif swap:
           variable_constraints[key1] = None
           self._variable_cache[address] = (

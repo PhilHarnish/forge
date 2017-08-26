@@ -173,6 +173,8 @@ with description('_model._Model usage'):
 
   with description('duplicate nouns with unique positions'):
     with before.each:
+      self.factory = _dimension_factory._DimensionFactory()
+      self.model = _model._Model(self.factory)
       self.gray, self.gray, self.blue = self.factory(
           color=['gray', 'gray', 'blue'])
       self._1, self._2, self._3 = self.factory(position=[1, 2, 3])
@@ -197,6 +199,50 @@ with description('_model._Model usage'):
         (color["gray"].position[1] * 1)
         (color["gray"].position[2] * 2)
         (color["gray"].position[3] * 3)
+      """))
+
+    with it('specifies boolean Numberjack variables'):
+      self.model(self.model.dimension_constraints())
+      model_lines = str(self.model).split('\n')
+      assignments = '\n'.join(filter(lambda line: ' in ' in line, model_lines))
+      expect(assignments).to(look_like("""
+        color["gray"].position[1] in {0,1}
+        color["gray"].position[2] in {0,1}
+        color["gray"].position[3] in {0,1}
+        color["blue"].position[1] in {0,1}
+        color["blue"].position[2] in {0,1}
+        color["blue"].position[3] in {0,1}
+      """))
+
+  with description('duplicate nouns with ambiguous values'):
+    with before.each:
+      self.factory = _dimension_factory._DimensionFactory()
+      self.model = _model._Model(self.factory)
+      self.factory(name=['andy', 'bob', 'cynthia'])
+      self.factory(color=['gray', 'blue'])
+      self.factory(food=['apple', 'banana'])
+
+    with it('specifies some Numberjack variables with ranges'):
+      self.model(self.model.dimension_constraints())
+      model_lines = str(self.model).split('\n')
+      assignments = '\n'.join(filter(lambda line: ' in ' in line, model_lines))
+      expect(assignments).to(look_like("""
+        name["andy"].color["gray"] in {0,1}
+        name["andy"].color["blue"] in {0,1}
+        name["bob"].color["gray"] in {0,1}
+        name["bob"].color["blue"] in {0,1}
+        name["cynthia"].color["gray"] in {0,1}
+        name["cynthia"].color["blue"] in {0,1}
+        name["andy"].food["apple"] in {0,1}
+        name["andy"].food["banana"] in {0,1}
+        name["bob"].food["apple"] in {0,1}
+        name["bob"].food["banana"] in {0,1}
+        name["cynthia"].food["apple"] in {0,1}
+        name["cynthia"].food["banana"] in {0,1}
+        color["gray"].food["apple"] in {0..2}
+        color["gray"].food["banana"] in {0..2}
+        color["blue"].food["apple"] in {0..2}
+        color["blue"].food["banana"] in {0..2}
       """))
 
   with description('get_solutions'):
@@ -236,8 +282,6 @@ with description('_model._Model usage'):
       """))
 
   with description('dimension_constraints'):
-
-
     with it('enforces cardinality constraints (with duplicate scalar values)'):
       result = self.model.dimension_constraints(types=(
         _dimension_factory.Cardinality,
