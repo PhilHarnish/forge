@@ -30,8 +30,10 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     self._max_dimension_size = 0
     # Map of identifier: dimension.
     self._value_to_dimension = {}
-    # Map of value: cardinality (number of duplicates).
-    self._value_cardinality = collections.defaultdict(int)
+    # Map of value: min cardinality (min number of duplicates).
+    self._min_value_cardinality = collections.defaultdict(int)
+    # Map of value: max cardinality (max number of duplicates).
+    self._max_value_cardinality = collections.defaultdict(int)
     # Cache of already-requested dimensions.
     self._slice_cache = {}
 
@@ -82,11 +84,12 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
           raise TypeError('ID %s already reserved by %s' % (
               value, self._value_to_dimension[value]))
       self._value_to_dimension[value] = dimension
-      self._value_cardinality[value] += 1
+      self._min_value_cardinality[value] += 1
+      self._max_value_cardinality[value] += 1
       child_dimensions.append((self._dimensions[dimension][value], set(source)))
     for value, _ in values:
-      self._value_cardinality[value] = max(
-          max_cardinality, self._value_cardinality[value])
+      self._max_value_cardinality[value] = max(
+          max_cardinality, self._max_value_cardinality[value])
     if not duplicates and all(isinstance(i, int) for i, _ in values):
       self._compact_dimensions.add(dimension)
     if len(inputs) == 1:
@@ -181,9 +184,13 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
 
   def dimension_constraint_groups(self):
     result = []
+    # Constraints for rows and columns within a sub-grid.
     self._append_cardinality_groups(result)
-    self._append_inference_groups(result)
+    # Constraints for sub-grids.
     self._append_group_sums(result)
+    # Constraints for values between 3 grids (AxB, BxC, AxC).
+    self._append_inference_groups(result)
+    # Constraints for values between row of grids (AxB, AxC, AxD, ...).
     self._append_value_sums_inference(result)
     return result
 
@@ -197,8 +204,6 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       # both the same size, without duplicates.
       if swap:
         (x_key, x_values), (y_key, y_values) = (y_key, y_values), (x_key, x_values)
-      x_size = self._dimension_size[x_key]
-      y_size = self._dimension_size[y_key]
       if compact:
         constraint = {
           y_key: None,
@@ -208,57 +213,32 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
         for x_value in x_values:
           constraint[x_key] = x_value
           group.append(constraint.copy())
-      elif (x_size < self._max_dimension_size and
-          y_size < self._max_dimension_size and
-          x_size * y_size > self._max_dimension_size):
-        # If x and y have duplicates and fewer than max dimensions no
-        # enforcement is possible.
-        self._append_cardinality_max(result, x_key, x_values, y_key, y_values)
       else:
+        # Rows.
         self._append_cardinality_group(result, x_key, x_values, y_key, y_values)
+        # Columns.
         self._append_cardinality_group(result, y_key, y_values, x_key, x_values)
     return result
 
   def _append_cardinality_group(
       self, result, major_key, major_values, minor_key, minor_values):
-    if self._dimension_size[major_key] < self._dimension_size[minor_key]:
-      return
-    min_major_cardinality = min(
-        self._value_cardinality[major_value] for major_value in major_values)
-    min_minor_cardinality = min(
-        self._value_cardinality[minor_value] for minor_value in minor_values)
-    max_minor_cardinality = max(
-        self._value_cardinality[minor_value] for minor_value in minor_values)
-    # Rows: there are more (or equal) major values than minor values.
-    # This implies minor values should not repeat.
-    constraint = {}
+    #if self._dimension_size[major_key] < self._dimension_size[minor_key]:
+    #  return  # Handle when keys are reversed.
     for major_value in major_values:
-      constraint[major_key] = major_value
-      cardinality = self._value_cardinality[major_value]
-      if min_major_cardinality <= min_minor_cardinality:
-        # The major values are rare enough that they cannot fill up the smallest
-        # minor values set. Okay to proceed.
-        pass
-      elif max_minor_cardinality > cardinality:
-        # There is a minor value which could (theoretically) fill the entire
-        # major set. No sense in proceeding.
-        continue
+      min_cardinality = self._min_value_cardinality[major_value]
+      max_cardinality = self._max_value_cardinality[major_value]
       group = []
-      result.append(Cardinality(group, min(cardinality, len(minor_values))))
-      for minor_value in minor_values:
-        constraint[minor_key] = minor_value
-        group.append(constraint.copy())
-
-  def _append_cardinality_max(
-      self, result, major_key, major_values, minor_key, minor_values):
-    group = []
-    result.append(CardinalityRange(group, 1, self._max_dimension_size))
-    for major_value in major_values:
       for minor_value in minor_values:
         group.append({
           major_key: major_value,
           minor_key: minor_value,
         })
+      #if major_key in ('omelet', 'pancake') and minor_key in ('omelet', 'pancake'):
+      #  print('wat')
+      if min_cardinality == max_cardinality:
+        result.append(Cardinality(group, min_cardinality))
+      else:
+        result.append(CardinalityRange(group, min_cardinality, max_cardinality))
 
   def _append_inference_groups(self, result=None):
     """Aligned cells between 3 boards must not sum to 2.
@@ -284,10 +264,10 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       for x_value in x_values:
         row = []
         rows.append(row)
-        x_value_cardinality = self._value_cardinality[x_value]
+        x_value_cardinality = self._max_value_cardinality[x_value]
         for z_value in z_values:
           slice_cardinality = (
-            x_value_cardinality * self._value_cardinality[z_value])
+            x_value_cardinality * self._max_value_cardinality[z_value])
           row.append(({
             x_key: x_value,
             z_key: z_value,
@@ -296,19 +276,19 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       for y_value in y_values:
         column = []
         columns.append(column)
-        y_value_cardinality = self._value_cardinality[y_value]
+        y_value_cardinality = self._max_value_cardinality[y_value]
         for z_value in z_values:
           slice_cardinality = (
-            y_value_cardinality * self._value_cardinality[z_value])
+            y_value_cardinality * self._max_value_cardinality[z_value])
           column.append(({
             y_key: y_value,
             z_key: z_value,
           }, slice_cardinality))
       # For each cell in board A set up inference with aligned rows and columns.
       for row_index, x_value in enumerate(x_values):
-        x_value_cardinality = self._value_cardinality[x_value]
+        x_value_cardinality = self._max_value_cardinality[x_value]
         for column_index, y_value in enumerate(y_values):
-          y_value_cardinality = self._value_cardinality[y_value]
+          y_value_cardinality = self._max_value_cardinality[y_value]
           slice_cardinality = x_value_cardinality * y_value_cardinality
           assert len(rows[row_index]) == len(columns[column_index])
           for row, column in zip(rows[row_index], columns[column_index]):
@@ -359,7 +339,7 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
           group = []
           has_duplicate = False
           for secondary_value in secondary_values:
-            if self._value_cardinality[secondary_value] > 1:
+            if self._max_value_cardinality[secondary_value] > 1:
               has_duplicate = True
             group.append({
               primary_key: primary_value,
@@ -375,4 +355,4 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     return result
 
   def value_cardinality(self, value):
-    return self._value_cardinality[value]
+    return self._max_value_cardinality[value]

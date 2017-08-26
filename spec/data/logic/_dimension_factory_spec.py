@@ -84,9 +84,23 @@ with description('_dimension_factory._DimensionFactory'):
       self.subject(number=[5, 6])
       groups = self.subject._append_cardinality_groups()
       expect(groups).to(equal([
-        ([{'name': 'A', 'number': 5}, {'name': 'A', 'number': 6}], 1),
-        ([{'name': 'B', 'number': 5}, {'name': 'B', 'number': 6}], 1),
-        ([{'name': 'C', 'number': 5}, {'name': 'C', 'number': 6}], 1),
+        _dimension_factory.Cardinality(group=[
+          {'name': 'A', 'number': 5}, {'name': 'A', 'number': 6}
+        ], cardinality=1),
+        _dimension_factory.Cardinality(group=[
+          {'name': 'B', 'number': 5}, {'name': 'B', 'number': 6}
+        ], cardinality=1),
+        _dimension_factory.Cardinality(group=[
+          {'name': 'C', 'number': 5}, {'name': 'C', 'number': 6}
+        ], cardinality=1),
+        _dimension_factory.CardinalityRange(group=[
+          {'number': 5, 'name': 'A'}, {'number': 5, 'name': 'B'},
+          {'number': 5, 'name': 'C'}
+        ], min_cardinality=1, max_cardinality=2),
+        _dimension_factory.CardinalityRange(group=[
+          {'number': 6, 'name': 'A'}, {'number': 6, 'name': 'B'},
+          {'number': 6, 'name': 'C'}
+        ], min_cardinality=1, max_cardinality=2)
       ]))
 
     with it('returns 2D rows and columns with different number of duplicates'):
@@ -96,12 +110,23 @@ with description('_dimension_factory._DimensionFactory'):
       self.subject(one=['A', 'A', 'A', 'A', 'A', 'A', 'B'])
       groups = self.subject._append_cardinality_groups()
       expect(groups).to(equal([
-        ([{'dupes': 3, 'one': 'A'}, {'dupes': 2, 'one': 'A'},
-          {'dupes': 1, 'one': 'A'}], 3),
-        # This ensures B appears in only one of 1, 2, or 3 (1 time).
-        ([{'dupes': 3, 'one': 'B'}, {'dupes': 2, 'one': 'B'},
-          {'dupes': 1, 'one': 'B'}], 1)
-      ]))
+        _dimension_factory.Cardinality(group=[
+          {'dupes': 3, 'one': 'A'}, {'dupes': 3, 'one': 'B'}
+        ], cardinality=2),
+        _dimension_factory.Cardinality(group=[
+          {'dupes': 2, 'one': 'A'}, {'dupes': 2, 'one': 'B'}
+        ], cardinality=3),
+        _dimension_factory.Cardinality(group=[
+          {'dupes': 1, 'one': 'A'}, {'dupes': 1, 'one': 'B'}
+        ], cardinality=2),
+        _dimension_factory.Cardinality(group=[
+          {'one': 'A', 'dupes': 3}, {'one': 'A', 'dupes': 2},
+          {'one': 'A', 'dupes': 1}
+        ], cardinality=6),
+        _dimension_factory.Cardinality(group=[
+          {'one': 'B', 'dupes': 3}, {'one': 'B', 'dupes': 2},
+          {'one': 'B', 'dupes': 1}
+        ], cardinality=1)]))
 
     with it('returns 3D rows and columns'):
       self.subject(a=['A', 'B'])
@@ -136,33 +161,64 @@ with description('_dimension_factory._DimensionFactory'):
       groups = self.subject._append_cardinality_groups()
       expect(groups).to(equal([
         _dimension_factory.Cardinality(group=[
-          {'d1': 'A', 'd2': 1}, {'d1': 'A', 'd2': 2}, {'d1': 'A', 'd2': 3},
+          {'d1': 'A', 'd2': 1}, {'d1': 'A', 'd2': 2}, {'d1': 'A', 'd2': 3}
         ], cardinality=1),
         _dimension_factory.Cardinality(group=[
-          {'d1': 'B', 'd2': 1}, {'d1': 'B', 'd2': 2}, {'d1': 'B', 'd2': 3},
+          {'d1': 'B', 'd2': 1}, {'d1': 'B', 'd2': 2}, {'d1': 'B', 'd2': 3}
         ], cardinality=1),
         _dimension_factory.Cardinality(group=[
-          {'d1': 'C', 'd2': 1}, {'d1': 'C', 'd2': 2}, {'d1': 'C', 'd2': 3},
+          {'d1': 'C', 'd2': 1}, {'d1': 'C', 'd2': 2}, {'d1': 'C', 'd2': 3}
         ], cardinality=1),
         _dimension_factory.Cardinality(group=[
-          {'d1': 'D', 'd2': 1}, {'d1': 'D', 'd2': 2}, {'d1': 'D', 'd2': 3},
-        ], cardinality=1),
-        _dimension_factory.Cardinality(group=[
-          {'d1': 'A', 'd3': 'x'}, {'d1': 'A', 'd3': 'y'}], cardinality=1,
-        ),
-        _dimension_factory.Cardinality(group=[
-          {'d1': 'B', 'd3': 'x'}, {'d1': 'B', 'd3': 'y'},
-        ], cardinality=1),
-        _dimension_factory.Cardinality(group=[
-          {'d1': 'C', 'd3': 'x'}, {'d1': 'C', 'd3': 'y'}], cardinality=1,
-        ),
-        _dimension_factory.Cardinality(group=[
-          {'d1': 'D', 'd3': 'x'}, {'d1': 'D', 'd3': 'y'},
+          {'d1': 'D', 'd2': 1}, {'d1': 'D', 'd2': 2}, {'d1': 'D', 'd2': 3}
         ], cardinality=1),
         _dimension_factory.CardinalityRange(group=[
-          {'d2': 1, 'd3': 'x'}, {'d2': 1, 'd3': 'y'}, {'d2': 2, 'd3': 'x'},
-          {'d2': 2, 'd3': 'y'}, {'d2': 3, 'd3': 'x'}, {'d2': 3, 'd3': 'y'},
-        ], min_cardinality=1, max_cardinality=4),
+          {'d2': 1, 'd1': 'A'}, {'d2': 1, 'd1': 'B'}, {'d2': 1, 'd1': 'C'},
+          {'d2': 1, 'd1': 'D'}
+        ], min_cardinality=1, max_cardinality=2),
+        _dimension_factory.CardinalityRange(group=[
+          {'d2': 2, 'd1': 'A'}, {'d2': 2, 'd1': 'B'}, {'d2': 2, 'd1': 'C'},
+          {'d2': 2, 'd1': 'D'}
+        ], min_cardinality=1, max_cardinality=2),
+        _dimension_factory.CardinalityRange(group=[
+          {'d2': 3, 'd1': 'A'}, {'d2': 3, 'd1': 'B'}, {'d2': 3, 'd1': 'C'},
+          {'d2': 3, 'd1': 'D'}
+        ], min_cardinality=1, max_cardinality=2),
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'A', 'd3': 'x'}, {'d1': 'A', 'd3': 'y'}
+        ], cardinality=1),
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'B', 'd3': 'x'}, {'d1': 'B', 'd3': 'y'}
+        ], cardinality=1),
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'C', 'd3': 'x'}, {'d1': 'C', 'd3': 'y'}
+        ], cardinality=1),
+        _dimension_factory.Cardinality(group=[
+          {'d1': 'D', 'd3': 'x'}, {'d1': 'D', 'd3': 'y'}
+        ], cardinality=1),
+        _dimension_factory.CardinalityRange(group=[
+          {'d3': 'x', 'd1': 'A'}, {'d3': 'x', 'd1': 'B'},
+          {'d3': 'x', 'd1': 'C'}, {'d3': 'x', 'd1': 'D'}
+        ], min_cardinality=1, max_cardinality=3),
+        _dimension_factory.CardinalityRange(group=[
+          {'d3': 'y', 'd1': 'A'}, {'d3': 'y', 'd1': 'B'},
+          {'d3': 'y', 'd1': 'C'}, {'d3': 'y', 'd1': 'D'}
+        ], min_cardinality=1, max_cardinality=3),
+        _dimension_factory.CardinalityRange(group=[
+          {'d2': 1, 'd3': 'x'}, {'d2': 1, 'd3': 'y'}
+        ], min_cardinality=1, max_cardinality=2),
+        _dimension_factory.CardinalityRange(group=[
+          {'d2': 2, 'd3': 'x'}, {'d2': 2, 'd3': 'y'}
+        ], min_cardinality=1, max_cardinality=2),
+        _dimension_factory.CardinalityRange(group=[
+          {'d2': 3, 'd3': 'x'}, {'d2': 3, 'd3': 'y'}
+        ], min_cardinality=1, max_cardinality=2),
+        _dimension_factory.CardinalityRange(group=[
+          {'d3': 'x', 'd2': 1}, {'d3': 'x', 'd2': 2}, {'d3': 'x', 'd2': 3}
+        ], min_cardinality=1, max_cardinality=3),
+        _dimension_factory.CardinalityRange(group=[
+          {'d3': 'y', 'd2': 1}, {'d3': 'y', 'd2': 2}, {'d3': 'y', 'd2': 3}
+        ], min_cardinality=1, max_cardinality=3)
       ]))
 
   with description('inference groups'):
