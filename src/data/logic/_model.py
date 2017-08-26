@@ -181,10 +181,7 @@ class _Model(Numberjack.Model):
               x_value_key: x_value,
               y_value_key: y_value,
             })
-            if variable.value() == 1:
-              row.append('o')
-            else:
-              row.append('x')
+            row.append(str(variable.value()))
           row.append('')  # Spacer between groups.
         rows.append('\t'.join(row))
       rows.append('')  # Spacer between groups.

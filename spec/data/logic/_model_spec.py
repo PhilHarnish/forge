@@ -227,12 +227,12 @@ with description('_model._Model usage'):
       expect(self.model.load('Mistral').solve()).to(be_true)
       expect(self.model.get_solutions_grid()).to(look_like("""
       *	cherries	dates	figs		10	11	
-      andy	o	x	x		o	x	
-      bob	x	o	x		x	o	
-      cynthia	x	x	o		x	o	
-
-      10	o	x	x	
-      11	x	o	o	
+      andy	1	0	0		1	0	
+      bob	0	1	0		0	1	
+      cynthia	0	0	1		0	1	
+     
+      10	1	0	0	
+      11	0	1	1	
       """))
 
   with description('dimension_constraints'):
