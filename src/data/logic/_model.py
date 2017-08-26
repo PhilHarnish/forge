@@ -239,10 +239,8 @@ class _Model(Numberjack.Model):
             zip(group_sums, group.scores), key=lambda x: x[1])
         reference, best_score = constraints.pop()
         for other, score in constraints:
-          if best_score == 2 and score in (1, 2):
+          if best_score == 2 and score == 2:
             # If both scores are 2 then there is no need for inference.
-            # Inference from 2 to 1 results in too many constraints for
-            # Numberjack to finish.
             continue
           result.append(reference == other)
       else:
