@@ -63,7 +63,7 @@ with description('_reference.Reference'):
       expect(c).to(be_a(Numberjack.Predicate))
       expect(str(c)).to(equal('(x0 == False)'))
 
-    with it('performs comparisons between two well-constrained references'):
+    with it('performs equality between two well-constrained references'):
       a = _reference.Reference(self.model, {
         'key1': 'value_a',
         'key2': 'value_a',
@@ -75,6 +75,19 @@ with description('_reference.Reference'):
       c = a == b
       expect(c).to(be_a(Numberjack.Predicate))
       expect(str(c)).to(equal('(x0 == x1)'))
+
+    with it('performs inequality between two well-constrained references'):
+      a = _reference.Reference(self.model, {
+        'key1': 'value_a',
+        'key2': 'value_a',
+      })
+      b = _reference.Reference(self.model, {
+        'key1': 'value_b',
+        'key2': 'value_b',
+      })
+      c = a != b
+      expect(c).to(be_a(Numberjack.Predicate))
+      expect(str(c)).to(equal('(x0 != x1)'))
 
   with description('value'):
     with it('returned from ValueReference matches input'):
