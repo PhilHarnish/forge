@@ -156,6 +156,10 @@ class _Model(Numberjack.Model):
             true_values.append(column_value)
     return column_headers, rows
 
+  def grid(self):
+    """Convenience method for printing grid from within logic problem DSL."""
+    return lambda: print('\n', self.get_solutions_grid())
+
   def get_solutions_grid(self):
     """Returns a large, traditional logic puzzle grid in tab-separated str.
 
