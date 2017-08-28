@@ -206,3 +206,6 @@ both cases the output should produce correct results. Something like this:
 * Support `if cond: {A, B, C} == {X, Y, Z}`.
 * Support `for x in y: 1 <= foo <= 4`
 * Optimize `a.reified == b.reified` to `all(a[x] == b[x] for x in reified)`.
+* Fix shorthand for:
+  for w in [lamp, paperweight, trivet]:
+    {w} != {anger, blackmail}
