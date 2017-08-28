@@ -600,14 +600,23 @@ def _mutual_equality_expression(node):
 def _mutual_equality_expression_value(node):
   if not (isinstance(node, ast.Compare) and
     isinstance(node.left, ast.Set) and len(node.ops) == 1 and
-    isinstance(node.ops[0], ast.Eq) and
     isinstance(node.comparators[0], ast.Set)):
     return None
-  return _mutual_equality_for(node.left, node.comparators[0])
+  if isinstance(node.ops[0], ast.Eq):
+    equal = True
+  elif isinstance(node.ops[0], ast.NotEq):
+    equal = False
+  else:
+    raise _fail(node, msg='Unsupported equality expression')
+  return _mutual_equality_for(node.left, node.comparators[0], equal)
 
-def _mutual_equality_for(a, b):
+def _mutual_equality_for(a, b, equal):
   if len(a.elts) > len(b.elts):
     a, b = b, a
+  if equal:
+    op = ast.Eq()
+  else:
+    op = ast.NotEq()
   return ast.For(
       target=ast.Name(id='__x', ctx=_STORE),
       iter=a,
@@ -636,7 +645,7 @@ def _mutual_equality_for(a, b):
                 ],
                 keywords=[],
             ),
-            ops=[ast.Eq()],
+            ops=[op],
             comparators=[ast.Num(n=1)],
         )),
       ],

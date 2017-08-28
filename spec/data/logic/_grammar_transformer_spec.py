@@ -217,6 +217,17 @@ with description('_GrammarTransformer'):
       node = node.body[-1]
       expect(to_source(node)).to(look_like(expected))
 
+    with it('set equality into group inequality, different sized lists'):
+      node = _grammar_transformer.transform("""
+        {A} != {X, Y, Z}
+      """)
+      expected = goal("""
+        for __x in {A}:
+          model(sum(__x[__y] for __y in {X, Y, Z}) != 1)
+      """)
+      node = node.body[-1]
+      expect(to_source(node)).to(look_like(expected))
+
   with description('model constraints'):
     with it('constrains A == B'):
       node = _grammar_transformer.transform('A == B')
