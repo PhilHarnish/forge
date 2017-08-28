@@ -90,6 +90,7 @@ sum(David[f] and Jessica[f] for f in [orange, tomato, green, seafood, strawberry
 sum(Beth[f] and Charles[f] for f in [orange, tomato, green, seafood, buttermilk, chocolate, pecan, muffin, toast, strawberry]) == 1
 """
 
+
 SOLUTION = """
    name |      juice |   omelet |    pancake |  bread |         jam
    Beth |     tomato |    green |  chocolate | muffin |  strawberry
