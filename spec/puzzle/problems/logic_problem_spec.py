@@ -43,6 +43,17 @@ with description('LogicProblem score'):
       match in itertools.combinations('BCDFJKT', 2)
     """).split('\n'))).to(equal(1))
 
+  with it('identifies a WIP logic problem with compound conditions'):
+    expect(logic_problem.LogicProblem.score(textwrap.dedent("""
+      name in {Beth, Charles, David, Frank, Jessica, Karen, Nolan, Taylor}
+      (group, place) in ({A, B}, {1, 2, 3, 4})
+      
+      any(Frank[g] for g in group.A) != any(Taylor[g] for g in group.A)
+      ((any(Frank[g] for g in place[1]) and any(Taylor[g] for g in place[2])) or
+          (any(Taylor[g] for g in place[1]) and any(Frank[g] for g in place[2])))
+    """).split('\n'))).to(equal(1))
+
+
 with description('LogicProblem parsing'):
   with it('parses empty input'):
     lines = ['']
