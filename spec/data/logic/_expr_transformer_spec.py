@@ -1,5 +1,7 @@
 import ast
 
+import Numberjack
+
 from data.logic import _dimension_factory, _expr_transformer, _model, \
   _predicates, _reference, dsl
 from spec.mamba import *
@@ -154,3 +156,16 @@ with description('compile'):
     compiled = self.transformer.compile(expr)
     expect(fn).to(have_been_called)
     expect(str(compiled)).to(equal('3'))
+
+  with description('regression tests'):
+    with before.each:
+      self.model = Numberjack.Model()
+
+    with it('resolves values before Numberjack uses them'):
+      a = dsl.variable('a')
+      b = dsl.variable('b')
+      c = a * b
+      expr = c == 1462
+      compiled = self.transformer.compile(expr)
+      expect(str(compiled)).to(equal('((a * b) == 1462)'))
+      expect(calling(self.model.add, compiled)).not_to(raise_error)

@@ -51,23 +51,25 @@ class ExprTransformer(ast.NodeTransformer):
     right = self.visit(node.right)
     op = node.op
     if isinstance(op, ast.BitAnd):
-      return left & right
+      result = left & right
     elif isinstance(op, ast.BitOr):
-      return left | right
+      result = left | right
     elif isinstance(op, ast.BitXor):
       # This shortcut may not always work. When does it fail?
-      return left + right == 1
+      result = left + right == 1
     elif isinstance(op, ast.Add):
-      return left + right
+      result = left + right
     elif isinstance(op, ast.Sub):
-      return left - right
+      result = left - right
     elif isinstance(op, ast.Mult):
-      return left * right
+      result = left * right
     elif isinstance(op, ast.LShift):
-      return left << right
+      result = left << right
     elif isinstance(op, ast.RShift):
-      return left >> right
-    _fail(node, msg='Binary op %s unsupported' % op.__class__.__name__)
+      result = left >> right
+    else:
+      raise _fail(node, msg='Binary op %s unsupported' % op.__class__.__name__)
+    return _predicates.Predicates([result])
 
   def visit_Call(self, node):
     args = [self.visit(arg) for arg in node.args]

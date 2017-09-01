@@ -33,3 +33,11 @@ with description('_sugar.variable'):
     expect(v).to(be_a(_ast_factory.AccumulatingExpressionMixin))
     v = v & (v == False)
     expect(v).to(be_a(_ast_factory.AccumulatingExpressionMixin))
+
+  with it('accumulates with values correctly'):
+    a = _sugar.Variable('a')
+    b = _sugar.Variable('b')
+    c = a * b
+    expect(c).to(be_a(_ast_factory.AccumulatingExpressionMixin))
+    v = c == 1462
+    expect(v).to(be_a(_ast_factory.AccumulatingExpressionMixin))

@@ -90,7 +90,9 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     for value, _ in values:
       self._max_value_cardinality[value] = max(
           max_cardinality, self._max_value_cardinality[value])
-    if not duplicates and all(isinstance(i, int) for i, _ in values):
+    raw_values = [i for i, _ in values]
+    if (not duplicates and all(isinstance(i, int) for i in raw_values) and
+        raw_values == list(range(raw_values[0], raw_values[-1] + 1))):
       self._compact_dimensions.add(dimension)
     if len(inputs) == 1:
       return _dimension_slice._OriginalDimensionSlice(
