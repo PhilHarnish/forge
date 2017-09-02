@@ -57,3 +57,24 @@ class _Init(object):
     pass
 
 init = _Init()
+
+
+def _normalize_gcc_constraints(constraints):
+  cardinality_map = {}
+  if isinstance(constraints, (list, set, tuple)):
+    for i in constraints:
+      cardinality_map[i] = (1, 1)
+  elif isinstance(constraints, dict):
+    for k, v in constraints.items():
+      if isinstance(v, tuple):
+        cardinality_map[k] = v
+      elif isinstance(v, range):
+        cardinality_map[k] = (getattr(v, 'start'), getattr(v, 'stop'))
+      else:
+        cardinality_map[k] = (v, v)
+  else:
+    raise TypeError('Invalid constraints for gcc: %s' % constraints)
+  return cardinality_map
+
+def gcc(vars, constraints):
+  return Numberjack.Gcc(vars, _normalize_gcc_constraints(constraints))

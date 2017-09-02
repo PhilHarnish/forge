@@ -41,3 +41,41 @@ with description('_sugar.variable'):
     expect(c).to(be_a(_ast_factory.AccumulatingExpressionMixin))
     v = c == 1462
     expect(v).to(be_a(_ast_factory.AccumulatingExpressionMixin))
+
+with description('_sugar._normalize_gcc_constraints'):
+  with it('accepts collections: list'):
+    expect(_sugar._normalize_gcc_constraints([1, 2, 3])).to(equal({
+      1: (1, 1),
+      2: (1, 1),
+      3: (1, 1),
+    }))
+
+  with it('accepts collections: set'):
+    expect(_sugar._normalize_gcc_constraints({1, 2, 3})).to(equal({
+      1: (1, 1),
+      2: (1, 1),
+      3: (1, 1),
+    }))
+
+  with it('accepts collections: tuple'):
+    expect(_sugar._normalize_gcc_constraints((1, 2, 3))).to(equal({
+      1: (1, 1),
+      2: (1, 1),
+      3: (1, 1),
+    }))
+
+  with it('accepts collections: dict, flat'):
+    expect(_sugar._normalize_gcc_constraints({1: 2, 3: 4})).to(equal({
+      1: (2, 2),
+      3: (4, 4),
+    }))
+
+  with it('accepts collections: dict, tuple'):
+    expect(_sugar._normalize_gcc_constraints({1: (2, 3)})).to(equal({
+      1: (2, 3),
+    }))
+
+  with it('accepts collections: dict, range'):
+    expect(_sugar._normalize_gcc_constraints({1: range(2, 3)})).to(equal({
+      1: (2, 3),
+    }))
