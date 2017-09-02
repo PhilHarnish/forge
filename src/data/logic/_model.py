@@ -147,13 +147,35 @@ class _Model(Numberjack.Model):
       for column_header, column_values in dimensions[1:]:
         true_values = []
         row.append(true_values)
+        compact, swap = self._dimension_factory.compact_dimensions(
+            first_header, column_header)
         for column_value in column_values:
           variable = self.get_variables({
             first_header: first_value,
             column_header: column_value,
           })
-          if variable.value() == 1:
+          value = variable.value()
+          if value == 1:
             true_values.append(column_value)
+          elif compact and value:
+            # MiniSat has strange, non-deterministic behavior for compacted
+            # dimensions.
+            if swap:
+              variable = self.get_variables({
+                first_header: None,
+                column_header: column_value,
+              })
+            else:
+              variable = self.get_variables({
+                first_header: first_value,
+                column_header: None,
+              })
+            # ...MiniSat also seems to function only in debugger mode which will
+            # repr and str values...
+            repr(variable), str(variable)
+            if variable.value() == column_value:
+              true_values.append(column_value)
+              # ...and even still it can return 'true' multiple times.
     return column_headers, rows
 
   def grid(self):
