@@ -84,6 +84,14 @@ class be_one_of(matchers.Matcher):
     return subject in self._options, [repr(option) for option in self._options]
 
 
+def _fn_name(fn):
+  if isinstance(fn, mock.MagicMock):
+    return re.sub(r'^<.*name=\'([^\']*)\'.*$', r'\1', str(fn))
+  elif hasattr(fn, '__name__'):
+    return fn.__name__
+  return str(fn)
+
+
 class _have_been_called(matchers.Matcher):
   def __init__(self, *args, **kwargs):
     self._args = args
@@ -104,7 +112,7 @@ class _have_been_called(matchers.Matcher):
 
   def _failure_message_negated(self, subject, *args):
     return 'expected: %s(%s) not to have been called' % (
-      subject, _fmt_args(self._args, self._kwargs))
+      _fn_name(subject), _fmt_args(self._args, self._kwargs))
 
 
 have_been_called = _have_been_called()
@@ -128,13 +136,12 @@ class have_been_called_times(matchers.Matcher):
     return self._failure_message_negated(subject, *args).replace(' not ', ' ')
 
   def _failure_message_negated(self, subject, *args):
-    if isinstance(subject, mock.MagicMock):
-      fn_str = re.sub(r'^<.*name=\'([^\']*)\'.*$', r'\1', str(subject))
-    else:
-      fn_str = str(subject)
     return (
       'expected: %s to have been called %s times,'
-      ' called %s times instead' % (fn_str, self._times, self._actual_times))
+      ' called %s times instead' % (
+        _fn_name(subject), self._times, self._actual_times
+      )
+    )
 
 
 have_been_called_once = have_been_called_times(1)
