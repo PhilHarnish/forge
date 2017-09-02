@@ -1,4 +1,5 @@
 import builtins
+import re
 import textwrap
 
 import mock
@@ -113,19 +114,27 @@ have_been_called_with = _have_been_called()
 class have_been_called_times(matchers.Matcher):
   def __init__(self, times):
     self._times = times
+    self._actual_times = 'unknown'
 
   def __call__(self, times):
     return have_been_called_times(self._times)
 
   def _match(self, subject):
-    return (self._times == len(subject.call_args_list),
+    self._actual_times = len(subject.call_args_list)
+    return (self._times == self._actual_times,
         [str(c) for c in subject.call_args_list])
 
   def _failure_message(self, subject, *args):
     return self._failure_message_negated(subject, *args).replace(' not ', ' ')
 
   def _failure_message_negated(self, subject, *args):
-    return 'expected: %s to have been called %s times' % (subject, self._times)
+    if isinstance(subject, mock.MagicMock):
+      fn_str = re.sub(r'^<.*name=\'([^\']*)\'.*$', r'\1', str(subject))
+    else:
+      fn_str = str(subject)
+    return (
+      'expected: %s to have been called %s times,'
+      ' called %s times instead' % (fn_str, self._times, self._actual_times))
 
 
 have_been_called_once = have_been_called_times(1)
