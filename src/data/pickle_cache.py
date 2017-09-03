@@ -7,7 +7,7 @@ import sys
 from data import data
 
 _PICKLE_PATH = data.project_path('data/_pkl_cache')
-_SANITIZE_RE = re.compile(r'[^A-Za-z1-9]')
+_SANITIZE_RE = re.compile(r'[^A-Za-z0-9]')
 
 
 def cache(prefix):
