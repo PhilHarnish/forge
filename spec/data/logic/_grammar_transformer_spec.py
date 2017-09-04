@@ -51,7 +51,7 @@ with description('_GrammarTransformer'):
     with it('detects dimension = a, b, c'):
       node = _grammar_transformer.transform('name <= {a, b, c}')
       expected = goal("""
-          a, b, c = name = dimensions(name=['a', 'b', 'c'])
+          a, b, c = name = dimensions(['name', ['a', 'b', 'c']])
       """)
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Assign))
@@ -60,7 +60,7 @@ with description('_GrammarTransformer'):
     with it('detects dimension = 1, 2, 3'):
       node = _grammar_transformer.transform('name <= {1, 2, 3}')
       expected = goal("""
-          _1, _2, _3 = name = dimensions(name=[1, 2, 3])
+          _1, _2, _3 = name = dimensions(['name', [1, 2, 3]])
       """)
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Assign))
@@ -69,7 +69,7 @@ with description('_GrammarTransformer'):
     with it('detects dimension = "a", "b c", "d e f"'):
       node = _grammar_transformer.transform('name <= {"a", "b c", "d e f"}')
       expected = goal("""
-          a, b_c, d_e_f = name = dimensions(name=['a', 'b c', 'd e f'])
+          a, b_c, d_e_f = name = dimensions(['name', ['a', 'b c', 'd e f']])
       """)
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Assign))
@@ -78,7 +78,7 @@ with description('_GrammarTransformer'):
     with it('detects dimension using "in" keyword'):
       node = _grammar_transformer.transform('name in {a, b, c}')
       expected = goal("""
-          a, b, c = name = dimensions(name=['a', 'b', 'c'])
+          a, b, c = name = dimensions(['name', ['a', 'b', 'c']])
       """)
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Assign))
@@ -87,7 +87,7 @@ with description('_GrammarTransformer'):
     with it('supports *N repeats as shorthand'):
       node = _grammar_transformer.transform('name in {a, b, c*3}')
       expected = goal("""
-          a, b, c, c, c = name = dimensions(name=['a', 'b', 'c', 'c', 'c'])
+          a, b, c, c, c = name = dimensions(['name', ['a', 'b', 'c', 'c', 'c']])
       """)
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Assign))
@@ -105,13 +105,24 @@ with description('_GrammarTransformer'):
       expect(assignment).to(be_a(ast.Assign))
       expect(to_source(assignment)).to(look_like(expected))
 
+    with it('supports dimensions with counts'):
+      node = _grammar_transformer.transform('a in 3*{x, y, z}')
+      expected = goal("""
+          x, y, z = a = dimensions(
+              ['a', 3, ['x', 'y', 'z']],
+          )
+      """)
+      assignment = node.body[-1]
+      expect(assignment).to(be_a(ast.Assign))
+      expect(to_source(assignment)).to(look_like(expected))
+
     with it('detects dimension created from networkx graphs'):
       node = _grammar_transformer.transform("""
         import networkx
         position in networkx.icosahedral_graph()
       """)
       expected = goal("""
-          position = dimensions(position=networkx.icosahedral_graph())
+        position = dimensions(['position', networkx.icosahedral_graph()])
       """)
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Assign))
@@ -122,7 +133,7 @@ with description('_GrammarTransformer'):
         position in range(26)
       """)
       expected = goal("""
-          position = dimensions(position=range(26))
+        position = dimensions(['position', range(26)])
       """)
       assignment = node.body[-1]
       expect(assignment).to(be_a(ast.Assign))

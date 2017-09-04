@@ -142,10 +142,10 @@ with description('LogicProblem solutions'):
       from data.logic.dsl import *
       dimensions = DimensionFactory()
       model = Model(dimensions)
-      andy, bob, cathy = name = dimensions(name=['Andy', 'Bob', 'Cathy'])
-      ceo, projectmanager, analyst = occupation = dimensions(occupation=['CEO',
-          'ProjectManager', 'Analyst'])
-      _10, _11, _12 = age = dimensions(age=[10, 11, 12])
+      andy, bob, cathy = name = dimensions(['name', ['Andy', 'Bob', 'Cathy']])
+      ceo, projectmanager, analyst = occupation = dimensions(['occupation', [
+          'CEO', 'ProjectManager', 'Analyst']])
+      _10, _11, _12 = age = dimensions(['age', [10, 11, 12]])
       """# The CEO is not the youngest."""
       model(ceo.age > projectmanager.age)
       model(ceo.age > analyst.age)

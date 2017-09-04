@@ -143,24 +143,7 @@ class _GrammarTransformer(ast.NodeTransformer):
       if result != node:
         return self.visit(result)
       return self.generic_visit(node)
-    elif isinstance(dimensions, _SingleDimension):
-      dimension, values = dimensions
-      targets = []
-      self._register_reference(dimension)
-      try:
-        # Treat "values" like an iterable.
-        for reference in values:
-          self._register_reference(reference)
-        targets.append(_dimension_target_tuple(values))
-      except TypeError:
-        # Otherwise assume "values" cannot be unpacked.
-        pass
-      targets.append(_dimension_name(dimension, _STORE))
-      return ast.Assign(
-          targets=targets,
-          value=_dimension_value(dimension, values),
-      )
-    elif isinstance(dimensions, _CrossProductDimension):
+    elif isinstance(dimensions, (_SingleDimension, _CrossProductDimension)):
       targets, args = dimensions
       self._find_and_register_references(targets)
       return ast.Assign(
@@ -310,8 +293,13 @@ def _fail(node, msg='Visit error'):
 
 
 def _canonical_reference_name(value):
-  if not isinstance(value, str) or (value and value[0].isdigit()):
+  if (isinstance(value, int) or
+      (isinstance(value, str) and value and value[0].isdigit())):
     value = '_%s' % value
+  elif isinstance(value, str):
+    pass
+  else:
+    raise TypeError('Value "%s" is not a valid reference' % value)
   return value.replace(' ', '_').replace('-', '_').lower()
 
 
@@ -371,11 +359,32 @@ def _variable_definition(node):
 
 
 def _single_dimension_definition(node):
-  dimension = node.left.id
   comparator = node.comparators[0]
+  if (isinstance(comparator, ast.BinOp) and
+      isinstance(comparator.op, ast.Mult) and
+      isinstance(comparator.left, ast.Num)):
+    count = comparator.left
+    comparator = comparator.right
+  else:
+    count = None
   values = _dimension_values(comparator)
   if values:
-    return _SingleDimension(dimension, values)
+    dimension = node.left.id
+    targets = []
+    if not isinstance(values, ast.AST):
+      targets.append(
+        ast.Tuple(
+          elts=[_dimension_name(value, _STORE) for value in values],
+          ctx=_STORE,
+        ),
+      )
+    targets.append(_dimension_name(dimension, _STORE))
+    args = [dimension]
+    if count is not None:
+      args.append(count)
+    args.append(values)
+    return _SingleDimension(
+        targets, [_ast_factory.coerce_value(args)])
   return None
 
 
