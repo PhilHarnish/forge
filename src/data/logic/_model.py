@@ -157,8 +157,6 @@ class _Model(Numberjack.Model):
           value = variable.value()
           if value == 1:
             true_values.append(column_value)
-          elif value:
-            true_values.append('%s*%s' % (column_value, value))
           elif compact and value:
             # MiniSat has strange, non-deterministic behavior for compacted
             # dimensions.
@@ -178,6 +176,9 @@ class _Model(Numberjack.Model):
             if variable.value() == column_value:
               true_values.append(column_value)
               # ...and even still it can return 'true' multiple times.
+          elif value:
+            # `value` was chosen multiple times.
+            true_values.append('%s*%s' % (column_value, value))
     return column_headers, rows
 
   def grid(self):
