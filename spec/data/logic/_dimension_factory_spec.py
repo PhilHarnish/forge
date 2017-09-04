@@ -16,6 +16,9 @@ with description('_dimension_factory._DimensionFactory'):
       expect(calling(self.subject, ('name', ['A']), ('age', [1]))).not_to(
           raise_error)
 
+    with it('accepts args with dimension counts'):
+      expect(calling(self.subject, ('name', 2, ['A', 'B']))).not_to(raise_error)
+
     with it('handles kwargs'):
       expect(calling(self.subject, name=['A'])).not_to(raise_error)
 
@@ -127,6 +130,29 @@ with description('_dimension_factory._DimensionFactory'):
           {'one': 'B', 'dupes': 3}, {'one': 'B', 'dupes': 2},
           {'one': 'B', 'dupes': 1}
         ], cardinality=1)]))
+
+    with it('returns 2D rows and columns with different counts'):
+      # 2-3 of each of these.
+      self.subject(['a', 3, ['x', 'y']])
+      # Only 1 "B".
+      self.subject(['b', ['q', 'r']])
+      groups = self.subject._append_cardinality_groups()
+      expect(groups).to(equal([
+        _dimension_factory.Cardinality(group=[
+          # a: x.
+          {'a': 'x', 'b': 'q'}, {'a': 'x', 'b': 'r'}
+        ], cardinality=3),
+        _dimension_factory.Cardinality(group=[
+          # a: y.
+          {'a': 'y', 'b': 'q'}, {'a': 'y', 'b': 'r'}
+        ], cardinality=3),
+        _dimension_factory.CardinalityRange(group=[
+          {'b': 'q', 'a': 'x'}, {'b': 'q', 'a': 'y'}
+        ], min_cardinality=1, max_cardinality=6),
+        _dimension_factory.CardinalityRange(group=[
+          {'b': 'r', 'a': 'x'}, {'b': 'r', 'a': 'y'}
+        ], min_cardinality=1, max_cardinality=6)
+      ]))
 
     with it('returns 3D rows and columns'):
       self.subject(a=['A', 'B'])

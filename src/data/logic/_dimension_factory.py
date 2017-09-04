@@ -28,6 +28,8 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
     self._dimension_size = {}
     # Maximum dimension size seen. Largest dimension should be first.
     self._max_dimension_size = 0
+    # Expected sum of values per dimension. (Default is 1.)
+    self._dimension_count = {}
     # Map of identifier: dimension.
     self._value_to_dimension = {}
     # Map of value: min cardinality (min number of duplicates).
@@ -44,12 +46,21 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       raise TypeError('Register only one dimension at a time (%s given)' % (
         ', '.join(kwargs.keys())))
     dimensions = list(args) + list(kwargs.items())
-    dimension = '_'.join(name for name, values in dimensions)
+    dimension = '_'.join(spec[0] for spec in dimensions)
     if dimension in self._dimensions:
       raise TypeError('Dimension "%s" already registered to %s' % (
         dimension, self._dimensions[dimension]
       ))
-    inputs = list(values for name, values in dimensions)
+    inputs = []
+    spec_count = None
+    for spec in dimensions:
+      if len(spec) == 3:
+        _, spec_count, input = spec
+      else:
+        spec_count = 1
+        _, input = spec
+      inputs.append(input)
+    self._dimension_count[dimension] = spec_count
     # A list of (id, source) tuples.
     values = []
     for input in itertools.product(*inputs):
@@ -71,15 +82,15 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       # dimension size is 3 then either choice can be up to 5.
       max_cardinality = self._max_dimension_size - (dimension_size - 1)
     else:
-      max_cardinality = 1
+      max_cardinality = spec_count
     child_dimensions = []
-    duplicates = False
+    compactable = spec_count == 1
     for value, source in values:
       if value in self._dimensions:
         raise TypeError('ID %s collides with dimension of same name' % (
           value))
       if value in self._value_to_dimension:
-        duplicates = True
+        compactable = False
         if dimension != self._value_to_dimension[value]:
           raise TypeError('ID %s already reserved by %s' % (
               value, self._value_to_dimension[value]))
@@ -88,10 +99,12 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
       self._max_value_cardinality[value] += 1
       child_dimensions.append((self._dimensions[dimension][value], set(source)))
     for value, _ in values:
+      self._min_value_cardinality[value] = max(
+          spec_count, self._min_value_cardinality[value])
       self._max_value_cardinality[value] = max(
           max_cardinality, self._max_value_cardinality[value])
     raw_values = [i for i, _ in values]
-    if (not duplicates and all(isinstance(i, int) for i in raw_values) and
+    if (compactable and all(isinstance(i, int) for i in raw_values) and
         raw_values == list(range(raw_values[0], raw_values[-1] + 1))):
       self._compact_dimensions.add(dimension)
     if len(inputs) == 1:
@@ -224,8 +237,14 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
 
   def _append_cardinality_group(
       self, result, major_key, major_values, minor_key, minor_values):
-    #if self._dimension_size[major_key] < self._dimension_size[minor_key]:
-    #  return  # Handle when keys are reversed.
+    if self._dimension_count[minor_key] > 1:
+      # The "count" logic is not very well constrained.
+      # Users will need to define better constraints in the logic problem.
+      # This assumes it is possible for each of the major values to be chosen
+      # `_dimension_count` times.
+      count_multiplier = self._dimension_count[minor_key] * len(major_values)
+    else:
+      count_multiplier = 1
     for major_value in major_values:
       min_cardinality = self._min_value_cardinality[major_value]
       max_cardinality = self._max_value_cardinality[major_value]
@@ -235,12 +254,11 @@ class _DimensionFactory(_dimension_slice._DimensionSlice):
           major_key: major_value,
           minor_key: minor_value,
         })
-      #if major_key in ('omelet', 'pancake') and minor_key in ('omelet', 'pancake'):
-      #  print('wat')
-      if min_cardinality == max_cardinality:
+      if min_cardinality == max_cardinality and count_multiplier == 1:
         result.append(Cardinality(group, min_cardinality))
       else:
-        result.append(CardinalityRange(group, min_cardinality, max_cardinality))
+        result.append(CardinalityRange(
+            group, min_cardinality, max_cardinality * count_multiplier))
 
   def _append_inference_groups(self, result=None):
     """Aligned cells between 3 boards must not sum to 2.
