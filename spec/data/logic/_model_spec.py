@@ -1,5 +1,4 @@
 import ast
-import re
 
 from data.logic import _dimension_factory, _model, _reference, dsl
 from spec.mamba import *
@@ -411,6 +410,22 @@ with description('_model._Model usage'):
         ((["andy"]food["banana"] + ["bob"]food["banana"] + ["cynthia"]food["banana"]) == (color["gray"]food["banana"] + color["blue"]food["banana"]))
       """))
 
+    with description('disable constraints'):
+      with it('normally returns constraints'):
+        self.model.load('Mistral')
+        expect(self.model.constraints).not_to(be_empty)
+
+      with it('removes all constraints'):
+        self.model.disable_constraints()
+        self.model.disable_inference()
+        self.model.load('Mistral')
+        expect(self.model.constraints).to(be_empty)
+
+      with it('removes specified constraints'):
+        for c in _model._DEFAULT_CONSTRAINTS:
+          self.model.disable_inference(c)
+        expect(self.model.constraints).to(be_empty)
+
   with description('load'):
     with it('applies dimensional constraints before loading'):
       expect(str(self.model)).to(look_like("""
@@ -421,3 +436,7 @@ with description('_model._Model usage'):
       expect(len(self.model.constraints)).to(be(0))
       self.model.load('Mistral')
       expect(len(self.model.constraints)).to(be_above(60))
+
+    with it('remembers preferred solver'):
+      self.model.solve_with('MiniSat')
+      expect(self.model.get_solver()).to(equal(['MiniSat']))

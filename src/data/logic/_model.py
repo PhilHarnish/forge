@@ -6,14 +6,36 @@ import Numberjack
 from data.logic import _dimension_factory, _expr_transformer, _predicates, \
   _reference, _solver, _util
 
+_BASE_CONSTRAINTS = {
+  _dimension_factory.Cardinality,
+  _dimension_factory.TotalCardinality,
+  _dimension_factory.UniqueCardinality,
+  _dimension_factory.CardinalityRange,
+}
+_INFERENCE_CONSTRAINTS = {
+  _dimension_factory.Inference,
+  _dimension_factory.ValueSumsInference,
+}
+_DEFAULT_CONSTRAINTS = _BASE_CONSTRAINTS | _INFERENCE_CONSTRAINTS
+
 
 class _Model(Numberjack.Model):
+  Cardinality = _dimension_factory.Cardinality
+  TotalCardinality = _dimension_factory.TotalCardinality
+  UniqueCardinality = _dimension_factory.UniqueCardinality
+  CardinalityRange = _dimension_factory.CardinalityRange
+
+  Inference = _dimension_factory.Inference
+  ValueSumsInference = _dimension_factory.ValueSumsInference
+
   def __init__(self, dimension_factory):
     super(_Model, self).__init__()
     self._dimension_factory = dimension_factory
     self._expr_transformer = _expr_transformer.ExprTransformer(self)
     self._variable_cache = {}
     self._constraints = []
+    self._default_constraint_types = _DEFAULT_CONSTRAINTS.copy()
+    self._preferred_solver = []
     self._deferred = []
 
   def __call__(self, *args):
@@ -36,7 +58,8 @@ class _Model(Numberjack.Model):
 
   def load(self, solvername, X=None, encoding=None):
     # WARNING: Nothing prevents redundant dimensional constraints.
-    self.add(self.dimension_constraints())
+    self.add(self.dimension_constraints(
+        types=tuple(self._default_constraint_types)))
     return _solver.Solver(
         self, super(_Model, self).load(solvername, X=X, encoding=encoding),
         self._deferred)
@@ -181,6 +204,29 @@ class _Model(Numberjack.Model):
             true_values.append('%s*%s' % (column_value, value))
     return column_headers, rows
 
+  def disable_constraints(self, type=None):
+    """Convenience method to omit default constraints in logic problem DSL."""
+    if type is None:
+      self._default_constraint_types -= _BASE_CONSTRAINTS
+    else:
+      self._default_constraint_types.remove(type)
+    return lambda: print('Default constraints disabled')
+
+  def disable_inference(self, type=None):
+    """Convenience method to omit default inference in logic problem DSL."""
+    if type is None:
+      self._default_constraint_types -= _INFERENCE_CONSTRAINTS
+    else:
+      self._default_constraint_types.remove(type)
+    return lambda: print('Default inference disabled')
+
+  def solve_with(self, *solvers):
+    self._preferred_solver = list(solvers)
+    return lambda: print('Solving with: %s' % str(solvers))
+
+  def get_solver(self):
+    return self._preferred_solver
+
   def grid(self):
     """Convenience method for printing grid from within logic problem DSL."""
     return lambda: print('\n', self.get_solutions_grid())
@@ -224,7 +270,7 @@ class _Model(Numberjack.Model):
   def dimension_constraints(self, types=None):
     result = []
     for group in self._dimension_factory.dimension_constraint_groups():
-      if types and not isinstance(group, types):
+      if types is not None and not isinstance(group, types):
         continue
       if hasattr(group, 'group'):
         variables = self._resolve_variables(group.group)
