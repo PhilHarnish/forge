@@ -43,7 +43,7 @@ class LogicProblem(problem.Problem):
   def _solve_iter(self):
     model = _model(self.lines)
     seen = set()
-    solvers = ['Mistral', 'MiniSat']
+    solvers = model.get_solver() or ['Mistral', 'MiniSat']
     while not seen and solvers:
       engine = solvers.pop(0)
       solver = _solver(model, engine)

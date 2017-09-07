@@ -191,3 +191,18 @@ with description('LogicProblem solutions'):
       problem = logic_problem.LogicProblem('test', [])
       problem.solutions()
       expect(solver_fn).to(have_been_called_times(2))
+
+  with it('tries preferred solver'):
+    solver = mock.Mock(solve=lambda: False)
+    model = mock.Mock(get_solver=lambda: ['Example'], _solved=False)
+    with mock.patch(
+        'puzzle.problems.logic_problem._solver', return_value=solver
+    ) as solver_fn:
+      # NB: Tried and failed to get patch.multiple to work here.
+      with mock.patch(
+          'puzzle.problems.logic_problem._model', return_value=model
+      ) as model_fn:
+        problem = logic_problem.LogicProblem('test', [])
+        problem.solutions()
+        expect(solver_fn).to(have_been_called_times(1))
+        expect(solver_fn).to(have_been_called_with(model, 'Example'))
