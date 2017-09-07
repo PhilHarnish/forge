@@ -7,6 +7,7 @@ DimensionFactory = _dimension_factory._DimensionFactory
 Model = _model._Model
 abs = _sugar.wrapped_call(Numberjack.Abs)
 all = _sugar.wrapped_call(Numberjack.Conjunction)
+all_diff = _sugar.wrapped_call(Numberjack.AllDiff)
 any = _sugar.wrapped_call(Numberjack.Disjunction)
 gcc = _sugar.wrapped_call(_sugar.gcc)
 sum = _sugar.wrapped_call(Numberjack.Sum)
