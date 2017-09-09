@@ -24,6 +24,7 @@ _INTERESTING_TOP_LEVEL_EXPRESSIONS = (
 
 
 _SOLUTION_LIMIT = 3  # Solutions should be unique, after all.
+_MAX_RETRIES = 3
 
 
 class LogicProblem(problem.Problem):
@@ -44,6 +45,7 @@ class LogicProblem(problem.Problem):
     model = _model(self.lines)
     seen = set()
     solvers = model.get_solver() or ['Mistral', 'MiniSat']
+    retries = 0
     while not seen and solvers:
       engine = solvers.pop(0)
       solver = _solver(model, engine)
@@ -54,7 +56,12 @@ class LogicProblem(problem.Problem):
         if solution in seen:
           # FIXME: No idea why this happens with some compacted problems.
           # Finding out why would be exhausting.
-          continue
+          retries += 1
+          if retries > _MAX_RETRIES:
+            break
+          else:
+            continue
+        retries = 0
         seen.add(solution)
         self._notes[solution] = ['Solved with %s' % engine]
         yield str(solver), 1
