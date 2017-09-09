@@ -1,4 +1,5 @@
-from puzzle.puzzlepedia import puzzle, puzzlepedia
+from data import warehouse
+from puzzle.puzzlepedia import prod_config, puzzle, puzzlepedia
 from spec.mamba import *
 
 display_patch = mock.patch('puzzle.puzzlepedia.puzzlepedia.display')
@@ -30,3 +31,26 @@ with description('puzzlepedia'):
     with it('runs without exception'):
       expect(calling(puzzlepedia.interact_with, self.puzzle)).not_to(
           raise_error)
+
+with _description('regression tests'):
+  with before.all:
+    warehouse.save()
+    prod_config.init()
+
+  with it('parses clues in order'):
+    source = textwrap.dedent("""
+      Classic Billy Wilder movie (4 wds)
+      It ended with the Siege of Yorktown (2 wds)
+      It may warn you of suprising object sizes (3 wds)
+      Like most solid objects, as opposed to linear (hyph.)
+      One who studies the spread of diseases
+      The point in the orbit of a planet at which its closest to the sun
+      Something asked intended to provoke a specific response (2 wds)
+      Sort of valuable, like some gemstones
+      Thoughtful discussion, as before a bill
+    """).strip()
+    lines = source.split('\n')
+    p = puzzle.Puzzle('ex', source)
+    expect(p.problems()).to(have_len(len(lines)))
+    for problem, line in zip(p.problems(), lines):
+      expect(problem.lines).to(equal([line]))

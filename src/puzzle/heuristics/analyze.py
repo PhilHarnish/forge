@@ -50,7 +50,7 @@ def identify_problems(lines, hint=None):
     identified = identify([line], hint=hint)
     if identified and identified.magnitude() > 0:
       results.append((identified, [line]))
-  return sorted(results, key=lambda x: x[0].magnitude(), reverse=True)
+  return results
 
 
 def init():

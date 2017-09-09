@@ -1,5 +1,3 @@
-import textwrap
-
 from puzzle.heuristics import analyze
 from puzzle.problems import problem
 from puzzle.puzzlepedia import puzzle
@@ -106,3 +104,22 @@ with description('Puzzle'):
       expect(subs.on_next.call_args).to(equal(mock.call(
           ('sample.0', p.problem(0))
       )))
+
+  with description('regression tests'):
+    with it('parses clues in order'):
+      source = textwrap.dedent("""
+        Classic Billy Wilder movie (4 wds)
+        It ended with the Siege of Yorktown (2 wds)
+        It may warn you of suprising object sizes (3 wds)
+        Like most solid objects, as opposed to linear (hyph.)
+        One who studies the spread of diseases
+        The point in the orbit of a planet at which its closest to the sun
+        Something asked intended to provoke a specific response (2 wds)
+        Sort of valuable, like some gemstones
+        Thoughtful discussion, as before a bill
+      """).strip()
+      lines = source.split('\n')
+      p = puzzle.Puzzle('ex', source)
+      expect(p.problems()).to(have_len(len(lines)))
+      for problem, line in zip(p.problems(), lines):
+        expect(problem.lines).to(equal([line]))

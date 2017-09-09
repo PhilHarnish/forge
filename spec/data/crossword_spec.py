@@ -1,5 +1,4 @@
 from data import crossword, warehouse
-from spec.data import fixtures
 from spec.mamba import *
 
 with description('clue_keywords'):
