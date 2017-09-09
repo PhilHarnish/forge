@@ -1,11 +1,7 @@
 import collections
-import re
 
 from data import crossword, warehouse
 from puzzle.problems.crossword import _base_crossword_problem
-
-_CROSSWORD_REGEX = re.compile(r'^.*\(([\d\s,|]+)\)$')
-_INTS = re.compile(r'(\d+)')
 
 
 class CrosswordProblem(_base_crossword_problem._BaseCrosswordProblem):
