@@ -66,6 +66,13 @@ class _DimensionFilterSlice(_OriginalDimensionSlice):
     else:
       self._filter = set()
 
+  def dimension_address(self):
+    candidates = list(self)
+    if len(candidates) == 1:
+      return _util.address(
+          self._factory.dimensions(), candidates[0]._constraints)
+    return super(_DimensionFilterSlice, self).dimension_address()
+
   def __getattr__(self, item):
     return _DimensionFilterSlice(
         self._factory, self._constraints, self._children,
