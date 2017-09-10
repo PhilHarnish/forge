@@ -6,15 +6,15 @@ class Solver(object):
     self._deferred = deferred
 
   def solve(self):
-    solved = False
+    solution_found = False
     if not self._solved:
       self._solved = True
-      solved = self._solver.solve()
+      solution_found = self._solver.solve()
     elif not self._solver.is_unsat():
-      solved = bool(self._solver.getNextSolution())
-    if solved:
+      solution_found = bool(self._solver.getNextSolution())
+    if solution_found:
       self._process_deferred()
-    return solved
+    return solution_found
 
   def solved(self):
     return self._solved and self._solver.is_sat() or not self._solver.is_unsat()
