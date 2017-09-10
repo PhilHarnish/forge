@@ -3,8 +3,8 @@ import re
 from data.alphabets import crossword_indicators
 from puzzle.problems import problem
 
-_CROSSWORD_REGEX = re.compile(r'^.*\(([\d\s,|]+)\)$')
-_INTS = re.compile(r'(\d+)')
+_CROSSWORD_REGEX = re.compile(r'^.*\(([\d\s,|]+)? ?(wo?r?ds)?(hyphe?n?)?\.?\)$')
+_INT_REGEX = re.compile(r'(\d+)')
 
 
 class _BaseCrosswordProblem(problem.Problem):
@@ -16,8 +16,14 @@ class _BaseCrosswordProblem(problem.Problem):
     self._max_length = float('inf')
     for line in lines:
       for match in _CROSSWORD_REGEX.finditer(line):
-        lengths = _INTS.findall(match.group(1))
-        if len(lengths) == 1:
+        int_constraint, word_constraint, hyphen_constraint = match.groups()
+        if int_constraint is None:
+          break
+        lengths = _INT_REGEX.findall(int_constraint)
+        if word_constraint:
+          # TODO: Verify word_constraint, hyphen_constraint.
+          pass
+        elif len(lengths) == 1:
           target = int(lengths[0])
           self.constrain(lambda x, _: len(x) == target)
           self._min_length = target

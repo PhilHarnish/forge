@@ -4,6 +4,10 @@ from data import data
 from puzzle.problems.crossword import crossword_problem
 from spec.mamba import *
 
+_SAMPLE = {
+  'a': 1, 'aa': .75, 'aaa': .5, 'abb': .25, 'aabb': .2, 'aaabb': .1,
+}
+
 with description('CrosswordProblem'):
   with it('ignores empty and garbage input'):
     expect(crossword_problem.CrosswordProblem.score([''])).to(equal(0))
@@ -24,6 +28,18 @@ with description('CrosswordProblem'):
   with it('positively matches clues with (##) at the end'):
     expect(crossword_problem.CrosswordProblem.score(
         ['Example crossword clue (7)'])).to(equal(1))
+
+  with it('positively matches clues with (## wds) at the end'):
+    expect(crossword_problem.CrosswordProblem.score(
+        ['Example crossword clue (2 wds)'])).to(equal(1))
+
+  with it('positively matches clues with (## words) at the end'):
+    expect(crossword_problem.CrosswordProblem.score(
+        ['Example crossword clue (2 words)'])).to(equal(1))
+
+  with it('positively matches clues with (hyph) at the end'):
+    expect(crossword_problem.CrosswordProblem.score(
+        ['Example crossword clue (hyph.)'])).to(equal(1))
 
   with it('ambiguously matches clues with lots of words'):
     expect(crossword_problem.CrosswordProblem.score(
@@ -53,18 +69,17 @@ with description('CrosswordProblem'):
 
     with it('constrains multi-word answers to fixed lengths'):
       problem = crossword_problem.CrosswordProblem('ex', ['example (3, 2)'])
-      problem._solve = mock.Mock(return_value={
-        'a': 1, 'aa': .75, 'aaa': .5,
-        'abb': .25, 'aabb': .2, 'aaabb': .1,
-      })
+      problem._solve = mock.Mock(return_value=_SAMPLE)
       expect(problem.solutions()).to(equal({'aaabb': .1}))
+
+    with it('constrains multi-word answers'):
+      problem = crossword_problem.CrosswordProblem('ex', ['example (2 wds)'])
+      problem._solve = mock.Mock(return_value=_SAMPLE)
+      expect(problem.solutions()).to(equal(_SAMPLE))
 
     with it('constrains ambiguous answers to minimum lengths'):
       problem = crossword_problem.CrosswordProblem('ex', ['example (3|1)'])
-      problem._solve = mock.Mock(return_value={
-        'a': 1, 'aa': .75, 'aaa': .5,
-        'abb': .25, 'aabb': .2, 'aaabb': .1,
-      })
+      problem._solve = mock.Mock(return_value=_SAMPLE)
       expect(problem.solutions()).to(equal({
         'aabb': .2, 'aaabb': .1,
       }))
