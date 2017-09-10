@@ -56,13 +56,13 @@ def identify_problems(lines, hint=None):
 def init():
   if _PROBLEM_TYPES:
     return
+  register(solved_problem.SolvedProblem)
   register(acrostic_problem.AcrosticProblem)
   register(anagram_problem.AnagramProblem)
   register(cryptic_problem.CrypticProblem, crossword_problem.CrosswordProblem)
   register(cryptogram_problem.CryptogramProblem)
   register(logic_problem.LogicProblem)
   register(number_problem.NumberProblem)
-  register(solved_problem.SolvedProblem)
 
 
 def reset():
