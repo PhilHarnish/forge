@@ -134,3 +134,12 @@ with description('NumberProblem'):
         solutions = problem.solutions()
         expect(solutions).to(have_key(expected))
         expect(solutions[expected]).to(be_above(0))
+
+    with it('solves "mystery experiences" Rachel'):
+      problem = number_problem.NumberProblem(
+          'Rachel',
+          ['1212 21 12 1211 111 221 2222 2 21 212 11 2'])
+      solutions = problem.solutions()
+      solution, weight = solutions.first()
+      expect(solution).to(equal('can you hear me'))
+      expect(weight).to(be_above(0))
