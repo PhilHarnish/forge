@@ -32,7 +32,12 @@ def digit_solutions_with_notes(source):
       max_digit = max(digits)
       for heuristic in _HEURISTICS:
         for result in heuristic(digits, min_digit, max_digit):
-          yield result, notes
+          result_notes = [_heuristic_name(heuristic)] + notes
+          yield result, result_notes
+
+
+def _heuristic_name(fn):
+  return fn.__name__.replace('_', ' ').strip()
 
 
 def _solutions_for_letters(letters):

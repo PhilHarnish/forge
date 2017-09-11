@@ -203,35 +203,41 @@ with description('analyze_number'):
       expect(analyze_number.solutions(0)).to(be_empty)
 
     with it('solves alphabet'):
-      expect(self.solutions(312)).to(equal(('cab', ['base10'])))
+      expect(self.solutions(312)).to(equal(('cab', ['alphabet', 'base10'])))
 
     with it('solves ascii nibbles'):
-      expect(self.solutions(0x6f776c)).to(equal(('owl', ['base16'])))
+      expect(self.solutions(0x6f776c)).to(
+          equal(('owl', ['ascii nibbles', 'base16'])))
 
     with it('solves base 36'):
-      expect(self.solutions(0xCAB)).to(equal(('cab', ['base16'])))
+      expect(self.solutions(0xCAB)).to(equal(('cab', ['base n', 'base16'])))
 
     with it('solves braille'):
-      expect(self.solutions(135024560123)).to(equal(('owl', ['base10'])))
+      expect(self.solutions(135024560123)).to(
+          equal(('owl', ['braille', 'base10'])))
 
     with it('solves morse'):
-      expect(self.solutions(222012201211)).to(equal(('owl', ['base10'])))
+      expect(self.solutions(222012201211)).to(
+          equal(('owl', ['morse', 'base10'])))
 
     with it('solves positional'):
       expect(self.solutions(23100000000000000000000000)).to(
-          equal(('cab', ['base10'])))
+          equal(('cab', ['positional', 'base10'])))
 
     with it('solves hexspeak'):
-      expect(self.solutions(0xDEAD)).to(equal(('dead', ['base16'])))
+      expect(self.solutions(0xDEAD)).to(equal(('dead', ['base n', 'base16'])))
 
     with it('solves keyboard intersection'):
-      expect(self.solutions(361358)).to(equal(('cab', ['base10'])))
+      expect(self.solutions(361358)).to(
+          equal(('cab', ['keyboard intersection', 'base10'])))
 
     with it('solves lexicographical ordering'):
-      expect(self.solutions(102012021)).to(equal(('cab', ['base10'])))
+      expect(self.solutions(102012021)).to(
+          equal(('cab', ['lexicographical ordering', 'base10'])))
 
     with it('solves runlength'):
-      expect(self.solutions(15032352767)).to(equal(('boo', ['base2'])))
+      expect(self.solutions(15032352767)).to(
+          equal(('boo', ['runlength', 'base2'])))
 
     with it('solves t9'):
-      expect(self.solutions(6669555)).to(equal(('owl', ['base10'])))
+      expect(self.solutions(6669555)).to(equal(('owl', ['t9', 'base10'])))
