@@ -21,8 +21,8 @@ _TARGET_WORD_SCORE_RATE = 200000000
 
 
 class CryptogramProblem(problem.Problem):
-  def __init__(self, name, lines):
-    super(CryptogramProblem, self).__init__(name, lines)
+  def __init__(self, name, lines, **kwargs):
+    super(CryptogramProblem, self).__init__(name, lines, **kwargs)
     _, self._words = _parse(lines)
 
   @staticmethod

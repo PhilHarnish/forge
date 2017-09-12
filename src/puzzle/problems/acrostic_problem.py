@@ -6,8 +6,8 @@ from puzzle.problems import problem
 
 
 class AcrosticProblem(problem.Problem):
-  def __init__(self, name, lines):
-    super(AcrosticProblem, self).__init__(name, lines)
+  def __init__(self, name, lines, **kwargs):
+    super(AcrosticProblem, self).__init__(name, lines, **kwargs)
     self._acrostic = acrostic.Acrostic(_normalize(lines))
 
   @staticmethod

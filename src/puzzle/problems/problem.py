@@ -10,14 +10,14 @@ class Problem(object):
   def __init__(self, name, lines, threshold=_THRESHOLD):
     self.name = name
     self.lines = lines
-    self._threshold = threshold
+    self._threshold = threshold or _THRESHOLD
     self._solutions_iterator = self._take_solutions_iter()
     self._all_solutions = meta.Meta()
     self._filtered_solutions_iterator = self._filter_solutions_iter()
     self._filtered_solutions = meta.Meta()
     self._notes = collections.defaultdict(list)
     self._constraints = [
-      lambda k, v: v > self._threshold
+      lambda k, v: v >= self._threshold
     ]
 
   @property

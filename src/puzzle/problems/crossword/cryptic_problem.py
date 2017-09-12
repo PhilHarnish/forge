@@ -6,8 +6,8 @@ from puzzle.problems.crossword import _base_crossword_problem
 
 
 class CrypticProblem(_base_crossword_problem._BaseCrosswordProblem):
-  def __init__(self, name, lines):
-    super(CrypticProblem, self).__init__(name, lines)
+  def __init__(self, name, lines, **kwargs):
+    super(CrypticProblem, self).__init__(name, lines, **kwargs)
     self._plan = None
     self._tokens = None
 

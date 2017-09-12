@@ -8,8 +8,8 @@ _INT_REGEX = re.compile(r'(\d+)')
 
 
 class _BaseCrosswordProblem(problem.Problem):
-  def __init__(self, name, lines):
-    super(_BaseCrosswordProblem, self).__init__(name, lines)
+  def __init__(self, name, lines, **kwargs):
+    super(_BaseCrosswordProblem, self).__init__(name, lines, **kwargs)
     if len(lines) > 1:
       raise NotImplementedError('Only one crossword clue per problem')
     self._min_length = 1

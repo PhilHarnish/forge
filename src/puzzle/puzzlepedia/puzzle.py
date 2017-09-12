@@ -6,7 +6,7 @@ from puzzle.puzzlepedia import solution_stream
 
 
 class Puzzle(subjects.Subject):
-  def __init__(self, name, source, hint=None):
+  def __init__(self, name, source, hint=None, **kwargs):
     super(Puzzle, self).__init__()
     self._meta_problems = []
     self._child_streams = []
@@ -21,7 +21,7 @@ class Puzzle(subjects.Subject):
           'Puzzle source type %s unsupported' % type(source))
     for i, (meta_problem, consumed) in enumerate(
         analyze.identify_problems(lines, hint=hint)):
-      problem = _reify(meta_problem, '#%s' % i, consumed)
+      problem = _reify(meta_problem, '#%s' % i, consumed, **kwargs)
       self._meta_problems.append(problem)
       self._child_streams.append(solution_stream.SolutionStream(
           str(i), problem))
@@ -42,10 +42,10 @@ class Puzzle(subjects.Subject):
     return Puzzle('meta', self)
 
 
-def _reify(meta_problem, name, lines):
+def _reify(meta_problem, name, lines, **kwargs):
   result = _MetaProblem()
   for value, weight in meta_problem.items():
-    result[value(name, lines)] = weight
+    result[value(name, lines, **kwargs)] = weight
   return result
 
 

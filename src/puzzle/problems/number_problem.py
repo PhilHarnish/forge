@@ -8,8 +8,8 @@ _OFFSETS = None
 
 
 class NumberProblem(problem.Problem):
-  def __init__(self, name, lines, allow_offsets=True):
-    super(NumberProblem, self).__init__(name, lines)
+  def __init__(self, name, lines, allow_offsets=True, **kwargs):
+    super(NumberProblem, self).__init__(name, lines, **kwargs)
     self._digits = _parse(lines)
     self._allow_offsets = allow_offsets
 
