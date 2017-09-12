@@ -107,7 +107,7 @@ class Trie(object):
       solution_weight, solution_word = heapq.heappop(solutions)
       yield solution_word, -solution_weight
 
-    if len(fringe._pool) > 15:
+    if len(fringe._pool) > 1000:
       print('WARNING')
       print('Max fringe size was: %s' % len(fringe._pool))
 
