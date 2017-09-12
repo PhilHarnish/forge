@@ -5,9 +5,9 @@ from puzzle.puzzlepedia import prod_config, puzzle, puzzle_widget
 _INITIALIZED = False
 
 
-def parse(source, hint=None):
+def parse(source, hint=None, threshold=None):
   _init()
-  result = puzzle.Puzzle('first stage', source, hint=hint)
+  result = puzzle.Puzzle('first stage', source, hint=hint, threshold=threshold)
   interact_with(result)
   return result
 
