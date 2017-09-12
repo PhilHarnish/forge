@@ -18,6 +18,11 @@ with description('SolvedProblem'):
       'GONE WITH THE WIND (clue)'
     ])).to(equal(1))
 
+  with it('allows lowercase with --'):
+    expect(solved_problem.SolvedProblem.score([
+      'Gone with the wind -- (clue)'
+    ])).to(equal(1))
+
   with description('solutions'):
     with it('returns provided solutions'):
       p = solved_problem.SolvedProblem('ex', ['SOLUTION (clue)'])

@@ -2,7 +2,8 @@ import re
 
 from puzzle.problems import problem
 
-_SOLVED_REGEX = re.compile(r'^([A-Z\s]+)\s+\((.*)\)$')
+_SOLVED_CAPS_REGEX = re.compile(r'^([A-Z\s]+)\s+\((.*)\)$')
+_SOLVED_NATURAL_REGEX = re.compile(r'^([A-Za-z\s]+)\s+-- \((.*)\)$')
 
 
 class SolvedProblem(problem.Problem):
@@ -18,8 +19,8 @@ class SolvedProblem(problem.Problem):
   def score(lines):
     if len(lines) > 1:
       return 0
-    match = _SOLVED_REGEX.match(lines[0])
-    if not match:
+    solution, clue = _parse(lines[0])
+    if not solution or not clue:
       return 0
     return 1
 
@@ -27,5 +28,7 @@ class SolvedProblem(problem.Problem):
     yield self._solution, 1
 
 def _parse(src):
-  match = _SOLVED_REGEX.match(src)
+  match = _SOLVED_CAPS_REGEX.match(src) or _SOLVED_NATURAL_REGEX.match(src)
+  if not match:
+    return None, None
   return match.group(1), match.group(2)
