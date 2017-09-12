@@ -19,6 +19,8 @@ def identify(lines, hint=None):
         penalty_multiplier = 1 - (group_count / group_scale)
         if hint is None:
           pass
+        elif t == solved_problem.SolvedProblem:
+          pass
         elif isinstance(hint, str):
           hint = hint.lower()
           type_name = t.__name__.lower()
