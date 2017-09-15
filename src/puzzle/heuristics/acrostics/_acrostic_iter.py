@@ -16,7 +16,10 @@ _TARGET_WORD_SCORE_RATE = 200000000
 
 
 class AcrosticIter(_base_acrostic.BaseAcrostic):
-  """Acrostic solver."""
+  """Acrostic solver.
+
+  Iterative solver with depth-first behavior.
+  """
 
   def __init__(self, words, trie=None):
     super(AcrosticIter, self).__init__(words, trie)
@@ -46,26 +49,30 @@ class AcrosticIter(_base_acrostic.BaseAcrostic):
   def _walk_phrase_graph_from(self, pos, acc, acc_weight):
     target = self._solution_len
     for phrase, weight in self._phrases_at(pos):
-      phrase_len = len(phrase)
-      acc.append((phrase, weight))
-      pos += phrase_len
-      acc_weight += weight
-      acc_len = len(acc)
-      if pos < target:
-        interesting = (acc_len < 3) or (pos / acc_len >= _TARGET_WORD_LEN)
-        if interesting:
-          for result in self._walk_phrase_graph_from(pos, acc, acc_weight):
-            # Forward any findings from recursive calls up the trampoline.
-            yield result
-      elif pos == target:
-        if len(acc) < target:  # Reject solutions composed of split letters.
-          scored = _scored_solution(self._trie.interesting_threshold(), acc)
-          yield scored
-      else:
-        raise Exception('Desired length exceeded.')
-      pos -= phrase_len
-      acc_weight -= weight
-      acc.pop()
+      yield from self._recurse_with(
+          pos, acc, acc_weight, target, phrase, weight)
+
+  def _recurse_with(self, pos, acc, acc_weight, target, phrase, weight):
+    phrase_len = len(phrase)
+    acc.append((phrase, weight))
+    pos += phrase_len
+    acc_weight += weight
+    acc_len = len(acc)
+    if pos < target:
+      interesting = (acc_len < 3) or (pos / acc_len >= _TARGET_WORD_LEN)
+      if interesting:
+        for result in self._walk_phrase_graph_from(pos, acc, acc_weight):
+          # Forward any findings from recursive calls up the trampoline.
+          yield result
+    elif pos == target:
+      if len(acc) < target:  # Reject solutions composed of split letters.
+        scored = _scored_solution(self._trie.interesting_threshold(), acc)
+        yield scored
+    else:
+      raise Exception('Desired length exceeded.')
+    pos -= phrase_len
+    acc_weight -= weight
+    acc.pop()
 
   def _phrases_at(self, pos):
     # phrases_at[0] has words of length 1, etc.
@@ -90,6 +97,15 @@ class AcrosticIter(_base_acrostic.BaseAcrostic):
       yield phrase, weight
 
   def _iter_phrases(self, phrases):
+    """Uses a heap to yield from lists of `phrases` in sorted order.
+
+    Sadly, this is 5% faster than the built-in heapq.merge solution:
+      yield from heapq.merge(
+          *[best_items.items() for pos, best_items in phrases.items()],
+          key=lambda x: x[1], reverse=True)
+    """
+    if not phrases:
+      return
     best_phrases = []
     cache = []
     for pos, l in phrases.items():
