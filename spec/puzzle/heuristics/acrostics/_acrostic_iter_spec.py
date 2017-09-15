@@ -18,34 +18,34 @@ BA_PREFIX_TRIE = word_frequencies.load(
 with description('acrostic'):
   with description('basics'):
     with it('uses a mock trie'):
-      a = _acrostic_iter.Acrostic(['is'])
+      a = _acrostic_iter.AcrosticIter(['is'])
       expect(len(a._trie)).to(be_below(100))
 
     with it('yields simple solutions'):
-      a = _acrostic_iter.Acrostic('is')
+      a = _acrostic_iter.AcrosticIter('is')
       expect(list(a)).to(contain('is'))
 
     with it('is observable'):
-      a = _acrostic_iter.Acrostic('is')
+      a = _acrostic_iter.AcrosticIter('is')
       subs = mock.Mock()
       a.subscribe(subs)
       expect(subs.on_next.call_args).to(equal(mock.call('is')))
 
     with it('yields multi-character solutions'):
-      a = _acrostic_iter.Acrostic(list('bag'), trie=BA_PREFIX_TRIE)
+      a = _acrostic_iter.AcrosticIter(list('bag'), trie=BA_PREFIX_TRIE)
       expect(list(a)).to(contain('bag'))
 
     with it('yields unique solutions'):
-      a = _acrostic_iter.Acrostic(list('ba') + ['ggg'], trie=BA_PREFIX_TRIE)
+      a = _acrostic_iter.AcrosticIter(list('ba') + ['ggg'], trie=BA_PREFIX_TRIE)
       expect(list(a)).to(have_len(1))
 
     with it('yields multiple multi-character solutions'):
-      a = _acrostic_iter.Acrostic(list('ba') + ['dgnrt'], trie=BA_PREFIX_TRIE)
+      a = _acrostic_iter.AcrosticIter(list('ba') + ['dgnrt'], trie=BA_PREFIX_TRIE)
       expect(list(a)).to(contain('bad', 'bag', 'ban', 'bar', 'bat'))
 
   with description('_iter_phrases'):
     with before.all:
-      self.subject = _acrostic_iter.Acrostic(['a'])
+      self.subject = _acrostic_iter.AcrosticIter(['a'])
 
     with it('yields nothing for empty input'):
       phrases = self.subject._iter_phrases({})
@@ -76,7 +76,7 @@ with description('acrostic'):
       ))
 
     with it('is used to cache results from previous walks'):
-      a = _acrostic_iter.Acrostic(list('ba') + ['dgnrt'], trie=BA_PREFIX_TRIE)
+      a = _acrostic_iter.AcrosticIter(list('ba') + ['dgnrt'], trie=BA_PREFIX_TRIE)
       expect(list(a)).to(contain('bad', 'bag', 'ban', 'bar', 'bat'))
       expect(list(a._phrase_graph[0][3].items())).to(equal([
         ('bat', 1000000004), ('bar', 1000000003), ('ban', 1000000002),
@@ -92,17 +92,17 @@ with description('acrostic'):
       self.patch.stop()
 
     with it('finds multiple words'):
-      a = _acrostic_iter.Acrostic(list('superbowl'), tries.ambiguous())
+      a = _acrostic_iter.AcrosticIter(list('superbowl'), tries.ambiguous())
       expect(list(a)).to(contain('super bowl', 'superb owl', 'superbowl'))
 
     with it('finds multiple words in really long string'):
       text = 'superbowlwarplanesnapshotscrapbookisnowhere'
-      a = _acrostic_iter.Acrostic(list(text), tries.ambiguous())
+      a = _acrostic_iter.AcrosticIter(list(text), tries.ambiguous())
       expect(''.join(next(iter(a)).split())).to(equal(text))
 
     with it('finds same answer quickly'):
       text = 'superbowlwarplanesnapshotscrapbookisnowhere'
-      a = _acrostic_iter.Acrostic(list(text), tries.ambiguous())
+      a = _acrostic_iter.AcrosticIter(list(text), tries.ambiguous())
       first = next(iter(a))
       # Result should be cached and '_walk' should never be needed.
       with patch.object(a, '_walk', side_effect=[]) as mock:
@@ -113,24 +113,24 @@ with description('acrostic'):
     with description('with seek sets'):
       with it('maintains old functionality'):
         seeking = seek_set.SeekSet(list('superbowl'))
-        a = _acrostic_iter.Acrostic(seeking, tries.ambiguous())
+        a = _acrostic_iter.AcrosticIter(seeking, tries.ambiguous())
         expect(list(a)).to(contain('super bowl', 'superb owl', 'superbowl'))
 
       with it('supports indexing'):
         seeking = seek_set.SeekSet(['bad', 'bag', 'ban'], indexes=[1, 2, 3])
-        a = _acrostic_iter.Acrostic(seeking, trie=BA_PREFIX_TRIE)
+        a = _acrostic_iter.AcrosticIter(seeking, trie=BA_PREFIX_TRIE)
         expect(list(a)).to(equal(['ban']))
 
       with it('supports ambiguous indexing'):
         seeking = seek_set.SeekSet(['bad', 'bag', 'dgn'], indexes=[1, 2, None])
-        a = _acrostic_iter.Acrostic(seeking, trie=BA_PREFIX_TRIE)
+        a = _acrostic_iter.AcrosticIter(seeking, trie=BA_PREFIX_TRIE)
         expect(list(a)).to(equal(['ban', 'bag', 'bad']))
 
       with it('supports permuted sets'):
         seeking = seek_set.SeekSet(
             ['dgn', 'aaa', 'bbb'],
             sets_permutable=True)
-        a = _acrostic_iter.Acrostic(seeking, trie=BA_PREFIX_TRIE)
+        a = _acrostic_iter.AcrosticIter(seeking, trie=BA_PREFIX_TRIE)
         expect(list(a)).to(equal(['ban', 'bag', 'bad']))
 
       with it('supports permuted sets (with indexes)'):
@@ -138,7 +138,7 @@ with description('acrostic'):
             ['dgn', 'aaa', 'bbb'],
             sets_permutable=True,
             indexes=[1, 2, 3])
-        a = _acrostic_iter.Acrostic(seeking, trie=BA_PREFIX_TRIE)
+        a = _acrostic_iter.AcrosticIter(seeking, trie=BA_PREFIX_TRIE)
         expect(list(a)).to(equal(['ban']))
 
   with _description('real data'):
@@ -151,7 +151,7 @@ with description('acrostic'):
       warehouse.restore()
 
     with it('finds simple words'):
-      a = _acrostic_iter.Acrostic('cab')
+      a = _acrostic_iter.AcrosticIter('cab')
       expected = [
         'cab',
         'ca b',
@@ -164,7 +164,7 @@ with description('acrostic'):
       expect(a.items()).to(have_len(len(expected)))
 
     with it('finds important words'):
-      a = _acrostic_iter.Acrostic('binary')
+      a = _acrostic_iter.AcrosticIter('binary')
       expect(next(a.items())).to(equal(('binary', 1)))
 
     with _it('crazy expensive'):
@@ -174,7 +174,7 @@ with description('acrostic'):
         'spinach', 'pinochet', 'porcupine', 'megapixels', 'australopithecus',
         'sharpie', 'intrepid', 'insipid', 'robespierre'
       ]
-      a = _acrostic_iter.Acrostic(words)
+      a = _acrostic_iter.AcrosticIter(words)
       limit = 1000000
       for i, (answer, weight) in enumerate(a.items()):
         if answer.startswith('answer') or i % (limit / 10) == 0:

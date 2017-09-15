@@ -15,11 +15,11 @@ _TARGET_WORD_LEN = 4
 _TARGET_WORD_SCORE_RATE = 200000000
 
 
-class Acrostic(_base_acrostic.BaseAcrostic):
+class AcrosticIter(_base_acrostic.BaseAcrostic):
   """Acrostic solver."""
 
   def __init__(self, words, trie=None):
-    super(Acrostic, self).__init__(words, trie)
+    super(AcrosticIter, self).__init__(words, trie)
     self._solution_len = len(words)
     self._source = Observable.from_(self)
     self.subscribe = self._source.subscribe
