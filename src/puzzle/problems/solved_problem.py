@@ -2,8 +2,9 @@ import re
 
 from puzzle.problems import problem
 
-_SOLVED_CAPS_REGEX = re.compile(r'^([A-Z\s]+)\s+\((.*)\)$')
-_SOLVED_NATURAL_REGEX = re.compile(r'^([A-Za-z\s]+)\s+-- \((.*)\)$')
+_DELIMITER = re.compile(r'[,/]')
+_SOLVED_CAPS_REGEX = re.compile(r'^([A-Z\s,/0-9]+)\s+\((.*)\)$')
+_SOLVED_NATURAL_REGEX = re.compile(r'^([A-Za-z0-9\s,/]+)\s+-- \((.*)\)$')
 
 
 class SolvedProblem(problem.Problem):
@@ -11,7 +12,7 @@ class SolvedProblem(problem.Problem):
     if len(lines) > 1:
       raise ValueError('Only one line per SolvedProblem')
     # Remove solution from line.
-    self._solution, line = _parse(lines[0])
+    self._solutions, line = _parse(lines[0])
     lines = [line]
     super(SolvedProblem, self).__init__(name, lines, *args, **kwargs)
 
@@ -25,10 +26,11 @@ class SolvedProblem(problem.Problem):
     return 1
 
   def _solve_iter(self):
-    yield self._solution, 1
+    for solution in self._solutions:
+      yield solution, 1
 
 def _parse(src):
   match = _SOLVED_CAPS_REGEX.match(src) or _SOLVED_NATURAL_REGEX.match(src)
   if not match:
     return None, None
-  return match.group(1), match.group(2)
+  return map(str.strip, re.split(_DELIMITER, match.group(1))), match.group(2)

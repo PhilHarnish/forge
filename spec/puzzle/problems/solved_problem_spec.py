@@ -13,6 +13,16 @@ with description('SolvedProblem'):
       'SOLUTION (clue)'
     ])).to(equal(1))
 
+  with it('matches multiple solutions, "," delimited'):
+    expect(solved_problem.SolvedProblem.score([
+      'SOLUTION 1, SOLUTION 2 (clue)'
+    ])).to(equal(1))
+
+  with it('matches multiple solutions, "/" delimited'):
+    expect(solved_problem.SolvedProblem.score([
+      'SOLUTION 1 / SOLUTION 2 (clue)'
+    ])).to(equal(1))
+
   with it('allows whitespace'):
     expect(solved_problem.SolvedProblem.score([
       'GONE WITH THE WIND (clue)'
@@ -28,6 +38,13 @@ with description('SolvedProblem'):
       p = solved_problem.SolvedProblem('ex', ['SOLUTION (clue)'])
       expect(p.solutions()).to(equal({
         'SOLUTION': 1,
+      }))
+
+    with it('returns all provided solutions'):
+      p = solved_problem.SolvedProblem('ex', ['SOLUTION 1 / SOLUTION 2 (clue)'])
+      expect(p.solutions()).to(equal({
+        'SOLUTION 1': 1,
+        'SOLUTION 2': 1,
       }))
 
     with it('removes ( and ) from clue'):
