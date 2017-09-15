@@ -2,10 +2,9 @@ import collections
 
 from mock.mock import patch
 
-from data import warehouse, word_frequencies
+from data import word_frequencies
 from data.seek_sets import seek_set
 from puzzle.heuristics.acrostics import _acrostic_iter
-from puzzle.puzzlepedia import prod_config
 from spec.data.fixtures import tries
 from spec.mamba import *
 
@@ -140,71 +139,3 @@ with description('acrostic'):
             indexes=[1, 2, 3])
         a = _acrostic_iter.AcrosticIter(seeking, trie=BA_PREFIX_TRIE)
         expect(list(a)).to(equal(['ban']))
-
-  with _description('real data'):
-    with before.all:
-      warehouse.save()
-      prod_config.init()
-
-    with after.all:
-      prod_config.reset()
-      warehouse.restore()
-
-    with it('finds simple words'):
-      a = _acrostic_iter.AcrosticIter('cab')
-      expected = [
-        'cab',
-        'ca b',
-        'c ab',
-      ]
-      for i, (answer, weight) in enumerate(a.items()):
-        expect('#%s = %s @ %s' % (i, answer, weight)).to(equal(
-            '#%s = %s @ %s' % (i, expected[i], weight)
-        ))
-      expect(a.items()).to(have_len(len(expected)))
-
-    with it('finds important words'):
-      a = _acrostic_iter.AcrosticIter('binary')
-      expect(next(a.items())).to(equal(('binary', 1)))
-
-    with _it('crazy expensive'):
-      words = [
-        'champion', 'nitpick', 'conspiracy', 'windpipe', 'epinephrine',
-        'philanthropic', 'sierpinski', 'mississippi', 'pilaf', 'vulpine',
-        'spinach', 'pinochet', 'porcupine', 'megapixels', 'australopithecus',
-        'sharpie', 'intrepid', 'insipid', 'robespierre'
-      ]
-      a = _acrostic_iter.AcrosticIter(words)
-      limit = 1000000
-      for i, (answer, weight) in enumerate(a.items()):
-        if answer.startswith('answer') or i % (limit / 10) == 0:
-          print(answer, weight)
-        if i > limit:
-          print('tried %s' % i)
-          break
-      """ 4/24
-      a to incipient each rss 120548796
-      a to incipient opps eii 153396
-      a to incipient eipe rni 59329
-      a to incipient ipps epe 174519
-      a to incipient cmss ede 290375
-      a to incipient csts rsr 175192
-      a to incipient opca dsr 752124
-      a to incipient cisr tnp 87249
-      a to incipient ilos dps 1290835
-      a to pntemplates cs tio 770193
-      a to perempuan usps tio 770193
-
-      4/25 + early break in walk when scores are low
-      a to incipient each rss 120548796
-      a to incipient iste eie 57198
-      a to incipient cmss dss 1995347
-      a to incipient imia rsi 697477
-      a to incipient osrs eip 398559
-      a to perempuan peas tpe 275152
-      a to perempuan imcs nss 990710
-      a to perempuan caar ens 717319
-      a to perempuan usea tns 523866
-      a to perempuan epra pii 512601
-      a to dicipline imps psi 6101411
-      """
