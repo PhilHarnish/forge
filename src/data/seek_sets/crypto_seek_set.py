@@ -9,6 +9,7 @@ class CryptoSeekSet(base_seek_set.BaseSeekSet):
       raise TypeError('CryptoSeekSet `sets` must be str')
     super(CryptoSeekSet, self).__init__(sets)
     if translation:
+      # Initialize with "translation".
       # Invert map; we want to quickly convert crypto
       self._crypto_to_normal = translation.copy()
       self._normal_to_crypto = {v: k for k, v in translation.items()}
@@ -20,23 +21,7 @@ class CryptoSeekSet(base_seek_set.BaseSeekSet):
     if len(seek) == 0:
       # Beginning of set; always True.
       return True
-    raise NotImplementedError()
-
-  def __getitem__(self, seek):
-    if isinstance(seek, slice):
-      start, stop, step = seek.start, seek.stop, seek.step
-    elif isinstance(seek, int):
-      start, stop, step = seek, seek, 1
-    else:
-      start, stop, step = None, None, None
-    if start is not None:  # Slicing.
-      if start == 0:
-        return self
-      else:
-        # TODO: Find a way to support this? Seems impossible.
-        raise IndexError('%s out of bounds' % seek)
-    # Indexing for lookup.
-    return self.seek(seek)
+    return super(CryptoSeekSet, self).__contains__(seek)
 
   def seek(self, seek):
     end = len(seek)
@@ -78,6 +63,3 @@ class CryptoSeekSet(base_seek_set.BaseSeekSet):
         if c not in normal_to_crypto:
           result.add(c)
     return result
-
-  def __len__(self):
-    return len(self._sets)

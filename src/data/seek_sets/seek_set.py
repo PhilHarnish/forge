@@ -32,24 +32,14 @@ class SeekSet(base_seek_set.BaseSeekSet):
       self._seek_trie = None
       self._set_index = None
 
-  def __getitem__(self, seek):
-    """Use `seek` to index into `self` and return set of available letters."""
-    if isinstance(seek, slice):
-      start, stop, step = seek.start, seek.stop, seek.step
-    elif isinstance(seek, int):
-      start, stop, step = seek, seek, 1
+  def _slice(self, start, stop, step):
+    if start == 0:
+      return self
+    elif not self._sets_permutable and not self._indexes_permutable:
+      return SeekSet(self._sets[start:stop:step])
     else:
-      start, stop, step = None, None, None
-    if start is not None:  # Slicing.
-      if start == 0:
-        return self
-      elif not self._sets_permutable and not self._indexes_permutable:
-        return SeekSet(self._sets[start:stop:step])
-      else:
-        # TODO: Find a way to support this? Seems impossible.
-        raise IndexError('%s out of bounds' % seek)
-    # Indexing for lookup.
-    return self.seek(seek)
+      # TODO: Find a way to support this? Seems impossible.
+      raise IndexError('%s out of bounds' % start)
 
   def seek(self, seek):
     result = set()
@@ -72,7 +62,7 @@ class SeekSet(base_seek_set.BaseSeekSet):
       _visit(
           result, [False] * l, self._sets, self._set_index,
           self._indexes, seek, 0, False)
-    except:
+    except StopIteration:
       pass
     return result
 
@@ -93,9 +83,6 @@ class SeekSet(base_seek_set.BaseSeekSet):
       return False
     except StopIteration:
       return True
-
-  def __len__(self):
-    return len(self._sets)
 
 
 def _index_sets(indexes, sets):
