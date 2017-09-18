@@ -29,7 +29,7 @@ with description('acrostic'):
     a = acrostic.Acrostic(list('ba') + ['dgnrt'], BA_PREFIX_TRIE)
     expect(list(a)).to(contain('bad', 'bag', 'ban', 'bar', 'bat'))
 
-  with description('real data'):
+  with _description('real data'):
     with before.all:
       warehouse.save()
       prod_config.init()
