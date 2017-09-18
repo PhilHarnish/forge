@@ -3,6 +3,8 @@ import heapq
 from data import max_heap
 from data.seek_sets import base_seek_set
 
+_NODE_SIZE = 3
+
 
 class Trie(object):
   def __init__(self, data):
@@ -25,7 +27,9 @@ class Trie(object):
       self._add_to_index(key, value)
       values.append(value)
     num_values = len(values)
-    if num_values % 2:
+    if num_values <= 2:
+      self._percentile25 = self._smallest
+    elif num_values % 2:
       self._percentile25 = values[num_values // 8 + 1]
     else:
       self._percentile25 = (
@@ -69,6 +73,8 @@ class Trie(object):
 
   def walk(self, seek_sets, exact_match=False):
     """Returns solutions matching `seek_sets`, ordered from high to low."""
+    if not seek_sets:
+      return
     # TODO: Inline per findings from commit 47a736f.
     fringe = max_heap.MaxHeap()
     solutions = []
@@ -93,7 +99,7 @@ class Trie(object):
           match_weight = next_children['match_weight']
           if match_weight:
             heapq.heappush(solutions, (-match_weight, ''.join(acc)))
-        if len(next_children) > 2 and pos < stop_seek_pos:
+        if len(next_children) > _NODE_SIZE and pos < stop_seek_pos:
           if exact_match and stop_seek_pos >= next_children['max_length']:
             pass
           else:
@@ -134,7 +140,7 @@ class Trie(object):
         cursor['match_weight'] = weight
         self._len += 1
         return
-      elif len(cursor) <= 2:
+      elif len(cursor) <= _NODE_SIZE:
         break  # End of Trie.
     # Add remaining characters.
     end = len(word) - 1
