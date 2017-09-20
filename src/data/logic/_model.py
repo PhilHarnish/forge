@@ -160,9 +160,14 @@ class _Model(Numberjack.Model):
 
   def get_solutions(self):
     """Returns table headers and rows."""
+    dimensions = list(self._dimension_factory.dimensions().items())
+    if dimensions:
+      return self._get_dimension_values(dimensions)
+    return self._get_model_values()
+
+  def _get_dimension_values(self, dimensions):
     column_headers = list(self._dimension_factory.dimensions().keys())
     rows = []
-    dimensions = list(self._dimension_factory.dimensions().items())
     first_header, first_values = dimensions[0]
     for first_value in first_values:
       row = [[first_value]]
@@ -202,6 +207,18 @@ class _Model(Numberjack.Model):
           elif value:
             # `value` was chosen multiple times.
             true_values.append('%s*%s' % (column_value, value))
+    return column_headers, rows
+
+  def _get_model_values(self):
+    column_headers = ['variables', 'values']
+    rows = []
+    for variable in sorted(self.variables, key=lambda v: v.operator):
+      # ...MiniSat also seems to function only in debugger mode which will
+      # repr and str values...
+      repr(variable), str(variable)
+      # `operator` matches the variable's given name.
+      value = _util.numberjack_solution(variable)
+      rows.append([[variable.operator], [value]])
     return column_headers, rows
 
   def disable_constraints(self, type=None):

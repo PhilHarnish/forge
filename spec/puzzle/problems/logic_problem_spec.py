@@ -206,3 +206,40 @@ with description('LogicProblem solutions'):
         problem.solutions()
         expect(solver_fn).to(have_been_called_times(1))
         expect(solver_fn).to(have_been_called_with(model, 'Example'))
+
+with description('functional tests'):
+  with it('supports free-form coding'):
+    program = """
+      A = variable(1, 9, 'A')
+      C = variable(1, 9, 'C')
+      E = variable(1, 9, 'E')
+      I = variable(1, 9, 'I')
+      L = variable(1, 9, 'L')
+      M = variable(1, 9, 'M')
+      N = variable(1, 9, 'N')
+      R = variable(1, 9, 'R')
+      U = variable(1, 9, 'U')
+      Z = variable(1, 9, 'Z')
+
+      N + U + M + E + L == 19
+      N + U + C + L + E + A + R == 36
+      C + I + N + E + M + A == 29
+      M + A + C == 18
+      M + E + L == 16
+      M + R + A == 16
+      R + A + E == 17
+      A + R + I + E + L == 32
+      """
+    problem = logic_problem.LogicProblem('test', program.split('\n'))
+    expect(problem.solution).to(look_like("""
+      variables | values
+              A |      8
+              C |      7
+              E |      4
+              I |      6
+              L |      9
+              M |      3
+              N |      1
+              R |      5
+              U |      2
+    """))
