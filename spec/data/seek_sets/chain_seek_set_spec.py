@@ -99,7 +99,7 @@ _SETS = [
   'wo'
 ]
 
-with description('real world test'):
+with _description('real world test'):
   with before.all:
     warehouse.save()
     prod_config.init()
@@ -135,7 +135,7 @@ with description('real world test'):
       'than',
     }))
 
-  with _it('finds results of length 4, 4, starting from on'):
+  with it('finds results of length 4, 4, starting from on'):
     seek_set = chain_seek_set.ChainSeekSet(_SETS, 8, prefix='on')
     results = set()
     acc = []
