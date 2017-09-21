@@ -82,14 +82,7 @@ with description('acrostic'):
         ('bag', 1000000001), ('bad', 1000000000),
       ]))
 
-  with context('when given ambiguous input text'):
-    with before.each:
-      self.patch = patch.object(_acrostic_iter, '_TARGET_WORD_SCORE_RATE', 1)
-      self.patch.start()
-
-    with after.each:
-      self.patch.stop()
-
+  with description('when given ambiguous input text'):
     with it('finds multiple words'):
       a = _acrostic_iter.AcrosticIter(list('superbowl'), tries.ambiguous())
       expect(list(a)).to(contain('super bowl', 'superb owl', 'superbowl'))

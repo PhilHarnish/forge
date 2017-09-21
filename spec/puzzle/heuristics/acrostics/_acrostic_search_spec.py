@@ -4,7 +4,7 @@ from mock.mock import patch
 
 from data import word_frequencies
 from data.seek_sets import seek_set
-from puzzle.heuristics.acrostics import _acrostic_iter, _acrostic_search
+from puzzle.heuristics.acrostics import _acrostic_search
 from spec.data.fixtures import tries
 from spec.mamba import *
 
@@ -83,13 +83,6 @@ with description('acrostic'):
       ]))
 
   with context('when given ambiguous input text'):
-    with before.each:
-      self.patch = patch.object(_acrostic_iter, '_TARGET_WORD_SCORE_RATE', 1)
-      self.patch.start()
-
-    with after.each:
-      self.patch.stop()
-
     with it('finds multiple words'):
       a = _acrostic_search.AcrosticSearch(list('superbowl'), tries.ambiguous())
       expect(list(a)).to(contain('super bowl', 'superb owl', 'superbowl'))
