@@ -7,12 +7,7 @@ from puzzle.heuristics import _base_acrostic
 
 _EMPTY = (None, 0)
 # Try to average 3 letters per word.
-_TARGET_WORD_LEN = 4
-# Target score per letter.
-# Emperically determined from 1 sample:
-#   (64649558 + 4705743816 + 46688059 + 495684) /
-#   len(''.join('answer is flat expanse'.split())) = 253556690.36842105
-_TARGET_WORD_SCORE_RATE = 200000000
+_TARGET_WORD_LEN = 3
 
 
 class AcrosticIter(_base_acrostic.BaseAcrostic):
@@ -132,9 +127,9 @@ class AcrosticIter(_base_acrostic.BaseAcrostic):
 
 def _scored_solution(target_score, acc):
   words = ' '.join(i[0] for i in acc)
-  min_weight = min(i[1] for i in acc)
   num_words = len(acc)
-  weighted_score = (min_weight / num_words) / target_score
+  avg_weight = sum(i[1] for i in acc) / len(acc)
+  weighted_score = avg_weight / target_score
   result = (
     words,
     min(1 / num_words, weighted_score)
