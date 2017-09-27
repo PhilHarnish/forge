@@ -3,6 +3,8 @@ from ipywidgets import widgets
 
 from puzzle.puzzlepedia import table_widget
 
+_MAX_RESULTS = 30
+
 
 def ProblemWidget(meta_problem):
   """Factory for IPython widgets, pretending to be real widget."""
@@ -41,7 +43,9 @@ def _update_solutions_for_problem(table, best_solution, problem):
     best_solution.value = solutions.peek()
   headers = ['score', 'solution', 'notes']
   data = []
-  for solution, score in solutions.items():
+  for i, (solution, score) in enumerate(solutions.items()):
+    if i >= _MAX_RESULTS:
+      break
     data.append([
       round(score, 3),
       _format_solution(solution),
