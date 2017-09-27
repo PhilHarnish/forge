@@ -20,10 +20,6 @@ class ChainSeekSet(base_seek_set.BaseSeekSet):
     elif sum(map(len, sets)) < length:
       raise ValueError('Input sets (%s) smaller than target length (%s)' % (
           sets, length))
-    # DO NOT SUBMIT
-    #if not offset.startswith(prefix):
-    #  raise ValueError('offset ("%s") must start with prefix ("%s")' % (
-    #    offset, prefix))
     super(ChainSeekSet, self).__init__(sets)
     self._start = set(self._sets)
     l = len(self._sets)
