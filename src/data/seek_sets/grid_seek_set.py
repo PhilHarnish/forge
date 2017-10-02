@@ -5,6 +5,8 @@ from data.seek_sets import base_seek_set
 
 # Wordsearch rules.
 SEARCH = object()
+# Column-by-column: return results from one column of grid at a time.
+COLUMN = object()
 
 class GridSeekSet(base_seek_set.BaseSeekSet):
   def __init__(
@@ -40,12 +42,11 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
     return result
 
   def seek(self, seek):
-    if not seek:
-      return set(self._index.keys())
-    start = seek[0]
-    results = set()
+    results, starts = self._starts(seek)
+    if results:
+      return results
     # Find `start` in self._index to begin search.
-    for row, col in self._index[start]:
+    for row, col in starts:
       self._seek(seek, results, [(row, col)])
     return results
 
@@ -67,6 +68,19 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
       self._seek(seek, results, path)
       path.pop()
 
+  def _starts(self, seek):
+    results = set()
+    if seek:
+      return results, self._index[seek[0]]
+    if self._mode == SEARCH:
+      results.update(self._index.keys())
+      return results, []
+    elif self._mode == COLUMN:
+      for row in self._grid:
+        results.add(row[0][0])  # First letter of first row entry.
+      return results, []
+    return results, []
+
   def _directions(self, path):
     y, x = path[-1]  # x, y = row, col.
     if self._mode == SEARCH:
@@ -78,6 +92,9 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
       # Continue in direction already headed.
       y_previous, x_previous = path[-2]
       yield y + (y - y_previous), x + (x - x_previous)
+    elif self._mode == COLUMN:
+      for new_y in range(len(self._grid)):
+        yield new_y, x + 1
     else:
       raise NotImplementedError(self._mode)
 
