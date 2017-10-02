@@ -103,6 +103,10 @@ with description('CrypticCrosswordProblem'):
       expect(solutions).to(have_key('wight'))
       expect(solutions['gecko']).to(be_above(solutions['wight']))
 
+    with it('solves screw'):
+      expect(self.problems['SCREW'].solutions()).not_to(be_empty)
+      expect(self.problems['SCREW'].solutions()).to(have_key('screw'))
+
     with _description('with wordnet'):
       with before.all:
         warehouse.save()

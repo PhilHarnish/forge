@@ -64,7 +64,7 @@ def _visit(tokens, plan, solutions):
       _VISIT_MAP[indicator](tokens, positions, solutions)
     except NotImplementedError:
       print('Indicator for "%s" not implemented' % indicator)
-      raise
+      raise NotImplementedError('Indicator for "%s" not implemented' % indicator)
     except Exception:
       print('Error visiting %s for %s' % (
         indicator, ' '.join(words[0] for words in tokens)
@@ -137,7 +137,7 @@ def _visit_embedded(tokens, positions, solutions):
   interesting_threshold = trie.interesting_threshold()
   end = len(search_text) - min_length
   ignored = set(acc)  # Ignore words from clue itself.
-  for offset in range(end):
+  for offset in range(end + 1):  # End should be inclusive.
     for result, weight in trie.walk(search_text[offset:]):
       if result in ignored:
         continue
