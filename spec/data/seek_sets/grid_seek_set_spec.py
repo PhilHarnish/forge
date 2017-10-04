@@ -54,10 +54,10 @@ with description('grid_seek_set'):
   with description('COLUMN indexing'):
     with before.each:
       self.subject = grid_seek_set.GridSeekSet([
-        'abcd',
-        'efgx',
-        'ijkl',
-        'xnop',
+        ['a', 'b', 'c', 'd'],
+        ['e', 'f', 'g', 'x'],
+        ['i', 'j', 'k', 'l'],
+        ['x', 'n123', 'o', 'p'],
       ], mode=grid_seek_set.COLUMN)
 
     with it('supports indexing for simple query'):
@@ -71,3 +71,9 @@ with description('grid_seek_set'):
 
     with it('supports indexing for simple multi-character query'):
       expect(self.subject['abc']).to(equal(set('dxlp')))
+
+    with it('supports indexing into multi-character cell'):
+      expect(self.subject['an12']).to(equal(set('3')))
+
+    with it('supports indexing out of multi-character cell'):
+      expect(self.subject['an123']).to(equal(set('cgko')))
