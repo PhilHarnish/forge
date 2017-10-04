@@ -12,13 +12,19 @@ with description('grid_seek_set'):
         'test',
       ])).not_to(raise_error)
 
+    with it('constructs with array of arrays'):
+      expect(calling(grid_seek_set.GridSeekSet, [
+        ['t', 'es', 't'],
+        ['t', 'es', 't'],
+      ])).not_to(raise_error)
+
   with description('SEARCH indexing'):
     with before.each:
       self.subject = grid_seek_set.GridSeekSet([
-        'abcd',
-        'efgx',
-        'ijkl',
-        'xnop',
+        ['a', 'b', 'c', 'd'],
+        ['e', 'f', 'g', 'x'],
+        ['i', 'j', 'k', 'l'],
+        ['x', 'n123', 'o', 'p'],
       ])
 
     with it('supports indexing for simple query'):
@@ -35,6 +41,12 @@ with description('grid_seek_set'):
 
     with it('supports indexing for diagnal multi-character query'):
       expect(self.subject['pkf']).to(equal({'a'}))
+
+    with it('supports indexing into multi-character cells'):
+      expect(self.subject['n12']).to(equal({'3'}))
+
+    with it('supports indexing out of multi-character cells'):
+      expect(self.subject['n123']).to(equal(set('ijkxo')))
 
     with it('supports indexing for ambiguous query'):
       expect(self.subject['x']).to(equal(set('cdgklijn')))
