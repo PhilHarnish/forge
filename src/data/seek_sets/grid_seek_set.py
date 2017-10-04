@@ -7,6 +7,8 @@ from data.seek_sets import base_seek_set
 SEARCH = object()
 # Column-by-column: return results from one column of grid at a time.
 COLUMN = object()
+# Row-by-row: return results from one row of grid at a time.
+ROW = object()
 
 class GridSeekSet(base_seek_set.BaseSeekSet):
   def __init__(
@@ -79,6 +81,10 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
       for row in self._grid:
         results.add(row[0][0])  # First letter of first row entry.
       return results, []
+    elif self._mode == ROW:
+      for c in self._grid[0]:
+        results.add(c[0])  # First letter of first row entry.
+      return results, []
     return results, []
 
   def _directions(self, path):
@@ -95,6 +101,9 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
     elif self._mode == COLUMN:
       for new_y in range(len(self._grid)):
         yield new_y, x + 1
+    elif self._mode == ROW:
+      for new_x in range(len(self._grid[y])):
+        yield y + 1, new_x
     else:
       raise NotImplementedError(self._mode)
 
@@ -121,10 +130,10 @@ def _offset(source, sink):
   sink_length = len(sink)
   if source_length > sink_length:
     if not source.startswith(sink):
-      raise ValueError('source ("%s") does not start with sink ("%s")' % (
-          source, sink))
+      # Dead end: sink was not found in source.
+      return -1
     return sink_length  # sink[sink_length:] == ''.
   elif not sink.startswith(source):
-    # Dead end: sink was not found at source.
+    # Dead end: sink was not found in source.
     return -1
   return source_length
