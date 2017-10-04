@@ -131,3 +131,30 @@ with description('grid_seek_set'):
 
     with it('supports indexing out of multi-character cell'):
       expect(self.subject['aj123']).to(equal(set('acpx')))
+
+  with description('SNAKE indexing'):
+    with before.each:
+      self.subject = grid_seek_set.GridSeekSet([
+        ['a', 'b', 'c', 'd'],
+        ['e', 'f', 'g', 'x'],
+        ['i', 'j123', 'k', 'l'],
+        ['x', 'n', 'o', 'p'],
+      ], mode=grid_seek_set.SNAKE)
+
+    with it('supports indexing for simple query'):
+      expect(self.subject['']).to(equal(set('abcdefgxijklxnop')))
+
+    with it('supports indexing for simple single-character query'):
+      expect(self.subject['a']).to(equal(set('bef')))
+
+    with it('rejects invalid paths'):
+      expect(self.subject['akp']).to(equal(set()))
+
+    with it('supports indexing for simple multi-character query'):
+      expect(self.subject['ab']).to(equal(set('acefg')))
+
+    with it('supports indexing into multi-character cell'):
+      expect(self.subject['aej12']).to(equal(set('3')))
+
+    with it('supports indexing out of multi-character cell'):
+      expect(self.subject['aej123']).to(equal(set('efgikxno')))

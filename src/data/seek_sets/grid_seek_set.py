@@ -11,6 +11,8 @@ COLUMN = object()
 ROW = object()
 # Knights tour: return characters using knight L shape moves.
 KNIGHT = object()
+# Snake: allow arbitrary turns.
+SNAKE = object()
 
 class GridSeekSet(base_seek_set.BaseSeekSet):
   def __init__(
@@ -76,7 +78,7 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
     results = set()
     if seek:
       return results, self._index[seek[0]]
-    if self._mode in (KNIGHT, SEARCH):
+    if self._mode in (KNIGHT, SEARCH, SNAKE):
       results.update(self._index.keys())
       return results, []
     elif self._mode == COLUMN:
@@ -91,8 +93,8 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
 
   def _directions(self, path):
     y, x = path[-1]  # x, y = row, col.
-    if self._mode == SEARCH:
-      if len(path) == 1:
+    if self._mode in (SEARCH, SNAKE):
+      if len(path) == 1 or self._mode == SNAKE:
         # Any direction from start is valid.
         for dx, dy in itertools.product([-1, 0, 1], [-1, 0, 1]):
           yield y + dy, x + dx
