@@ -9,6 +9,8 @@ SEARCH = object()
 COLUMN = object()
 # Row-by-row: return results from one row of grid at a time.
 ROW = object()
+# Knights tour: return characters using knight L shape moves.
+KNIGHT = object()
 
 class GridSeekSet(base_seek_set.BaseSeekSet):
   def __init__(
@@ -74,7 +76,7 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
     results = set()
     if seek:
       return results, self._index[seek[0]]
-    if self._mode == SEARCH:
+    if self._mode in (KNIGHT, SEARCH):
       results.update(self._index.keys())
       return results, []
     elif self._mode == COLUMN:
@@ -104,6 +106,11 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
     elif self._mode == ROW:
       for new_x in range(len(self._grid[y])):
         yield y + 1, new_x
+    elif self._mode == KNIGHT:
+      for dx, dy in itertools.product([-1, -2, 1, 2], [-1, -2, 1, 2]):
+        if abs(dx) == abs(dy):
+          continue
+        yield y + dy, x + dx
     else:
       raise NotImplementedError(self._mode)
 
