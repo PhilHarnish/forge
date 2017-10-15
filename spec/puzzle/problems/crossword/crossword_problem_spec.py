@@ -61,6 +61,10 @@ with description('CrosswordProblem'):
       expect(call(crossword_problem.CrosswordProblem.score, [line])).to(
           be_above(.5))
 
+  with it('cleans off address'):
+    problem = crossword_problem.CrosswordProblem('ex', [' 1. example (3)'])
+    expect(problem.lines).to(equal(['example (3)']))
+
   with description('constraints'):
     with it('constrains to fixed lengths'):
       problem = crossword_problem.CrosswordProblem('ex', ['example (3)'])

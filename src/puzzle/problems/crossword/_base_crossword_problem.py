@@ -4,14 +4,16 @@ from data.alphabets import crossword_indicators
 from puzzle.problems import problem
 
 _CROSSWORD_REGEX = re.compile(r'^.*\(([\d\s,|]+)? ?(wo?r?ds)?(hyphe?n?)?\.?\)$')
+_ADDRESS = re.compile(r'\s*\d*\.\s')
 _INT_REGEX = re.compile(r'(\d+)')
 
 
 class _BaseCrosswordProblem(problem.Problem):
   def __init__(self, name, lines, **kwargs):
-    super(_BaseCrosswordProblem, self).__init__(name, lines, **kwargs)
     if len(lines) > 1:
       raise NotImplementedError('Only one crossword clue per problem')
+    lines[0] = _clean(lines[0])
+    super(_BaseCrosswordProblem, self).__init__(name, lines, **kwargs)
     self._min_length = 1
     self._max_length = float('inf')
     for line in lines:
@@ -62,3 +64,11 @@ def score(lines):
     base_score = 0.5
   # Something with a lot of words *might* be a crossword clue.
   return base_score * (min(5, num_words) / 5)
+
+
+def _clean(line):
+  # Remove leading/trailing whitespace.
+  line = line.strip()
+  # Remove leading "12. "
+  line = re.sub(_ADDRESS, '', line)
+  return line
