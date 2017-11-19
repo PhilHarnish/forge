@@ -40,11 +40,17 @@ with description('Problem'):
 
   with description('iterative solving'):
     with before.each:
-      solve_iter_stub = mock.Mock(return_value=iter([
+      results = [
         ('first value', 0.9),
         ('better value', 1.0),
         ('bad value', 0.5),
-      ]))
+      ]
+      self.pos = 0
+      def solve_iter_source():
+        while self.pos < len(results):
+          yield results[self.pos]
+          self.pos += 1
+      solve_iter_stub = mock.Mock(return_value=solve_iter_source())
       class ExampleProblem(problem.Problem):
         _solve_iter = solve_iter_stub
 
@@ -73,3 +79,8 @@ with description('Problem'):
         ('first value', 0.9),
       ]))
       expect(self.solve_iter_stub).to(have_been_called_once)
+
+    with it('solutions stream via yield'):
+      expect(self.pos).to(equal(0))
+      for i, s in enumerate(self.subject):
+        expect(self.pos).to(equal(i))

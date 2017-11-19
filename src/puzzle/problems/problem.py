@@ -46,6 +46,9 @@ class Problem(object):
       pass
     return self._filtered_solutions
 
+  def __iter__(self):
+    yield from self._filtered_solutions_iterator
+
   def notes_for(self, solution):
     return self._notes.get(solution, [])
 
