@@ -143,11 +143,8 @@ def coerce_value(value):
   elif isinstance(value, _addressable_value.AddressableValue):
     return ast.Name(id=value.dimension_address(), ctx=_LOAD)
   # It may be a generator, list, tuple, etc.
-  try:
-    return ast.List(
-        elts=list(coerce_value(v) for v in value),
-        ctx=_LOAD,
-    )
-  except TypeError:
-    pass
-  raise TypeError('unable to coerce %s' % value)
+  as_list = list(value)
+  return ast.List(
+      elts=list(coerce_value(v) for v in as_list),
+      ctx=_LOAD,
+  )
