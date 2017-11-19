@@ -9,6 +9,7 @@ def base_form(word):
 
 
 def expand(word, pos=None):
+  del pos
   result = synonyms(word, limit_one_word=True)
   base_form = wordnet.morphy(word)
   if base_form and base_form not in result:
@@ -63,7 +64,7 @@ def _add_synset_lemmas(results, visited, synset, limit_one_word, suffix):
         continue
       synonym_lemma = synonym_lemma.replace('_', ' ')
     results[synonym_lemma] = 1
-    if suffix:
+    if suffix and synonym_lemma + suffix not in results:
       results[synonym_lemma + suffix] = 1
 
 
