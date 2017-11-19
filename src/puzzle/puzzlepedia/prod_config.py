@@ -63,6 +63,18 @@ def _get_unigram_trie():
   return trie.Trie(warehouse.get('/words/unigram').items())
 
 
+def _get_bigram():
+  results = {}  # NB: Not sorted.
+  for word, value in word_frequencies.parse_file('data/count_2w.txt'):
+    if value:
+      word = word.lower()
+      if word in results:
+        results[word] = max(results[word], value)
+      else:
+        results[word] = value
+  return results
+
+
 def _get_crossword():
   return crossword.connect('data/crossword.sqlite')
 
@@ -90,6 +102,7 @@ def init():
   warehouse.register('/words/unigram', _get_unigram)
   warehouse.register('/words/unigram/anagram_index', _get_unigram_anagram_index)
   warehouse.register('/words/unigram/trie', _get_unigram_trie)
+  warehouse.register('/words/bigram', _get_bigram)
 
 
 def reset():
