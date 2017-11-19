@@ -60,7 +60,7 @@ with _description('_word_api'):
     with it('executes without error'):
       expect(calling(_word_api.hypernyms, 'orange')).not_to(raise_error)
 
-    with it('returns synonyms'):
+    with it('returns hypernyms'):
       results = _word_api.hypernyms('orange')
       expect(results).to(have_keys('pigment', 'color', 'edible fruit'))
 
