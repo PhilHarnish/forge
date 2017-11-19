@@ -19,5 +19,7 @@ def load_from_file(f):
 
 def parse_file(f):
   for line in data.open_project_path(f):
-    word, weight = line.split()
+    parts = line.split()
+    weight = parts.pop()
+    word = ' '.join(parts)
     yield word, int(weight) or 1

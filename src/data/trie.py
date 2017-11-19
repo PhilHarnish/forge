@@ -6,8 +6,9 @@ from data.seek_sets import base_seek_set
 _NODE_SIZE = 3
 
 
-class Trie(object):
+class Trie(dict):
   def __init__(self, data):
+    super(Trie, self).__init__()
     self._smallest = float('inf')
     self._largest = 0
     # Trie's index (highest value characters first).

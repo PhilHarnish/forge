@@ -1,5 +1,3 @@
-import textwrap
-
 from mock import patch
 
 from data import word_frequencies
@@ -17,6 +15,7 @@ _SMALL_FILE = textwrap.dedent("""
     is	4705743816
     on	3750423199
     that	3400031103
+    multiple words 1000000000
 """).strip()
 
 with description('word_frequencies'):
@@ -28,7 +27,7 @@ with description('word_frequencies'):
     patcher.stop()
 
   with it('loads'):
-    expect(word_frequencies.load_from_file('test')).to(have_len(10))
+    expect(word_frequencies.load_from_file('test')).to(have_len(11))
 
   with it('memoizes one file result'):
     with patch.object(word_frequencies, 'load') as mock_load:
@@ -54,3 +53,7 @@ with description('word_frequencies'):
       ('on', 3750423199),
       ('that', 3400031103)
     ]))
+
+  with it('should should store multi-word results'):
+    t = word_frequencies.load_from_file('test')
+    expect(t).to(have_key('multiple words'))
