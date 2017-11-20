@@ -1,10 +1,15 @@
 import collections
 import itertools
 
+from data.convert import deep
 from data.seek_sets import base_seek_set
 
 # Wordsearch rules.
 SEARCH = object()
+# Compas (NSEW) directions.
+COMPASS = object()
+# Right & down directions.
+READING = object()
 # Column-by-column: return results from one column of grid at a time.
 COLUMN = object()
 # Row-by-row: return results from one row of grid at a time.
@@ -13,6 +18,7 @@ ROW = object()
 KNIGHT = object()
 # Snake: allow arbitrary turns.
 SNAKE = object()
+
 
 class GridSeekSet(base_seek_set.BaseSeekSet):
   def __init__(
@@ -29,7 +35,7 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
     :param goal_column: Starting position for end. Undefined is anywhere.
     """
     super(GridSeekSet, self).__init__(set())
-    self._grid = grid
+    self._grid = deep.lower(grid)
     self._index = self._index_grid(grid)
     self._mode = mode
     self._start_row = start_row
@@ -44,7 +50,11 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
     result = collections.defaultdict(list)
     for r, row in enumerate(grid):
       for c, col in enumerate(row):
-        result[col[0]].append((r, c))
+        if isinstance(col, set):
+          for i in col:
+            result[i].append((r, c))
+        else:
+          result[col[0]].append((r, c))
     return result
 
   def seek(self, seek):
@@ -65,7 +75,10 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
     seek = seek[offset:]
     if not seek and offset < len(cursor):
       # `seek` matched `cursor` but some of `cursor` remains.
-      results.add(cursor[offset])
+      if isinstance(cursor, set):
+        results.update(cursor)
+      else:
+        results.add(cursor[offset])
       return
     for row_next, col_next in self._directions(path):
       if not self._valid(row, col, row_next, col_next):
@@ -78,7 +91,9 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
     results = set()
     if seek:
       return results, self._index[seek[0]]
-    if self._mode in (KNIGHT, SEARCH, SNAKE):
+    if self._start_row is not None and self._start_column is not None:
+      return results, [(self._start_row, self._start_column)]
+    if self._mode in (COMPASS, KNIGHT, SEARCH, SNAKE, READING):
       results.update(self._index.keys())
       return results, []
     elif self._mode == COLUMN:
@@ -97,6 +112,19 @@ class GridSeekSet(base_seek_set.BaseSeekSet):
       if len(path) == 1 or self._mode == SNAKE:
         # Any direction from start is valid.
         for dx, dy in itertools.product([-1, 0, 1], [-1, 0, 1]):
+          yield y + dy, x + dx
+        return
+      # Continue in direction already headed.
+      y_previous, x_previous = path[-2]
+      yield y + (y - y_previous), x + (x - x_previous)
+    elif self._mode == COMPASS:
+      # North, south, east and west are valid.
+      for dx, dy in [(0, 1), (1, 0), (-1, 0), (0, -1)]:
+        yield y + dy, x + dx
+    elif self._mode == READING:
+      if len(path) == 1:
+        # Right and down are valid.
+        for dx, dy in [(0, 1), (1, 0)]:
           yield y + dy, x + dx
         return
       # Continue in direction already headed.
@@ -135,6 +163,12 @@ def _offset(source, sink):
   """Finds common prefix, if any, and returns offset after alignment."""
   if not sink:
     return 0
+  if isinstance(sink, list):
+    sink = ''.join(sink)
+  if isinstance(source, set):
+    if sink[0] in source:
+      return 1
+    return -1
   source_length = len(source)
   sink_length = len(sink)
   if source_length > sink_length:
