@@ -7,7 +7,7 @@ _FULL_ALPHABET = set('abcdefghijklmnopqrstuvwxyz')
 
 class SeekSet(base_seek_set.BaseSeekSet):
   def __init__(self, sets, sets_permutable=False, indexes=None,
-      indexes_permutable=False):
+      indexes_permutable=False, start_seek=None):
     if indexes_permutable and not indexes:
       raise IndexError('Must specify indexes if indexes_permutable=True')
     if indexes:
@@ -31,21 +31,32 @@ class SeekSet(base_seek_set.BaseSeekSet):
     else:
       self._seek_trie = None
       self._set_index = None
+    self._start_seek = start_seek
 
   def _slice(self, start, stop, step):
     if start == 0:
       return self
     elif not self._sets_permutable and not self._indexes_permutable:
       return SeekSet(self._sets[start:stop:step])
-    else:
-      # TODO: Find a way to support this? Seems impossible.
+    elif isinstance(start, int):
       raise IndexError('%s out of bounds' % start)
+    # Degenerate case is really inefficient: instantiate a SeekSet which starts
+    # at "start".
+    return SeekSet(
+        self._sets, sets_permutable=self._sets_permutable,
+        indexes=self._indexes, indexes_permutable=self._indexes_permutable,
+        start_seek=list(start),
+    )
 
   def seek(self, seek):
+    if self._start_seek:
+      seek = self._start_seek + seek
     result = set()
     end = len(seek)
     l = len(self._sets)
-    if end > l:
+    if end == l:
+      return result
+    elif end > l:
       # Indicates a bug or inefficient behavior.
       raise IndexError('%s out of bounds' % seek)
     if not self._indexes:
@@ -84,6 +95,11 @@ class SeekSet(base_seek_set.BaseSeekSet):
     except StopIteration:
       return True
 
+  def __len__(self):
+    if self._indexes:
+      return min(len(self._indexes), super(SeekSet, self).__len__())
+    return super(SeekSet, self).__len__()
+
 
 def _index_sets(indexes, sets):
   result = {}
@@ -117,7 +133,7 @@ def _index_all(sets):
 
 
 def _visit(result, visited, sets, set_index, indexes, seek, pos, stop):
-  if indexes and pos >= len(indexes) and stop:
+  if indexes and pos >= len(indexes):
     raise StopIteration()  # End of the line.
   if indexes is None or indexes[pos] is None:
     index = None

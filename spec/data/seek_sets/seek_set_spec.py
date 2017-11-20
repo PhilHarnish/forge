@@ -52,6 +52,32 @@ with description('seek_set'):
       with it('rejects anything off of the path'):
         expect(self.subject['abcd']).to(be_empty)
 
+    with description('start_seek prefix'):
+      with before.each:
+        self.subject_base = seek_set.SeekSet(
+            ['a', 'ab', 'abc', 'abcd', 'abcde'],
+        )
+        self.subject_start = seek_set.SeekSet(
+            ['a', 'ab', 'abc', 'abcd', 'abcde'],
+            start_seek='a',
+        )
+
+      with it('supports simple query'):
+        # "a" is provided which opens up access to a "b".
+        expect(self.subject_start['']).to(equal({'a', 'b'}))
+        expect(self.subject_start['']).to(equal(self.subject_base['a']))
+
+      with it('supports simple multi-character query'):
+        expect(self.subject_start['ab']).to(equal({'a', 'b', 'c', 'd'}))
+        expect(self.subject_start['ab']).to(equal(self.subject_base['aab']))
+
+      with it('supports complex query'):
+        expect(self.subject_start['bcd']).to(equal({'a', 'b', 'c', 'd', 'e'}))
+        expect(self.subject_start['bcd']).to(equal(self.subject_base['abcd']))
+
+      with it('rejects anything off of the path'):
+        expect(self.subject_start['abcd']).to(be_empty)
+
     with description('indexing with missing indexes'):
       with before.each:
         self.subject = seek_set.SeekSet(
