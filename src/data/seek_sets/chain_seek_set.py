@@ -52,12 +52,11 @@ class ChainSeekSet(base_seek_set.BaseSeekSet):
       if self._prefix.startswith(seek):
         # Return the next character in `self._prefix` as only result.
         return self._prefix[len(seek)]
-      return ''
+      return ''  # Prefix does not start with seek.
     elif seek.startswith(self._prefix):
-      #seek = seek[prefix_length:]
-      pass
+      pass  # Seek matches prefix.
     else:
-      return ''  # Seek does not match prefix.
+      return ''  # Seek does not start with prefix.
     return self._seek(self._offset + seek, set(), set())
 
   def _seek(self, seek, used, result):
