@@ -132,3 +132,11 @@ with description('acrostic'):
             indexes=[1, 2, 3])
         a = _acrostic_iter.AcrosticIter(seeking, trie=BA_PREFIX_TRIE)
         expect(list(a)).to(equal(['ban']))
+
+      with it('supports multi-word solutions with permuting'):
+        seeking = seek_set.SeekSet(
+            ['dgn', 'aaa', 'bbb', 'dgn', 'aaa', 'bbb'],
+            sets_permutable=True,
+            indexes=[1, 2, 3, 1, 2, 3])
+        a = _acrostic_iter.AcrosticIter(seeking, trie=BA_PREFIX_TRIE)
+        expect(list(a)).to(equal(['ban ban']))

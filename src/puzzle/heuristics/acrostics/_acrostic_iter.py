@@ -3,6 +3,7 @@ import heapq
 from rx import Observable
 
 from data import meta
+from data.seek_sets import base_seek_set
 from puzzle.heuristics import _base_acrostic
 
 _EMPTY = (None, 0)
@@ -27,11 +28,12 @@ class AcrosticIter(_base_acrostic.BaseAcrostic):
       {} for _ in range(0, self._solution_len)
     ]
     self._walks = []
+    self._walk_cache = {}
     for i in range(0, self._solution_len):
       try:
         self._walks.append(self._trie.walk(self._words[i:]))
       except IndexError:
-        break
+        pass
 
   def __iter__(self):
     for phrase, weight in self._walk_phrase_graph_from(0, [], 0):
@@ -43,7 +45,7 @@ class AcrosticIter(_base_acrostic.BaseAcrostic):
 
   def _walk_phrase_graph_from(self, pos, acc, acc_weight):
     target = self._solution_len
-    for phrase, weight in self._phrases_at(pos):
+    for phrase, weight in self._phrases_at(pos, acc):
       yield from self._recurse_with(
           pos, acc, acc_weight, target, phrase, weight)
 
@@ -69,26 +71,41 @@ class AcrosticIter(_base_acrostic.BaseAcrostic):
     acc_weight -= weight
     acc.pop()
 
-  def _phrases_at(self, pos):
+  def _phrases_at(self, pos, acc):
     # phrases_at[0] has words of length 1, etc.
     phrases_at = self._phrase_graph[pos]
     # Exhaust known phrases first.
     for phrase in self._iter_phrases(phrases_at):
       yield phrase
     # Then find more.
-    for phrase in self._walk(pos):
+    for phrase in self._walk(pos, acc):
       yield phrase
 
-  def _walk(self, pos):
-    if pos >= len(self._walks):
+  def _start_walk(self, pos, acc):
+    if pos < len(self._walks):
+      walk = self._walks[pos]
+      phrases_at = self._phrase_graph[pos]
+    elif isinstance(self._words, base_seek_set.BaseSeekSet):
+      acc_letters = ''.join([c for c, _ in acc])
+      if acc_letters not in self._walk_cache:
+        self._walk_cache[acc_letters] = self._trie.walk(self._words[acc_letters:])
+      walk = self._walk_cache[acc_letters]
+      phrases_at = None
+    else:
+      return None, None  # No way to proceed from here.
+    return walk, phrases_at
+
+  def _walk(self, pos, acc):
+    walk, phrases_at = self._start_walk(pos, acc)
+    if not walk:
       return
-    phrases_at = self._phrase_graph[pos]
-    for phrase, weight in self._walks[pos]:
-      l = len(phrase)
-      if l not in phrases_at:
-        phrases_at[l] = meta.Meta()
-      length_l_phrases = phrases_at[l]
-      length_l_phrases[phrase] = weight
+    for phrase, weight in walk:
+      if phrases_at is not None:
+        l = len(phrase)
+        if l not in phrases_at:
+          phrases_at[l] = meta.Meta()
+        length_l_phrases = phrases_at[l]
+        length_l_phrases[phrase] = weight
       yield phrase, weight
 
   def _iter_phrases(self, phrases):
