@@ -68,7 +68,7 @@ with description('AcrosticProblem'):
       )
       expect(list(problem.solutions())).to(equal(['cat', 'cab']))
 
-with description('regression tests'):
+with _description('regression tests'):
   with before.all:
     warehouse.save()
     prod_config.init()
