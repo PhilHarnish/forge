@@ -1,0 +1,75 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [],
+   "source": [
+    "GIMLET = 5x GIN(1) + 1x LIME(4)\n",
+    "\n",
+    "French royal line cavalryman with spear\n",
+    "LANCER = 9x BOURBON(4) + 16x CHAMPAGNE(4)\n",
+    "\n",
+    "Seismic activity\n",
+    "EARTHQUAKE = 3x ABSINTH(1) + 3x COGNAC(4)\n",
+    "\n",
+    "Could give you tetanus\n",
+    "RUSTY NAIL = 4.5x SCOTCH(6) + 2.5x DRAMBUIE(6)\n",
+    "\n",
+    "Accommodation, now with air option\n",
+    "B&B = 1x BRANDY(4) + 1x BENEDICTINE(8)\n",
+    "\n",
+    "Pneumatic drill\n",
+    "JACKHAMMER? = 1x JACK(9) + 1x AMARETTO(4)\n",
+    "\n",
+    "Radler to English speakers (***actually, RADLER is German for CYCLIST)\n",
+    "CYCLIST = 1x BEER(1) + 1x LEMONADE(1)\n",
+    "\n",
+    "Dumbledore’s favourite, in the US\n",
+    "LEMON DROP = 2.5x VODKA(5) + 2x TRIPLE SEC(7) + 1.5 LEMON(?)\n",
+    "\n",
+    "Spanish dove\n",
+    "PALOMA = 1x TEQUILA(1) + 3x GRAPEFRUIT(4)\n",
+    "\n",
+    "French concrete\n",
+    "BETON = 4x BECHEROVKA(7) + 20x TONIC(6)\n",
+    "\n",
+    "Moving touch-me-not\n",
+    "MIMOSA = 7.5x CHAMPAGNE(9) + 7.5x ORANGE(2)\n",
+    "\n",
+    "Tall boulder problem\n",
+    "HIGHBALL = 1x SCOTCH(6) + 1x SODA(2)\n",
+    "\n",
+    "Classic night to start a novel with\n",
+    "DARK N STORMY = 6x RUM(2) + 10x GINGER BEER(6)\n",
+    "\n",
+    "Swan of Catania\n",
+    "BELLINI = 2x PROSECCO(6) + 1x PEACH(2)\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.0"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}
