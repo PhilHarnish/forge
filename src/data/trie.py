@@ -58,9 +58,9 @@ class Trie(dict):
     cursor = self._index
     while pos < l:
       target = prefix[pos]
-      if target not in cursor:
+      cursor = cursor.get(target, None)
+      if not cursor:
         break
-      cursor = cursor[target]
       pos += 1
     if pos == l:
       return cursor
