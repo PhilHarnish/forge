@@ -72,7 +72,20 @@ class Trie(dict):
   def interesting_threshold(self):
     return self._percentile25
 
-  def walk(self, seek_sets, exact_match=False):
+  def walk(self, seek_sets, exact_match=None):
+    if exact_match is not None:
+      yield from self._walk(seek_sets, exact_match)
+      return
+    exact_matches = set()
+    for word, weight in self._walk(seek_sets, True):
+      exact_matches.add(word)
+      yield word, weight
+    for word, weight in self._walk(seek_sets, False):
+      if word in exact_matches:
+        continue
+      yield word, weight
+
+  def _walk(self, seek_sets, exact_match):
     """Returns solutions matching `seek_sets`, ordered from high to low."""
     if not seek_sets:
       return

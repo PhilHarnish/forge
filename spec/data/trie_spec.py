@@ -69,6 +69,7 @@ with description('trie'):
       with it('returns 1 and 2 letter results when given alphabet x2'):
         expect(list(self.subject.walk(
             ['abcdefghijklmnopqrstuvwxyz'] * 2,
+            exact_match=False,
         ))).to(equal([
           ('of', 13151942776), ('to', 12136980858),
           ('a', 9081174698),
@@ -94,7 +95,7 @@ with description('trie'):
       with description('using SeekSet'):
         with it('works with old functionality'):
           sets = seek_set.SeekSet(['abcdefghijklmnopqrstuvwxyz'] * 2)
-          expect(list(self.subject.walk(sets))).to(equal([
+          expect(list(self.subject.walk(sets, exact_match=False))).to(equal([
             ('of', 13151942776), ('to', 12136980858),
             ('a', 9081174698),
             ('in', 8469404971), ('is', 4705743816), ('on', 3750423199)

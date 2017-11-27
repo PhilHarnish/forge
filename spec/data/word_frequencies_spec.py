@@ -41,7 +41,10 @@ with description('word_frequencies'):
 
   with it('should have results'):
     t = word_frequencies.load_from_file('test')
-    expect(list(t.walk(['abcdefghijklmnopqrstuvwxyz'] * 4))).to(equal([
+    expect(list(t.walk(
+        ['abcdefghijklmnopqrstuvwxyz'] * 4,
+        exact_match=False)
+    )).to(equal([
       ('the', 23135851162),
       ('of', 13151942776),
       ('and', 12997637966),
