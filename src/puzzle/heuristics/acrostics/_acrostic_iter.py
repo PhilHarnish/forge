@@ -63,7 +63,7 @@ class AcrosticIter(_base_acrostic.BaseAcrostic):
           yield result
     elif pos == target:
       if len(acc) < target:  # Reject solutions composed of split letters.
-        scored = _scored_solution(self._trie.interesting_threshold(), acc)
+        scored = _scored_solution(acc)
         yield scored
     else:
       raise Exception('Desired length exceeded.')
@@ -75,11 +75,9 @@ class AcrosticIter(_base_acrostic.BaseAcrostic):
     # phrases_at[0] has words of length 1, etc.
     phrases_at = self._phrase_graph[pos]
     # Exhaust known phrases first.
-    for phrase in self._iter_phrases(phrases_at):
-      yield phrase
+    yield from self._iter_phrases(phrases_at)
     # Then find more.
-    for phrase in self._walk(pos, acc):
-      yield phrase
+    yield from self._walk(pos, acc)
 
   def _start_walk(self, pos, acc):
     if pos < len(self._walks):
@@ -88,7 +86,8 @@ class AcrosticIter(_base_acrostic.BaseAcrostic):
     elif isinstance(self._words, base_seek_set.BaseSeekSet):
       acc_letters = ''.join([c for c, _ in acc])
       if acc_letters not in self._walk_cache:
-        self._walk_cache[acc_letters] = self._trie.walk(self._words[acc_letters:])
+        self._walk_cache[acc_letters] = self._trie.walk(
+            self._words[acc_letters:])
       walk = self._walk_cache[acc_letters]
       phrases_at = None
     else:
@@ -142,13 +141,12 @@ class AcrosticIter(_base_acrostic.BaseAcrostic):
         heapq.heapreplace(best_phrases, (-weight, cache_id))
 
 
-def _scored_solution(target_score, acc):
+def _scored_solution(acc):
   words = ' '.join(i[0] for i in acc)
   num_words = len(acc)
-  avg_weight = sum(i[1] for i in acc) / len(acc)
-  weighted_score = avg_weight / target_score
+  avg_weight = min(1, sum(i[1] for i in acc) / num_words)
   result = (
     words,
-    min(1 / num_words, weighted_score)
+    avg_weight,
   )
   return result

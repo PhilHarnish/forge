@@ -17,13 +17,15 @@ class AcrosticSearch(_acrostic_iter.AcrosticIter):
     # - 1 length phrases score (pos + 1)/target * weight.
     target = self._solution_len
     remaining_distance = target - pos
+    interval_size = 1 / remaining_distance
     heap = max_heap.MaxHeap()
     for phrase, weight in self._phrases_at(pos, acc):
       phrase_len = len(phrase)
-      scale = phrase_len / remaining_distance  # n / target : {0 < scale <= 1}.
-      heap.push(scale * weight, phrase)
+      normalized_weight = min(1, weight / self._trie.interesting_threshold())
+      score = (phrase_len + normalized_weight) * interval_size
+      heap.push(score, phrase)
       best_weight = heap.best_weight()
-      while weight < best_weight:
+      while score < best_weight:
         # _phrases_at is yielding values which, even when scaled by 100% (i.e.
         # full length) can not exceed the best score we have in the heap.
         # Proceed from heap.
