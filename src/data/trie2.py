@@ -57,12 +57,6 @@ class _Node(object):
       cursor._max_weight = v
     cursor._match_weight = v
 
-  #def __getitem__(self, i):
-  #  return self._children[i]
-
-  #def __contains__(self, item):
-  #  return item in self._children
-
   def __repr__(self):
     chars = []
     for i in range(26):
@@ -97,9 +91,12 @@ class Trie2(dict):
     return self._weight(cursor)
 
   def _weight(self, cursor):
-    return cursor._match_weight / self._index._max_weight
+    # Normalize large weights to [0, 1].
+    if self._index._max_weight > 1:
+      return cursor._match_weight / self._index._max_weight
+    return cursor._match_weight
 
-  def walk(self, seek_sets):
+  def walk(self, seek):
     raise NotImplementedError()
 
   def _find_prefix(self, prefix):

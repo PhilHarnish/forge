@@ -15,7 +15,7 @@ _TEST_DATA = [
 ]
 
 with description('trie2'):
-  with context('test data'):
+  with description('test data'):
     with before.each:
       self.subject = trie2.Trie2(_TEST_DATA)
 
@@ -26,5 +26,14 @@ with description('trie2'):
       last_weight = float('inf')
       for key, weight in _TEST_DATA:
         expect(key in self.subject).to(be_true)
+        expect(self.subject[key]).to(be_below_or_equal(1))
         expect(self.subject[key]).to(be_below(last_weight))
         last_weight = weight
+
+  with it('preserves weights already <= 1'):
+    t = trie2.Trie2((
+        ('a', 1),
+        ('aa', 0.9),
+    ))
+    expect(t['a']).to(equal(1))
+    expect(t['aa']).to(equal(0.9))
