@@ -1,5 +1,3 @@
-
-
 class _Node(object):
   __slots__ = (
     '_char_mask',

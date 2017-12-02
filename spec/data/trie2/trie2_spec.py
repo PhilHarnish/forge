@@ -1,4 +1,4 @@
-from data import trie2
+from data.trie2 import trie2
 from spec.mamba import *
 
 _TEST_DATA = [
