@@ -1,3 +1,6 @@
+from typing import Iterable, List, Optional, Tuple
+
+
 class Node(object):
   __slots__ = (
     '_char_mask',
@@ -7,17 +10,20 @@ class Node(object):
     '_children',
   )
 
-  def __init__(self):
+  def __init__(self: 'Node'):
     self._char_mask = 0
     self._length_mask = 0
     self._max_weight = 0
     self._match_weight = 0
     self._children = {}
 
-  def get(self, k):
+  def get(self, k: str) -> Optional['Node']:
     return self._children.get(k, None)
 
-  def add(self, k, v):
+  def items(self) -> Iterable[Tuple[str, 'Node']]:
+    return self._children.items()
+
+  def add(self, k: str, v: float):
     l = len(k)
     pos = 0
     cursor = self
@@ -29,7 +35,7 @@ class Node(object):
       cursor._max_weight = max(cursor._max_weight, v)
       # Traverse to next.
       cursor_next = cursor.get(c)
-      if not cursor_next:
+      if cursor_next is None:
         break
       cursor = cursor_next
       pos += 1
@@ -55,7 +61,16 @@ class Node(object):
       cursor._max_weight = v
     cursor._match_weight = v
 
-  def __repr__(self):
+  def match_weight(self) -> int:
+    return self._match_weight
+
+  def magnitude(self) -> int:
+    return self._max_weight
+
+  def __len__(self) -> int:
+    return len(self._children)
+
+  def __repr__(self) -> str:
     chars = []
     for i in range(26):
       if self._char_mask & (2 ** i):
@@ -66,10 +81,10 @@ class Node(object):
           '0', ' ').replace('1', '#')
     else:
       lengths = ''
-    return '_Node(%s, %s, %s)' % (
+    return 'Node(%s, %s, %s)' % (
       repr(''.join(chars)), repr(lengths), self._match_weight)
 
-def _char_masks(s):
+def _char_masks(s: str) -> List[int]:
   result = [0]
   acc = 0
   for c in s[::-1]:
