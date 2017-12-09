@@ -1,8 +1,12 @@
+from typing import Optional, Sequence, Tuple
+
 from data.trie2.node import Node
+
+WeightedWord = Tuple[str, float]
 
 
 class Trie2(dict):
-  def __init__(self, items):
+  def __init__(self: 'Trie2', items: Sequence[WeightedWord]):
     super(Trie2, self).__init__()
     self._index = Node()
     self._length = 0
@@ -10,40 +14,23 @@ class Trie2(dict):
     for key, value in items:
       self._add_to_index(key, value)
 
-  def __contains__(self, key):
-    return self._find_prefix(key) is not None
+  def __contains__(self, key: str) -> bool:
+    return _find_prefix(self._index, key) is not None
 
-  def __len__(self):
+  def __len__(self) -> int:
     return self._length
 
-  def __getitem__(self, key):
-    cursor = self._find_prefix(key)
-    return self._weight(cursor)
+  def __getitem__(self, key: str) -> float:
+    return self._normalize_weight(_find_prefix(self._index, key).match_weight())
 
-  def _weight(self, cursor):
+  def _normalize_weight(self, weight: float) -> float:
     # Normalize large weights to [0, 1].
-    if self._index._max_weight > 1:
-      return cursor._match_weight / self._index._max_weight
-    return cursor._match_weight
+    magnitude = self._index.magnitude()
+    if magnitude > 1:
+      return weight / magnitude
+    return weight
 
-  def walk(self, seek):
-    raise NotImplementedError()
-
-  def _find_prefix(self, prefix):
-    l = len(prefix)
-    pos = 0
-    cursor = self._index
-    while pos < l:
-      target = prefix[pos]
-      cursor = cursor.get(target)
-      if not cursor:
-        break
-      pos += 1
-    if pos == l:
-      return cursor
-    return None
-
-  def _add_to_index(self, word, weight):
+  def _add_to_index(self, word: str, weight: float) -> None:
     if weight > self._smallest:
       raise AssertionError(
           'Items must be added to Trie2 in descending order.')
@@ -51,3 +38,13 @@ class Trie2(dict):
       self._smallest = weight
     self._index.add(word, weight)
     self._length += 1
+
+
+def _find_prefix(cursor: Node, prefix: str) -> Optional[Node]:
+  l = len(prefix)
+  pos = 0
+  while cursor and pos < l:
+    target = prefix[pos]
+    cursor = cursor.get(target)
+    pos += 1
+  return cursor

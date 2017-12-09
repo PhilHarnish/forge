@@ -14,6 +14,7 @@ _TEST_DATA = [
     ('that', 3400031103),
 ]
 
+
 with description('trie2'):
   with description('test data'):
     with before.each:
