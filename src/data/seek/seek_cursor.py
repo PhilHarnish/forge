@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
-from data.seek import base_seek
-from data.trie2 import node, trie2
+from data.seek import base_seek, node
+from data.trie2 import trie2
 
 
 class SeekCursor(object):

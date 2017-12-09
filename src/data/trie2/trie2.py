@@ -1,6 +1,6 @@
 from typing import Optional, Sequence, Tuple
 
-from data.trie2.node import Node
+from data.seek.node import Node
 
 WeightedWord = Tuple[str, float]
 

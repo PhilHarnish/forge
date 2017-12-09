@@ -1,4 +1,4 @@
-from data.trie2 import node
+from data.seek import node
 from spec.mamba import *
 
 
