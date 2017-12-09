@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
 
+from data import types
 from data.seek import base_seek, node
-from data.trie2 import trie2
 
 
 class SeekCursor(object):
@@ -21,5 +21,5 @@ class SeekCursor(object):
   def seek(self, next) -> 'SeekCursor':
     raise NotImplementedError()
 
-  def match(self) -> Optional['trie2.WeightedWord']:
+  def match(self) -> Optional[types.WeightedWord]:
     raise NotImplementedError()

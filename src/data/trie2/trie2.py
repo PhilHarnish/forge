@@ -1,12 +1,11 @@
-from typing import Optional, Sequence, Tuple
+from typing import Optional, Sequence
 
+from data import types
 from data.seek.node import Node
-
-WeightedWord = Tuple[str, float]
 
 
 class Trie2(dict):
-  def __init__(self: 'Trie2', items: Sequence[WeightedWord]):
+  def __init__(self: 'Trie2', items: Sequence[types.WeightedWord]):
     super(Trie2, self).__init__()
     self._index = Node()
     self._length = 0
