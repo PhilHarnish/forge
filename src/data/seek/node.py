@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple
 
 
 class Node(object):
@@ -10,12 +10,21 @@ class Node(object):
     '_children',
   )
 
+  _char_mask: int
+  _length_mask: int
+  _max_weight: int
+  _match_weight: int
+  _children: Dict[str, 'Node']
+
   def __init__(self: 'Node'):
     self._char_mask = 0
     self._length_mask = 0
     self._max_weight = 0
     self._match_weight = 0
     self._children = {}
+
+  def children(self) -> Dict[str, 'Node']:
+    return self._children
 
   def get(self, k: str) -> Optional['Node']:
     return self._children.get(k, None)
