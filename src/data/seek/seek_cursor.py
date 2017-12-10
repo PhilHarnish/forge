@@ -35,3 +35,6 @@ class SeekCursor(object):
         acc.append(c)
       return ''.join(acc[::-1]), weight
     return None
+
+  def magnitude(self) -> float:
+    return self._node.magnitude()
