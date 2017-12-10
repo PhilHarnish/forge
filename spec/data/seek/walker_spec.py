@@ -22,12 +22,9 @@ with description('test data'):
     s = base_seek.BaseSeek(n)
     self.subject = walker.Walker(s)
 
-  with it('walks all items, in order, between [0, 1]'):
-    last_weight = 1
+  with it('walks all items, in order'):
     for expected, actual in zip(_TEST_DATA, self.subject):
-      expected_word, _ = expected
+      expected_word, expected_weight = expected
       actual_word, actual_weight = actual
       expect(expected_word).to(equal(actual_word))
-      expect(actual_weight).to(be_below_or_equal(last_weight))
-      last_weight = actual_weight
-    expect(last_weight).to(be_above_or_equal(0))
+      expect(actual_weight).to(equal(expected_weight))

@@ -27,10 +27,6 @@ class Walker(object):
       return -weight, cursor
     root = self._seek_root.start()
     max_weight = root.magnitude()
-    if max_weight > 1:
-      normalize_weight = lambda v: v / max_weight
-    else:
-      normalize_weight = lambda v: v
 
     push(float('inf'), root)
     solutions = []
@@ -45,10 +41,10 @@ class Walker(object):
           push(child.magnitude(), child)
       while solutions and -solutions[0][0] > weight:
         solution_weight, solution_word = heapq.heappop(solutions)
-        yield solution_word, normalize_weight(-solution_weight)
+        yield solution_word, -solution_weight
     while solutions:
       solution_weight, solution_word = heapq.heappop(solutions)
-      yield solution_word, normalize_weight(-solution_weight)
+      yield solution_word, -solution_weight
     if len(pool) > 1000:
       print('WARNING')
       print('Max fringe size was: %s' % len(pool))
