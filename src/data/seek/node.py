@@ -1,4 +1,4 @@
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, ItemsView, List, Optional
 
 
 class Node(object):
@@ -27,10 +27,10 @@ class Node(object):
     return self._children
 
   def get(self, k: str) -> Optional['Node']:
-    return self._children.get(k, None)
+    return self.children().get(k, None)
 
-  def items(self) -> Iterable[Tuple[str, 'Node']]:
-    return self._children.items()
+  def items(self) -> ItemsView[str, 'Node']:
+    return self.children().items()
 
   def add(self, k: str, v: float):
     l = len(k)
@@ -76,8 +76,22 @@ class Node(object):
   def magnitude(self) -> int:
     return self._max_weight
 
+  def shallow_copy(self) -> 'Node':
+    n = Node()
+    n._char_mask = self._char_mask
+    n._length_mask = self._length_mask
+    n._max_weight = self._max_weight
+    n._match_weight = self._match_weight
+    return n
+
+  def set_flags(self, char_mask, length_mask, max_weight, match_weight) -> None:
+    self._char_mask = char_mask
+    self._length_mask = length_mask
+    self._max_weight = max_weight
+    self._match_weight = match_weight
+
   def __len__(self) -> int:
-    return len(self._children)
+    return len(self.children())
 
   def __repr__(self) -> str:
     chars = []
@@ -90,8 +104,9 @@ class Node(object):
           '0', ' ').replace('1', '#')
     else:
       lengths = ''
-    return 'Node(%s, %s, %s)' % (
-      repr(''.join(chars)), repr(lengths), self._match_weight)
+    return '%s(%s, %s, %s)' % (
+      self.__class__.__name__, repr(''.join(chars)), repr(lengths),
+      self._match_weight)
 
 def _char_masks(s: str) -> List[int]:
   result = [0]
