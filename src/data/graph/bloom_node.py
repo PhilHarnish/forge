@@ -1,6 +1,8 @@
 import itertools
 from typing import Dict, Iterable, List, Optional
 
+from data import iter_util
+
 
 class BloomNode(object):
   """Graph node with bloom-filter style optimizations."""
@@ -28,7 +30,7 @@ class BloomNode(object):
   # Match value for this node.
   match_weight: float
   # Input sources for this node.
-  _sources: Optional[Iterable['BloomNode']]
+  _sources: Optional[List['BloomNode']]
   # Outgoing edges of this node.
   _edges: Dict[str, 'BloomNode']
 
@@ -39,7 +41,7 @@ class BloomNode(object):
     self.match_weight = 0
     self.max_weight = 0
     self.min_weight = 0
-    self._sources = sources
+    self._sources = list(sources)
     self._edges = {}
 
   def distance(self, length: int) -> None:
@@ -87,7 +89,7 @@ class BloomNode(object):
     self.min_weight = max(weight, self.min_weight)
 
   def __len__(self) -> int:
-    # TODO: Need to expand edges first.
+    self._expand()
     return len(self._edges)
 
   def __contains__(self, key: str) -> bool:
@@ -103,6 +105,16 @@ class BloomNode(object):
       if child is not None:
         self._edges[key] = child
     return self._edges[key]
+
+  def _expand(self) -> None:
+    if not self._sources:
+      return
+    for key, sources in iter_util.common(
+        [source._edges for source in self._sources]):
+      reduced = reduce(sources)
+      if reduced is not None:
+        self._edges[key] = reduced
+    self._sources.clear()  # No need to redo this work ever again.
 
   def _find(self, key: str) -> Optional['BloomNode']:
     """Returns common node for `k` from sources, if any."""

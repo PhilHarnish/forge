@@ -82,6 +82,9 @@ with description('sources'):
     expect(c.lengths_mask).to(equal(0b1))
     expect(c.match_weight).to(equal(1))
 
+  with it('expands edges when measuring len'):
+    expect(self.combined).to(have_len(1))
+
 
 with description('repr'):
   with before.each:
