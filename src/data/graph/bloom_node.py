@@ -1,5 +1,5 @@
 import itertools
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional
 
 from data import iter_util
 
@@ -34,14 +34,14 @@ class BloomNode(object):
   # Outgoing edges of this node.
   _edges: Dict[str, 'BloomNode']
 
-  def __init__(self, sources: Optional[Iterable['BloomNode']] = None) -> None:
+  def __init__(self, sources: Optional[List['BloomNode']] = None) -> None:
     self.provide_mask = None
     self.require_mask = None
     self.lengths_mask = None
     self.match_weight = 0
     self.max_weight = 0
     self.min_weight = 0
-    self._sources = list(sources)
+    self._sources = sources
     self._edges = {}
 
   def distance(self, length: int) -> None:

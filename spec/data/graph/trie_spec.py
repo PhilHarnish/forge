@@ -40,6 +40,32 @@ with description('add'):
     expect(root['b']['a']).to(have_len(3))
 
 
+with description('merge'):
+  with it('merges to zero results for unrelated tries'):
+    a = bloom_node.BloomNode()
+    trie.add(a, 'abc', 1.0)
+    b = bloom_node.BloomNode()
+    trie.add(b, 'xyz', 1.0)
+    merged = bloom_node.BloomNode([a, b])
+    expect(merged).to(have_len(0))
+
+  with it('predicts non-overlap for suffixes'):
+    a = bloom_node.BloomNode()
+    trie.add(a, 'cab', 1.0)
+    b = bloom_node.BloomNode()
+    trie.add(b, 'cat', 1.0)
+    merged = bloom_node.BloomNode([a, b])
+    expect(merged).to(have_len(0))
+
+  with it('predicts overlap for identical tries'):
+    a = bloom_node.BloomNode()
+    trie.add(a, 'cat', 1.0)
+    b = bloom_node.BloomNode()
+    trie.add(b, 'cat', 1.0)
+    merged = bloom_node.BloomNode([a, b])
+    expect(merged).to(have_len(1))
+
+
 with description('test data'):
   with before.each:
     self.trie = bloom_node.BloomNode()
