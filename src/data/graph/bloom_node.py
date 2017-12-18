@@ -120,7 +120,7 @@ class BloomNode(object):
     for i in range(26):
       if self.require_mask and self.require_mask & (2 ** i):
         chars.append(chr(ord('A') + i))
-      elif self.require_mask and self.provide_mask & (2 ** i):
+      elif self.provide_mask and self.provide_mask & (2 ** i):
         chars.append(chr(ord('a') + i))
     if self.lengths_mask:
       # Convert mask to binary, reverse, and swap "01" for " #"
