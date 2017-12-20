@@ -1,0 +1,25 @@
+from data.graph import bloom_mask
+from spec.mamba import *
+
+
+with description('for_alpha'):
+  with it('raises for bad input'):
+    expect(calling(bloom_mask.for_alpha, 'word')).to(raise_error(ValueError))
+    expect(calling(bloom_mask.for_alpha, '123')).to(raise_error(ValueError))
+
+  with it('raises for unsupported input'):
+    expect(calling(bloom_mask.for_alpha, '#')).to(
+        raise_error(NotImplementedError))
+    expect(calling(bloom_mask.for_alpha, '$')).to(
+        raise_error(NotImplementedError))
+    expect(calling(bloom_mask.for_alpha, ' ')).to(
+        raise_error(NotImplementedError))
+
+  with it('produces increasing unique values'):
+    seen = 0
+    last = -1
+    for c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ':
+      expect(call(bloom_mask.for_alpha, c)).to(be_above(last))
+      last = bloom_mask.for_alpha(c)
+      expect(last & seen).to(equal(0))
+      seen |= last

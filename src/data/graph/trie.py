@@ -1,6 +1,6 @@
 from typing import List
 
-from data.graph import bloom_node
+from data.graph import bloom_mask, bloom_node
 
 
 def add(cursor: bloom_node.BloomNode, k: str, v: float):
@@ -20,8 +20,6 @@ def _char_masks(s: str) -> List[int]:
   result = [0]
   acc = 0
   for c in s[::-1]:
-    if c < 'a' or c > 'z':
-      raise IndexError('Node cannot mask %s' % c)
-    acc |= 2 ** (ord(c) - 97)  # ord('a') == 97.
+    acc |= bloom_mask.for_alpha(c)
     result.append(acc)
   return list(reversed(result))
