@@ -52,6 +52,12 @@ class BloomNode(object):
     else:
       self.lengths_mask |= mask
 
+  def link(self, key: str, node: 'BloomNode') -> None:
+    """Links `self` to `node` via `key`."""
+    if key in self._edges:
+      raise KeyError('Key "%s" already linked' % key)
+    self._edges[key] = node
+
   def open(self, key: str) -> 'BloomNode':
     """Return outgoing edge `k`. Create node if necessary."""
     if key not in self._edges:

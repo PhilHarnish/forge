@@ -29,6 +29,21 @@ with description('populating'):
       abc = self.subject.open('abc')
       expect(self.subject.open('abc')).to(equal(abc))
 
+  with description('link'):
+    with before.each:
+      self.child = bloom_node.BloomNode()
+
+    with it('allows a child to be linked'):
+      expect(calling(self.subject.link, 'key', self.child)).not_to(raise_error)
+
+    with it('creates a link'):
+      self.subject.link('key', self.child)
+      expect(self.subject['key']).to(equal(self.child))
+
+    with it('rejects duplicate links'):
+      self.subject.link('key', self.child)
+      expect(calling(self.subject.link, 'key', self.child)).to(
+          raise_error(KeyError))
 
 with description('api'):
   with before.each:
