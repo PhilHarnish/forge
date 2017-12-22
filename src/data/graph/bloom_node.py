@@ -2,6 +2,7 @@ import itertools
 from typing import Dict, List, Optional
 
 from data import iter_util
+from data.graph import bloom_mask
 
 
 class BloomNode(object):
@@ -18,11 +19,11 @@ class BloomNode(object):
   )
 
   # Bloom filter for edge labels provided by descendants.
-  provide_mask: Optional[int]
+  provide_mask: int
   # Bloom filter for edge labels required by descendants.
-  require_mask: Optional[int]
+  require_mask: int
   # Bloom filter for distances remaining until matching node.
-  lengths_mask: Optional[int]
+  lengths_mask: int
   # Maximum match weight in descendant nodes.
   max_weight: float
   # Minimum match weight in descendant nodes.
@@ -35,9 +36,9 @@ class BloomNode(object):
   _edges: Dict[str, 'BloomNode']
 
   def __init__(self, sources: Optional[List['BloomNode']] = None) -> None:
-    self.provide_mask = None
-    self.require_mask = None
-    self.lengths_mask = None
+    self.provide_mask = bloom_mask.PROVIDE_NOTHING
+    self.require_mask = bloom_mask.REQUIRE_NOTHING
+    self.lengths_mask = 0
     self.match_weight = 0
     self.max_weight = 0
     self.min_weight = 0
@@ -46,40 +47,45 @@ class BloomNode(object):
 
   def distance(self, length: int) -> None:
     """Report distance to a matching node."""
-    mask = 2 ** length
-    if self.lengths_mask is None:
-      self.lengths_mask = mask
-    else:
-      self.lengths_mask |= mask
+    self.lengths_mask |= 2 ** length
 
   def link(self, key: str, node: 'BloomNode') -> None:
     """Links `self` to `node` via `key`."""
     if key in self._edges:
       raise KeyError('Key "%s" already linked' % key)
     self._edges[key] = node
+    # Provide and require anything children do.
+    self.provide_mask |= node.provide_mask
+    self.require_mask &= node.require_mask
+    # Inherit matching lengths (offset by 1).
+    self.lengths_mask |= node.lengths_mask << 1
+    self.weight(node.max_weight)
+    self.weight(node.min_weight)
+    # Provide anything implied by the key transition.
+    # FIXME: This is inflexible.
+    try:
+      # Provides become more numerous with time.
+      self.provide_mask |= bloom_mask.for_alpha(key)
+    except ValueError:
+      pass
 
   def open(self, key: str) -> 'BloomNode':
     """Return outgoing edge `k`. Create node if necessary."""
     if key not in self._edges:
       child = self._find(key)
       if child is None:
-        self._edges[key] = BloomNode()
+        self.link(key, BloomNode())
       else:
-        self._edges[key] = child
+        self.link(key, child)
     return self._edges[key]
 
   def require(self, mask: int) -> None:
     """Declare requirements for this node."""
-    if self.require_mask is None:
-      self.require_mask = mask
-    else:
-      # Requirements become more sparse with time.
-      self.require_mask &= mask
-    if self.provide_mask is None:
-      self.provide_mask = mask
-    else:
-      # Anything a node requires is implicitly provided.
-      self.provide_mask |= mask
+    # Requirements become more sparse with time.
+    self.require_mask &= mask
+    # Anything a node requires is implicitly provided.
+    # Provides become more numerous with time.
+    self.provide_mask |= mask
 
   def satisfies(self, other: 'BloomNode') -> bool:
     return other.require_mask & self.provide_mask == other.require_mask
@@ -92,7 +98,7 @@ class BloomNode(object):
             '%s already has match weight %s' % (self, self.match_weight))
       self.match_weight = weight
     self.max_weight = max(weight, self.max_weight)
-    self.min_weight = max(weight, self.min_weight)
+    self.min_weight = min(weight, self.min_weight)
 
   def __len__(self) -> int:
     self._expand()
@@ -119,7 +125,7 @@ class BloomNode(object):
         [source._edges for source in self._sources]):
       reduced = reduce(sources)
       if reduced is not None:
-        self._edges[key] = reduced
+        self.link(key, reduced)
     self._sources.clear()  # No need to redo this work ever again.
 
   def _find(self, key: str) -> Optional['BloomNode']:
@@ -134,6 +140,7 @@ class BloomNode(object):
     return reduce(sources)
 
   def __repr__(self) -> str:
+    self._expand()
     chars = []
     for i in range(26):
       if self.require_mask and self.require_mask & (2 ** i):

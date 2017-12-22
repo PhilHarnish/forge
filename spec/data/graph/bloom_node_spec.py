@@ -50,9 +50,9 @@ with description('api'):
     self.subject = bloom_node.BloomNode()
 
   with it('initially empty masks'):
-    expect(self.subject.provide_mask).to(be_none)
-    expect(self.subject.require_mask).to(be_none)
-    expect(self.subject.lengths_mask).to(be_none)
+    expect(self.subject.provide_mask).to(equal(0))
+    expect(self.subject.require_mask).to(equal(0))
+    expect(self.subject.lengths_mask).to(equal(0))
 
   with it('requires progressively less'):
     self.subject.require(0b111)
