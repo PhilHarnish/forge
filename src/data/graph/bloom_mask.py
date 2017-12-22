@@ -10,3 +10,21 @@ def for_alpha(character: str) -> int:
   if character in _ALPHA_MAP:
     return _ALPHA_MAP[character]
   raise NotImplementedError('Unable to compute mask for "%s"' % character)
+
+
+class BitMatchAnything(int):
+  def __and__(self, other: int) -> int:
+    return other
+
+  def __rand__(self, other: int) -> int:
+    return other
+
+  def __or__(self, other: int) -> int:
+    return other
+
+  def __ror__(self, other: int) -> int:
+    return other
+
+
+PROVIDE_NOTHING = BitMatchAnything()
+REQUIRE_NOTHING = BitMatchAnything()
