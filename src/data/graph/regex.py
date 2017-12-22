@@ -28,11 +28,7 @@ def _to_simple_nodes(expression: str, weight) -> bloom_node.BloomNode:
     full_alpha = _LOWER_ALPHA + _UPPER_ALPHA
   # Setup the "goal" state.
   cursor = bloom_node.BloomNode()
-  base_require_mask = 0
-  base_provide_mask = 0
-  cursor.require(base_require_mask)
-  distance = 0
-  cursor.distance(distance)
+  cursor.distance(0)
   cursor.weight(weight, True)
   # Start at the end of expression and work backwards.
   for c in expression[::-1]:
@@ -42,20 +38,11 @@ def _to_simple_nodes(expression: str, weight) -> bloom_node.BloomNode:
       edges = c
     # Create new cursor with path to old cursor.
     next_cursor = bloom_node.BloomNode()
-    distance += 1
-    next_cursor.distance(distance)
-    next_cursor.weight(1, False)
-    # Inherit requirements from previous node.
-    next_cursor.require_mask = base_require_mask
-    next_cursor.provide_mask = base_provide_mask
     # Calculate edges.
     for edge in edges:
-      # All edges lead to "cursor".
-      next_cursor.link(edge, cursor)
       # Update require & provides for the new node.
       next_cursor.require(bloom_mask.for_alpha(edge))
-    # Remember requirements from this node.
-    base_require_mask = next_cursor.require_mask
-    base_provide_mask = next_cursor.provide_mask
+      # Add link.
+      next_cursor.link(edge, cursor)
     cursor = next_cursor
   return cursor

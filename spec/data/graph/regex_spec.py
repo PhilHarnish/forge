@@ -26,7 +26,7 @@ with description('parse'):
   with it('produces simple graphs'):
     parsed = regex.parse('a')
     expect(parsed).to(be_a(bloom_node.BloomNode))
-    expect(repr(parsed)).to(equal("BloomNode('a', ' #', 0)"))
+    expect(repr(parsed)).to(equal("BloomNode('A', ' #', 0)"))
     expect(repr(parsed['a'])).to(equal(_GOAL))
 
   with it('produces longer graphs'):
@@ -48,6 +48,7 @@ with description('parse'):
       expect(parsed).to(be_a(bloom_node.BloomNode))
       expect(repr(parsed)).to(equal(
           "BloomNode('abcdefghijklmnopqrstuvwxyz', '  #', 0)"))
+      expect(repr(parsed['z'])).to(equal("BloomNode('B', ' #', 0)"))
       expect(repr(parsed['z']['b'])).to(equal(_GOAL))
 
     with it('produces wildcard suffix'):
@@ -62,6 +63,7 @@ with description('parse'):
       expect(parsed).to(be_a(bloom_node.BloomNode))
       expect(repr(parsed)).to(equal(
           "BloomNode('abcdefghijklmnopqrstuvwxyz', '   #', 0)"))
+      expect(repr(parsed['a']['z'])).to(equal("BloomNode('C', ' #', 0)"))
       expect(repr(parsed['a']['z']['c'])).to(equal(_GOAL))
 
     with it('does not accept invalid paths through graph'):
