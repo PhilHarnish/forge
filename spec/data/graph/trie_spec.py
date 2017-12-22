@@ -1,4 +1,4 @@
-from data.graph import bloom_node, trie
+from data.graph import bloom_node, regex, trie
 from spec.mamba import *
 
 _TEST_DATA = [
@@ -71,3 +71,18 @@ with description('test data'):
     self.trie = bloom_node.BloomNode()
     for key, value in _TEST_DATA:
       trie.add(self.trie, key, value)
+
+  with it('populates test data'):
+    expect(repr(self.trie)).to(equal("BloomNode('adefhinorst', ' ####', 0)"))
+
+  with it('should consider some merges impossible'):
+    expression = regex.parse('.n')
+    child1 = self.trie['t']
+    child2 = expression['t']
+    expect(bloom_node.reduce([child1, child2])).to(equal(None))
+
+  with it('merges with regex'):
+    expression = regex.parse('.n')
+    merged = bloom_node.BloomNode([self.trie, expression])
+    expect(repr(merged)).to(equal("BloomNode('iNo', '  #', 0)"))
+    expect(repr(merged['i'])).to(equal("BloomNode('N', ' #', 0)"))
