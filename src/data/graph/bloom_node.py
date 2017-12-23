@@ -1,7 +1,7 @@
 import itertools
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 
-from data import iter_util
+from data import iter_util, types
 from data.graph import bloom_mask
 
 
@@ -48,6 +48,10 @@ class BloomNode(object):
   def distance(self, length: int) -> None:
     """Report distance to a matching node."""
     self.lengths_mask |= 2 ** length
+
+  def items(self) -> Iterable[types.WeightedWord]:
+    self._expand()
+    yield from self._edges.items()
 
   def link(self, key: str, node: 'BloomNode') -> None:
     """Links `self` to `node` via `key`."""
@@ -117,6 +121,10 @@ class BloomNode(object):
       if child is not None:
         self._edges[key] = child
     return self._edges[key]
+
+  def __iter__(self) -> Iterable[str]:
+    for k, v in self.items():
+      yield k
 
   def _expand(self) -> None:
     if not self._sources:

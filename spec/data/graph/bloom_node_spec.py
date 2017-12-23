@@ -68,6 +68,10 @@ with description('api'):
     self.subject.require(0b110)
     expect(self.subject.provide_mask).to(equal(0b111))
 
+  with it('iterates over added keys'):
+    self.subject.open('first')
+    self.subject.open('second')
+    expect(set(self.subject)).to(equal({'first', 'second'}))
 
 with description('sources'):
   with before.each:
@@ -99,6 +103,9 @@ with description('sources'):
 
   with it('expands edges when measuring len'):
     expect(self.combined).to(have_len(1))
+
+  with it('expands edges when iterating'):
+    expect(set(self.combined)).to(equal({'common'}))
 
 
 with description('repr'):
