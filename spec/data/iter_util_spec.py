@@ -19,3 +19,9 @@ with description('common'):
     ])).to(equal([
       ('b', [.5, .25]),
     ]))
+
+  with it('optionally skips specified items'):
+    expect(iter_util.common([
+        {'a': 1, 'b': .5},
+        {'b': .25, 'c': .15},
+    ], skip={'b'})).to(equal([]))
