@@ -1,7 +1,7 @@
 import itertools
 from typing import Dict, Iterable, List, Optional
 
-from data import iter_util, types
+from data import iter_util
 from data.graph import bloom_mask
 
 
@@ -49,7 +49,7 @@ class BloomNode(object):
     """Report distance to a matching node."""
     self.lengths_mask |= 2 ** length
 
-  def items(self) -> Iterable[types.WeightedWord]:
+  def items(self) -> Iterable[Dict[str, 'BloomNode']]:
     self._expand()
     yield from self._edges.items()
 
@@ -60,7 +60,7 @@ class BloomNode(object):
     self._edges[key] = node
     # Provide and require anything children do.
     self.provide_mask |= node.provide_mask
-    self.require_mask &= node.require_mask
+    self.require_mask |= node.require_mask
     # Inherit matching lengths (offset by 1).
     self.lengths_mask |= node.lengths_mask << 1
     self.weight(node.max_weight)
@@ -130,7 +130,7 @@ class BloomNode(object):
     if not self._sources:
       return
     for key, sources in iter_util.common(
-        [source._edges for source in self._sources]):
+        [source._edges for source in self._sources], skip=self._edges):
       reduced = reduce(sources)
       if reduced is not None:
         self.link(key, reduced)
@@ -169,9 +169,7 @@ class BloomNode(object):
 def reduce(sources: List['BloomNode']) -> Optional['BloomNode']:
   if not sources or any(
           not source.lengths_mask or
-          not source.provide_mask or
-          not source.max_weight or
-          source.require_mask is None
+          not source.max_weight
               for source in sources):
     return None
   # First, verify there are matching masks. It's required for a valid

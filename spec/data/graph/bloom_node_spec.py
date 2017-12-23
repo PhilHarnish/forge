@@ -45,6 +45,7 @@ with description('populating'):
       expect(calling(self.subject.link, 'key', self.child)).to(
           raise_error(KeyError))
 
+
 with description('api'):
   with before.each:
     self.subject = bloom_node.BloomNode()
@@ -72,6 +73,7 @@ with description('api'):
     self.subject.open('first')
     self.subject.open('second')
     expect(set(self.subject)).to(equal({'first', 'second'}))
+
 
 with description('sources'):
   with before.each:
@@ -106,6 +108,10 @@ with description('sources'):
 
   with it('expands edges when iterating'):
     expect(set(self.combined)).to(equal({'common'}))
+
+  with it('safely expands remaining edges if one edge was already accessed'):
+    expect(self.combined['common']).not_to(be_none)
+    expect(calling(repr, self.combined)).not_to(raise_error)
 
 
 with description('repr'):

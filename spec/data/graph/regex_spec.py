@@ -32,7 +32,7 @@ with description('parse'):
   with it('produces longer graphs'):
     parsed = regex.parse('abc')
     expect(parsed).to(be_a(bloom_node.BloomNode))
-    expect(repr(parsed)).to(equal("BloomNode('abc', '   #', 0)"))
+    expect(repr(parsed)).to(equal("BloomNode('ABC', '   #', 0)"))
     expect(repr(parsed['a']['b']['c'])).to(equal(_GOAL))
 
   with description('with "." character'):
@@ -47,7 +47,7 @@ with description('parse'):
       parsed = regex.parse('.b')
       expect(parsed).to(be_a(bloom_node.BloomNode))
       expect(repr(parsed)).to(equal(
-          "BloomNode('abcdefghijklmnopqrstuvwxyz', '  #', 0)"))
+          "BloomNode('aBcdefghijklmnopqrstuvwxyz', '  #', 0)"))
       expect(repr(parsed['z'])).to(equal("BloomNode('B', ' #', 0)"))
       expect(repr(parsed['z']['b'])).to(equal(_GOAL))
 
@@ -55,14 +55,14 @@ with description('parse'):
       parsed = regex.parse('a.')
       expect(parsed).to(be_a(bloom_node.BloomNode))
       expect(repr(parsed)).to(equal(
-          "BloomNode('abcdefghijklmnopqrstuvwxyz', '  #', 0)"))
+          "BloomNode('Abcdefghijklmnopqrstuvwxyz', '  #', 0)"))
       expect(repr(parsed['a']['z'])).to(equal(_GOAL))
 
     with it('produces wildcard middle'):
       parsed = regex.parse('a.c')
       expect(parsed).to(be_a(bloom_node.BloomNode))
       expect(repr(parsed)).to(equal(
-          "BloomNode('abcdefghijklmnopqrstuvwxyz', '   #', 0)"))
+          "BloomNode('AbCdefghijklmnopqrstuvwxyz', '   #', 0)"))
       expect(repr(parsed['a']['z'])).to(equal("BloomNode('C', ' #', 0)"))
       expect(repr(parsed['a']['z']['c'])).to(equal(_GOAL))
 
