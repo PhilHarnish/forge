@@ -46,6 +46,7 @@ def _get_multi_puzzle():
 
 with description('Puzzle'):
   with before.all:
+    analyze.reset()  # https://github.com/nestorsalceda/mamba/issues/91
     analyze.register(TestProblem)
     analyze.register(WeakMatchProblem)
     analyze.register(MetaProblem)

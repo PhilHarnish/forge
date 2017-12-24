@@ -1,7 +1,10 @@
 from data import max_heap
 from spec.mamba import *
 
-with description(max_heap.MaxHeap):
+with description(max_heap.MaxHeap) as self:
+  with before.each:
+    self.subject = max_heap.MaxHeap()
+
   with description('push'):
     with it('accepts any inputs'):
       expect(calling(self.subject.push, 0, True)).not_to(raise_error)
