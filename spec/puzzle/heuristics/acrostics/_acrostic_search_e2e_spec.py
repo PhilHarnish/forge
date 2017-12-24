@@ -5,7 +5,7 @@ from puzzle.puzzlepedia import prod_config
 from spec.mamba import *
 
 
-with description('acrostic e2e'):
+with description('acrostic e2e', 'end2end'):
   with before.each:
     warehouse.save()
     prod_config.init()
