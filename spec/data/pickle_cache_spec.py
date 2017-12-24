@@ -99,7 +99,7 @@ with description('pickle_cache'):
 
       self.patched_os.path.getmtime.side_effect = stub_getmtime
 
-      @pickle_cache.cache_from_file('prefix', lambda path: path)
+      @pickle_cache.cache_from_file('prefix')
       def fn(path):
         return path
 

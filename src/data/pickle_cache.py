@@ -18,7 +18,7 @@ def cache(prefix):
   return _cache(prefix, test_fn)
 
 
-def cache_from_file(prefix, path_fn):
+def cache_from_file(prefix, path_fn = lambda *args: args[-1]):
   def test_fn(pickle_source, args, kwargs):
     file_source = path_fn(*args, **kwargs)
     if 'pickle_cache_spec' in file_source:
