@@ -40,8 +40,9 @@ _init_breakpoint_global()
 # Mamba.
 self = {}
 
-def description(desc):
+def description(desc, tag=''):
   del desc
+  del tag
 
 def context(desc):
   del desc
