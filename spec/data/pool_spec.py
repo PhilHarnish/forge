@@ -5,13 +5,13 @@ from spec.mamba import *
 class PoolStub(pool.Pooled):
   allocated = 0
 
-  def __init__(self, value: int) -> None:
+  def __init__(self, value: int = 0) -> None:
     super(PoolStub, self).__init__()
     self.value = value
 
-  def _alloc(self) -> pool.Pooled:
+  def _alloc(self, *args, **kwargs) -> pool.Pooled:
     PoolStub.allocated += 1
-    return PoolStub(0)
+    return PoolStub(*args, **kwargs)
 
   def __str__(self) -> str:
     return 'PoolStub(%s)' % self.value
@@ -32,9 +32,9 @@ with description('pooling'):
 
   with it('should create new instances from instances'):
     a = PoolStub(1)
-    b = a.alloc()
+    b = a.alloc(2)
     expect(b).to(be_a(PoolStub))
-    b.value = 2
+    expect(b.value).to(equal(2))
     expect(str(a)).not_to(equal(str(b)))
 
   with it('should allocate new instances if needed'):

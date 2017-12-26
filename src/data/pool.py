@@ -11,15 +11,19 @@ def reset() -> None:
 class Pooled(object):
   __slots__ = ('_pool',)
 
-  def __init__(self) -> None:
+  def __init__(self, *args, **kwargs) -> None:
+    del kwargs
+    del args
     self._pool = _get_pool(type(self))
 
-  def alloc(self) -> 'Pooled':
+  def alloc(self, *args, **kwargs) -> 'Pooled':
     if self._pool:
-      return self._pool.pop()
-    return self._alloc()
+      result = self._pool.pop()
+      result.__init__(*args, **kwargs)
+      return result
+    return self._alloc(*args, **kwargs)
 
-  def _alloc(self) -> 'Pooled':
+  def _alloc(self, *args, **kwargs) -> 'Pooled':
     raise NotImplementedError()
 
   def free(self) -> None:
