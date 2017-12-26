@@ -9,12 +9,14 @@ def common(
   if not maps:
     return []
   sorted_maps = list(sorted(maps, key=len, reverse=True))
-  result = []
   first, remaining = sorted_maps[0], sorted_maps[1:]
-  for key in first:
-    if skip and key in skip:
-      continue
-    elif any(key not in i for i in remaining):
-      continue
-    result.append((key, [i[key] for i in maps]))
-  return result
+  if skip:
+    return [
+      (key, [i[key] for i in maps])
+      for key in first if key not in skip and not any(
+          key not in i for i in remaining)
+    ]
+  return [
+    (key, [i[key] for i in maps])
+    for key in first if not any(key not in i for i in remaining)
+  ]

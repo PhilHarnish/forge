@@ -55,9 +55,7 @@ class BloomNode(object):
 
   def link(self, key: str, node: 'BloomNode') -> None:
     """Links `self` to `node` via `key`."""
-    if key in self._edges:
-      raise KeyError('Key "%s" already linked' % key)
-    self._edges[key] = node
+    self._base_link(key, node)
     # Provide and require anything children do.
     self.provide_mask |= node.provide_mask
     self.require_mask |= node.require_mask
@@ -65,6 +63,11 @@ class BloomNode(object):
     self.lengths_mask |= node.lengths_mask << 1
     self.weight(node.max_weight)
     self.weight(node.min_weight)
+
+  def _base_link(self, key: str, node: 'BloomNode') -> None:
+    if key in self._edges:
+      raise KeyError('Key "%s" already linked' % key)
+    self._edges[key] = node
     # Provide anything implied by the key transition.
     # FIXME: This is inflexible.
     try:
@@ -78,7 +81,7 @@ class BloomNode(object):
     if key not in self._edges:
       child = self._find(key)
       if child is None:
-        self.link(key, BloomNode())
+        self._base_link(key, BloomNode())
       else:
         self.link(key, child)
     return self._edges[key]
@@ -101,8 +104,10 @@ class BloomNode(object):
         raise ValueError(
             '%s already has match weight %s' % (self, self.match_weight))
       self.match_weight = weight
-    self.max_weight = max(weight, self.max_weight)
-    self.min_weight = min(weight, self.min_weight)
+    if weight < self.min_weight:
+      self.min_weight = weight
+    elif weight > self.max_weight:
+      self.max_weight = weight
 
   def __len__(self) -> int:
     self._expand()
