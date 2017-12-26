@@ -25,7 +25,7 @@ with description('for_alpha'):
       seen |= last
 
 
-with description('mask defaults'):
+with description('mask defaults') as self:
   with before.each:
     self.subject = bloom_mask.BitMatchAnything()
 
@@ -52,3 +52,6 @@ with description('mask defaults'):
     x = 0b101
     x &= self.subject
     expect(x).to(be(0b101))
+
+  with it('claims equality'):
+    expect(0b101 & 0b0).to(equal(self.subject))

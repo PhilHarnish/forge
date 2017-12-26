@@ -25,6 +25,12 @@ class BitMatchAnything(int):
   def __ror__(self, other: int) -> int:
     return other
 
+  def __eq__(self, other: int) -> bool:
+    return True
+
+  def __req__(self, other: int) -> bool:
+    return True
+
 
 PROVIDE_NOTHING = BitMatchAnything()
 REQUIRE_NOTHING = BitMatchAnything()
