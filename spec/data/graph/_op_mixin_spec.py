@@ -25,12 +25,6 @@ with description('overloading'):
   with it('should accumulate with multiplication'):
     expect(str(Stub() * Stub())).to(equal('Stub((Stub()*Stub()))'))
 
-  with it('should accumulate with AND'):
-    expect(str(Stub() & Stub())).to(equal('Stub((Stub()&Stub()))'))
-
-  with it('should accumulate with OR'):
-    expect(str(Stub() | Stub())).to(equal('Stub((Stub()|Stub()))'))
-
   with it('should support float with multiplication'):
     expect(str(Stub() * 0.5)).to(equal('Stub((Stub()*0.5))'))
 

@@ -10,14 +10,10 @@ _next = itertools.count()
 OP_IDENTITY = next(_next)
 OP_ADD = next(_next)
 OP_MULTIPLY = next(_next)
-OP_AND = next(_next)
-OP_OR = next(_next)
 _OPERATOR_STRINGS = [
   ('%s', ''),
   ('(%s)', '+'),
   ('(%s)', '*'),
-  ('(%s)', '&'),
-  ('(%s)', '|'),
 ]
 
 
@@ -36,6 +32,9 @@ class Op(object):
 
   def __eq__(self, other: 'Op') -> bool:
     return self._operator == other._operator
+
+  def __len__(self) -> int:
+    return len(self._operands)
 
   def __str__(self) -> str:
     fmt, mid = _OPERATOR_STRINGS[self._operator]
@@ -65,12 +64,6 @@ class OpMixin(pool.Pooled):
 
   def __mul__(self, other: Union[int, float, 'OpMixin']) -> 'OpMixin':
     return _commutative(self, OP_MULTIPLY, other)
-
-  def __and__(self, other: Union[int, float, 'OpMixin']) -> 'OpMixin':
-    return _commutative(self, OP_AND, other)
-
-  def __or__(self, other: Union[int, float, 'OpMixin']) -> 'OpMixin':
-    return _commutative(self, OP_OR, other)
 
   def __str__(self) -> str:
     return '%s(%s)' % (self.__class__.__name__, str(self.op))
