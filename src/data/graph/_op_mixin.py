@@ -24,9 +24,12 @@ _OPERATOR_STRINGS = [
 class Op(object):
   __slots__ = ('_operator', '_operands')
 
-  def __init__(self, operator, operands) -> None:
+  def __init__(self, operator: OperatorType, operands: list) -> None:
     self._operator = operator
     self._operands = operands
+
+  def operator(self) -> int:
+    return self._operator
 
   def operands(self) -> list:
     return self._operands

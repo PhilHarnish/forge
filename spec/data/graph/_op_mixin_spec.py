@@ -15,7 +15,7 @@ with description('construction'):
     expect(calling(Stub)).not_to(raise_error)
 
 
-with fdescription('overloading'):
+with description('overloading'):
   with it('should begin with identity operation'):
     expect(str(Stub())).to(equal('Stub()'))
 
