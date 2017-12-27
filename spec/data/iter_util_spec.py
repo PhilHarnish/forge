@@ -48,19 +48,19 @@ with description('both'):
     expect(iter_util.both([])).to(equal([]))
 
   with it('returns all items for single object'):
-    expect(iter_util.both([{'a': 1, 'b': .5}])).to(equal([
+    expect(list(sorted(iter_util.both([{'a': 1, 'b': .5}])))).to(equal([
       ('a', [1]),
       ('b', [.5]),
     ]))
 
   with it('returns either items for multiple'):
-    expect(iter_util.both([
+    expect(list(sorted(iter_util.both([
         {'a': 1, 'b': .5},
         {'b': .25, 'c': .15},
-    ])).to(equal([
+    ])))).to(equal([
       ('a', [1]),
-      ('c', [0.15]),
       ('b', [0.5, 0.25]),
+      ('c', [0.15]),
     ]))
 
   with it('optionally focuses specified items'):
@@ -80,10 +80,10 @@ with description('both'):
     ]))
 
   with it('optionally skips and focuses specified items'):
-    expect(iter_util.both([
+    expect(list(sorted(iter_util.both([
         {'a': 1, 'b': 1, 'c': 1},
         {'_': 2, 'b': 2, 'c': 2},
-    ], whitelist=set('abc'), blacklist={'c'})).to(equal([
+    ], whitelist=set('abc'), blacklist={'c'})))).to(equal([
+      ('a', [1]),
       ('b', [1, 2]),
-      ('a', [1])
     ]))
