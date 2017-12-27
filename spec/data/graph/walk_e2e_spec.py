@@ -27,16 +27,18 @@ def get_words() -> list:
       yield word, value
 
 
-def make_trie() -> bloom_node.BloomNode:
+def make_trie(length_mask) -> bloom_node.BloomNode:
   root = bloom_node.BloomNode()
   for word, value in get_words():
+    if 2 ** len(word) & length_mask == 0:
+      continue
     trie.add(root, word, value / _FIRST_WORD_WEIGHT)
   return root
 
 
 @pickle_cache.cache('data/graph/walk_e2e_spec/trie')
-def pickled_trie() -> bloom_node.BloomNode:
-  return make_trie()
+def pickled_trie(length_mask: int) -> bloom_node.BloomNode:
+  return make_trie(length_mask)
 
 
 def results(root) -> List[str]:
@@ -65,26 +67,49 @@ def head2head(patterns, trie, words) -> tuple:
 
 with _description('benchmarks: trie creation', 'end2end'):
   with it('runs'):
-    root = make_trie()
+    root = make_trie(0b111111110)
     expect(repr(root)).to(equal(
-        "BloomNode('abcdefghijklmnopqrstuvwxyz',"
-        " ' ################################ #', 0)"))
+        "BloomNode('abcdefghijklmnopqrstuvwxyz', ' ########', 0)"))
 
 
 with description('benchmarks: node merging', 'end2end') as self:
   with before.all:
-    self.root = pickled_trie()
+    self.root = pickled_trie(1 << 7)
     self.words = list(get_words())
 
   with it('finds nodes matching .e.k.n.'):
     expected, actual = head2head(['.e.k.n.'], self.root, self.words)
-    expect(expected).to(equal(actual))
+    expect(actual).to(equal(expected))
 
   with it('finds nodes matching s.e.i.g'):
     expected, actual = head2head(['s.e.i.g'], self.root, self.words)
-    expect(expected).to(equal(actual))
+    expect(actual).to(equal(expected))
 
   with it('finds nodes matching multiple regular expressions'):
     expected, actual = head2head(['s.e.i.g', '.e.k.n.'], self.root, self.words)
-    expect(expected).to(equal(actual))
+    expect(actual).to(equal(expected))
     expect(actual).to(equal(['seeking']))
+
+  with it('finds nodes for very expensive queries'):
+    expected, actual = head2head([
+      '...alls',
+    ], self.root, self.words)
+    expect(actual).to(equal(expected))
+    expect(actual).to(equal([
+      'recalls', 'ingalls', 'adcalls', 'befalls', 'thralls', 'squalls',
+      'mccalls'
+    ]))
+
+  with it('finds nodes for very expensive queries'):
+    expected, actual = head2head([
+      '.......',
+      '...a...',
+      '....l..',
+      '.....l.',
+      '......s',
+    ], self.root, self.words)
+    expect(expected).to(equal(actual))
+    expect(actual).to(equal([
+      'recalls', 'ingalls', 'adcalls', 'befalls', 'thralls', 'squalls',
+      'mccalls'
+    ]))

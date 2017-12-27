@@ -134,7 +134,7 @@ class BloomNode(_op_mixin.OpMixin):
     for key, reduced in bloom_node_reducer.reduce(
         self.op, blacklist=self._edges):
       self.link(key, reduced)
-    self.op = _op_mixin.IDENTITY  # No need to redo this work ever again.
+    self.op = None  # No need to redo this work ever again.
 
   def _find(self, key: str) -> Optional['BloomNode']:
     """Returns common node for `k` from sources, if any."""

@@ -41,11 +41,6 @@ def _visit_identity(
 def _visit_add(
     sources: List['bloom_node.BloomNode'],
     extra: list) -> Optional['bloom_node.BloomNode']:
-  if not sources or any(
-      not source.lengths_mask or
-      not source.max_weight
-          for source in sources):
-    return None
   if extra:
     raise NotImplementedError('OP_ADD failed to reduce %s' % extra)
   # Round up all of the values from all available sources.
@@ -72,11 +67,6 @@ def _visit_add(
 def _visit_multiply(
     sources: List['bloom_node.BloomNode'],
     extra: list) -> Optional['bloom_node.BloomNode']:
-  if not sources or any(
-      not source.lengths_mask or
-      not source.max_weight
-          for source in sources):
-    return None
   scale = 1
   for n in extra:
     scale *= n
@@ -89,8 +79,8 @@ def _visit_multiply(
   max_weight = sources[0].max_weight
   pos = 1
   l = len(sources)
-  while pos < l and lengths_mask and (
-      provide_mask & require_mask) == require_mask:
+  while pos < l and lengths_mask and provide_mask and (
+      not require_mask or (provide_mask & require_mask) == require_mask):
     source = sources[pos]
     lengths_mask &= source.lengths_mask  # Overlapping solution lengths exist.
     provide_mask &= source.provide_mask  # Overlapping letters are provided.
@@ -99,7 +89,7 @@ def _visit_multiply(
     match_weight *= source.match_weight
     pos += 1
   if (not lengths_mask or
-      (provide_mask & require_mask) != require_mask or
+      (require_mask and (provide_mask & require_mask) != require_mask) or
       not max_weight):
     return None  # Unsatisfiable; no common requirements.
   # Verify all combinations are mutually satisfiable.

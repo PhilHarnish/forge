@@ -1,20 +1,24 @@
 import heapq
 from typing import ItemsView, Iterable, Tuple
 
-from data import types
+from data import pool, types
 from data.graph import bloom_node
 
 
-class _Cursor(object):
+class _Cursor(pool.Pooled):
   __slots__ = ('node', '_path')
 
   def __init__(self, node: bloom_node.BloomNode, path: types.Path) -> None:
+    super(_Cursor, self).__init__()
     self.node = node
     self._path = path
 
   def children(self) -> ItemsView['_Cursor', bloom_node.BloomNode]:
     for edge, child in self.node.items():
-      yield _alloc(child, (edge, self._path)), child
+      yield self.alloc(child, (edge, self._path)), child
+
+  def _alloc(self, node: bloom_node.BloomNode, path: types.Path) -> '_Cursor':
+    return _Cursor(node, path)
 
   def __str__(self) -> str:
     acc = []
@@ -26,14 +30,6 @@ class _Cursor(object):
 
   def __repr__(self) -> str:
     return "_Cursor(..., '%s')" % str(self)
-
-def _alloc(node: bloom_node.BloomNode, path: types.Path) -> _Cursor:
-  return _Cursor(node, path)
-
-
-def _free(cursor: _Cursor) -> None:
-  del cursor  # Unused argument. Does not actually "free" anything.
-  pass
 
 
 def walk(root: bloom_node.BloomNode) -> Iterable[types.WeightedWord]:
@@ -53,7 +49,7 @@ def walk(root: bloom_node.BloomNode) -> Iterable[types.WeightedWord]:
     free_positions.append(idx)
     return -weight, cursor
 
-  push(float('inf'), _alloc(root, None))
+  push(float('inf'), _Cursor(root, None))
   solutions = []
   while len(fringe):
     weight, cursor = pop()
@@ -65,7 +61,7 @@ def walk(root: bloom_node.BloomNode) -> Iterable[types.WeightedWord]:
         heapq.heappush(solutions, (-child_node.match_weight, str(child_cursor)))
       if child_node:
         push(child_node.max_weight, child_cursor)
-    _free(cursor)
+    cursor.free()
   while solutions:
     solution_weight, solution_word = heapq.heappop(solutions)
     yield solution_word, -solution_weight
