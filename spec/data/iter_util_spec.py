@@ -72,10 +72,11 @@ with description('both'):
     ]))
 
   with it('optionally skips specified items'):
-    expect(iter_util.both([
+    expect(list(sorted(iter_util.both([
         {'a': 1, 'b': .5},
         {'b': .25, 'c': .15},
-    ], blacklist={'b'})).to(equal([('a', [1]),
+    ], blacklist={'b'})))).to(equal([
+      ('a', [1]),
       ('c', [0.15]),
     ]))
 
