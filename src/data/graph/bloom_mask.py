@@ -1,7 +1,29 @@
-_ALPHA_CHARACTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+BASE_ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
+UNIT_SEPARATOR = chr(31)
+WORD_SEPARATOR = ' '
+UPPER_ALPHABET = BASE_ALPHABET.upper()
+
+
+# Shoud letter frequency ('etaoinshrdlcumwfgypbvkjxqz') be used instead?
+_ALPHA_CHARACTERS = BASE_ALPHABET + WORD_SEPARATOR + UPPER_ALPHABET
 _ALPHA_MAP = {
   c: 2**i for i, c in enumerate(_ALPHA_CHARACTERS)
 }
+_ALPHA_MAP[UNIT_SEPARATOR] = _ALPHA_MAP[' ']
+
+
+def normalize(string: str) -> str:
+  return string.replace(UNIT_SEPARATOR, ' ')
+
+
+def map_to_str(provide_mask: int, require_mask: int) -> str:
+  chars = []
+  for i in range(26):
+    if require_mask and require_mask & (2 ** i):
+      chars.append(chr(ord('A') + i))
+    elif provide_mask and provide_mask & (2 ** i):
+      chars.append(chr(ord('a') + i))
+  return ''.join(chars)
 
 
 def for_alpha(character: str) -> int:

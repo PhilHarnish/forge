@@ -12,8 +12,6 @@ with description('for_alpha'):
         raise_error(NotImplementedError))
     expect(calling(bloom_mask.for_alpha, '$')).to(
         raise_error(NotImplementedError))
-    expect(calling(bloom_mask.for_alpha, ' ')).to(
-        raise_error(NotImplementedError))
 
   with it('produces increasing unique values'):
     seen = 0

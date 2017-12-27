@@ -147,12 +147,6 @@ class BloomNode(_op_mixin.OpMixin):
 
   def __str__(self) -> str:
     self._expand()
-    chars = []
-    for i in range(26):
-      if self.require_mask and self.require_mask & (2 ** i):
-        chars.append(chr(ord('A') + i))
-      elif self.provide_mask and self.provide_mask & (2 ** i):
-        chars.append(chr(ord('a') + i))
     if self.lengths_mask:
       # Convert mask to binary, reverse, and swap "01" for " #"
       lengths = bin(self.lengths_mask)[:1:-1].replace(
@@ -160,7 +154,9 @@ class BloomNode(_op_mixin.OpMixin):
     else:
       lengths = ''
     return '%s(%s, %s, %s)' % (
-        self.__class__.__name__, repr(''.join(chars)), repr(lengths),
+        self.__class__.__name__,
+        repr(bloom_mask.map_to_str(self.provide_mask, self.require_mask)),
+        repr(lengths),
         self.match_weight)
 
   __repr__ = __str__
