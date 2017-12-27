@@ -79,7 +79,7 @@ def _visit_multiply(
   max_weight = sources[0].max_weight
   pos = 1
   l = len(sources)
-  while pos < l and lengths_mask and provide_mask and (
+  while pos < l and lengths_mask and (
       not require_mask or (provide_mask & require_mask) == require_mask):
     source = sources[pos]
     lengths_mask &= source.lengths_mask  # Overlapping solution lengths exist.
