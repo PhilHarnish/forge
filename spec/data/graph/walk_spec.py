@@ -34,7 +34,7 @@ with description('test data'):
 
   with it('finds regex matches'):
     expression = regex.parse('.n')
-    merged = bloom_node.BloomNode([self.test_data, expression])
+    merged = self.test_data * expression
     expect(list(walk.walk(merged))).to(equal([
       ('in', 0.3660727635087299),
       ('on', 0.16210439688339484)

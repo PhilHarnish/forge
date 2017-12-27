@@ -46,7 +46,7 @@ with description('merge'):
     trie.add(a, 'abc', 1.0)
     b = bloom_node.BloomNode()
     trie.add(b, 'xyz', 1.0)
-    merged = bloom_node.BloomNode([a, b])
+    merged = a * b
     expect(merged).to(have_len(0))
 
   with it('predicts non-overlap for suffixes'):
@@ -54,7 +54,7 @@ with description('merge'):
     trie.add(a, 'cab', 1.0)
     b = bloom_node.BloomNode()
     trie.add(b, 'cat', 1.0)
-    merged = bloom_node.BloomNode([a, b])
+    merged = a * b
     expect(merged).to(have_len(0))
 
   with it('predicts overlap for identical tries'):
@@ -62,7 +62,7 @@ with description('merge'):
     trie.add(a, 'cat', 1.0)
     b = bloom_node.BloomNode()
     trie.add(b, 'cat', 1.0)
-    merged = bloom_node.BloomNode([a, b])
+    merged = a * b
     expect(merged).to(have_len(1))
 
 
@@ -79,10 +79,10 @@ with description('test data'):
     expression = regex.parse('.n')
     child1 = self.trie['t']
     child2 = expression['t']
-    expect(bloom_node.reduce([child1, child2])).to(equal(None))
+    expect(child1 * child2).to(have_len(0))
 
   with it('merges with regex'):
     expression = regex.parse('.n')
-    merged = bloom_node.BloomNode([self.trie, expression])
+    merged = self.trie * expression
     expect(repr(merged)).to(equal("BloomNode('iNo', '  #', 0)"))
     expect(repr(merged['i'])).to(equal("BloomNode('N', ' #', 0)"))

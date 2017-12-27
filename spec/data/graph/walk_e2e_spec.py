@@ -34,7 +34,7 @@ def make_trie() -> bloom_node.BloomNode:
   return root
 
 
-@pickle_cache.cache('end2end/data/graph/walk_e2e_spec/trie')
+@pickle_cache.cache('data/graph/walk_e2e_spec/trie')
 def pickled_trie() -> bloom_node.BloomNode:
   return make_trie()
 
@@ -48,10 +48,9 @@ def results(root) -> List[str]:
 
 def head2head(patterns, trie, words) -> tuple:
   start = time.time()
-  sources = [trie]
+  merged = trie
   for pattern in patterns:
-    sources.append(regex.parse(pattern))
-  merged = bloom_node.BloomNode(sources)
+    merged *= regex.parse(pattern)
   actual = results(merged)
   trie_elapsed = time.time() - start
   start = time.time()

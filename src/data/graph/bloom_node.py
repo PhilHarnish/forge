@@ -1,20 +1,17 @@
-import itertools
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, ItemsView, Iterable, Optional
 
-from data import iter_util
-from data.graph import bloom_mask
+from data.graph import _op_mixin, bloom_mask, bloom_node_reducer
 
 
-class BloomNode(object):
+class BloomNode(_op_mixin.OpMixin):
   """Graph node with bloom-filter style optimizations."""
   __slots__ = (
     'provide_mask',
     'require_mask',
     'lengths_mask',
     'max_weight',
-    'min_weight',
     'match_weight',
-    '_sources',
+    '_ops',
     '_edges',
   )
 
@@ -26,30 +23,29 @@ class BloomNode(object):
   lengths_mask: int
   # Maximum match weight in descendant nodes.
   max_weight: float
-  # Minimum match weight in descendant nodes.
-  min_weight: float
   # Match value for this node.
   match_weight: float
-  # Input sources for this node.
-  _sources: Optional[List['BloomNode']]
   # Outgoing edges of this node.
   _edges: Dict[str, 'BloomNode']
 
-  def __init__(self, sources: Optional[List['BloomNode']] = None) -> None:
+  def __init__(self, op: Optional[_op_mixin.Op] = None) -> None:
+    super(BloomNode, self).__init__(op)
     self.provide_mask = bloom_mask.PROVIDE_NOTHING
     self.require_mask = bloom_mask.REQUIRE_NOTHING
     self.lengths_mask = 0
     self.match_weight = 0
     self.max_weight = 0
-    self.min_weight = 0
-    self._sources = sources
     self._edges = {}
 
   def distance(self, length: int) -> None:
     """Report distance to a matching node."""
     self.lengths_mask |= 2 ** length
 
-  def items(self) -> Iterable[Dict[str, 'BloomNode']]:
+  def edges(self) -> Dict[str, 'BloomNode']:
+    self._expand()
+    return self._edges
+
+  def items(self) -> ItemsView[str, 'BloomNode']:
     self._expand()
     yield from self._edges.items()
 
@@ -61,8 +57,8 @@ class BloomNode(object):
     self.require_mask |= node.require_mask
     # Inherit matching lengths (offset by 1).
     self.lengths_mask |= node.lengths_mask << 1
-    self.weight(node.max_weight)
-    self.weight(node.min_weight)
+    if node.max_weight > self.max_weight:
+      self.max_weight = node.max_weight
 
   def _base_link(self, key: str, node: 'BloomNode') -> None:
     if key in self._edges:
@@ -104,9 +100,7 @@ class BloomNode(object):
         raise ValueError(
             '%s already has match weight %s' % (self, self.match_weight))
       self.match_weight = weight
-    if weight < self.min_weight:
-      self.min_weight = weight
-    elif weight > self.max_weight:
+    if weight > self.max_weight:
       self.max_weight = weight
 
   def __len__(self) -> int:
@@ -131,28 +125,27 @@ class BloomNode(object):
     for k, v in self.items():
       yield k
 
+  def _alloc(self, *args, **kwargs) -> 'BloomNode':
+    return BloomNode(*args, **kwargs)
+
   def _expand(self) -> None:
-    if not self._sources:
+    if not self.op:
       return
-    for key, sources in iter_util.common(
-        [source._edges for source in self._sources], skip=self._edges):
-      reduced = reduce(sources)
-      if reduced is not None:
-        self.link(key, reduced)
-    self._sources.clear()  # No need to redo this work ever again.
+    for key, reduced in bloom_node_reducer.reduce(
+        self.op, blacklist=self._edges):
+      self.link(key, reduced)
+    self.op = _op_mixin.IDENTITY  # No need to redo this work ever again.
 
   def _find(self, key: str) -> Optional['BloomNode']:
     """Returns common node for `k` from sources, if any."""
-    if not self._sources:
+    if not self.op:
       return None
-    sources = []
-    for source in self._sources:
-      if key not in source:
-        return None
-      sources.append(source[key])
-    return reduce(sources)
+    for key, reduced in bloom_node_reducer.reduce(
+        self.op, whitelist={key}):
+      return reduced
+    return None
 
-  def __repr__(self) -> str:
+  def __str__(self) -> str:
     self._expand()
     chars = []
     for i in range(26):
@@ -170,46 +163,4 @@ class BloomNode(object):
         self.__class__.__name__, repr(''.join(chars)), repr(lengths),
         self.match_weight)
 
-
-def reduce(sources: List['BloomNode']) -> Optional['BloomNode']:
-  if not sources or any(
-          not source.lengths_mask or
-          not source.max_weight
-              for source in sources):
-    return None
-  # First, verify there are matching masks. It's required for a valid
-  # solution and is trivial to verify satisfaction.
-  lengths_mask = sources[0].lengths_mask
-  provide_mask = sources[0].provide_mask
-  require_mask = sources[0].require_mask
-  match_weight = sources[0].match_weight
-  min_weight = sources[0].min_weight
-  max_weight = sources[0].max_weight
-  pos = 1
-  l = len(sources)
-  while pos < l and lengths_mask and (
-        provide_mask & require_mask) == require_mask:
-    source = sources[pos]
-    lengths_mask &= source.lengths_mask  # Overlapping solution lengths exist.
-    provide_mask &= source.provide_mask  # Overlapping letters are provided.
-    require_mask |= source.require_mask  # Requirements are combined.
-    min_weight = min(min_weight, source.min_weight)
-    max_weight = min(max_weight, source.max_weight)
-    match_weight = min(match_weight, source.match_weight)  # Trends to 0.
-    pos += 1
-  if (not lengths_mask or
-      (provide_mask & require_mask) != require_mask or
-      not max_weight):
-    return None  # Unsatisfiable; no common requirements.
-  # Verify all combinations are mutually satisfiable.
-  for a, b in itertools.combinations(sources, 2):
-    if not a.satisfies(b) or not b.satisfies(a):
-      return None
-  reduced = BloomNode(sources)
-  reduced.provide_mask = provide_mask
-  reduced.require_mask = require_mask
-  reduced.lengths_mask = lengths_mask
-  reduced.min_weight = min_weight
-  reduced.max_weight = max_weight
-  reduced.match_weight = match_weight
-  return reduced
+  __repr__ = __str__
