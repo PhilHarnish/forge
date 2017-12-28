@@ -35,6 +35,17 @@ with description('parse'):
     expect(repr(parsed)).to(equal("BloomNode('ABC', '   #', 0)"))
     expect(repr(parsed['a']['b']['c'])).to(equal(_GOAL))
 
+  with description('with capitals'):
+    with it('produces simple graphs'):
+      parsed = regex.parse('aA')
+      expect(repr(parsed)).to(equal("BloomNode('A;A', '  #', 0)"))
+
+    with it('with "."'):
+      parsed = regex.parse('a.Z')
+      expect(repr(parsed)).to(equal(
+          "BloomNode('Abcdefghijklmnopqrstuvwxyz;ABCDEFGHIJKLMNOPQRSTUVWXYZ',"
+          " '   #', 0)"))
+
   with description('with "." character'):
     with it('produces simple graphs'):
       parsed = regex.parse('.')

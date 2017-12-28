@@ -1,9 +1,9 @@
 import re
 from typing import Optional
 
-from data.graph import bloom_mask, bloom_node
+from data.graph import bloom_node
 
-_SIMPLE = re.compile(r'[a-z\.]+')
+_SIMPLE = re.compile(r'[a-zA-Z.]+')
 _LOWER_ALPHA = 'abcdefghijklmnopqrstuvwxyz'
 _UPPER_ALPHA = _LOWER_ALPHA.upper()
 
@@ -22,10 +22,10 @@ def normalize(expression: str) -> str:
   return expression
 
 def _to_simple_nodes(expression: str, weight) -> bloom_node.BloomNode:
-  if expression.islower():
-    full_alpha = _LOWER_ALPHA
-  else:
+  if not expression.islower() and any(c.isupper() for c in expression):
     full_alpha = _LOWER_ALPHA + _UPPER_ALPHA
+  else:
+    full_alpha = _LOWER_ALPHA
   # Setup the "goal" state.
   cursor = bloom_node.BloomNode()
   cursor.distance(0)
@@ -40,8 +40,6 @@ def _to_simple_nodes(expression: str, weight) -> bloom_node.BloomNode:
     next_cursor = bloom_node.BloomNode()
     # Calculate edges.
     for edge in edges:
-      # Update require & provides for the new node.
-      next_cursor.require(bloom_mask.for_alpha(edge))
       # Add link.
       next_cursor.link(edge, cursor)
     cursor = next_cursor
