@@ -11,7 +11,6 @@ class BloomNode(_op_mixin.OpMixin):
     'lengths_mask',
     'max_weight',
     'match_weight',
-    '_ops',
     '_edges',
   )
 
@@ -52,9 +51,6 @@ class BloomNode(_op_mixin.OpMixin):
   def link(self, key: str, node: 'BloomNode') -> None:
     """Links `self` to `node` via `key`."""
     self._base_link(key, node)
-    # Provide and require anything children do.
-    self.provide_mask |= node.provide_mask
-    self.require_mask |= node.require_mask
     # Inherit matching lengths (offset by 1).
     self.lengths_mask |= node.lengths_mask << 1
     if node.max_weight > self.max_weight:
@@ -68,9 +64,15 @@ class BloomNode(_op_mixin.OpMixin):
     # FIXME: This is inflexible.
     try:
       # Provides become more numerous with time.
-      self.provide_mask |= bloom_mask.for_alpha(key)
+      edge_mask = bloom_mask.for_alpha(key)
+      self.provide_mask |= edge_mask | node.provide_mask
+      new_requirements = edge_mask | node.require_mask
+      if (not self.require_mask or
+          self.require_mask & new_requirements != new_requirements):
+        self.require_mask &= new_requirements
     except ValueError:
-      pass
+      self.provide_mask |= node.provide_mask
+      self.require_mask &= node.require_mask
 
   def open(self, key: str) -> 'BloomNode':
     """Return outgoing edge `k`. Create node if necessary."""

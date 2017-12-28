@@ -77,7 +77,7 @@ with description('reduce'):
           # -> c.
           "[('o', BloomNode('Mno', ' #  #', 0))]",
           # -> o.
-          "[('m', BloomNode('mNO', '#  #', 0.8))]",
+          "[('m', BloomNode('MNO', '#  #', 0.8))]",
           # -> m.
           "[('m', BloomNode('NO', '  #', 0))]",
           # -> m.
@@ -171,7 +171,7 @@ with description('reduce'):
         # -> c.
         "[('o', BloomNode('Mno', ' #  #', 0))]",
         # -> o.
-        "[('m', BloomNode('mNO', '#  #', 0.2))]",
+        "[('m', BloomNode('MNO', '#  #', 0.2))]",
         # -> m.
         "[('m', BloomNode('NO', '  #', 0))]",
         # -> m.
