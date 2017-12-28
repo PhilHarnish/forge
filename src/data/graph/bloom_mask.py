@@ -17,13 +17,18 @@ def normalize(string: str) -> str:
 
 
 def map_to_str(provide_mask: int, require_mask: int) -> str:
-  chars = []
-  for i in range(26):
-    if require_mask and require_mask & (2 ** i):
-      chars.append(chr(ord('A') + i))
-    elif provide_mask and provide_mask & (2 ** i):
-      chars.append(chr(ord('a') + i))
-  return ''.join(chars)
+  blocks = []
+  for group in (BASE_ALPHABET, WORD_SEPARATOR, UPPER_ALPHABET):
+    block = []
+    for c in group:
+      mask = for_alpha(c)
+      if require_mask and require_mask & mask:
+        block.append(c.upper())
+      elif provide_mask and provide_mask & mask:
+        block.append(c)
+    if block:
+      blocks.append(''.join(block))
+  return ';'.join(blocks)
 
 
 def for_alpha(character: str) -> int:

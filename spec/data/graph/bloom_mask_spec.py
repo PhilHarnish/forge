@@ -23,6 +23,24 @@ with description('for_alpha'):
       seen |= last
 
 
+with description('map_to_str'):
+  with it('produces no output for 0s'):
+    expect(bloom_mask.map_to_str(0, 0)).to(equal(''))
+
+  with it('indicates provided characters'):
+    expect(bloom_mask.map_to_str(0b111, 0)).to(equal('abc'))
+
+  with it('indicates required characters differently'):
+    expect(bloom_mask.map_to_str(0b111, 0b111)).to(equal('ABC'))
+
+  with it('indicates PROVIDE_NOTHING as 0'):
+    expect(bloom_mask.map_to_str(bloom_mask.PROVIDE_NOTHING, 0)).to(equal(''))
+
+  with it('indicates PROVIDE_NOTHING+REQUIRE_NOTHING as 0'):
+    expect(bloom_mask.map_to_str(
+        bloom_mask.PROVIDE_NOTHING, bloom_mask.REQUIRE_NOTHING)).to(equal(''))
+
+
 with description('mask defaults') as self:
   with before.each:
     self.subject = bloom_mask.BitMatchAnything()
