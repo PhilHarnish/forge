@@ -50,5 +50,5 @@ def common(
     ]
   return [
     (key, [i[key] for i in maps])
-    for key in reference if not any(key not in i for i in remaining)
+    for key in reference if all(key in i for i in remaining)
   ]
