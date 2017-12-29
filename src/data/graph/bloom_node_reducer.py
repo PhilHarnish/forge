@@ -96,7 +96,8 @@ def _visit_multiply(
   for a, b in itertools.combinations(sources, 2):
     if not a.satisfies(b) or not b.satisfies(a):
       return None
-  reduced = bloom_node.BloomNode(_op_mixin.Op(_op_mixin.OP_MULTIPLY, sources))
+  reduced = bloom_node.BloomNode(
+      _op_mixin.Op(_op_mixin.OP_MULTIPLY, sources + extra))
   reduced.provide_mask = provide_mask
   reduced.require_mask = require_mask
   reduced.lengths_mask = lengths_mask
