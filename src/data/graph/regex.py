@@ -38,9 +38,6 @@ def _to_simple_nodes(expression: str, weight) -> bloom_node.BloomNode:
       edges = c
     # Create new cursor with path to old cursor.
     next_cursor = bloom_node.BloomNode()
-    # Calculate edges.
-    for edge in edges:
-      # Add link.
-      next_cursor.link(edge, cursor)
+    next_cursor.links(edges, cursor)
     cursor = next_cursor
   return cursor
