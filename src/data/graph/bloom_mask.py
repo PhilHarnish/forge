@@ -2,6 +2,7 @@ BASE_ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 UNIT_SEPARATOR = chr(31)
 WORD_SEPARATOR = ' '
 UPPER_ALPHABET = BASE_ALPHABET.upper()
+SEPARATOR = {UNIT_SEPARATOR, WORD_SEPARATOR}
 
 
 # Shoud letter frequency ('etaoinshrdlcumwfgypbvkjxqz') be used instead?
@@ -53,9 +54,6 @@ class BitMatchAnything(int):
     return other
 
   def __eq__(self, other: int) -> bool:
-    return True
-
-  def __req__(self, other: int) -> bool:
     return True
 
 
