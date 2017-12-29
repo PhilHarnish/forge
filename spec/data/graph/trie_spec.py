@@ -1,7 +1,13 @@
 from data.graph import bloom_node, regex, trie
 from spec.mamba import *
 
-_TEST_DATA = [
+
+def _scale(items: list) -> list:
+  scale = items[0][1]
+  return [(k, v / scale) for k, v in items]
+
+
+_TEST_DATA = _scale([
     ('the', 23135851162),
     ('of', 13151942776),
     ('and', 12997637966),
@@ -12,7 +18,7 @@ _TEST_DATA = [
     ('is', 4705743816),
     ('on', 3750423199),
     ('that', 3400031103),
-]
+])
 
 
 with description('add'):
@@ -38,6 +44,31 @@ with description('add'):
     expect(root['b']).to(have_len(1))
     expect(repr(root['b']['a'])).to(equal("BloomNode('dgn', ' #', 0)"))
     expect(root['b']['a']).to(have_len(3))
+
+  with it('maintains bloom properties for longer word + substring'):
+    node = bloom_node.BloomNode()
+    trie.add(node, 'com', 0.5)
+    trie.add(node, 'common', 1.0)
+    expecteds = [
+      # START.
+      "BloomNode('CMnO', '   #  #', 0)",
+      # -> c.
+      "BloomNode('MnO', '  #  #', 0)",
+      # -> o.
+      "BloomNode('Mno', ' #  #', 0)",
+      # -> m.
+      "BloomNode('MNO', '#  #', 0.5)",
+      # -> m.
+      "BloomNode('NO', '  #', 0)",
+      # -> o.
+      "BloomNode('N', ' #', 0)",
+      # -> n.
+      "BloomNode('', '#', 1.0)",
+    ]
+    for c, expected in zip('common', expecteds):
+      expect(str(node)).to(equal(expected))
+      node = node[c]
+    expect(repr(node)).to(equal(expecteds[-1]))
 
 
 with description('merge'):
@@ -66,7 +97,7 @@ with description('merge'):
     expect(merged).to(have_len(1))
 
 
-with description('test data'):
+with description('test data, 1 word'):
   with before.each:
     self.trie = bloom_node.BloomNode()
     for key, value in _TEST_DATA:
@@ -86,3 +117,51 @@ with description('test data'):
     merged = self.trie * expression
     expect(repr(merged)).to(equal("BloomNode('iNo', '  #', 0)"))
     expect(repr(merged['i'])).to(equal("BloomNode('N', ' #', 0)"))
+
+
+with description('test data, multiple word'):
+  with before.each:
+    self.trie = bloom_node.BloomNode()
+    for key, value in _TEST_DATA:
+      trie.add(self.trie, key, value)
+    for key, value in _TEST_DATA:
+      trie.add_multi_word(self.trie, key, value)
+
+  with it('populates test data'):
+    expect(repr(self.trie)).to(equal("BloomNode('adefhinorst; ', ' ####', 0)"))
+
+  with it('should allow looping back to root'):
+    expect(repr(self.trie['i']['s'][' '])).to(equal(
+        "BloomNode('adefhinorst; ', ' ####', 0)"))
+
+  with it('should weigh later word matches less than original'):
+    expect(self.trie['i']['s'].match_weight).to(be_above(
+        self.trie['i']['s'][' ']['i']['s'].match_weight))
+
+  with it('should weigh even later word matches less than later'):
+    expect(self.trie['i']['s'][' ']['i']['s'].match_weight).to(be_above(
+        self.trie['i']['s'][' ']['i']['s'][' ']['i']['s'].match_weight))
+
+  with it('should repr correctly in deep test'):
+    expecteds = [
+      # -> i.
+      "BloomNode('ns; ', ' #', 0)",
+      # -> s.
+      "BloomNode(' ', '#', 0.20339618296512277)",
+      # ->  .
+      "BloomNode('adefhinorst; ', ' ####', 0)",
+      # -> i.
+      "BloomNode('ns; ', ' #', 0.0)",
+      # -> s.
+      "BloomNode(' ', '#', 0.041370007244781695)",
+      # ->  .
+      "BloomNode('adefhinorst; ', ' ####', 0.0)",
+      # -> i.
+      "BloomNode('ns; ', ' #', 0.0)",
+      # -> s.
+      "BloomNode(' ', '#', 0.008414501562828072)",
+    ]
+    node = self.trie
+    for c, expected in zip('is is is', expecteds):
+      node = node[c]
+      expect(str(repr(node))).to(equal(expected))
