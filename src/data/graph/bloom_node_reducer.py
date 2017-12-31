@@ -79,6 +79,7 @@ def _visit_multiply(
   max_weight = sources[0].max_weight
   pos = 1
   l = len(sources)
+  has_child_ops = bool(sources[0].op)
   while pos < l and lengths_mask and (
       not require_mask or (provide_mask & require_mask) == require_mask):
     source = sources[pos]
@@ -88,10 +89,14 @@ def _visit_multiply(
     max_weight *= source.max_weight  # Trends to 0.
     match_weight *= source.match_weight
     pos += 1
-  if (not lengths_mask or
-      (require_mask and (provide_mask & require_mask) != require_mask) or
-      not max_weight):
-    return None  # Unsatisfiable; no common requirements.
+    has_child_ops |= bool(source.op)
+  if not has_child_ops and (
+      not lengths_mask or
+      not max_weight or
+      (require_mask and (provide_mask & require_mask) != require_mask)):
+    # Unsatisfiable: no common requirements or child operations which could
+    # potentially expand into more edges.
+    return None
   # Verify all combinations are mutually satisfiable.
   for a, b in itertools.combinations(sources, 2):
     if not a.satisfies(b) or not b.satisfies(a):
