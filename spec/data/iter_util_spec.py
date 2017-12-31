@@ -47,6 +47,9 @@ with description('both'):
   with it('returns nothing for empty input'):
     expect(iter_util.both([])).to(equal([]))
 
+  with it('returns nothing for empty input + whitelist'):
+    expect(iter_util.both([{'key': 'value'}], whitelist={' '})).to(equal([]))
+
   with it('returns all items for single object'):
     expect(list(sorted(iter_util.both([{'a': 1, 'b': .5}])))).to(equal([
       ('a', [1]),

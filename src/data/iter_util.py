@@ -5,13 +5,13 @@ T = TypeVar('T')  # Generic type.
 
 def both(
     maps: List[Mapping[str, T]],
-    whitelist: Optional[Container[str]] = None,
+    whitelist: Optional[Iterable[str]] = None,
     blacklist: Optional[Container[str]] = None
 ) -> Iterable[Tuple[str, List[T]]]:
   if not maps:
     return []
   if whitelist:
-    reference = whitelist
+    reference = {key for key in whitelist if any(key in map for map in maps)}
   else:
     # Combine keys from all maps as reference.
     reference = set()
