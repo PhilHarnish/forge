@@ -8,10 +8,14 @@ _FIRST_WORD_WEIGHT = 23135851162
 _WORD_LIMIT = 47436  # After "gherkin" which is a cryptic solution in test set.
 
 
-def get_words() -> list:
-  for word, value in word_frequencies.parse_file('data/count_1w.txt'):
+def get_words(file: str = 'data/count_1w.txt') -> list:
+  for word, value in word_frequencies.parse_file(file):
     if value < _WORD_LIMIT:
       break
+    elif len(word) > 12:
+      continue
+    elif not word.isalpha():
+      continue
     last_c = None
     c_chain = 0
     for c in word:
@@ -47,6 +51,16 @@ def results(root) -> List[str]:
   return results
 
 
+def path(root: bloom_node.BloomNode, path: str) -> List[str]:
+  result = []
+  cursor = root
+  for c in path:
+    result.append(repr(cursor))
+    cursor = cursor[c]
+  result.append(repr(cursor))
+  return result
+
+
 def head2head(patterns, trie, words) -> tuple:
   start = time.time()
   merged = trie
@@ -65,13 +79,30 @@ def head2head(patterns, trie, words) -> tuple:
 
 
 with description('benchmarks: trie creation', 'end2end'):
-  with it('runs'):
+  with it('creates unigram trie'):
     with benchmark(3500) as should_run:
       if should_run:
         root = make_trie(0b111111110)
         expect(repr(root)).to(equal(
             "BloomNode('abcdefghijklmnopqrstuvwxyz', ' ########', 0)"))
 
+  with it('creates unigram + bigram trie'):
+    with benchmark(7000) as should_run:
+      if should_run:
+        unigrams = list(get_words())
+        bigrams = list(get_words('data/count_2w_aggregated.txt'))
+        root = bloom_node.BloomNode()
+        trie.add_ngrams(root, [unigrams, bigrams])
+        expect(path(root, 'to be a')).to(equal([
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', ' ############', 0)",
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 0.0006713145844190183)",
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '###########', 0.02097509031643418)",
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', ' ############', 0)",
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 2.9005393996133883e-05)",
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '###########', 0.0001657494654788442)",
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', ' ############', 0.0)",
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 2.5089529173969956e-05)"
+        ]))
 
 with description('benchmarks: node merging', 'end2end') as self:
   with before.all:
