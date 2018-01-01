@@ -62,14 +62,16 @@ class _Benchmark(object):
 
   def __exit__(self, exc_type, exc_val, exc_tb) -> None:
     delta = (time.time() - self._start) * 1000
-    if self._should_run:
+    if exc_type or exc_val or exc_tb:
+      pass
+    elif self._should_run:
       expect(delta).to(be_between(
           self._expected_ms * (1 - self._stddev),
           self._expected_ms * (1 + self._stddev)))
     elif delta > TARGET_BENCHMARK_RUNTIME_MS:
       raise Exception(
           'Benchmark of %s exceeds target of %s and should run infrequently' % (
-            self._expected_ms, TARGET_BENCHMARK_RUNTIME_MS,
+            delta, TARGET_BENCHMARK_RUNTIME_MS,
           ))
 
   def __call__(
@@ -79,7 +81,7 @@ class _Benchmark(object):
     return _Benchmark(expected_ms, stddev)
 
 
-benchmark = _Benchmark(5, 5)
+benchmark = _Benchmark(5, 1)
 
 
 # Mamba.

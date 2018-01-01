@@ -136,3 +136,12 @@ with description('benchmarks'):
       with benchmark(1, 1):
         expect(True).to(be_true)
     expect(test).not_to(raise_error)
+
+  with it('should permit exceptions to raise to the top'):
+    class CustomException(Exception):
+      pass
+
+    def test() -> None:
+      with benchmark(1, 1):
+        raise CustomException('exception')
+    expect(test).to(raise_error(CustomException))
