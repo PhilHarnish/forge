@@ -123,3 +123,16 @@ with description('mamba test helper'):
       expect(self.subject).to(have_been_called_once)
       self.subject()
       expect(self.subject).not_to(have_been_called_once)
+
+with description('benchmarks'):
+  with it('should work without call()'):
+    def test() -> None:
+      with benchmark:
+        expect(True).to(be_true)
+    expect(test).not_to(raise_error)
+
+  with it('should be customizable by calling with arguments'):
+    def test() -> None:
+      with benchmark(1, 1):
+        expect(True).to(be_true)
+    expect(test).not_to(raise_error)

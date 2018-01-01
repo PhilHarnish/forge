@@ -1,6 +1,9 @@
 import builtins
+import random
 import re
 import textwrap
+import time
+from typing import Optional
 
 import mock
 from expects import *
@@ -36,6 +39,48 @@ class _Breakpoints(object):
 
 breakpoints = _Breakpoints()
 _init_breakpoint_global()
+
+
+TARGET_BENCHMARK_RUNTIME_MS = 500
+
+
+class _Benchmark(object):
+  def __init__(self, expected_ms, stddev) -> None:
+    self._expected_ms = expected_ms
+    self._stddev = stddev
+    self._should_run = False
+
+  def __enter__(self) -> bool:
+    self._start = time.time()
+    if self._expected_ms > TARGET_BENCHMARK_RUNTIME_MS:
+      # Return True randomly such that the average time matches target.
+      self._should_run = (
+          random.random() < TARGET_BENCHMARK_RUNTIME_MS / self._expected_ms)
+    else:
+      self._should_run = True
+    return self._should_run
+
+  def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    delta = (time.time() - self._start) * 1000
+    if self._should_run:
+      expect(delta).to(be_between(
+          self._expected_ms * (1 - self._stddev),
+          self._expected_ms * (1 + self._stddev)))
+    elif delta > TARGET_BENCHMARK_RUNTIME_MS:
+      raise Exception(
+          'Benchmark of %s exceeds target of %s and should run infrequently' % (
+            self._expected_ms, TARGET_BENCHMARK_RUNTIME_MS,
+          ))
+
+  def __call__(
+      self,
+      expected_ms: Optional[int] = None,
+      stddev: Optional[float] = .1) -> '_Benchmark':
+    return _Benchmark(expected_ms, stddev)
+
+
+benchmark = _Benchmark(5, 5)
+
 
 # Mamba.
 self = {}
