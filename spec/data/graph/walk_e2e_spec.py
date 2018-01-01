@@ -1,4 +1,3 @@
-import time
 from typing import List
 
 from data import pickle_cache, word_frequencies
@@ -65,11 +64,13 @@ def head2head(patterns, trie, words) -> tuple:
   return expected, actual
 
 
-with _description('benchmarks: trie creation', 'end2end'):
+with description('benchmarks: trie creation', 'end2end'):
   with it('runs'):
-    root = make_trie(0b111111110)
-    expect(repr(root)).to(equal(
-        "BloomNode('abcdefghijklmnopqrstuvwxyz', ' ########', 0)"))
+    with benchmark(3500) as should_run:
+      if should_run:
+        root = make_trie(0b111111110)
+        expect(repr(root)).to(equal(
+            "BloomNode('abcdefghijklmnopqrstuvwxyz', ' ########', 0)"))
 
 
 with description('benchmarks: node merging', 'end2end') as self:
