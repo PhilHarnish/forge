@@ -106,10 +106,16 @@ def _add(
     include_space: bool) -> bloom_node.BloomNode:
   l = len(key)
   pos = 0
-  char_masks = _char_masks(key, include_space)
+  if include_space:
+    char_masks_space = _char_masks(key, include_space)
+  else:
+    char_masks_space = []
+  char_masks_base = _char_masks(key, False)
   cursor = root
   while pos <= l:
-    cursor.require(char_masks[pos])
+    if include_space:
+      cursor.require(char_masks_space[pos])  # Provide space.
+    cursor.require(char_masks_base[pos])
     cursor.distance(l - pos)
     cursor.weight(value, pos == l)
     if pos < l:
