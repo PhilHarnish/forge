@@ -1,7 +1,7 @@
 import re
 from typing import Optional
 
-from data.graph import bloom_node
+from data.graph import bloom_mask, bloom_node
 
 _SIMPLE = re.compile(r'[a-zA-Z. ]+')
 _LOWER_ALPHA = 'abcdefghijklmnopqrstuvwxyz'
@@ -38,6 +38,9 @@ def _to_simple_nodes(expression: str, weight) -> bloom_node.BloomNode:
       edges = c
     # Create new cursor with path to old cursor.
     next_cursor = bloom_node.BloomNode()
+    if c in bloom_mask.SEPARATOR:
+      next_cursor.distance(0)
+      next_cursor.weight(weight, False)
     next_cursor.links(edges, cursor)
     cursor = next_cursor
   return cursor

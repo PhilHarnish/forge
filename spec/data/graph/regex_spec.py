@@ -87,8 +87,8 @@ with description('parse'):
 
     with it('produces simple graphs'):
       parsed = regex.parse('a b')
-      expect(repr(parsed)).to(equal("BloomNode('A; ', '', 0)"))
-      expect(repr(parsed['a'])).to(equal("BloomNode(' ', '', 0)"))
+      expect(repr(parsed)).to(equal("BloomNode('A; ', ' #', 0)"))
+      expect(repr(parsed['a'])).to(equal("BloomNode(' ', '#', 0)"))
       expect(repr(parsed['a'][' '])).to(equal("BloomNode('B', ' #', 0)"))
       expect(repr(parsed['a'][' ']['b'])).to(equal(_GOAL))
 
