@@ -40,6 +40,27 @@ with description('populating'):
       self.subject.link('key', self.child)
       expect(self.subject['key']).to(equal(self.child))
 
+    with it('updates masks at root'):
+      self.subject.link('a', self.child)
+      expect(repr(self.subject)).to(equal("BloomNode('A', '', 0)"))
+      self.subject.link('b', self.child)
+      expect(repr(self.subject)).to(equal("BloomNode('ab', '', 0)"))
+      self.subject.link('c', self.child)
+      expect(repr(self.subject)).to(equal("BloomNode('abc', '', 0)"))
+
+    with it('updates masks recursively'):
+      cursor = self.child
+      cursor.weight(1, True)
+      cursor.distance(0)
+      for c in 'aba'[::-1]:
+        parent = bloom_node.BloomNode()
+        parent.link(c, cursor)
+        cursor = parent
+      expect(repr(cursor)).to(equal("BloomNode('AB', '   #', 0)"))
+      expect(repr(cursor['a'])).to(equal("BloomNode('AB', '  #', 0)"))
+      expect(repr(cursor['a']['b'])).to(equal("BloomNode('A', ' #', 0)"))
+      expect(repr(cursor['a']['b']['a'])).to(equal("BloomNode('', '#', 1)"))
+
     with it('rejects duplicate links'):
       self.subject.link('key', self.child)
       expect(calling(self.subject.link, 'key', self.child)).to(

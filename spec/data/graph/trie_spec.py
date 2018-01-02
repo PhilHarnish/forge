@@ -45,7 +45,12 @@ with description('add'):
     trie.add(root, 'another', 1.0)
     expect(root).to(have_len(2))
 
-  with it('maintains bloom properties'):
+  with it('maintains bloom properties for 1 value'):
+    root = bloom_node.BloomNode()
+    trie.add(root, 'cab', 1.0)
+    expect(repr(root)).to(equal("BloomNode('ABC', '   #', 0)"))
+
+  with it('maintains bloom properties for multiple values'):
     root = bloom_node.BloomNode()
     trie.add(root, 'bad', 1.0)
     trie.add(root, 'bag', .50)

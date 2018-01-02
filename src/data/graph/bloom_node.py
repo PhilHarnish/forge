@@ -50,12 +50,11 @@ class BloomNode(_op_mixin.OpMixin):
 
   def link(self, key: str, node: 'BloomNode') -> None:
     """Links `self` to `node` via `key`."""
-    self._link(key, node, self._empty())
+    self._link(key, node, True)
 
   def links(self, keys: Iterable[str], node: 'BloomNode') -> None:
-    inherit = self._empty()
     for key in keys:
-      self._link(key, node, inherit)
+      self._link(key, node, True)
 
   def _link(self, key: str, node: 'BloomNode', inherit: bool) -> None:
     if key in self._edges:
@@ -63,23 +62,23 @@ class BloomNode(_op_mixin.OpMixin):
     self._edges[key] = node
     if not inherit:
       return
-    elif key in bloom_mask.SEPARATOR:
-      return  # Prevent inheriting across word boundary characters.
-    provide_mask = node.provide_mask
+    try:
+      edge_mask = bloom_mask.for_alpha(key)  # FIXME: This is inflexible.
+      self.provide_mask |= edge_mask
+      require_edge_mask = edge_mask
+    except ValueError:
+      require_edge_mask = bloom_mask.REQUIRE_NOTHING
+    if key in bloom_mask.SEPARATOR:
+      # Prevent inheriting across word boundary characters.
+      return
+    self.provide_mask |= node.provide_mask
     if node.match_weight:
       # We cannot inherit requirements from a matching node; traversing edge
       # is a sufficient requirement.
-      require_mask = bloom_mask.REQUIRE_NOTHING
+      require_child_mask = bloom_mask.REQUIRE_NOTHING
     else:
-      require_mask = node.require_mask
-    try:
-      edge_mask = bloom_mask.for_alpha(key)  # FIXME: This is inflexible.
-      provide_mask |= edge_mask
-      require_mask |= edge_mask
-    except ValueError:
-      pass
-    self.provide_mask |= provide_mask
-    self.require_mask &= require_mask
+      require_child_mask = node.require_mask
+    self.require_mask &= require_edge_mask | require_child_mask
     # Inherit matching lengths (offset by 1).
     self.lengths_mask |= node.lengths_mask << 1
     if node.max_weight > self.max_weight:
@@ -123,14 +122,14 @@ class BloomNode(_op_mixin.OpMixin):
     if key not in self._edges:
       child = self._find(key)
       if child is not None:
-        self._link(key, child, self._empty())
+        self._link(key, child, True)
     return key in self._edges
 
   def __getitem__(self, key: str) -> 'BloomNode':
     if key not in self._edges:
       child = self._find(key)
       if child is not None:
-        self._link(key, child, self._empty())
+        self._link(key, child, True)
     return self._edges[key]
 
   def __iter__(self) -> Iterable[str]:
@@ -140,17 +139,12 @@ class BloomNode(_op_mixin.OpMixin):
   def _alloc(self, *args, **kwargs) -> 'BloomNode':
     return BloomNode(*args, **kwargs)
 
-  def _empty(self) -> bool:
-    return not (self.lengths_mask or self.provide_mask or self._edges)
-
   def _expand(self) -> None:
     if not self.op:
       return
-    # Inherit from all child nodes only if empty before beginning.
-    inherit = self._empty()
     for key, reduced in bloom_node_reducer.reduce(
         self.op, blacklist=self._edges):
-      self._link(key, reduced, inherit)
+      self._link(key, reduced, True)
     self.op = None  # No need to redo this work ever again.
 
   def _find(self, key: str) -> Optional['BloomNode']:
