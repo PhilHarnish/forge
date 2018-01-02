@@ -8,13 +8,15 @@ _FIRST_WORD_WEIGHT = 23135851162
 _WORD_LIMIT = 47436  # After "gherkin" which is a cryptic solution in test set.
 
 
-def get_words(file: str = 'data/count_1w.txt') -> list:
+def get_words(length_mask: int = None, file: str = 'data/count_1w.txt') -> list:
   for word, value in word_frequencies.parse_file(file):
     if value < _WORD_LIMIT:
       break
     elif len(word) > 12:
       continue
     elif not word.isalpha():
+      continue
+    elif length_mask and (1 << len(word)) & length_mask == 0:
       continue
     last_c = None
     c_chain = 0
@@ -32,9 +34,7 @@ def get_words(file: str = 'data/count_1w.txt') -> list:
 
 def make_trie(length_mask) -> bloom_node.BloomNode:
   root = bloom_node.BloomNode()
-  for word, value in get_words():
-    if 2 ** len(word) & length_mask == 0:
-      continue
+  for word, value in get_words(length_mask=length_mask):
     trie.add(root, word, value / _FIRST_WORD_WEIGHT)
   return root
 
@@ -42,6 +42,16 @@ def make_trie(length_mask) -> bloom_node.BloomNode:
 @pickle_cache.cache('data/graph/walk_e2e_spec/trie')
 def pickled_trie(length_mask: int) -> bloom_node.BloomNode:
   return make_trie(length_mask)
+
+
+@pickle_cache.cache('data/graph/walk_e2e_spec/unigram_bigram')
+def pickled_unigram_bigram(length_mask: int) -> bloom_node.BloomNode:
+  unigrams = list(get_words(length_mask=length_mask))
+  bigrams = list(get_words(
+      length_mask=length_mask, file='data/count_2w_aggregated.txt'))
+  root = bloom_node.BloomNode()
+  trie.add_ngrams(root, [unigrams, bigrams])
+  return root
 
 
 def results(root) -> List[str]:
@@ -90,7 +100,7 @@ with description('benchmarks: trie creation', 'end2end'):
     with benchmark(7000) as should_run:
       if should_run:
         unigrams = list(get_words())
-        bigrams = list(get_words('data/count_2w_aggregated.txt'))
+        bigrams = list(get_words(file='data/count_2w_aggregated.txt'))
         root = bloom_node.BloomNode()
         trie.add_ngrams(root, [unigrams, bigrams])
         expect(path(root, 'to be a')).to(equal([
@@ -145,3 +155,22 @@ with description('benchmarks: node merging', 'end2end') as self:
       'recalls', 'ingalls', 'adcalls', 'befalls', 'thralls', 'squalls',
       'mccalls'
     ]))
+
+with description('benchmarks: unigram/bigram walk', 'end2end') as self:
+  with before.all:
+    self.root = pickled_unigram_bigram(0b111111)
+
+  with it('should find common results'):
+    words = []
+    for word, _ in walk.walk(self.root):
+      words.append(word)
+      if len(words) > 10:
+        break
+    #words = [word for _, word in zip(range(10), walk.walk(self.root))]
+    expect(words).to(equal([
+      'the', 'of', 'and', 'to', 'a', 'in', 'for', 'is', 'on', 'that', 'by',
+    ]))
+
+  with it('should find explicit solutions'):
+    merged = self.root * regex.parse('plums of wrath')
+    expect(results(merged)).to(equal(['plums of wrath']))

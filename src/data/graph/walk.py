@@ -53,7 +53,7 @@ def walk(root: bloom_node.BloomNode) -> Iterable[types.WeightedWord]:
   solutions = []
   while len(fringe):
     weight, cursor = pop()
-    while solutions and -solutions[0][0] > weight:
+    while solutions and -solutions[0][0] >= weight:
       solution_weight, solution_word = heapq.heappop(solutions)
       yield solution_word, -solution_weight
     for child_cursor, child_node in cursor.children():

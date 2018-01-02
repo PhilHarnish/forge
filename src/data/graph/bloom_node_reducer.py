@@ -76,7 +76,7 @@ def _visit_multiply(
   provide_mask = sources[0].provide_mask
   require_mask = sources[0].require_mask
   match_weight = sources[0].match_weight * scale
-  max_weight = sources[0].max_weight
+  max_weight = sources[0].max_weight * scale
   pos = 1
   l = len(sources)
   has_child_ops = bool(sources[0].op)
