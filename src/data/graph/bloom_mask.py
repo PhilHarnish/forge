@@ -24,7 +24,10 @@ def map_to_str(provide_mask: int, require_mask: int) -> str:
     for c in group:
       mask = for_alpha(c)
       if require_mask and require_mask & mask:
-        block.append(c.upper())
+        if c == ' ':
+          block.append(' !')
+        else:
+          block.append(c.upper())
       elif provide_mask and provide_mask & mask:
         block.append(c)
     if block:
