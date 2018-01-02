@@ -39,3 +39,26 @@ with description('test data'):
       ('in', 0.3660727635087299),
       ('on', 0.16210439688339484)
     ]))
+
+with description('unigram test data'):
+  with before.each:
+    self.test_data = bloom_node.BloomNode()
+    trie.add_ngrams(self.test_data, [_TEST_DATA])
+
+  with it('finds regex matches'):
+    expression = regex.parse('.n')
+    merged = self.test_data * expression
+    expect(list(walk.walk(merged))).to(equal([
+      ('in', 0.08752774988332092),
+      ('on', 0.038759051532272784),
+    ]))
+
+  with it('finds regex matches with spaces'):
+    expression = regex.parse('.n i.')
+    merged = self.test_data * expression
+    expect(list(walk.walk(merged))).to(equal([
+      ('in in', 0.007661106999637185),
+      ('in is', 0.004256639871478522),
+      ('on in', 0.0033924925682315187),
+      ('on is', 0.001884925916099688)
+    ]))
