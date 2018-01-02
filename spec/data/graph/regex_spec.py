@@ -6,8 +6,6 @@ _GOAL = "BloomNode('', '#', 1)"
 
 with description('parse'):
   with it('rejects unsupported input'):
-    expect(calling(regex.parse, 'multiple words')).to(
-        raise_error(NotImplementedError))
     expect(calling(regex.parse, '(matching group)')).to(
         raise_error(NotImplementedError))
     expect(calling(regex.parse, '[char group]')).to(
@@ -79,7 +77,20 @@ with description('parse'):
 
     with it('does not accept invalid paths through graph'):
       parsed = regex.parse('a.c')
+      expect(repr(parsed)).to(equal(
+          "BloomNode('AbCdefghijklmnopqrstuvwxyz', '   #', 0)"))
       expect(lambda: parsed['a']['z']['z']).to(raise_error(KeyError))
+
+  with description('whitespace'):
+    with it('accepts simple example'):
+      expect(calling(regex.parse, 'multiple words')).not_to(raise_error)
+
+    with it('produces simple graphs'):
+      parsed = regex.parse('a b')
+      expect(repr(parsed)).to(equal("BloomNode('A; ', '', 0)"))
+      expect(repr(parsed['a'])).to(equal("BloomNode(' ', '', 0)"))
+      expect(repr(parsed['a'][' '])).to(equal("BloomNode('B', ' #', 0)"))
+      expect(repr(parsed['a'][' ']['b'])).to(equal(_GOAL))
 
 with description('normalize'):
   with it('leaves normal input alone'):

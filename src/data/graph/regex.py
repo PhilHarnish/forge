@@ -3,7 +3,7 @@ from typing import Optional
 
 from data.graph import bloom_node
 
-_SIMPLE = re.compile(r'[a-zA-Z.]+')
+_SIMPLE = re.compile(r'[a-zA-Z. ]+')
 _LOWER_ALPHA = 'abcdefghijklmnopqrstuvwxyz'
 _UPPER_ALPHA = _LOWER_ALPHA.upper()
 
