@@ -16,7 +16,7 @@ with description('for_alpha'):
   with it('produces increasing unique values'):
     seen = 0
     last = -1
-    for c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ':
+    for c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\'':
       expect(call(bloom_mask.for_alpha, c)).to(be_above(last))
       last = bloom_mask.for_alpha(c)
       expect(last & seen).to(equal(0))
@@ -39,6 +39,20 @@ with description('map_to_str'):
   with it('indicates PROVIDE_NOTHING+REQUIRE_NOTHING as 0'):
     expect(bloom_mask.map_to_str(
         bloom_mask.PROVIDE_NOTHING, bloom_mask.REQUIRE_NOTHING)).to(equal(''))
+
+  with it('converts roundtrip'):
+    expect(bloom_mask.map_to_str(
+        bloom_mask.for_alpha('i') |
+        bloom_mask.for_alpha('t') |
+        bloom_mask.for_alpha("'") |
+        bloom_mask.for_alpha('s') |
+        bloom_mask.for_alpha(' ') |
+        bloom_mask.for_alpha('a') |
+        bloom_mask.for_alpha(' ') |
+        bloom_mask.for_alpha('T') |
+        bloom_mask.for_alpha('E') |
+        bloom_mask.for_alpha('S') |
+        bloom_mask.for_alpha('T'), 0)).to(equal("aist; ';EST"))
 
 
 with description('mask defaults') as self:

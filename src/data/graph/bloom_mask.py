@@ -1,12 +1,13 @@
 BASE_ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 UNIT_SEPARATOR = chr(31)
 WORD_SEPARATOR = ' '
+EXTRA = "'"
 UPPER_ALPHABET = BASE_ALPHABET.upper()
 SEPARATOR = {UNIT_SEPARATOR, WORD_SEPARATOR}
 
 
-# Shoud letter frequency ('etaoinshrdlcumwfgypbvkjxqz') be used instead?
-_ALPHA_CHARACTERS = BASE_ALPHABET + WORD_SEPARATOR + UPPER_ALPHABET
+# Should letter frequency ('etaoinshrdlcumwfgypbvkjxqz') be used instead?
+_ALPHA_CHARACTERS = BASE_ALPHABET + WORD_SEPARATOR + UPPER_ALPHABET + EXTRA
 _ALPHA_MAP = {
   c: 2**i for i, c in enumerate(_ALPHA_CHARACTERS)
 }
@@ -19,7 +20,7 @@ def normalize(string: str) -> str:
 
 def map_to_str(provide_mask: int, require_mask: int) -> str:
   blocks = []
-  for group in (BASE_ALPHABET, WORD_SEPARATOR, UPPER_ALPHABET):
+  for group in (BASE_ALPHABET, WORD_SEPARATOR+EXTRA, UPPER_ALPHABET):
     block = []
     for c in group:
       mask = for_alpha(c)
