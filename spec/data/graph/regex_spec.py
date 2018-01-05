@@ -4,18 +4,16 @@ from spec.mamba import *
 _GOAL = "BloomNode('', '#', 1)"
 
 
-with description('parse'):
+with fdescription('parse'):
   with it('rejects unsupported input'):
-    expect(calling(regex.parse, '(matching group)')).to(
-        raise_error(NotImplementedError))
     expect(calling(regex.parse, '[char group]')).to(
         raise_error(NotImplementedError))
-    expect(calling(regex.parse, 'a|b')).to(
-        raise_error(NotImplementedError, 'Unsupported characters in a|b ("|")'))
+    expect(calling(regex.parse, '(matching group)')).to(
+        raise_error(NotImplementedError))
     expect(calling(regex.parse, 'a*')).to(
-        raise_error(NotImplementedError, 'Unsupported characters in a* ("*")'))
+        raise_error(NotImplementedError, 'Unsupported re type MAX_REPEAT'))
     expect(calling(regex.parse, 'a+')).to(
-        raise_error(NotImplementedError, 'Unsupported characters in a+ ("+")'))
+        raise_error(NotImplementedError, 'Unsupported re type MAX_REPEAT'))
 
   with it('accepts simple input'):
     expect(calling(regex.parse, 'simple')).not_to(raise_error)
@@ -91,6 +89,15 @@ with description('parse'):
       expect(repr(parsed['a'])).to(equal("BloomNode(' ', '#', 0)"))
       expect(repr(parsed['a'][' '])).to(equal("BloomNode('B', ' #', 0)"))
       expect(repr(parsed['a'][' ']['b'])).to(equal(_GOAL))
+
+  with description('regex'):
+    with it('supports small character groups'):
+      node = regex.parse('[abc][def]')
+      expect(repr(node)).to(equal("BloomNode('abcdef', '  #', 0)"))
+      expect(repr(node['a'])).to(equal("BloomNode('def', ' #', 0)"))
+
+    with it('supports small A|B expressions'):
+      expect(repr(regex.parse('a|b'))).to(equal("BloomNode('ab', ' #', 0)"))
 
 with description('normalize'):
   with it('leaves normal input alone'):

@@ -1,5 +1,6 @@
 import re
-from typing import Optional
+import sre_parse
+from typing import Any, Optional
 
 from data.graph import bloom_mask, bloom_node
 
@@ -10,16 +11,17 @@ _UPPER_ALPHA = _LOWER_ALPHA.upper()
 def parse(expression: str, weight: Optional[float] = 1) -> bloom_node.BloomNode:
   match = re.match(_SIMPLE, expression)
   if not match or match.span(0)[1] != len(expression):
-    raise NotImplementedError('Unsupported characters in %s ("%s")' % (
-      expression, re.sub(_SIMPLE, '', expression)
-    ))
+    visitor = _RegexVisitor(expression, weight)
+    return visitor.visit(sre_parse.parse(expression))
   return _to_simple_nodes(normalize(expression), weight)
+
 
 def normalize(expression: str) -> str:
   if expression.isupper() and not expression.islower():
     # Convert an ALL CAPS expression to lower case.
     return expression.lower()
   return expression
+
 
 def _to_simple_nodes(expression: str, weight) -> bloom_node.BloomNode:
   if not expression.islower() and any(c.isupper() for c in expression):
@@ -44,3 +46,58 @@ def _to_simple_nodes(expression: str, weight) -> bloom_node.BloomNode:
     next_cursor.links(edges, cursor)
     cursor = next_cursor
   return cursor
+
+
+class _RegexVisitor(object):
+  def __init__(self, expression: str, weight: float):
+    self._expression = expression
+    self._weight = weight
+
+  def visit(self, data: list) -> bloom_node.BloomNode:
+    goal = bloom_node.BloomNode()
+    goal.distance(0)
+    goal.weight(self._weight, True)
+    return self._visit(goal, data)
+
+  def _visit(
+      self, cursor: bloom_node.BloomNode, data: list) -> bloom_node.BloomNode:
+    for kind, value in reversed(data):
+      fn_name = '_visit_%s' % kind
+      if not hasattr(self, fn_name):
+        raise NotImplementedError('Unsupported re type %s' % kind)
+      visit_fn = getattr(self, fn_name)
+      cursor = visit_fn(cursor, value)
+    return cursor
+
+  def _visit_IN(
+      self, cursor: bloom_node.BloomNode, data: list) -> bloom_node.BloomNode:
+    """Character group."""
+    edges = []
+    for datum in data:
+      value = self._visit_value(datum)
+      if value == ' ':
+        raise NotImplementedError('Space in character groups not implemented')
+      edges.append(value)
+    next_cursor = bloom_node.BloomNode()
+    next_cursor.links(''.join(set(edges)), cursor)
+    return next_cursor
+
+  def _visit_LITERAL(
+      self, cursor: bloom_node.BloomNode, data: int) -> bloom_node.BloomNode:
+    value = self._visit_value_LITERAL(data)
+    next_cursor = bloom_node.BloomNode()
+    next_cursor.link(value, cursor)
+    if value in bloom_mask.SEPARATOR:
+      next_cursor.distance(0)
+      next_cursor.weight(self._weight, False)
+    return next_cursor
+
+  def _visit_value(self, data: tuple) -> Any:
+    kind, value = data
+    fn_name = '_visit_value_%s' % kind
+    if not hasattr(self, fn_name):
+      raise NotImplementedError('Unsupported re type %s' % kind)
+    return getattr(self, fn_name)(value)
+
+  def _visit_value_LITERAL(self, data: int) -> str:
+    return chr(data)
