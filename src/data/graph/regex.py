@@ -73,12 +73,12 @@ class _RegexVisitor(object):
       self, cursor: bloom_node.BloomNode, data: list) -> bloom_node.BloomNode:
     """Character group."""
     edges = []
+    next_cursor = bloom_node.BloomNode()
     for datum in data:
       value = self._visit_value(datum)
-      if value == ' ':
-        raise NotImplementedError('Space in character groups not implemented')
+      if value in bloom_mask.SEPARATOR:
+        next_cursor.distance(0)
       edges.append(value)
-    next_cursor = bloom_node.BloomNode()
     next_cursor.links(''.join(set(edges)), cursor)
     return next_cursor
 

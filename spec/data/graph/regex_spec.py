@@ -96,6 +96,13 @@ with description('parse'):
       expect(repr(node)).to(equal("BloomNode('abcdef', '  #', 0)"))
       expect(repr(node['a'])).to(equal("BloomNode('def', ' #', 0)"))
 
+    with it('supports character groups with spaces'):
+      node = regex.parse('[abc][abc ][abc]')
+      expect(repr(node)).to(equal("BloomNode('abc; ', ' # #', 0)"))
+      expect(repr(node['a'])).to(equal("BloomNode('abc; ', '# #', 0)"))
+      expect(repr(node['a'][' '])).to(equal("BloomNode('abc', ' #', 0)"))
+      expect(repr(node['a'][' ']['b'])).to(equal("BloomNode('', '#', 1)"))
+
     with it('supports small A|B expressions'):
       expect(repr(regex.parse('a|b'))).to(equal("BloomNode('ab', ' #', 0)"))
 
