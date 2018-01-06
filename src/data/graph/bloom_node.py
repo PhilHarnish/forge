@@ -144,8 +144,7 @@ class BloomNode(_op_mixin.OpMixin):
   def _expand(self) -> None:
     if not self.op:
       return
-    for key, reduced in bloom_node_reducer.reduce(
-        self.op, blacklist=self._edges):
+    for key, reduced in bloom_node_reducer.reduce(self, blacklist=self._edges):
       self._link(key, reduced, True)
     self.op = None  # No need to redo this work ever again.
 
