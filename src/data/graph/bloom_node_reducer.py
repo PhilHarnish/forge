@@ -5,18 +5,37 @@ from data import iter_util
 from data.graph import _op_mixin, bloom_node
 
 
+def merge(host: 'bloom_node.BloomNode') -> None:
+  op = host.op
+  _, merge_fn, _ = _operator_functions[op.operator()]
+  operands = op.operands()
+  if not operands:
+    return
+  nodes = []
+  extra = []
+  for operator in operands:
+    if isinstance(operator, bloom_node.BloomNode):
+      nodes.append(operator)
+    else:
+      extra.append(operator)
+  merge_fn(host, nodes, extra)
+
+
 def reduce(
-    op: _op_mixin.Op,
+    host: 'bloom_node.BloomNode',
     whitelist: Container[str] = None,
     blacklist: Container[str] = None) -> ItemsView[str, 'bloom_node.BloomNode']:
+  op = host.op
   operands = op.operands()
   if not operands:
     return {}.items()
-  iterator_fn, visitor_fn = _operator_functions[op.operator()]
+  iterator_fn, merge_fn, visitor_fn = _operator_functions[op.operator()]
+  nodes = []
   edges = []
   extra = []
   for operator in operands:
     if isinstance(operator, bloom_node.BloomNode):
+      nodes.append(operator)
       edges.append(operator.edges())
     else:
       extra.append(operator)
@@ -27,6 +46,31 @@ def reduce(
     result = visitor_fn(sources, extra)
     if result is not None:
       yield key, result
+  merge_fn(host, nodes, extra)
+
+
+def _merge_add(
+    host: 'bloom_node.BloomNode',
+    sources: List['bloom_node.BloomNode'],
+    extra: list):
+  del extra
+  host.match_weight = max(node.match_weight for node in sources)
+  if max(node.lengths_mask & 0b1 for node in sources):
+    host.lengths_mask |= 0b1
+
+
+def _merge_multiply(
+    host: 'bloom_node.BloomNode',
+    sources: List['bloom_node.BloomNode'],
+    extra: list):
+  match_weight = 1
+  for node in sources:
+    match_weight *= node.match_weight
+  for value in extra:
+    match_weight *= value
+  host.match_weight = match_weight
+  if max(node.lengths_mask & 0b1 for node in sources):
+    host.lengths_mask |= 0b1
 
 
 def _visit_identity(
@@ -112,7 +156,7 @@ def _visit_multiply(
 
 
 _operator_functions = [
-  (iter_util.common, _visit_identity),
-  (iter_util.both, _visit_add),
-  (iter_util.common, _visit_multiply),
+  (iter_util.common, _merge_add, _visit_identity),
+  (iter_util.both, _merge_add, _visit_add),
+  (iter_util.common, _merge_multiply, _visit_multiply),
 ]

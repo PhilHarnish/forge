@@ -1,25 +1,35 @@
 from data.graph import _op_mixin, bloom_node, bloom_node_reducer, trie
 from spec.mamba import *
 
+with description('merge'):
+  with it('can merge top-level properties'):
+    a = bloom_node.BloomNode()
+    a.distance(0)
+    a.weight(1, True)
+    b = bloom_node.BloomNode()
+    merged = a + b
+    bloom_node_reducer.merge(merged)
+    expect(repr(merged)).to(equal("BloomNode('', '#', 1)"))
+
 with description('reduce'):
   with it('is a no-op for empty input'):
-    op = _op_mixin.IDENTITY
-    expect(list(bloom_node_reducer.reduce(op))).to(equal([]))
+    host = bloom_node.BloomNode(_op_mixin.Op(_op_mixin.OP_IDENTITY, []))
+    expect(list(bloom_node_reducer.reduce(host))).to(equal([]))
 
   with description('OP_IDENTITY'):
     with it('reduces IDENTITY to itself'):
       node = bloom_node.BloomNode()
       child = node.open('key')
-      op = _op_mixin.Op(_op_mixin.OP_IDENTITY, [node])
-      expect(list(bloom_node_reducer.reduce(op))).to(equal([
+      host = bloom_node.BloomNode(_op_mixin.Op(_op_mixin.OP_IDENTITY, [node]))
+      expect(list(bloom_node_reducer.reduce(host))).to(equal([
         ('key', child),
       ]))
 
     with it('raises for IDENTITY + multiple sources'):
       node = bloom_node.BloomNode()
       node.open('key')
-      op = _op_mixin.Op(_op_mixin.OP_IDENTITY, [node, node])
-      expect(calling(next, bloom_node_reducer.reduce(op))).to(
+      host = bloom_node.BloomNode(_op_mixin.Op(_op_mixin.OP_IDENTITY, [node, node]))
+      expect(calling(next, bloom_node_reducer.reduce(host))).to(
           raise_error(NotImplementedError))
 
   with description('OP_ADD') as self:
@@ -35,7 +45,7 @@ with description('reduce'):
 
       with it('provides all branches'):
         results = list(sorted(
-            bloom_node_reducer.reduce(self.node.op), key=lambda x: x[0]))
+            bloom_node_reducer.reduce(self.node), key=lambda x: x[0]))
         expect(str(results)).to(
             equal(
                 "[('a', BloomNode('', '#', 1)),"
@@ -48,7 +58,7 @@ with description('reduce'):
         trie.add(c, 'd', .25)
         node = self.node + c
         results = list(sorted(
-            bloom_node_reducer.reduce(node.op), key=lambda x: x[0]))
+            bloom_node_reducer.reduce(node), key=lambda x: x[0]))
         expect(str(results)).to(
             equal(
                 "[('a', BloomNode('', '#', 1)),"
@@ -56,7 +66,7 @@ with description('reduce'):
                 " ('c', BloomNode('', '#', 1)),"
                 " ('d', BloomNode('', '#', 0.25))]"))
 
-    with description('two larger sources'):
+    with description('two larger sources') as self:
       with before.each:
         a = bloom_node.BloomNode()
         trie.add(a, 'aonly', 1)
@@ -89,7 +99,7 @@ with description('reduce'):
         node = self.node
         for c, expected in zip('common', expecteds):
           results = list(sorted(
-              bloom_node_reducer.reduce(node.op), key=lambda x: x[0]))
+              bloom_node_reducer.reduce(node), key=lambda x: x[0]))
           expect(str(results)).to(equal(expected))
           node = node[c]
         # Ends at end of "common".
@@ -114,7 +124,7 @@ with description('reduce'):
         node = self.node
         for c, expected in zip('aonly', expecteds):
           results = list(sorted(
-              bloom_node_reducer.reduce(node.op), key=lambda x: x[0]))
+              bloom_node_reducer.reduce(node), key=lambda x: x[0]))
           expect(str(results)).to(equal(expected))
           node = node[c]
         # Ends at end of "common".
@@ -129,7 +139,7 @@ with description('reduce'):
       trie.add(b, 'b', 1)
       trie.add(b, 'c', .5)
       node = a * b
-      expect(str(list(bloom_node_reducer.reduce(node.op)))).to(
+      expect(str(list(bloom_node_reducer.reduce(node)))).to(
           equal("[('c', BloomNode('', '#', 0.25))]"))
 
     with it('scales 1 source'):
@@ -137,7 +147,7 @@ with description('reduce'):
       trie.add(a, 'a', 1)
       trie.add(a, 'c', .5)
       node = a * 0.5
-      expect(str(list(bloom_node_reducer.reduce(node.op)))).to(
+      expect(str(list(bloom_node_reducer.reduce(node)))).to(
           equal(
               "[('a', BloomNode('', '#', 0.5)),"
               " ('c', BloomNode('', '#', 0.25))]"))
@@ -152,7 +162,7 @@ with description('reduce'):
       node = a * b * 0.5
       expect(str(node.op)).to(
           equal("(BloomNode('ac', ' #', 0)*BloomNode('bc', ' #', 0)*0.5)"))
-      expect(str(list(bloom_node_reducer.reduce(node.op)))).to(
+      expect(str(list(bloom_node_reducer.reduce(node)))).to(
           equal("[('c', BloomNode('', '#', 0.125))]"))
 
     with it('multiplies two sources, but not recursively'):
@@ -181,7 +191,7 @@ with description('reduce'):
         # -> n.
       ]
       for c, expected in zip('common', expecteds):
-        expect(str(list(bloom_node_reducer.reduce(node.op)))).to(
+        expect(str(list(bloom_node_reducer.reduce(node)))).to(
             equal(expected))
         node = node[c]
       # Ends at end of "common".
