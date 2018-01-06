@@ -92,6 +92,28 @@ class _RegexVisitor(object):
       next_cursor.weight(self._weight, False)
     return next_cursor
 
+  def _visit_MAX_REPEAT(
+      self, cursor: bloom_node.BloomNode, data: list) -> bloom_node.BloomNode:
+    start, end, pattern = data
+    if str(end) == 'MAXREPEAT':
+      raise NotImplementedError('Unable to repeat MAXREPEAT')
+    chain_start = cursor
+    exits = []
+    if start == 0:
+      # Path to cursor is possible either via chain or original cursor.
+      exits.append(cursor)
+      link_count = end - 1
+    else:
+      link_count = end - start
+    for _ in range(link_count + 1):
+      chain_start = self._visit(chain_start, pattern)
+      # Path may go through this chain.
+      exits.append(chain_start)
+    result = exits[0]
+    for exit in exits[1:]:
+      result += exit
+    return result
+
   def _visit_value(self, data: tuple) -> Any:
     kind, value = data
     fn_name = '_visit_value_%s' % kind

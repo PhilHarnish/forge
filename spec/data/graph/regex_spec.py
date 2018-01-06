@@ -4,16 +4,16 @@ from spec.mamba import *
 _GOAL = "BloomNode('', '#', 1)"
 
 
-with fdescription('parse'):
+with description('parse'):
   with it('rejects unsupported input'):
     expect(calling(regex.parse, '[char group]')).to(
         raise_error(NotImplementedError))
     expect(calling(regex.parse, '(matching group)')).to(
         raise_error(NotImplementedError))
     expect(calling(regex.parse, 'a*')).to(
-        raise_error(NotImplementedError, 'Unsupported re type MAX_REPEAT'))
+        raise_error(NotImplementedError, 'Unable to repeat MAXREPEAT'))
     expect(calling(regex.parse, 'a+')).to(
-        raise_error(NotImplementedError, 'Unsupported re type MAX_REPEAT'))
+        raise_error(NotImplementedError, 'Unable to repeat MAXREPEAT'))
 
   with it('accepts simple input'):
     expect(calling(regex.parse, 'simple')).not_to(raise_error)
@@ -98,6 +98,21 @@ with fdescription('parse'):
 
     with it('supports small A|B expressions'):
       expect(repr(regex.parse('a|b'))).to(equal("BloomNode('ab', ' #', 0)"))
+
+    with it('supports optional (x?) characters'):
+      node = regex.parse('abc?')
+      expect(repr(node)).to(equal("BloomNode('ABc', '  ##', 0)"))
+      expect(repr(node['a'])).to(equal("BloomNode('Bc', ' ##', 0)"))
+      expect(repr(node['a']['b'])).to(equal("BloomNode('C', '##', 1)"))
+      expect(repr(node['a']['b']['c'])).to(equal("BloomNode('', '#', 1)"))
+
+    with it('supports repeat ranges'):
+      node = regex.parse('ab{1,3}')
+      expect(repr(node)).to(equal("BloomNode('AB', '  ###', 0)"))
+      expect(repr(node['a'])).to(equal("BloomNode('B', ' ###', 0)"))
+      expect(repr(node['a']['b'])).to(equal("BloomNode('B', '###', 1)"))
+      expect(repr(node['a']['b']['b'])).to(equal("BloomNode('B', '##', 1)"))
+      expect(repr(node['a']['b']['b']['b'])).to(equal("BloomNode('', '#', 1)"))
 
 with description('normalize'):
   with it('leaves normal input alone'):
