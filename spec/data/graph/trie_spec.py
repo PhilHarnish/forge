@@ -80,7 +80,7 @@ with description('add'):
       # -> o.
       "BloomNode('N', ' #', 0)",
       # -> n.
-      "BloomNode('', '#', 1.0)",
+      "BloomNode('', '#', 1)",
     ]))
 
 
@@ -166,13 +166,13 @@ with description('test data, multiple word'):
       # ->  .
       "BloomNode('adefhinorst; ', ' ####', 0)",
       # -> i.
-      "BloomNode('ns; ', ' #', 0.0)",
+      "BloomNode('ns; ', ' #', 0)",
       # -> s.
       "BloomNode(' ', '#', 0.041370007244781695)",
       # ->  .
-      "BloomNode('adefhinorst; ', ' ####', 0.0)",
+      "BloomNode('adefhinorst; ', ' ####', 0)",
       # -> i.
-      "BloomNode('ns; ', ' #', 0.0)",
+      "BloomNode('ns; ', ' #', 0)",
       # -> s.
       "BloomNode(' ', '#', 0.008414501562828072)",
     ]))
@@ -272,7 +272,7 @@ with description('add_ngrams'):
         "BloomNode('Bcd; ', '####', 0.5)",  # c(a)/total = 50/100.
         "BloomNode('Abcd; ', ' ####', 0)",
         "BloomNode('Bcd; ', '####', 0.5)",  # c(a a)/c(a) = 25/50.
-        "BloomNode('Abcd; ', ' ####', 0.0)",
+        "BloomNode('Abcd; ', ' ####', 0)",
         "BloomNode('Bcd; ', '####', 0.25)",  # c(a a)/c(a) * P(a) = 25/50 * .5.
       ]))
 
@@ -289,6 +289,6 @@ with description('add_ngrams'):
         "BloomNode('Cd; ', '###', 0.25)",  # c(ab)/total = 25/100.
         "BloomNode('Abcd; ', ' ####', 0)",
         "BloomNode('Bcd; ', '####', 0.1)",
-        "BloomNode('Abcd; ', ' ####', 0.0)",
+        "BloomNode('Abcd; ', ' ####', 0)",
         "BloomNode('Bcd; ', '####', 0.1)",
       ]))
