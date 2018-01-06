@@ -5,31 +5,17 @@ from data.graph import bloom_node, regex, trie, walk
 from spec.mamba import *
 
 _FIRST_WORD_WEIGHT = 23135851162
-_WORD_LIMIT = 47436  # After "gherkin" which is a cryptic solution in test set.
 
 
-def get_words(length_mask: int = None, file: str = 'data/count_1w.txt') -> list:
+def get_words(length_mask: int = None, file: str = 'data/g1m_1gram.txt') -> list:
   for word, value in word_frequencies.parse_file(file):
-    if value < _WORD_LIMIT:
-      break
-    elif len(word) > 12:
+    if len(word) > 12:
       continue
     elif not word.isalpha():
       continue
-    elif length_mask and (1 << len(word)) & length_mask == 0:
+    if length_mask and (1 << len(word)) & length_mask == 0:
       continue
-    last_c = None
-    c_chain = 0
-    for c in word:
-      if c == last_c:
-        c_chain += 1
-      else:
-        last_c = c
-        c_chain = 1
-      if c_chain >= 3:
-        break
-    else:
-      yield word, value
+    yield word, value
 
 
 def make_trie(length_mask) -> bloom_node.BloomNode:
@@ -44,13 +30,14 @@ def pickled_trie(length_mask: int) -> bloom_node.BloomNode:
   return make_trie(length_mask)
 
 
-@pickle_cache.cache('data/graph/walk_e2e_spec/unigram_bigram')
-def pickled_unigram_bigram(length_mask: int) -> bloom_node.BloomNode:
-  unigrams = list(get_words(length_mask=length_mask))
-  bigrams = list(get_words(
-      length_mask=length_mask, file='data/count_2w_aggregated.txt'))
+@pickle_cache.cache('data/graph/walk_e2e_spec/ngrams')
+def pickled_ngrams(length_mask: int) -> bloom_node.BloomNode:
+  ngrams = [list(get_words(length_mask=length_mask))]
+  for i in range(2, 5+1):
+    ngrams.append(list(get_words(
+        length_mask=length_mask, file='data/coca_%sgram.txt' % i)))
   root = bloom_node.BloomNode()
-  trie.add_ngrams(root, [unigrams, bigrams])
+  trie.add_ngrams(root, ngrams)
   return root
 
 
@@ -90,7 +77,7 @@ def head2head(patterns, trie, words) -> tuple:
 
 with description('benchmarks: trie creation', 'end2end'):
   with it('creates unigram trie'):
-    with benchmark(3500) as should_run:
+    with benchmark(1030) as should_run:
       if should_run:
         root = make_trie(0b111111110)
         expect(repr(root)).to(equal(
@@ -132,15 +119,12 @@ with description('benchmarks: node merging', 'end2end') as self:
     expect(actual).to(equal(expected))
     expect(actual).to(equal(['seeking']))
 
-  with it('finds nodes for very expensive queries'):
+  with it('finds nodes for expensive queries'):
     expected, actual = head2head([
       '...alls',
     ], self.root, self.words)
     expect(actual).to(equal(expected))
-    expect(actual).to(equal([
-      'recalls', 'ingalls', 'adcalls', 'befalls', 'thralls', 'squalls',
-      'mccalls'
-    ]))
+    expect(actual).to(equal(['recalls', 'befalls']))
 
   with it('finds nodes for very expensive queries'):
     expected, actual = head2head([
@@ -151,14 +135,11 @@ with description('benchmarks: node merging', 'end2end') as self:
       '......s',
     ], self.root, self.words)
     expect(expected).to(equal(actual))
-    expect(actual).to(equal([
-      'recalls', 'ingalls', 'adcalls', 'befalls', 'thralls', 'squalls',
-      'mccalls'
-    ]))
+    expect(actual).to(equal(['recalls', 'befalls']))
 
 with description('benchmarks: unigram/bigram walk', 'end2end') as self:
   with before.all:
-    self.root = pickled_unigram_bigram(0b111111)
+    self.root = pickled_ngrams(0b111111)
 
   with it('should find common results'):
     words = []
@@ -166,11 +147,21 @@ with description('benchmarks: unigram/bigram walk', 'end2end') as self:
       words.append(word)
       if len(words) > 10:
         break
-    #words = [word for _, word in zip(range(10), walk.walk(self.root))]
     expect(words).to(equal([
-      'the', 'of', 'and', 'to', 'a', 'in', 'for', 'is', 'on', 'that', 'by',
+      'the', 'and', 'that', 'the the', 'a the', 'an the', 'and the', 'that the',
+      'for', 'for the', 'was'
     ]))
 
   with it('should find explicit solutions'):
     merged = self.root * regex.parse('plums of wrath')
     expect(results(merged)).to(equal(['plums of wrath']))
+
+  with it('should find constrained solutions'):
+    expression = ' '.join([
+      '[lump][threadle][deus][rhumb][shopping]',  # plums
+      '[ok][frow]',  # of
+      '[wed][caret][again][toque][hon]',  # wrath
+    ])
+    merged = self.root * regex.parse(expression)
+    for solution in walk.walk(merged):
+      print(solution)
