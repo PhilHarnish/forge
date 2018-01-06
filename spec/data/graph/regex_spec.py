@@ -6,8 +6,6 @@ _GOAL = "BloomNode('', '#', 1)"
 
 with description('parse'):
   with it('rejects unsupported input'):
-    expect(calling(regex.parse, '[char group]')).to(
-        raise_error(NotImplementedError))
     expect(calling(regex.parse, '(matching group)')).to(
         raise_error(NotImplementedError))
     expect(calling(regex.parse, 'a*')).to(
@@ -90,36 +88,35 @@ with description('parse'):
       expect(repr(parsed['a'][' '])).to(equal("BloomNode('B', ' #', 0)"))
       expect(repr(parsed['a'][' ']['b'])).to(equal(_GOAL))
 
-  with description('regex'):
-    with it('supports small character groups'):
-      node = regex.parse('[abc][def]')
-      expect(repr(node)).to(equal("BloomNode('abcdef', '  #', 0)"))
-      expect(repr(node['a'])).to(equal("BloomNode('def', ' #', 0)"))
+  with it('supports small character groups'):
+    node = regex.parse('[abc][def]')
+    expect(repr(node)).to(equal("BloomNode('abcdef', '  #', 0)"))
+    expect(repr(node['a'])).to(equal("BloomNode('def', ' #', 0)"))
 
-    with it('supports character groups with spaces'):
-      node = regex.parse('[abc][abc ][abc]')
-      expect(repr(node)).to(equal("BloomNode('abc; ', ' # #', 0)"))
-      expect(repr(node['a'])).to(equal("BloomNode('abc; ', '# #', 0)"))
-      expect(repr(node['a'][' '])).to(equal("BloomNode('abc', ' #', 0)"))
-      expect(repr(node['a'][' ']['b'])).to(equal("BloomNode('', '#', 1)"))
+  with it('supports character groups with spaces'):
+    node = regex.parse('[abc][abc ][abc]')
+    expect(repr(node)).to(equal("BloomNode('abc; ', ' # #', 0)"))
+    expect(repr(node['a'])).to(equal("BloomNode('abc; ', '# #', 0)"))
+    expect(repr(node['a'][' '])).to(equal("BloomNode('abc', ' #', 0)"))
+    expect(repr(node['a'][' ']['b'])).to(equal("BloomNode('', '#', 1)"))
 
-    with it('supports small A|B expressions'):
-      expect(repr(regex.parse('a|b'))).to(equal("BloomNode('ab', ' #', 0)"))
+  with it('supports small A|B expressions'):
+    expect(repr(regex.parse('a|b'))).to(equal("BloomNode('ab', ' #', 0)"))
 
-    with it('supports optional (x?) characters'):
-      node = regex.parse('abc?')
-      expect(repr(node)).to(equal("BloomNode('ABc', '  ##', 0)"))
-      expect(repr(node['a'])).to(equal("BloomNode('Bc', ' ##', 0)"))
-      expect(repr(node['a']['b'])).to(equal("BloomNode('C', '##', 1)"))
-      expect(repr(node['a']['b']['c'])).to(equal("BloomNode('', '#', 1)"))
+  with it('supports optional (x?) characters'):
+    node = regex.parse('abc?')
+    expect(repr(node)).to(equal("BloomNode('ABc', '  ##', 0)"))
+    expect(repr(node['a'])).to(equal("BloomNode('Bc', ' ##', 0)"))
+    expect(repr(node['a']['b'])).to(equal("BloomNode('C', '##', 1)"))
+    expect(repr(node['a']['b']['c'])).to(equal("BloomNode('', '#', 1)"))
 
-    with it('supports repeat ranges'):
-      node = regex.parse('ab{1,3}')
-      expect(repr(node)).to(equal("BloomNode('AB', '  ###', 0)"))
-      expect(repr(node['a'])).to(equal("BloomNode('B', ' ###', 0)"))
-      expect(repr(node['a']['b'])).to(equal("BloomNode('B', '###', 1)"))
-      expect(repr(node['a']['b']['b'])).to(equal("BloomNode('B', '##', 1)"))
-      expect(repr(node['a']['b']['b']['b'])).to(equal("BloomNode('', '#', 1)"))
+  with it('supports repeat ranges'):
+    node = regex.parse('ab{1,3}')
+    expect(repr(node)).to(equal("BloomNode('AB', '  ###', 0)"))
+    expect(repr(node['a'])).to(equal("BloomNode('B', ' ###', 0)"))
+    expect(repr(node['a']['b'])).to(equal("BloomNode('B', '###', 1)"))
+    expect(repr(node['a']['b']['b'])).to(equal("BloomNode('B', '##', 1)"))
+    expect(repr(node['a']['b']['b']['b'])).to(equal("BloomNode('', '#', 1)"))
 
 with description('normalize'):
   with it('leaves normal input alone'):
