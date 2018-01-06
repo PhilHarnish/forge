@@ -1,5 +1,5 @@
 import itertools
-from typing import Container, ItemsView, List, Optional
+from typing import Container, ItemsView, List, Optional, Tuple
 
 from data import iter_util
 from data.graph import _op_mixin, bloom_node
@@ -53,24 +53,26 @@ def _merge_add(
     host: 'bloom_node.BloomNode',
     sources: List['bloom_node.BloomNode'],
     extra: list):
-  del extra
-  host.match_weight = max(node.match_weight for node in sources)
-  if max(node.lengths_mask & 0b1 for node in sources):
-    host.lengths_mask |= 0b1
+  provide_mask, require_mask, lengths_mask, max_weight, match_weight = (
+      _reduce_add(sources, extra))
+  host.provide_mask |= provide_mask
+  host.require_mask &= require_mask
+  host.lengths_mask |= lengths_mask
+  host.max_weight = max(host.max_weight, max_weight)
+  host.match_weight = max(host.match_weight, match_weight)
 
 
 def _merge_multiply(
     host: 'bloom_node.BloomNode',
     sources: List['bloom_node.BloomNode'],
     extra: list):
-  match_weight = 1
-  for node in sources:
-    match_weight *= node.match_weight
-  for value in extra:
-    match_weight *= value
-  host.match_weight = match_weight
-  if max(node.lengths_mask & 0b1 for node in sources):
-    host.lengths_mask |= 0b1
+  provide_mask, require_mask, lengths_mask, max_weight, match_weight = (
+      _reduce_multiply(sources, extra))
+  host.provide_mask &= provide_mask
+  host.require_mask &= require_mask
+  host.lengths_mask |= lengths_mask
+  host.max_weight = max(host.max_weight, max_weight)
+  host.match_weight = max(host.match_weight, match_weight)
 
 
 def _visit_identity(
@@ -82,35 +84,49 @@ def _visit_identity(
       'OP_IDENTITY failed to reduce %s, %s' % (sources, extra))
 
 
-def _visit_add(
+def _reduce_add(
     sources: List['bloom_node.BloomNode'],
-    extra: list) -> Optional['bloom_node.BloomNode']:
+    extra: list) -> Tuple[int, int, int, float, float]:
   if extra:
     raise NotImplementedError('OP_ADD failed to reduce %s' % extra)
   # Round up all of the values from all available sources.
-  lengths_mask = sources[0].lengths_mask
   provide_mask = sources[0].provide_mask
   require_mask = sources[0].require_mask
+  lengths_mask = sources[0].lengths_mask
+  max_weight = sources[0].max_weight
+  match_weight = sources[0].match_weight
   pos = 1
   l = len(sources)
   while pos < l:
     source = sources[pos]
-    lengths_mask |= source.lengths_mask  # Lengths from either are provided.
     provide_mask |= source.provide_mask  # Letters from either are provided.
     require_mask &= source.require_mask  # Requirements are reduced.
+    lengths_mask |= source.lengths_mask  # Lengths from either are provided.
+    if source.max_weight > max_weight:
+      max_weight = source.max_weight
+    if source.match_weight > match_weight:
+      match_weight = source.match_weight
     pos += 1
+  return provide_mask, require_mask, lengths_mask, max_weight, match_weight
+
+
+def _visit_add(
+    sources: List['bloom_node.BloomNode'],
+    extra: list) -> Optional['bloom_node.BloomNode']:
+  provide_mask, require_mask, lengths_mask, max_weight, match_weight = (
+    _reduce_add(sources, extra))
   reduced = bloom_node.BloomNode(_op_mixin.Op(_op_mixin.OP_ADD, sources))
   reduced.provide_mask = provide_mask
   reduced.require_mask = require_mask
   reduced.lengths_mask = lengths_mask
-  reduced.max_weight = max(source.max_weight for source in sources)
-  reduced.match_weight = max(source.match_weight for source in sources)
+  reduced.max_weight = max_weight
+  reduced.match_weight = match_weight
   return reduced
 
 
-def _visit_multiply(
+def _reduce_multiply(
     sources: List['bloom_node.BloomNode'],
-    extra: list) -> Optional['bloom_node.BloomNode']:
+    extra: list) -> Tuple[int, int, int, float, float]:
   scale = 1
   for n in extra:
     scale *= n
@@ -119,11 +135,10 @@ def _visit_multiply(
   lengths_mask = sources[0].lengths_mask
   provide_mask = sources[0].provide_mask
   require_mask = sources[0].require_mask
-  match_weight = sources[0].match_weight * scale
   max_weight = sources[0].max_weight * scale
+  match_weight = sources[0].match_weight * scale
   pos = 1
   l = len(sources)
-  has_child_ops = bool(sources[0].op)
   while pos < l and lengths_mask and (
       not require_mask or (provide_mask & require_mask) == require_mask):
     source = sources[pos]
@@ -133,8 +148,15 @@ def _visit_multiply(
     max_weight *= source.max_weight  # Trends to 0.
     match_weight *= source.match_weight
     pos += 1
-    has_child_ops |= bool(source.op)
-  if not has_child_ops and (
+  return provide_mask, require_mask, lengths_mask, max_weight, match_weight
+
+
+def _visit_multiply(
+    sources: List['bloom_node.BloomNode'],
+    extra: list) -> Optional['bloom_node.BloomNode']:
+  provide_mask, require_mask, lengths_mask, max_weight, match_weight = (
+      _reduce_multiply(sources, extra))
+  if not any(source.op for source in sources) and (
       not lengths_mask or
       not max_weight or
       (require_mask and (provide_mask & require_mask) != require_mask)):
