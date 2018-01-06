@@ -38,7 +38,7 @@ class BloomNode(_op_mixin.OpMixin):
 
   def distance(self, length: int) -> None:
     """Report distance to a matching node."""
-    self.lengths_mask |= 2 ** length
+    self.lengths_mask |= 1 << length
 
   def edges(self) -> Dict[str, 'BloomNode']:
     self._expand()
@@ -71,6 +71,8 @@ class BloomNode(_op_mixin.OpMixin):
     if key in bloom_mask.SEPARATOR:
       # Prevent inheriting across word boundary characters.
       return
+    if node.op:
+      bloom_node_reducer.merge(node)
     self.provide_mask |= node.provide_mask
     if node.match_weight:
       # We cannot inherit requirements from a matching node; traversing edge
@@ -151,23 +153,26 @@ class BloomNode(_op_mixin.OpMixin):
     """Returns common node for `k` from sources, if any."""
     if not self.op:
       return None
-    for key, reduced in bloom_node_reducer.reduce(
-        self.op, whitelist={key}):
+    for key, reduced in bloom_node_reducer.reduce(self, whitelist={key}):
       return reduced
     return None
 
-  def __str__(self) -> str:
+  def __repr__(self) -> str:
     self._expand()
+    return str(self)
+
+  def __str__(self) -> str:
     if self.lengths_mask:
       # Convert mask to binary, reverse, and swap "01" for " #"
       lengths = bin(self.lengths_mask)[:1:-1].replace(
           '0', ' ').replace('1', '#')
     else:
       lengths = ''
+    weight = str(self.match_weight)
+    if weight.endswith('.0'):
+      weight = weight[:-2]
     return '%s(%s, %s, %s)' % (
         self.__class__.__name__,
         repr(bloom_mask.map_to_str(self.provide_mask, self.require_mask)),
         repr(lengths),
-        self.match_weight)
-
-  __repr__ = __str__
+        weight)
