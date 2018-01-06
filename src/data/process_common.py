@@ -22,6 +22,8 @@ def score(word: str, count: int, year: int) -> int:
       if consecutive >= 2:
         return 0
       consecutive += 1
+    else:
+      consecutive = 1
     last_c = c
   if word[0].isupper():
     if word.isupper():

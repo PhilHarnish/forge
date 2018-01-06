@@ -30,3 +30,6 @@ with description('process_common'):
 
   with it('scores words with few vowels lower'):
     expect(process_common.score('rhythm', 10, 0)).to(be_below(10))
+
+  with it('does not punish words with many duplicates'):
+    expect(process_common.score('balloon', 10, 0)).to(equal(10))
