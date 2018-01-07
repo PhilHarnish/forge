@@ -152,9 +152,6 @@ with description('path_values'):
     expect(path_values({}, '')).to(look_like('{}'))
 
   with it('works for shallow dicts'):
-    expect(path_values({'key': 'value'}, ['key'])).to(look_like('{}'))
-
-  with it('works for shallow dicts'):
     expect(path_values({'key': 'value'}, ['key'])).to(look_like("""
         {'key': 'value'}
         key = 'value'
