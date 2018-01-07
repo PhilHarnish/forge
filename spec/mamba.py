@@ -9,6 +9,7 @@ import mock
 from expects import *
 from expects import matchers
 
+from data.convert import repr_format
 from spec.data import fixtures
 
 # Convenience.
@@ -160,7 +161,7 @@ class _have_been_called(matchers.Matcher):
 
   def _failure_message_negated(self, subject, *args):
     return 'expected: %s(%s) not to have been called' % (
-      _fn_name(subject), _fmt_args(self._args, self._kwargs))
+      _fn_name(subject), repr_format.as_args(*self._args, **self._kwargs))
 
 
 have_been_called = _have_been_called()
@@ -219,7 +220,7 @@ class call(object):
     return self._cached_value
 
   def __repr__(self):
-    args = _fmt_args(self._args, self._kwargs)
+    args = repr_format.as_args(*self._args, **self._kwargs)
     if self._value is None:
       suffix = ''
     else:
@@ -268,15 +269,6 @@ class calling(call):
     if args or kwargs:
       raise NotImplementedError()
     return self._value
-
-
-def _fmt_args(args, kwargs):
-  return ', '.join([
-                     repr(arg) for arg in args
-                   ] + [
-                     '%s=%s' % (key, repr(value)) for key, value in
-                     kwargs.items()
-                   ])
 
 
 class look_like(equal):
