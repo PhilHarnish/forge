@@ -104,7 +104,7 @@ class BloomNode(_op_mixin.OpMixin):
     if key not in self._edges:
       child = self._find(key)
       if child is None:
-        child = BloomNode()
+        child = self._alloc()
       self._link(key, child, False)
     return self._edges[key]
 
