@@ -98,7 +98,7 @@ with description('parse'):
     expect(repr(node)).to(equal("BloomNode('abc; ', ' # #', 0)"))
     expect(repr(node['a'])).to(equal("BloomNode('abc; ', '# #', 0)"))
     expect(repr(node['a'][' '])).to(equal("BloomNode('abc', ' #', 0)"))
-    expect(repr(node['a'][' ']['b'])).to(equal("BloomNode('', '#', 1)"))
+    expect(repr(node['a'][' ']['b'])).to(equal(_GOAL))
 
   with it('supports small A|B expressions'):
     expect(repr(regex.parse('a|b'))).to(equal("BloomNode('ab', ' #', 0)"))
@@ -108,7 +108,7 @@ with description('parse'):
     expect(repr(node)).to(equal("BloomNode('ABc', '  ##', 0)"))
     expect(repr(node['a'])).to(equal("BloomNode('Bc', ' ##', 0)"))
     expect(repr(node['a']['b'])).to(equal("BloomNode('C', '##', 1)"))
-    expect(repr(node['a']['b']['c'])).to(equal("BloomNode('', '#', 1)"))
+    expect(repr(node['a']['b']['c'])).to(equal(_GOAL))
 
   with it('supports repeat ranges'):
     node = regex.parse('ab{1,3}')
@@ -116,7 +116,17 @@ with description('parse'):
     expect(repr(node['a'])).to(equal("BloomNode('B', ' ###', 0)"))
     expect(repr(node['a']['b'])).to(equal("BloomNode('B', '###', 1)"))
     expect(repr(node['a']['b']['b'])).to(equal("BloomNode('B', '##', 1)"))
-    expect(repr(node['a']['b']['b']['b'])).to(equal("BloomNode('', '#', 1)"))
+    expect(repr(node['a']['b']['b']['b'])).to(equal(_GOAL))
+
+  with it('supports repeat ranges + suffix'):
+    node = regex.parse('b{1,3}c')
+    expect(repr(node)).to(equal("BloomNode('BC', '  ###', 0)"))
+    expect(repr(node['b'])).to(equal("BloomNode('bC', ' ###', 0)"))
+    expect(repr(node['b']['c'])).to(equal(_GOAL))
+    expect(repr(node['b']['b'])).to(equal("BloomNode('bC', ' ##', 0)"))
+    expect(repr(node['b']['b']['c'])).to(equal(_GOAL))
+    expect(repr(node['b']['b']['b'])).to(equal("BloomNode('C', ' #', 0)"))
+    expect(repr(node['b']['b']['b']['c'])).to(equal(_GOAL))
 
 with description('normalize'):
   with it('leaves normal input alone'):
