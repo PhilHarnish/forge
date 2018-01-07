@@ -10,7 +10,7 @@ _UPPER_ALPHA = _LOWER_ALPHA.upper()
 def parse(expression: str, weight: Optional[float] = 1) -> bloom_node.BloomNode:
   expression = normalize(expression)
   visitor = _RegexVisitor(expression, weight)
-  return visitor.visit(sre_parse.parse(expression))
+  return visitor.visit()
 
 
 def normalize(expression: str) -> str:
@@ -22,18 +22,23 @@ def normalize(expression: str) -> str:
 
 class _RegexVisitor(object):
   def __init__(self, expression: str, weight: float):
-    self._expression = expression
+    parsed = sre_parse.parse(expression)
+    self._pattern = parsed.pattern
+    self._data = parsed.data
+    self._inverted_groups = {
+      value: name for name, value in self._pattern.groupdict.items()
+    }
     self._weight = weight
     if not expression.islower() and any(c.isupper() for c in expression):
       self._any = _LOWER_ALPHA + _UPPER_ALPHA
     else:
       self._any = _LOWER_ALPHA
 
-  def visit(self, data: list) -> bloom_node.BloomNode:
+  def visit(self) -> bloom_node.BloomNode:
     goal = bloom_node.BloomNode()
     goal.distance(0)
     goal.weight(self._weight, True)
-    return self._visit(goal, data)
+    return self._visit(goal, self._data)
 
   def _visit(
       self, cursor: bloom_node.BloomNode, data: list) -> bloom_node.BloomNode:
@@ -96,6 +101,18 @@ class _RegexVisitor(object):
     for exit in exits[1:]:
       result += exit
     return result
+
+  def _visit_SUBPATTERN(
+      self, cursor: bloom_node.BloomNode, data: list) -> bloom_node.BloomNode:
+    group_id, x, y, pattern = data
+    assert x == 0
+    assert y == 0
+    exit = cursor
+    group_name = self._inverted_groups.get(group_id, group_id)
+    exit.annotations({'EXIT_%s' % group_name: group_id})
+    enter = self._visit(cursor, pattern)
+    enter.annotations({'ENTER_%s' % group_name: group_id})
+    return enter
 
   def _visit_value(self, data: tuple) -> Any:
     kind, value = data

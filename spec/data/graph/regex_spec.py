@@ -6,70 +6,79 @@ _GOAL = "BloomNode('', '#', 1)"
 
 with description('parse'):
   with it('rejects unsupported input'):
-    expect(calling(regex.parse, '(matching group)')).to(
-        raise_error(NotImplementedError))
     expect(calling(regex.parse, 'a*')).to(
         raise_error(NotImplementedError, 'Unable to repeat MAXREPEAT'))
     expect(calling(regex.parse, 'a+')).to(
         raise_error(NotImplementedError, 'Unable to repeat MAXREPEAT'))
 
-  with it('accepts simple input'):
-    expect(calling(regex.parse, 'simple')).not_to(raise_error)
-    expect(calling(regex.parse, 's.mple')).not_to(raise_error)
-
   with it('produces simple graphs'):
-    parsed = regex.parse('a')
-    expect(parsed).to(be_a(bloom_node.BloomNode))
-    expect(repr(parsed)).to(equal("BloomNode('A', ' #', 0)"))
-    expect(repr(parsed['a'])).to(equal(_GOAL))
+    node = regex.parse('a')
+    expect(node).to(be_a(bloom_node.BloomNode))
+    expect(path_values(node, 'a')).to(look_like("""
+        BloomNode('A', ' #', 0)
+        a = BloomNode('', '#', 1)
+    """))
 
   with it('produces longer graphs'):
-    parsed = regex.parse('abc')
-    expect(parsed).to(be_a(bloom_node.BloomNode))
-    expect(repr(parsed)).to(equal("BloomNode('ABC', '   #', 0)"))
-    expect(repr(parsed['a']['b']['c'])).to(equal(_GOAL))
+    node = regex.parse('abc')
+    expect(node).to(be_a(bloom_node.BloomNode))
+    expect(path_values(node, 'abc')).to(look_like("""
+        BloomNode('ABC', '   #', 0)
+        a = BloomNode('BC', '  #', 0)
+        b = BloomNode('C', ' #', 0)
+        c = BloomNode('', '#', 1)
+    """))
 
   with description('with capitals'):
     with it('produces simple graphs'):
-      parsed = regex.parse('aA')
-      expect(repr(parsed)).to(equal("BloomNode('A;A', '  #', 0)"))
+      node = regex.parse('aA')
+      expect(path_values(node, 'aA')).to(look_like("""
+          BloomNode('A;A', '  #', 0)
+          a = BloomNode('A', ' #', 0)
+          A = BloomNode('', '#', 1)
+      """))
 
     with it('with "."'):
-      parsed = regex.parse('a.Z')
-      expect(repr(parsed)).to(equal(
-          "BloomNode('Abcdefghijklmnopqrstuvwxyz;ABCDEFGHIJKLMNOPQRSTUVWXYZ',"
-          " '   #', 0)"))
+      node = regex.parse('a.Z')
+      expect(path_values(node, 'azZ')).to(look_like("""
+BloomNode('Abcdefghijklmnopqrstuvwxyz;ABCDEFGHIJKLMNOPQRSTUVWXYZ', '   #', 0)
+a = BloomNode('abcdefghijklmnopqrstuvwxyz;ABCDEFGHIJKLMNOPQRSTUVWXYZ', '  #', 0)
+z = BloomNode('Z', ' #', 0)
+Z = BloomNode('', '#', 1)
+      """))
 
   with description('with "." character'):
     with it('produces simple graphs'):
-      parsed = regex.parse('.')
-      expect(parsed).to(be_a(bloom_node.BloomNode))
-      expect(repr(parsed)).to(equal(
-          "BloomNode('abcdefghijklmnopqrstuvwxyz', ' #', 0)"))
-      expect(repr(parsed['z'])).to(equal(_GOAL))
+      node = regex.parse('.')
+      expect(path_values(node, 'z')).to(look_like("""
+          BloomNode('abcdefghijklmnopqrstuvwxyz', ' #', 0)
+          z = BloomNode('', '#', 1)
+      """))
 
     with it('produces wildcard prefix'):
-      parsed = regex.parse('.b')
-      expect(parsed).to(be_a(bloom_node.BloomNode))
-      expect(repr(parsed)).to(equal(
-          "BloomNode('aBcdefghijklmnopqrstuvwxyz', '  #', 0)"))
-      expect(repr(parsed['z'])).to(equal("BloomNode('B', ' #', 0)"))
-      expect(repr(parsed['z']['b'])).to(equal(_GOAL))
+      node = regex.parse('.b')
+      expect(path_values(node, 'zb')).to(look_like("""
+          BloomNode('aBcdefghijklmnopqrstuvwxyz', '  #', 0)
+          z = BloomNode('B', ' #', 0)
+          b = BloomNode('', '#', 1)
+      """))
 
     with it('produces wildcard suffix'):
-      parsed = regex.parse('a.')
-      expect(parsed).to(be_a(bloom_node.BloomNode))
-      expect(repr(parsed)).to(equal(
-          "BloomNode('Abcdefghijklmnopqrstuvwxyz', '  #', 0)"))
-      expect(repr(parsed['a']['z'])).to(equal(_GOAL))
+      node = regex.parse('a.')
+      expect(path_values(node, 'az')).to(look_like("""
+          BloomNode('Abcdefghijklmnopqrstuvwxyz', '  #', 0)
+          a = BloomNode('abcdefghijklmnopqrstuvwxyz', ' #', 0)
+          z = BloomNode('', '#', 1)
+      """))
 
     with it('produces wildcard middle'):
-      parsed = regex.parse('a.c')
-      expect(parsed).to(be_a(bloom_node.BloomNode))
-      expect(repr(parsed)).to(equal(
-          "BloomNode('AbCdefghijklmnopqrstuvwxyz', '   #', 0)"))
-      expect(repr(parsed['a']['z'])).to(equal("BloomNode('C', ' #', 0)"))
-      expect(repr(parsed['a']['z']['c'])).to(equal(_GOAL))
+      node = regex.parse('a.c')
+      expect(path_values(node, 'azc')).to(look_like("""
+          BloomNode('AbCdefghijklmnopqrstuvwxyz', '   #', 0)
+          a = BloomNode('abCdefghijklmnopqrstuvwxyz', '  #', 0)
+          z = BloomNode('C', ' #', 0)
+          c = BloomNode('', '#', 1)
+      """))
 
     with it('does not accept invalid paths through graph'):
       parsed = regex.parse('a.c')
@@ -82,51 +91,85 @@ with description('parse'):
       expect(calling(regex.parse, 'multiple words')).not_to(raise_error)
 
     with it('produces simple graphs'):
-      parsed = regex.parse('a b')
-      expect(repr(parsed)).to(equal("BloomNode('A; ', ' #', 0)"))
-      expect(repr(parsed['a'])).to(equal("BloomNode(' ', '#', 0)"))
-      expect(repr(parsed['a'][' '])).to(equal("BloomNode('B', ' #', 0)"))
-      expect(repr(parsed['a'][' ']['b'])).to(equal(_GOAL))
+      node = regex.parse('a b')
+      expect(path_values(node, 'a b')).to(look_like("""
+        BloomNode('A; ', ' #', 0)
+        a = BloomNode(' ', '#', 0)
+          = BloomNode('B', ' #', 0)
+        b = BloomNode('', '#', 1)
+      """))
 
   with it('supports small character groups'):
     node = regex.parse('[abc][def]')
-    expect(repr(node)).to(equal("BloomNode('abcdef', '  #', 0)"))
-    expect(repr(node['a'])).to(equal("BloomNode('def', ' #', 0)"))
+    expect(path_values(node, 'ae')).to(look_like("""
+        BloomNode('abcdef', '  #', 0)
+        a = BloomNode('def', ' #', 0)
+        e = BloomNode('', '#', 1)
+    """))
 
   with it('supports character groups with spaces'):
     node = regex.parse('[abc][abc ][abc]')
-    expect(repr(node)).to(equal("BloomNode('abc; ', ' # #', 0)"))
-    expect(repr(node['a'])).to(equal("BloomNode('abc; ', '# #', 0)"))
-    expect(repr(node['a'][' '])).to(equal("BloomNode('abc', ' #', 0)"))
-    expect(repr(node['a'][' ']['b'])).to(equal(_GOAL))
+    expect(path_values(node, 'a b')).to(look_like("""
+        BloomNode('abc; ', ' # #', 0)
+        a = BloomNode('abc; ', '# #', 0)
+          = BloomNode('abc', ' #', 0)
+        b = BloomNode('', '#', 1)
+    """))
 
   with it('supports small A|B expressions'):
     expect(repr(regex.parse('a|b'))).to(equal("BloomNode('ab', ' #', 0)"))
 
   with it('supports optional (x?) characters'):
     node = regex.parse('abc?')
-    expect(repr(node)).to(equal("BloomNode('ABc', '  ##', 0)"))
-    expect(repr(node['a'])).to(equal("BloomNode('Bc', ' ##', 0)"))
-    expect(repr(node['a']['b'])).to(equal("BloomNode('C', '##', 1)"))
-    expect(repr(node['a']['b']['c'])).to(equal(_GOAL))
+    expect(path_values(node, 'abc')).to(look_like("""
+        BloomNode('ABc', '  ##', 0)
+        a = BloomNode('Bc', ' ##', 0)
+        b = BloomNode('C', '##', 1)
+        c = BloomNode('', '#', 1)
+    """))
 
   with it('supports repeat ranges'):
     node = regex.parse('ab{1,3}')
-    expect(repr(node)).to(equal("BloomNode('AB', '  ###', 0)"))
-    expect(repr(node['a'])).to(equal("BloomNode('B', ' ###', 0)"))
-    expect(repr(node['a']['b'])).to(equal("BloomNode('B', '###', 1)"))
-    expect(repr(node['a']['b']['b'])).to(equal("BloomNode('B', '##', 1)"))
-    expect(repr(node['a']['b']['b']['b'])).to(equal(_GOAL))
+    expect(path_values(node, 'abbb')).to(look_like("""
+        BloomNode('AB', '  ###', 0)
+        a = BloomNode('B', ' ###', 0)
+        b = BloomNode('B', '###', 1)
+        b = BloomNode('B', '##', 1)
+        b = BloomNode('', '#', 1)
+    """))
 
   with it('supports repeat ranges + suffix'):
     node = regex.parse('b{1,3}c')
-    expect(repr(node)).to(equal("BloomNode('BC', '  ###', 0)"))
-    expect(repr(node['b'])).to(equal("BloomNode('bC', ' ###', 0)"))
+    expect(path_values(node, 'bbbc')).to(look_like("""
+        BloomNode('BC', '  ###', 0)
+        b = BloomNode('bC', ' ###', 0)
+        b = BloomNode('bC', ' ##', 0)
+        b = BloomNode('C', ' #', 0)
+        c = BloomNode('', '#', 1)
+    """))
     expect(repr(node['b']['c'])).to(equal(_GOAL))
-    expect(repr(node['b']['b'])).to(equal("BloomNode('bC', ' ##', 0)"))
     expect(repr(node['b']['b']['c'])).to(equal(_GOAL))
-    expect(repr(node['b']['b']['b'])).to(equal("BloomNode('C', ' #', 0)"))
     expect(repr(node['b']['b']['b']['c'])).to(equal(_GOAL))
+
+  with it('supports simple capture groups'):
+    expect(calling(regex.parse, '(abc)')).not_to(
+        raise_error(NotImplementedError))
+    node = regex.parse('(abc)')
+    expect(path_values(node, 'abc')).to(look_like("""
+        BloomNode('ABC', '   #', 0, ENTER_1=1)
+        a = BloomNode('BC', '  #', 0)
+        b = BloomNode('C', ' #', 0)
+        c = BloomNode('', '#', 1, EXIT_1=1)
+    """))
+
+  with it('supports named capture groups'):
+    node = regex.parse('(?P<id>abc)')
+    expect(path_values(node, 'abc')).to(look_like("""
+        BloomNode('ABC', '   #', 0, ENTER_id=1)
+        a = BloomNode('BC', '  #', 0)
+        b = BloomNode('C', ' #', 0)
+        c = BloomNode('', '#', 1, EXIT_id=1)
+    """))
 
 with description('normalize'):
   with it('leaves normal input alone'):
