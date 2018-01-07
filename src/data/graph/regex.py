@@ -42,12 +42,18 @@ class _RegexVisitor(object):
 
   def _visit(
       self, cursor: bloom_node.BloomNode, data: list) -> bloom_node.BloomNode:
+    data = self._transform(data)
     for kind, value in reversed(data):
       fn_name = '_visit_%s' % kind
       if not hasattr(self, fn_name):
         raise NotImplementedError('Unsupported re type %s' % kind)
       visit_fn = getattr(self, fn_name)
       cursor = visit_fn(cursor, value)
+    return cursor
+
+  def _visit_ANAGRAM(
+      self, cursor: bloom_node.BloomNode, data: list) -> bloom_node.BloomNode:
+    # TODO: If length of list is 1 then all literals can be anagrammed.
     return cursor
 
   def _visit_ANY(
@@ -123,3 +129,25 @@ class _RegexVisitor(object):
 
   def _visit_value_LITERAL(self, data: int) -> str:
     return chr(data)
+
+  def _transform(self, data: list):
+    transformed = []
+    anagram_groups = []
+    for datum in data:
+      kind, value = datum
+      if str(kind) != 'LITERAL':
+        transformed.append(datum)
+        continue
+      # Look for {ab,c} anagram syntax.
+      value = chr(value)
+      if value == '{':
+        anagram_groups.append([[]])
+      elif not anagram_groups:
+        transformed.append(datum)
+      elif value == ',':
+        anagram_groups[-1].append([])
+      elif value == '}':
+        transformed.append(('ANAGRAM', anagram_groups.pop()))
+      else:
+        anagram_groups[-1][-1].append(datum)
+    return transformed

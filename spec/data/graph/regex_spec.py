@@ -152,8 +152,7 @@ Z = BloomNode('', '#', 1)
     expect(repr(node['b']['b']['b']['c'])).to(equal(_GOAL))
 
   with it('supports simple capture groups'):
-    expect(calling(regex.parse, '(abc)')).not_to(
-        raise_error(NotImplementedError))
+    expect(calling(regex.parse, '(abc)')).not_to(raise_error)
     node = regex.parse('(abc)')
     expect(path_values(node, 'abc')).to(look_like("""
         BloomNode('ABC', '   #', 0, ENTER_1=1)
@@ -170,6 +169,9 @@ Z = BloomNode('', '#', 1)
         b = BloomNode('C', ' #', 0)
         c = BloomNode('', '#', 1, EXIT_id=1)
     """))
+
+  with it('parses anagram syntax'):
+    expect(calling(regex.parse, '{ab,c}')).not_to(raise_error)
 
 with description('normalize'):
   with it('leaves normal input alone'):
