@@ -135,7 +135,7 @@ with description('sources'):
     expect(calling(repr, self.combined)).not_to(raise_error)
 
 
-with description('repr'):
+with description('repr') as self:
   with before.each:
     self.subject = bloom_node.BloomNode()
 
@@ -148,3 +148,31 @@ with description('repr'):
     self.subject.distance(3)
     self.subject.distance(2)
     expect(repr(self.subject)).to(equal("BloomNode('AbC', '  ##', 0)"))
+
+
+with description('annotations'):
+  with it('starts empty'):
+    node = bloom_node.BloomNode()
+    expect(node.annotations()).to(be_empty)
+
+  with it('holds values'):
+    node = bloom_node.BloomNode()
+    node.annotations({'key': 'value'})
+    expect(node.annotations()).to(equal({'key': 'value'}))
+    expect(repr(node)).to(equal("BloomNode('', '', 0, key='value')"))
+
+  with it('merges values via +'):
+    a = bloom_node.BloomNode()
+    a.annotations({'key': 'value'})
+    b = bloom_node.BloomNode()
+    node = a + b
+    expect(node.annotations()).to(equal({'key': 'value'}))
+    expect(repr(node)).to(equal("BloomNode('', '', 0, key='value')"))
+
+  with it('merges values via *'):
+    a = bloom_node.BloomNode()
+    a.annotations({'key': 'value'})
+    b = bloom_node.BloomNode()
+    node = a * b
+    expect(node.annotations()).to(equal({'key': 'value'}))
+    expect(repr(node)).to(equal("BloomNode('', '', 0, key='value')"))

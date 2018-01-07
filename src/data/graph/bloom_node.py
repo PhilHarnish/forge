@@ -1,5 +1,6 @@
-from typing import Dict, ItemsView, Iterable, Optional
+from typing import Any, Dict, ItemsView, Iterable, Optional
 
+from data.convert import repr_format
 from data.graph import _op_mixin, bloom_mask, bloom_node_reducer
 
 
@@ -11,6 +12,7 @@ class BloomNode(_op_mixin.OpMixin):
     'lengths_mask',
     'max_weight',
     'match_weight',
+    '_annotations',
     '_edges',
   )
 
@@ -24,6 +26,8 @@ class BloomNode(_op_mixin.OpMixin):
   max_weight: float
   # Match value for this node.
   match_weight: float
+  # Annotations on this node.
+  _annotations: Dict[str, Any]
   # Outgoing edges of this node.
   _edges: Dict[str, 'BloomNode']
 
@@ -34,6 +38,7 @@ class BloomNode(_op_mixin.OpMixin):
     self.lengths_mask = 0
     self.match_weight = 0
     self.max_weight = 0
+    self._annotations = {}
     self._edges = {}
 
   def distance(self, length: int) -> None:
@@ -85,6 +90,14 @@ class BloomNode(_op_mixin.OpMixin):
     self.lengths_mask |= node.lengths_mask << 1
     if node.max_weight > self.max_weight:
       self.max_weight = node.max_weight
+
+  def annotations(
+      self, new_annotations: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    if new_annotations is not None:
+      self._annotations.update(new_annotations)
+    elif self.op:
+      bloom_node_reducer.merge(self)
+    return self._annotations
 
   def open(self, key: str) -> 'BloomNode':
     """Return outgoing edge `k`. Create node if necessary."""
@@ -161,17 +174,20 @@ class BloomNode(_op_mixin.OpMixin):
     return str(self)
 
   def __str__(self) -> str:
+    args = [repr(bloom_mask.map_to_str(self.provide_mask, self.require_mask))]
     if self.lengths_mask:
       # Convert mask to binary, reverse, and swap "01" for " #"
       lengths = bin(self.lengths_mask)[:1:-1].replace(
           '0', ' ').replace('1', '#')
     else:
       lengths = ''
+    args.append(repr(lengths))
     weight = str(self.match_weight)
     if weight.endswith('.0'):
       weight = weight[:-2]
-    return '%s(%s, %s, %s)' % (
+    args.append(weight)
+    if self._annotations:
+      args.append(repr_format.as_args(**self._annotations))
+    return '%s(%s)' % (
         self.__class__.__name__,
-        repr(bloom_mask.map_to_str(self.provide_mask, self.require_mask)),
-        repr(lengths),
-        weight)
+        ', '.join(args))

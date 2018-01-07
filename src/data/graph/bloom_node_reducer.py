@@ -60,6 +60,8 @@ def _merge_add(
   host.lengths_mask |= lengths_mask
   host.max_weight = max(host.max_weight, max_weight)
   host.match_weight = max(host.match_weight, match_weight)
+  for source in sources:
+    host.annotations(source.annotations())
 
 
 def _merge_multiply(
@@ -73,6 +75,8 @@ def _merge_multiply(
   host.lengths_mask |= lengths_mask
   host.max_weight = max(host.max_weight, max_weight)
   host.match_weight = max(host.match_weight, match_weight)
+  for source in sources:
+    host.annotations(source.annotations())
 
 
 def _visit_identity(
