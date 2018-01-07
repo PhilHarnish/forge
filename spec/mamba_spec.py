@@ -145,3 +145,36 @@ with description('benchmarks'):
       with benchmark(1, 1):
         raise CustomException('exception')
     expect(test).to(raise_error(CustomException))
+
+
+with description('path_values'):
+  with it('echos input for empty input'):
+    expect(path_values({}, '')).to(look_like('{}'))
+
+  with it('works for shallow dicts'):
+    expect(path_values({'key': 'value'}, ['key'])).to(look_like('{}'))
+
+  with it('works for shallow dicts'):
+    expect(path_values({'key': 'value'}, ['key'])).to(look_like("""
+        {'key': 'value'}
+        key = 'value'
+    """))
+
+  with it('works for deeper dicts'):
+    expect(path_values({'a': {'b': 'c'}}, 'ab')).to(look_like("""
+        {'a': {'b': 'c'}}
+        a = {'b': 'c'}
+        b = 'c'
+    """))
+
+  with it('works for arrays and strings'):
+    expect(path_values(
+        [[['00'], ['01']], [['10'], ['11']]],
+        [0, 1, 0, 1])
+    ).to(look_like("""
+        [[['00'], ['01']], [['10'], ['11']]]
+        0 = [['00'], ['01']]
+        1 = ['01']
+        0 = '01'
+        1 = '1'
+    """))

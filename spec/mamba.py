@@ -3,7 +3,7 @@ import random
 import re
 import textwrap
 import time
-from typing import Optional
+from typing import Any, Iterable, Optional
 
 import mock
 from expects import *
@@ -283,3 +283,12 @@ class look_like(equal):
 
   def _clean(self, s):
     return textwrap.dedent(s.rstrip(' ').strip('\n'))
+
+
+def path_values(root: Any, path: Iterable) -> str:
+  results = [repr(root)]
+  cursor = root
+  for c in path:
+    cursor = cursor[c]
+    results.append('%s = %s' % (c, repr(cursor)))
+  return '\n'.join(results)
