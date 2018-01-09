@@ -146,6 +146,9 @@ class AnagramSet(object):
     else:
       self._prefix = prefix
 
+  def choices(self) -> List[str]:
+    return self._index.choices(self._available)
+
   def __iter__(self) -> Iterable[str]:
     yield from self._index.available(self._available, self._prefix)
 

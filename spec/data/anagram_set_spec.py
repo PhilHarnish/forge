@@ -39,6 +39,12 @@ with description('simple choices'):
     for input in bad_inputs:
       expect(calling(subject.__getitem__, input)).to(raise_error)
 
+  with description('choices()'):
+    with it('returns available choices'):
+      subject = anagram_set.from_choices('abc')
+      expect(subject['a'].choices()).to(equal(['b', 'c']))
+
+with description('ambiguous choices'):
   with it('handles ambiguous input'):
     subject = anagram_set.from_choices(['aab', 'aac', 'a', 'a'])
     expected = {
