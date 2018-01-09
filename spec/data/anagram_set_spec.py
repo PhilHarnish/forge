@@ -54,10 +54,6 @@ with description('simple choices'):
     }
     expect(lookup(subject, expected)).to(equal(expected))
 
-  with it('caches identical results'):
-    subject = anagram_set.from_choices('abc')
-    expect(subject['ab']).to(be(subject['ba']))
-
   with it('compacts clear results'):
     subject = anagram_set.from_choices(['aab', 'a', 'a'])
     expect(repr(subject['aa'])).to(
@@ -76,3 +72,14 @@ with description('simple choices'):
     expect(repr(subject['aaab'])).to(
         equal("AnagramSet(['a', 'b'], '')"))
     expect(subject['aaaba']).to(be(subject['aaaab']))
+
+with description('caching'):
+  with it('caches identical results'):
+    subject = anagram_set.from_choices('abc')
+    expect(subject['ab']).to(be(subject['ba']))
+
+  with it('shares state between children'):
+    subject = anagram_set.from_choices('abc')
+    a = subject['a']
+    b = subject['b']
+    expect(b['a']).to(be(a['b']))

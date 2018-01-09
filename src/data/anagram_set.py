@@ -129,6 +129,8 @@ class _CompoundAnagramIndex(_AnagramIndex):
 
 
 class AnagramSet(object):
+  __slots__ = ('_index', '_available', '_prefix')
+
   def __init__(
       self,
       index: _AnagramIndex,
