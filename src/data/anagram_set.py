@@ -3,6 +3,9 @@ import heapq
 from typing import Iterable, List, Optional, Set, Tuple
 
 
+WorkQueue = List[Tuple[int, int]]
+
+
 class _AnagramIndex(object):
   def __init__(self, choices: List[str]) -> None:
     assert len(choices) < 63
@@ -31,9 +34,25 @@ class _AnagramIndex(object):
   def choices(self, available: int) -> List['str']:
     return [self._choices[i] for i in _ids(available)]
 
-  def get(self, available: int, prefix: str) -> Optional['AnagramSet']:
-    available, prefix = self._seek(available, prefix)
-    return self._get(available, prefix)
+  def get(
+      self,
+      available: int,
+      prefix: str,
+      queue: Optional[WorkQueue]) -> Optional['AnagramSet']:
+    available, prefix, queue = self._seek(available, prefix, queue)
+    return self._get(available, prefix, queue)
+
+  def remaining(self, available: int, prefix: str) -> str:
+    choices = []
+    for choice in _ids(available):
+      choices.append(self._choices[choice])
+    result = ''.join(choices)
+    if not prefix:
+      return ''.join(result)
+    counter = collections.Counter()
+    counter.update(result)
+    counter.subtract(prefix)
+    return ''.join(counter.elements())
 
   def _populate_available_without_prefix(
       self, result: Set[str], available: int) -> None:
@@ -44,7 +63,11 @@ class _AnagramIndex(object):
       self, result: Set[str], available: int, prefix: str) -> None:
     raise NotImplementedError()
 
-  def _seek(self, available: int, prefix: str) -> Tuple[int, str]:
+  def _seek(self,
+      available: int,
+      prefix: str,
+      queue: Optional[WorkQueue]) -> Tuple[int, str, Optional[WorkQueue]]:
+    assert not queue  # Unclear how queue would be used in base class.
     for c in prefix:
       if not available:
         raise KeyError(prefix)
@@ -55,12 +78,16 @@ class _AnagramIndex(object):
       available ^= candidates - (candidates & (candidates - 1))
     if not available:
       raise KeyError(prefix)
-    return available, ''
+    return available, '', None
 
-  def _get(self, available: int, prefix: str) -> 'AnagramSet':
+  def _get(
+      self,
+      available: int,
+      prefix: str,
+      queue: Optional[WorkQueue]) -> 'AnagramSet':
     key = '%s%s' % (available, prefix)
     if key not in self._child_cache:
-      self._child_cache[key] = AnagramSet(self, available, prefix)
+      self._child_cache[key] = AnagramSet(self, available, prefix, queue)
     return self._child_cache[key]
 
 
@@ -91,8 +118,13 @@ class _CompoundAnagramIndex(_AnagramIndex):
       else:
         self._populate_available_without_prefix(result, next_available)
 
-  def _seek(self, available: int, prefix: str) -> Tuple[int, str]:
-    queue = [(0, available)]
+  def _seek(
+      self,
+      available: int,
+      prefix: str,
+      queue: Optional[WorkQueue]) -> Tuple[int, str, Optional[WorkQueue]]:
+    if not queue:
+      queue = [(0, available)]
     prefix_length = len(prefix)
     while queue and queue[0][0] < prefix_length:
       next_pos, next_available = heapq.heappop(queue)
@@ -107,9 +139,9 @@ class _CompoundAnagramIndex(_AnagramIndex):
     exit_pos, exit_available = queue[0]
     if len(queue) == 1 and exit_pos == prefix_length:
       # Solution was unique and perfectly spans prefix. Compact result.
-      return exit_available, ''
+      return exit_available, '', None
     # Solution is not unique.
-    return available, prefix
+    return available, prefix, queue
 
   def _advance(
       self, available: int, prefix: str, pos: int) -> Iterable[Tuple[int, int]]:
@@ -129,13 +161,14 @@ class _CompoundAnagramIndex(_AnagramIndex):
 
 
 class AnagramSet(object):
-  __slots__ = ('_index', '_available', '_prefix')
+  __slots__ = ('_index', '_available', '_prefix', '_queue')
 
   def __init__(
       self,
       index: _AnagramIndex,
       available: Optional[int] = None,
-      prefix: Optional[str] = None) -> None:
+      prefix: Optional[str] = None,
+      queue: Optional[WorkQueue] = None) -> None:
     self._index = index
     if available is None:
       self._available = index.initial_available
@@ -145,6 +178,7 @@ class AnagramSet(object):
       self._prefix = ''
     else:
       self._prefix = prefix
+    self._queue = queue
 
   def choices(self) -> List[str]:
     return self._index.choices(self._available)
@@ -153,7 +187,7 @@ class AnagramSet(object):
     yield from self._index.available(self._available, self._prefix)
 
   def __getitem__(self, item: str) -> 'AnagramSet':
-    return self._index.get(self._available, self._prefix + item)
+    return self._index.get(self._available, self._prefix + item, self._queue)
 
   def __repr__(self) -> str:
     return '%s(%s, %s)' % (
