@@ -52,3 +52,12 @@ def common(
     (key, [i[key] for i in maps])
     for key in reference if all(key in i for i in remaining)
   ]
+
+
+def none(
+    maps: List[Mapping[str, T]],
+    whitelist: Optional[Iterable[str]] = None,
+    blacklist: Optional[Container[str]] = None
+) -> Iterable[Tuple[str, List[T]]]:
+  del maps, whitelist, blacklist
+  return []

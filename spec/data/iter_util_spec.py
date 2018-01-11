@@ -91,3 +91,11 @@ with description('both'):
       ('a', [1]),
       ('b', [1, 2]),
     ]))
+
+
+with description('none'):
+  with it('returns nothing for empty input'):
+    expect(iter_util.none([])).to(equal([]))
+
+  with it('returns nothing for simple input'):
+    expect(iter_util.none([{}, {'key': 'value'}])).to(equal([]))
