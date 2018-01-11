@@ -1,9 +1,9 @@
 import collections
 import heapq
-from typing import Iterable, List, Optional, Set, Tuple
+from typing import ItemsView, Iterable, List, Optional, Set, Tuple
 
 
-WorkQueue = List[Tuple[int, int]]
+WorkQueue = List[Tuple[int, int, tuple]]
 
 
 class _AnagramIndex(object):
@@ -124,19 +124,19 @@ class _CompoundAnagramIndex(_AnagramIndex):
       prefix: str,
       queue: Optional[WorkQueue]) -> Tuple[int, str, Optional[WorkQueue]]:
     if not queue:
-      queue = [(0, available)]
+      queue = [(0, available, None)]
     prefix_length = len(prefix)
     while queue and queue[0][0] < prefix_length:
-      next_pos, next_available = heapq.heappop(queue)
-      for exit_pos, exit_available in self._advance(
-          next_available, prefix, next_pos):
+      next_pos, next_available, next_acc = heapq.heappop(queue)
+      for exit_pos, exit_available, exit_acc in self._advance(
+          next_available, prefix, next_pos, next_acc):
         # Note: It is possible to detect bottlenecks mid-iteration but this
         # code assumes access happens one letter at a time. Bottleneck
         # optimization only happens at the end.
-        heapq.heappush(queue, (exit_pos, exit_available))
+        heapq.heappush(queue, (exit_pos, exit_available, exit_acc))
     if not queue:
       raise KeyError(prefix)
-    exit_pos, exit_available = queue[0]
+    exit_pos, exit_available, exit_acc = queue[0]
     if len(queue) == 1 and exit_pos == prefix_length:
       # Solution was unique and perfectly spans prefix. Compact result.
       return exit_available, '', None
@@ -144,7 +144,11 @@ class _CompoundAnagramIndex(_AnagramIndex):
     return available, prefix, queue
 
   def _advance(
-      self, available: int, prefix: str, pos: int) -> Iterable[Tuple[int, int]]:
+      self,
+      available: int,
+      prefix: str,
+      pos: int,
+      acc: tuple) -> Iterable[Tuple[int, int, tuple]]:
     c = prefix[pos]
     candidates = available & self._choices_char_map[c]
     options = []
@@ -156,7 +160,7 @@ class _CompoundAnagramIndex(_AnagramIndex):
       visited.add(choice)
       if not _match_suffix(prefix, pos, choice):
         continue
-      options.append((pos + len(choice), available ^ candidate))
+      options.append((pos + len(choice), available ^ candidate, (acc, choice)))
     return options
 
 
@@ -181,7 +185,20 @@ class AnagramSet(object):
     self._queue = queue
 
   def choices(self) -> List[str]:
-    return self._index.choices(self._available)
+    if not self._prefix:
+      return self._index.choices(self._available)
+    assert self._queue
+    # Split acc from top of queue.
+    _, last_available, last_acc = self._queue[0]
+    result = self._index.choices(last_available)
+    span = _expand_acc(last_acc)
+    if len(span) > len(self._prefix):
+      result.append(span[len(self._prefix):])
+    return result
+
+  def items(self) -> ItemsView[str, 'AnagramSet']:
+    for key in self:
+      yield key, self[key]
 
   def __iter__(self) -> Iterable[str]:
     yield from self._index.available(self._available, self._prefix)
@@ -229,3 +246,12 @@ def _match_suffix(reference:str, start:int, comparison: str) -> bool:
     comparison_position += 1
     reference_position += 1
   return True
+
+
+def _expand_acc(acc: tuple) -> str:
+  result = []
+  cursor = acc
+  while cursor:
+    result.append(cursor[1])
+    cursor = cursor[0]
+  return ''.join(reversed(result))

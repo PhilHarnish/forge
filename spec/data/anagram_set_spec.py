@@ -39,10 +39,6 @@ with description('simple choices'):
     for input in bad_inputs:
       expect(calling(subject.__getitem__, input)).to(raise_error)
 
-  with description('choices()'):
-    with it('returns available choices'):
-      subject = anagram_set.from_choices('abc')
-      expect(subject['a'].choices()).to(equal(['b', 'c']))
 
 with description('ambiguous choices'):
   with it('handles ambiguous input'):
@@ -79,6 +75,7 @@ with description('ambiguous choices'):
         equal("AnagramSet(['a', 'b'], '')"))
     expect(subject['aaaba']).to(be(subject['aaaab']))
 
+
 with description('caching'):
   with it('caches identical results'):
     subject = anagram_set.from_choices('abc')
@@ -89,3 +86,34 @@ with description('caching'):
     a = subject['a']
     b = subject['b']
     expect(b['a']).to(be(a['b']))
+
+
+with description('choices()'):
+  with it('returns available choices'):
+    subject = anagram_set.from_choices('abc')
+    expect(subject['a'].choices()).to(equal(['b', 'c']))
+
+  with it('only includes unused characters'):
+    subject = anagram_set.from_choices(['ab', 'c'])
+    expect(list(sorted(subject['a'].choices()))).to(equal(['b', 'c']))
+
+
+with description('items()'):
+  with it('returns nothing for empty anagram'):
+    subject = anagram_set.from_choices('')
+    expect(list(subject.items())).to(equal([]))
+
+  with it('returns items for a simple anagram'):
+    subject = anagram_set.from_choices('abc')
+    expect(list(sorted(subject.items()))).to(equal([
+      ('a', subject['a']),
+      ('b', subject['b']),
+      ('c', subject['c']),
+    ]))
+
+  with it('returns items for a ambiguous anagram'):
+    subject = anagram_set.from_choices(['ab', 'c'])
+    expect(list(sorted(subject.items()))).to(equal([
+      ('a', subject['a']),
+      ('c', subject['c']),
+    ]))
