@@ -3,6 +3,7 @@ from typing import Container, ItemsView, List, Optional, Tuple
 
 from data import iter_util
 from data.graph import _op_mixin, bloom_node
+from data.graph.ops import anagram_op
 
 
 def merge(host: 'bloom_node.BloomNode') -> None:
@@ -18,7 +19,7 @@ def merge(host: 'bloom_node.BloomNode') -> None:
       nodes.append(operator)
     else:
       extra.append(operator)
-  merge_fn(host, nodes, extra)
+  merge_fn(host, nodes, extra, whitelist=None, blacklist=None)
 
 
 def reduce(
@@ -46,13 +47,15 @@ def reduce(
     result = visitor_fn(sources, extra)
     if result is not None:
       yield key, result
-  merge_fn(host, nodes, extra)
+  merge_fn(host, nodes, extra, whitelist=whitelist, blacklist=blacklist)
 
 
 def _merge_add(
     host: 'bloom_node.BloomNode',
     sources: List['bloom_node.BloomNode'],
-    extra: list):
+    extra: list,
+    **kwargs) -> None:
+  del kwargs
   provide_mask, require_mask, lengths_mask, max_weight, match_weight = (
       _reduce_add(sources, extra))
   host.provide_mask |= provide_mask
@@ -67,7 +70,9 @@ def _merge_add(
 def _merge_multiply(
     host: 'bloom_node.BloomNode',
     sources: List['bloom_node.BloomNode'],
-    extra: list):
+    extra: list,
+    **kwargs) -> None:
+  del kwargs
   provide_mask, require_mask, lengths_mask, max_weight, match_weight = (
       _reduce_multiply(sources, extra))
   host.provide_mask &= provide_mask
@@ -181,8 +186,16 @@ def _visit_multiply(
   return reduced
 
 
+def _visit_fail(
+    sources: List['bloom_node.BloomNode'],
+    extra: list) -> None:
+  del sources, extra
+  raise NotImplementedError('Reduce visitor unsupported for this operator')
+
+
 _operator_functions = [
   (iter_util.common, _merge_add, _visit_identity),
   (iter_util.both, _merge_add, _visit_add),
   (iter_util.common, _merge_multiply, _visit_multiply),
+  (iter_util.none, anagram_op.merge_fn, _visit_fail),
 ]
