@@ -10,10 +10,12 @@ _next = itertools.count()
 OP_IDENTITY = next(_next)
 OP_ADD = next(_next)
 OP_MULTIPLY = next(_next)
+OP_DIV = next(_next)
 _OPERATOR_STRINGS = [
   ('%s', ''),
   ('(%s)', '+'),
   ('(%s)', '*'),
+  ('anagram(%s)', ', '),
 ]
 
 
@@ -38,7 +40,7 @@ class Op(object):
 
   def __str__(self) -> str:
     fmt, mid = _OPERATOR_STRINGS[self._operator]
-    return fmt % mid.join(map(str, self._operands))
+    return fmt % mid.join(map(repr, self._operands))
 
   __repr__ = __str__
 
@@ -59,11 +61,17 @@ class OpMixin(pool.Pooled):
     else:
       self.op = op
 
-  def __add__(self, other: Union[int, float, 'OpMixin']) -> 'OpMixin':
+  def __add__(self, other: Union[Any, 'OpMixin']) -> 'OpMixin':
     return _commutative(self, OP_ADD, other)
 
-  def __mul__(self, other: Union[int, float, 'OpMixin']) -> 'OpMixin':
+  def __mul__(self, other: Union[Any, 'OpMixin']) -> 'OpMixin':
     return _commutative(self, OP_MULTIPLY, other)
+
+  def __truediv__(self, other: Union[Any, 'OpMixin']) -> 'OpMixin':
+    return _noncommutative(self, OP_DIV, other)
+
+  def __rtruediv__(self, other: Union[Any, 'OpMixin']) -> 'OpMixin':
+    return _noncommutative(self, OP_DIV, other)
 
   def __str__(self) -> str:
     return '%s(%s)' % (self.__class__.__name__, str(self.op))
@@ -84,4 +92,13 @@ def _commutative(
     children.extend(other.op.operands())
   else:
     children.append(other)
+  return child
+
+
+def _noncommutative(
+    source: OpMixin, operator: OperatorType, other: Any) -> OpMixin:
+  children = []
+  child = source.alloc(Op(operator, children))
+  children.append(source)
+  children.append(other)
   return child
