@@ -76,8 +76,6 @@ class _AnagramIndex(object):
         raise KeyError(prefix)
       # Remove lowest candidate from those available.
       available ^= candidates - (candidates & (candidates - 1))
-    if not available:
-      raise KeyError(prefix)
     return available, '', None
 
   def _get(

@@ -35,7 +35,7 @@ with description('simple choices'):
 
   with it('raises KeyError for invalid access'):
     subject = anagram_set.from_choices('abc')
-    bad_inputs = ['aa', 'd', 'abc']
+    bad_inputs = ['aa', 'd']
     for input in bad_inputs:
       expect(calling(subject.__getitem__, input)).to(raise_error)
 
