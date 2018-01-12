@@ -172,6 +172,34 @@ Z = BloomNode('', '#', 1)
 
   with it('parses anagram syntax'):
     expect(calling(regex.parse, '{ab,c}')).not_to(raise_error)
+    node = regex.parse('{ab,c}')
+    expect(path_values(node, 'cab')).to(look_like("""
+        BloomNode('ABC', '   #', 0)
+        c = BloomNode('AB', '  #', 0)
+        a = BloomNode('B', ' #', 0)
+        b = BloomNode('', '#', 1)
+    """))
+    expect(path_values(node, 'abc')).to(look_like("""
+        BloomNode('ABC', '   #', 0)
+        a = BloomNode('BC', '  #', 0)
+        b = BloomNode('C', ' #', 0)
+        c = BloomNode('', '#', 1)
+    """))
+    expect(lambda: node['bac']).to(raise_error(KeyError))
+
+  with it('parses anagram syntax with prefix/suffix'):
+    expect(calling(regex.parse, 'd{abc}e')).not_to(raise_error)
+    node = regex.parse('d{abc}e')
+    expect(path_values(node, 'dcabe')).to(look_like("""
+        BloomNode('ABCDE', '     #', 0)
+        d = BloomNode('ABCE', '    #', 0)
+        c = BloomNode('ABE', '   #', 0)
+        a = BloomNode('BE', '  #', 0)
+        b = BloomNode('E', ' #', 0)
+        e = BloomNode('', '#', 1)
+    """))
+    expect(repr(node['d']['a']['b']['c'])).to(equal("BloomNode('E', ' #', 0)"))
+    expect(lambda: node['dabca']).to(raise_error(KeyError))
 
 with description('normalize'):
   with it('leaves normal input alone'):

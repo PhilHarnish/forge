@@ -60,10 +60,16 @@ class _RegexVisitor(object):
       cursor: bloom_node.BloomNode,
       data: list,
       exits: list) -> bloom_node.BloomNode:
-    del data
     del exits
-    # TODO: If length of list is 1 then all literals can be anagrammed.
-    return cursor
+    groups = []
+    for tokens in data:
+      values = []
+      for token in tokens:
+        values.append(self._visit_value(token))
+      groups.append(''.join(values))
+    if len(groups) == 1:
+      groups = list(groups[0])
+    return cursor / groups
 
   def _visit_ANY(
       self,
