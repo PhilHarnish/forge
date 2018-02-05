@@ -19,7 +19,8 @@ def merge(host: 'bloom_node.BloomNode') -> None:
       nodes.append(operator)
     else:
       extra.append(operator)
-  merge_fn(host, nodes, extra, whitelist=None, blacklist=None)
+  merge_fn(
+      host, nodes, extra, whitelist=None, blacklist=host.edges(readonly=True))
 
 
 def reduce(

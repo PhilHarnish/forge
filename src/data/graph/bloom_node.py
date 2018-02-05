@@ -45,8 +45,9 @@ class BloomNode(_op_mixin.OpMixin):
     """Report distance to a matching node."""
     self.lengths_mask |= 1 << length
 
-  def edges(self) -> Dict[str, 'BloomNode']:
-    self._expand()
+  def edges(self, readonly=False) -> Dict[str, 'BloomNode']:
+    if not readonly:
+      self._expand()
     return self._edges
 
   def items(self) -> ItemsView[str, 'BloomNode']:
