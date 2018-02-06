@@ -1,6 +1,6 @@
 from typing import Collection, ItemsView, Iterable, List, Union
 
-from data import anagram_set
+from data.anagram import anagram_set
 from data.graph import bloom_mask, bloom_node
 
 _SPACE_MASK = bloom_mask.for_alpha(' ')

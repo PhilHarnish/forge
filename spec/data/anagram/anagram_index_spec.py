@@ -1,6 +1,6 @@
 import collections
 
-from data import anagram_index
+from data.anagram import anagram_index
 from spec.data.fixtures import tries
 from spec.mamba import *
 

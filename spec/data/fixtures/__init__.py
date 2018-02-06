@@ -1,6 +1,7 @@
 import collections
 
-from data import anagram_index, crossword, warehouse
+from data import crossword, warehouse
+from data.anagram import anagram_index
 from spec.data.fixtures import _words_api, tries
 
 

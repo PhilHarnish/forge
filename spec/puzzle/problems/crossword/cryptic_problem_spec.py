@@ -1,4 +1,5 @@
-from data import anagram_index, data, trie, warehouse
+from data import data, trie, warehouse
+from data.anagram import anagram_index
 from data.word_api import word_api
 from puzzle.problems.crossword import cryptic_problem
 from spec.mamba import *

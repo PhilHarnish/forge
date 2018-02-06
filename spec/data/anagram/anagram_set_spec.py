@@ -1,6 +1,6 @@
 from typing import Dict, Set
 
-from data import anagram_set
+from data.anagram import anagram_set
 from spec.mamba import *
 
 with description('anagram_set.from_choices'):
