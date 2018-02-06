@@ -157,7 +157,7 @@ class _RegexVisitor(object):
     kind, value = data
     fn_name = '_visit_value_%s' % kind
     if not hasattr(self, fn_name):
-      raise NotImplementedError('Unsupported re type %s' % kind)
+      raise NotImplementedError('Unsupported re value type %s' % kind)
     return getattr(self, fn_name)(value)
 
   def _visit_value_LITERAL(self, data: int) -> str:
@@ -168,11 +168,15 @@ class _RegexVisitor(object):
     anagram_groups = []
     for datum in data:
       kind, value = datum
-      if str(kind) != 'LITERAL':
+      kind = str(kind)
+      if kind == 'LITERAL':
+        # Look for {ab,c} anagram syntax.
+        value = chr(value)
+      elif not anagram_groups:
         transformed.append(datum)
         continue
-      # Look for {ab,c} anagram syntax.
-      value = chr(value)
+      else:
+        value = None
       if value == '{':
         anagram_groups.append([[]])
       elif not anagram_groups:

@@ -202,7 +202,7 @@ Z = BloomNode('', '#', 1)
     expect(lambda: node['dabca']).to(raise_error(KeyError))
 
   with it('parses anagram syntax with spaces'):
-    expect(calling(regex.parse, '{abc }')).not_to(raise_error)
+    expect(calling(regex.parse, '{noti }')).not_to(raise_error)
     node = regex.parse('{noti }')
     expect(path_values(node, 'not i')).to(look_like("""
         BloomNode('inot; !', ' ###', 0)
@@ -228,6 +228,10 @@ Z = BloomNode('', '#', 1)
         t = BloomNode('O', ' #', 0)
         o = BloomNode('', '#', 1)
     """))
+
+  with it('attempts anagram syntax with "ANY"'):
+    expect(calling(regex.parse, '{abc.}')).to(
+        raise_error(NotImplementedError, 'Unsupported re value type ANY'))
 
 with description('normalize'):
   with it('leaves normal input alone'):
