@@ -19,7 +19,11 @@ def merge_fn(
   assert len(extra) == 1
   state = _normalize_state(exit_node, extra[0])
   for key, node in state.items(whitelist=whitelist, blacklist=blacklist):
+    # HACK: Hide the operator from node so that expanding is cheap.
+    op = node.op
+    node.op = None
     host.link(key, node)
+    node.op = op
 
 
 class _AnagramIndex(object):
