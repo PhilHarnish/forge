@@ -1,8 +1,9 @@
 import collections
 
-from data import anagram_index, crossword, data, pickle_cache, trie, \
-  warehouse, \
+from data import crossword, data, pickle_cache, trie, warehouse, \
   word_frequencies
+from data.anagram import anagram_index
+from data.graph import bloom_node, trie as graph_trie
 from data.word_api import word_api
 from puzzle.heuristics import analyze
 
@@ -91,7 +92,27 @@ def _get_crossword_cursor():
   return cursor
 
 
-def init():
+def _get_words(length_mask: int = None, file: str = 'data/g1m_1gram.txt') -> list:
+  for word, value in word_frequencies.parse_file(file):
+    if len(word) > 12:
+      continue
+    elif not word.isalpha():
+      continue
+    if length_mask and (1 << len(word)) & length_mask == 0:
+      continue
+    yield word, value
+
+
+def _get_ngrams() -> bloom_node.BloomNode:
+  ngrams = [list(_get_words())]
+  for i in range(2, 5+1):
+    ngrams.append(list(_get_words(file='data/coca_%sgram.txt' % i)))
+  root = bloom_node.BloomNode()
+  graph_trie.add_ngrams(root, ngrams)
+  return root
+
+
+def init() -> None:
   analyze.init()
   warehouse.init(deadline_ms=_DEADLINE_MS)
   warehouse.register('/api/words', _get_words_api)
@@ -103,8 +124,9 @@ def init():
   warehouse.register('/words/unigram/anagram_index', _get_unigram_anagram_index)
   warehouse.register('/words/unigram/trie', _get_unigram_trie)
   warehouse.register('/words/bigram', _get_bigram)
+  warehouse.register('/graph/ngram', _get_ngrams)
 
 
-def reset():
+def reset() -> None:
   analyze.reset()
   warehouse.reset()
