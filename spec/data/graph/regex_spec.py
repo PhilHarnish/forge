@@ -201,6 +201,34 @@ Z = BloomNode('', '#', 1)
     expect(repr(node['d']['a']['b']['c'])).to(equal("BloomNode('E', ' #', 0)"))
     expect(lambda: node['dabca']).to(raise_error(KeyError))
 
+  with it('parses anagram syntax with spaces'):
+    expect(calling(regex.parse, '{abc }')).not_to(raise_error)
+    node = regex.parse('{noti }')
+    expect(path_values(node, 'not i')).to(look_like("""
+        BloomNode('inot; !', ' ###', 0)
+        n = BloomNode('iot; !', '###', 0)
+        o = BloomNode('it; !', '##', 0)
+        t = BloomNode('i; !', '#', 0)
+          = BloomNode('I', ' #', 0)
+        i = BloomNode('', '#', 1)
+    """))
+    expect(path_values(node, 'i not')).to(look_like("""
+        BloomNode('inot; !', ' ###', 0)
+        i = BloomNode('not; !', '###', 0)
+          = BloomNode('NOT', '   #', 0)
+        n = BloomNode('OT', '  #', 0)
+        o = BloomNode('T', ' #', 0)
+        t = BloomNode('', '#', 1)
+    """))
+    expect(path_values(node, 'in to')).to(look_like("""
+        BloomNode('inot; !', ' ###', 0)
+        i = BloomNode('not; !', '###', 0)
+        n = BloomNode('ot; !', '##', 0)
+          = BloomNode('OT', '  #', 0)
+        t = BloomNode('O', ' #', 0)
+        o = BloomNode('', '#', 1)
+    """))
+
 with description('normalize'):
   with it('leaves normal input alone'):
     expect(regex.normalize('asdf')).to(equal('asdf'))

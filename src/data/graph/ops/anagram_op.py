@@ -3,6 +3,8 @@ from typing import Collection, ItemsView, Iterable, List, Union
 from data import anagram_set
 from data.graph import bloom_mask, bloom_node
 
+_SPACE_MASK = bloom_mask.for_alpha(' ')
+
 
 def merge_fn(
     host: 'bloom_node.BloomNode',
@@ -58,19 +60,28 @@ class _AnagramIndex(object):
       # Inherit requirements from exit.
       node_mask = 0
       exit_distance = 0
+      has_space = False
       for available_choice in child_anagrams.choices():
-        exit_distance += len(available_choice)
+        choice_length = len(available_choice)
+        exit_distance += choice_length
         if available_choice not in self._mask_cache:
           choice_mask = 0
           for c in available_choice:
             choice_mask |= bloom_mask.for_alpha(c)
           self._mask_cache[available_choice] = choice_mask
         node_mask |= self._mask_cache[available_choice]
+        has_space |= available_choice in bloom_mask.SEPARATOR
       if exit_distance:
         node = self._exit_node / _AnagramState(self, child_anagrams)
         node.provide_mask = exit_provide_mask | node_mask
-        node.require_mask = exit_require_mask | node_mask
-        node.lengths_mask = exit_lengths_mask << exit_distance
+        if has_space:
+          # Space is the only REALLY required character. Others are optional.
+          node.require_mask = _SPACE_MASK
+          # Assume it's possible to make words in [0 .. exit_distance - 1].
+          node.lengths_mask = (1 << (exit_distance - 1)) - 1
+        else:
+          node.require_mask = exit_require_mask | node_mask
+          node.lengths_mask = exit_lengths_mask << exit_distance
         node.max_weight = exit_max_weight
       else:
         node = self._exit_node
