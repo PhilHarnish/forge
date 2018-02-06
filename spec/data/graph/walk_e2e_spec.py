@@ -92,13 +92,13 @@ with description('benchmarks: trie creation', 'end2end'):
         trie.add_ngrams(root, [unigrams, bigrams])
         expect(path(root, 'to be a')).to(equal([
           "BloomNode('abcdefghijklmnopqrstuvwxyz; ', ' ############', 0)",
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 0.0006713145844190183)",
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '###########', 0.02097509031643418)",
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 6.867071358893854e-06)",
+          "BloomNode('abcdefghiklmnopqrstuvwxyz; ', '###########', 0.0004906526796536196)",
           "BloomNode('abcdefghijklmnopqrstuvwxyz; ', ' ############', 0)",
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 2.9005393996133883e-05)",
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '###########', 0.0001657494654788442)",
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', ' ############', 0.0)",
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 2.5089529173969956e-05)"
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 1.8976823503140278e-07)",
+          "BloomNode('abcdefghiklmnopqrstuvwxyz; ', '###########', 1.313779931343778e-05)",
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', ' ############', 0)",
+          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 4.709283276142498e-06)"
         ]))
 
 with description('benchmarks: node merging', 'end2end') as self:
@@ -163,5 +163,12 @@ with description('benchmarks: unigram/bigram walk', 'end2end') as self:
       '[wed][caret][again][toque][hon]',  # wrath
     ])
     merged = self.root * regex.parse(expression)
-    for solution in walk.walk(merged):
-      print(solution)
+    expect(results(merged)).to(contain('plums of wrath'))
+
+  with it('should terminate for difficult expression'):
+    merged = self.root * regex.parse('{super bowl}')
+    expect(results(merged)).to(contain(
+        'blow super', 'blow purse', 'pulse brow', 'pure blows', 'pure bowls',
+        'blue prows', 'blows pure', 'spur below', 'purse blow', 'super blow',
+        'super bowl', 'bowl super'))
+
