@@ -1,3 +1,4 @@
+import sre_constants
 import sre_parse
 from typing import Any, Optional
 
@@ -35,19 +36,19 @@ class _RegexVisitor(object):
       self._any = _LOWER_ALPHA
 
   def visit(self) -> bloom_node.BloomNode:
-    exit = bloom_node.BloomNode()
-    exit.distance(0)
-    exit.weight(self._weight, True)
-    return self._visit(exit, self._data, [])
+    exit_node = bloom_node.BloomNode()
+    exit_node.distance(0)
+    exit_node.weight(self._weight, True)
+    return self._visit(exit_node, self._data, [])
 
   def _visit(
       self,
       cursor: bloom_node.BloomNode,
       data: list,
       exits: list) -> bloom_node.BloomNode:
-    data = self._transform(data)
+    data = _transform(data)
     for kind, value in reversed(data):
-      fn_name = '_visit_%s' % kind
+      fn_name = '_visit_%s' % str(kind).lower()
       if not hasattr(self, fn_name):
         raise NotImplementedError('Unsupported re type %s' % kind)
       visit_fn = getattr(self, fn_name)
@@ -55,71 +56,74 @@ class _RegexVisitor(object):
       cursor = visit_fn(cursor, value, exits)
     return cursor
 
-  def _visit_ANAGRAM(
+  def _visit_anagram(
       self,
       cursor: bloom_node.BloomNode,
-      data: list,
+      value: list,
       exits: list) -> bloom_node.BloomNode:
     del exits
-    groups = []
-    for tokens in data:
+    if len(value) == 1:
+      # Convert {abc} shorthand to {a,b,c}.
+      groups = [[item] for item in value[0]]
+    else:
+      groups = value
+    result = []
+    for group in groups:
       values = []
-      for token in tokens:
-        values.append(self._visit_value(token))
-      groups.append(''.join(values))
-    if len(groups) == 1:
-      groups = list(groups[0])
-    return cursor / groups
+      for value in group:
+        values.append(self._visit_value(value))
+      result.append(''.join(values))
+    return cursor / result
 
-  def _visit_ANY(
+  def _visit_any(
       self,
       cursor: bloom_node.BloomNode,
-      data: list,
+      value: list,
       exits: list) -> bloom_node.BloomNode:
     del exits
-    assert data is None
+    assert value is None
     next_cursor = bloom_node.BloomNode()
     next_cursor.links(self._any, cursor)
     return next_cursor
 
-  def _visit_IN(
+  def _visit_in(
       self,
       cursor: bloom_node.BloomNode,
-      data: list,
+      value: list,
       exits: list) -> bloom_node.BloomNode:
     """Character group."""
     del exits
     edges = []
     next_cursor = bloom_node.BloomNode()
-    for datum in data:
-      value = self._visit_value(datum)
-      if value in bloom_mask.SEPARATOR:
+    for token in value:
+      character = self._visit_value(token)
+      if character in bloom_mask.SEPARATOR:
         next_cursor.distance(0)
-      edges.append(value)
-    next_cursor.links(''.join(set(edges)), cursor)
+      edges.append(character)
+    next_cursor.links(set(edges), cursor)
     return next_cursor
 
-  def _visit_LITERAL(
+  def _visit_literal(
       self,
       cursor: bloom_node.BloomNode,
-      data: int,
+      value: int,
       exits: list) -> bloom_node.BloomNode:
     del exits
-    value = self._visit_value_LITERAL(data)
+    character = self._visit_value_literal(value)
     next_cursor = bloom_node.BloomNode()
-    next_cursor.link(value, cursor)
-    if value in bloom_mask.SEPARATOR:
+    next_cursor.link(character, cursor)
+    if character in bloom_mask.SEPARATOR:
       next_cursor.distance(0)
       next_cursor.weight(self._weight, False)
     return next_cursor
 
-  def _visit_MAX_REPEAT(
+  def _visit_max_repeat(
       self,
       cursor: bloom_node.BloomNode,
-      data: list,
+      value: list,
       exits: list) -> bloom_node.BloomNode:
-    start, end, pattern = data
-    if str(end) == 'MAXREPEAT':
+    start, end, pattern = value
+    if end == sre_constants.MAXREPEAT:
       raise NotImplementedError('Unable to repeat MAXREPEAT')
     chain_start = cursor
     exit_nodes = []
@@ -138,53 +142,54 @@ class _RegexVisitor(object):
       result += exit_node
     return result
 
-  def _visit_SUBPATTERN(
+  def _visit_subpattern(
       self,
       cursor: bloom_node.BloomNode,
-      data: list,
+      value: list,
       exits: list) -> bloom_node.BloomNode:
-    group_id, x, y, pattern = data
+    group_id, x, y, pattern = value
     assert x == 0
     assert y == 0
-    exit = cursor
+    exit_node = cursor
     group_name = self._inverted_groups.get(group_id, group_id)
-    exit.annotations({'EXIT_%s' % group_name: group_id})
+    exit_node.annotations({'EXIT_%s' % group_name: group_id})
     enter = self._visit(cursor, pattern, exits[-1][-1])
     enter.annotations({'ENTER_%s' % group_name: group_id})
     return enter
 
-  def _visit_value(self, data: tuple) -> Any:
-    kind, value = data
-    fn_name = '_visit_value_%s' % kind
+  def _visit_value(self, token: tuple) -> Any:
+    kind, value = token
+    fn_name = '_visit_value_%s' % str(kind).lower()
     if not hasattr(self, fn_name):
       raise NotImplementedError('Unsupported re value type %s' % kind)
     return getattr(self, fn_name)(value)
 
-  def _visit_value_LITERAL(self, data: int) -> str:
-    return chr(data)
+  def _visit_value_literal(self, value: int) -> str:
+    del self
+    return chr(value)
 
-  def _transform(self, data: list):
-    transformed = []
-    anagram_groups = []
-    for datum in data:
-      kind, value = datum
-      kind = str(kind)
-      if kind == 'LITERAL':
-        # Look for {ab,c} anagram syntax.
-        value = chr(value)
-      elif not anagram_groups:
-        transformed.append(datum)
-        continue
-      else:
-        value = None
-      if value == '{':
-        anagram_groups.append([[]])
-      elif not anagram_groups:
-        transformed.append(datum)
-      elif value == ',':
-        anagram_groups[-1].append([])
-      elif value == '}':
-        transformed.append(('ANAGRAM', anagram_groups.pop()))
-      else:
-        anagram_groups[-1][-1].append(datum)
-    return transformed
+
+def _transform(data: list):
+  transformed = []
+  anagram_groups = []
+  for datum in data:
+    kind, value = datum
+    if kind == sre_constants.LITERAL:
+      # Look for {ab,c} anagram syntax.
+      value = chr(value)
+    elif not anagram_groups:
+      transformed.append(datum)
+      continue
+    else:
+      value = None
+    if value == '{':
+      anagram_groups.append([[]])
+    elif not anagram_groups:
+      transformed.append(datum)
+    elif value == ',':
+      anagram_groups[-1].append([])
+    elif value == '}':
+      transformed.append(('ANAGRAM', anagram_groups.pop()))
+    else:
+      anagram_groups[-1][-1].append(datum)
+  return transformed
