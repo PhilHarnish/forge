@@ -64,6 +64,13 @@ with description('simple iterative usage'):
     expect(calling(lambda: anagram_iter.from_choices([13, 13])[13][13][13])).to(
         raise_error(KeyError, 13))
 
+  with it('produces a list of the final choices'):
+    ats = anagram_iter.from_choices([13, 13, 15])
+    expect(list(ats.final_choices())).to(equal([
+      (13, ats[15][13]),
+      (15, ats[13][13]),
+    ]))
+
 
 with description('complex iterative usage'):
   with it('merges paths with common suffix'):

@@ -41,7 +41,7 @@ class _AnagramIterIndex(object):
     match = available & mask
     if not match:
       raise KeyError(item)
-    available -= (match - (match >> 1)) & mask
+    available -= (match ^ (match >> 1)) & mask
     return self._get(available)
 
   def _get(self, available: int) -> 'AnagramIter':
@@ -54,8 +54,13 @@ class _AnagramIterIndex(object):
     for idx in _ids(available & self._initial_choice_mask):
       mask = self._choices_masks[idx]
       match = available & mask
-      child_available = available - ((match - (match >> 1)) & mask)
+      child_available = available - ((match ^ (match >> 1)) & mask)
       yield self._choices[idx], self._get(child_available)
+
+  def final_choices(self, available: int) -> ItemsView[T, 'AnagramIter']:
+    # Only iterate through IDs which align with initial choice mask.
+    for idx in _ids(available & self._initial_choice_mask):
+      yield self._choices[idx], self._get(idx)
 
 
 class AnagramIter(object):
@@ -73,6 +78,10 @@ class AnagramIter(object):
 
   def items(self) -> ItemsView[T, 'AnagramIter']:
     yield from self._index.items(self._available)
+
+  def final_choices(self) -> ItemsView[T, 'AnagramIter']:
+    """Optimized path for listing each option as though it were the last."""
+    yield from self._index.final_choices(self._available)
 
   def __iter__(self) -> Iterable[T]:
     yield from self._index.available(self._available)
