@@ -3,7 +3,7 @@ import random
 import re
 import textwrap
 import time
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, Match, Optional
 
 import mock
 from expects import *
@@ -272,7 +272,8 @@ class calling(call):
 
 
 class look_like(equal):
-  def __init__(self, expected):
+  def __init__(self, expected, remove_comments=False):
+    self._remove_comments = remove_comments
     super(look_like, self).__init__(self._clean(expected))
 
   def _match(self, subject):
@@ -282,6 +283,15 @@ class look_like(equal):
     return success, error_lines
 
   def _clean(self, s):
+    if self._remove_comments:
+      def sub(m: Match[str]) -> str:
+        if m.group(2) is None:
+          return m.group(1)
+        return ''
+
+      pattern = r'(\".*?\"|\'.*?\')|(\s*#[^\r\n]*$)'
+      s = re.compile(pattern, re.MULTILINE | re.DOTALL).sub(sub, s)
+
     return textwrap.dedent(s.rstrip(' ').strip('\n'))
 
 

@@ -88,6 +88,20 @@ with description('mamba test helper'):
             example"""
       expect(expected).to(look_like(actual))
 
+    with it('removes comments'):
+      expected = """
+        one
+        two "#comment"
+        three
+      """
+      actual = """
+        one  # Line with a comment.
+        two "#comment"
+        # Comment above a line.
+        three
+      """
+      expect(expected).to(look_like(actual, remove_comments=True))
+
   with description('mocks'):
     with before.each:
       self.subject = mock.Mock(name='mamba_mock')
