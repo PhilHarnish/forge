@@ -1,4 +1,5 @@
-from typing import Container, Iterable, List, Mapping, Optional, Tuple, TypeVar
+from typing import Callable, Container, Iterable, List, Mapping, Optional, \
+  Tuple, TypeVar
 
 T = TypeVar('T')  # Generic type.
 
@@ -61,3 +62,24 @@ def none(
 ) -> Iterable[Tuple[str, List[T]]]:
   del maps, whitelist, blacklist
   return []
+
+
+def reduce_binary(
+    func: Callable[[T, T], T],
+    items: Iterable[T],
+    initializer: Optional[T] = None) -> T:
+  """Call `func` with pairs of items until exhausted.
+
+   Execution order is undefined.
+   """
+  items = list(items)
+  if initializer:
+    items.append(initializer)
+  while len(items) > 1:
+    queue = []
+    while len(items) >= 2:
+      queue.append(func(items.pop(), items.pop()))
+    if items:
+      queue.append(items.pop())
+    items = queue
+  return items[0]

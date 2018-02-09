@@ -99,3 +99,22 @@ with description('none'):
 
   with it('returns nothing for simple input'):
     expect(iter_util.none([{}, {'key': 'value'}])).to(equal([]))
+
+
+with description('reduce binary'):
+  with before.each:
+    self.reducer = mock.Mock('reducer', side_effect=lambda a, b: a + b)
+
+  with it('returns input for 1 value'):
+    expect(iter_util.reduce_binary(self.reducer, [1])).to(equal(1))
+
+  with it('returns sum for 2 values'):
+    expect(iter_util.reduce_binary(self.reducer, [1, 2])).to(equal(3))
+
+  with it('returns sum for many values'):
+    expect(iter_util.reduce_binary(self.reducer, range(16))).to(
+        equal(sum(range(16))))
+
+  with it('calls reducer a minimum number of times'):
+    iter_util.reduce_binary(self.reducer, range(32))
+    expect(self.reducer).to(have_been_called_times(31))
