@@ -1,5 +1,3 @@
-from typing import List
-
 from data.graph import bloom_node, regex, trie
 from spec.mamba import *
 
@@ -21,16 +19,6 @@ _TEST_DATA = _scale([
     ('on', 3750423199),
     ('that', 3400031103),
 ])
-
-
-def path(root: bloom_node.BloomNode, path: str) -> List[str]:
-  result = []
-  cursor = root
-  for c in path:
-    result.append(repr(cursor))
-    cursor = cursor[c]
-  result.append(repr(cursor))
-  return result
 
 
 with description('add'):
@@ -66,22 +54,15 @@ with description('add'):
     node = bloom_node.BloomNode()
     trie.add(node, 'com', 0.5)
     trie.add(node, 'common', 1.0)
-    expect(path(node, 'common')).to(equal([
-      # START.
-      "BloomNode('CMnO', '   #  #', 0)",
-      # -> c.
-      "BloomNode('MnO', '  #  #', 0)",
-      # -> o.
-      "BloomNode('Mno', ' #  #', 0)",
-      # -> m.
-      "BloomNode('MNO', '#  #', 0.5)",
-      # -> m.
-      "BloomNode('NO', '  #', 0)",
-      # -> o.
-      "BloomNode('N', ' #', 0)",
-      # -> n.
-      "BloomNode('', '#', 1)",
-    ]))
+    expect(path_values(node, 'common')).to(look_like("""
+        BloomNode('CMnO', '   #  #', 0)
+        c = BloomNode('MnO', '  #  #', 0)
+        o = BloomNode('Mno', ' #  #', 0)
+        m = BloomNode('MNO', '#  #', 0.5)
+        m = BloomNode('NO', '  #', 0)
+        o = BloomNode('N', ' #', 0)
+        n = BloomNode('', '#', 1)
+    """))
 
 
 with description('merge'):
@@ -156,26 +137,17 @@ with description('test data, multiple word'):
         self.trie['i']['s'][' ']['i']['s'][' ']['i']['s'].match_weight))
 
   with it('should repr correctly in deep test'):
-    expect(path(self.trie, 'is is is')).to(equal([
-      # START.
-      "BloomNode('adefhinorst; ', ' ####', 0)",
-      # -> i.
-      "BloomNode('ns; ', ' #', 0)",
-      # -> s.
-      "BloomNode(' ', '#', 0.20339618296512277)",
-      # ->  .
-      "BloomNode('adefhinorst; ', ' ####', 0)",
-      # -> i.
-      "BloomNode('ns; ', ' #', 0)",
-      # -> s.
-      "BloomNode(' ', '#', 0.041370007244781695)",
-      # ->  .
-      "BloomNode('adefhinorst; ', ' ####', 0)",
-      # -> i.
-      "BloomNode('ns; ', ' #', 0)",
-      # -> s.
-      "BloomNode(' ', '#', 0.008414501562828072)",
-    ]))
+    expect(path_values(self.trie, 'is is is')).to(look_like("""
+        BloomNode('adefhinorst; ', ' ####', 0)
+        i = BloomNode('ns; ', ' #', 0)
+        s = BloomNode(' ', '#', 0.20339618296512277)
+          = BloomNode('adefhinorst; ', ' ####', 0)
+        i = BloomNode('ns; ', ' #', 0)
+        s = BloomNode(' ', '#', 0.041370007244781695)
+          = BloomNode('adefhinorst; ', ' ####', 0)
+        i = BloomNode('ns; ', ' #', 0)
+        s = BloomNode(' ', '#', 0.008414501562828072)
+    """))
 
 
 with description('add_ngrams'):
@@ -241,40 +213,40 @@ with description('add_ngrams'):
       trie.add_ngrams(self.trie, [self.unigrams, self.bigrams])
 
     with it('expands unigrams'):
-      expect(path(self.trie, 'a')).to(equal([
-        "BloomNode('Abcd; ', ' ####', 0)",
-        "BloomNode('Bcd; ', '####', 0.5)",
-      ]))
+      expect(path_values(self.trie, 'a')).to(look_like("""
+        BloomNode('Abcd; ', ' ####', 0)
+        a = BloomNode('Bcd; ', '####', 0.5)
+      """))
 
     with it('expands specified bigrams'):
-      expect(path(self.trie, 'a ab')).to(equal([
-        "BloomNode('Abcd; ', ' ####', 0)",
-        "BloomNode('Bcd; ', '####', 0.5)",  # c(a)/total = 50/100.
-        "BloomNode('Abcd; ', ' ####', 0)",
-        "BloomNode('Bcd; ', '####', 0.5)",  # c(a a)/c(a) = 25 / 50.
-        "BloomNode('Cd; ', '###', 0.3)",  # c(a ab)/c(a) = 15 / 50.
-      ]))
+      expect(path_values(self.trie, 'a ab')).to(look_like("""
+          BloomNode('Abcd; ', ' ####', 0)
+          a = BloomNode('Bcd; ', '####', 0.5)  # c(a)/total = 50/100.
+            = BloomNode('Abcd; ', ' ####', 0)
+          a = BloomNode('Bcd; ', '####', 0.5)  # c(a a)/c(a) = 25 / 50.
+          b = BloomNode('Cd; ', '###', 0.3)  # c(a ab)/c(a) = 15 / 50.
+      """, remove_comments=True))
 
     with it('expands invented bigrams'):
-      expect(path(self.trie, 'ab a')).to(equal([
-        "BloomNode('Abcd; ', ' ####', 0)",
-        "BloomNode('Bcd; ', '####', 0.5)",  # c(a)/total = 50/100.
-        "BloomNode('Cd; ', '###', 0.25)",  # c(ab)/total = 25/100.
-        "BloomNode('Abcd; ', ' ####', 0)",
+      expect(path_values(self.trie, 'ab a')).to(look_like("""
+        BloomNode('Abcd; ', ' ####', 0)
+        a = BloomNode('Bcd; ', '####', 0.5)  # c(a)/total = 50/100.
+        b = BloomNode('Cd; ', '###', 0.25)  # c(ab)/total = 25/100.
+          = BloomNode('Abcd; ', ' ####', 0)
         # P(ab a) = P(ab *)*P(a) = c(ab a)/c(ab)*P(a) = min(ab *)/c(ab)*P(a) =
         # 5/25 * .5 = .1.
-        "BloomNode('Bcd; ', '####', 0.1)",
-      ]))
+        a = BloomNode('Bcd; ', '####', 0.1)
+      """, remove_comments=True))
 
     with it('expands invented familiar trigrams'):
-      expect(path(self.trie, 'a a a')).to(equal([
-        "BloomNode('Abcd; ', ' ####', 0)",
-        "BloomNode('Bcd; ', '####', 0.5)",  # c(a)/total = 50/100.
-        "BloomNode('Abcd; ', ' ####', 0)",
-        "BloomNode('Bcd; ', '####', 0.5)",  # c(a a)/c(a) = 25/50.
-        "BloomNode('Abcd; ', ' ####', 0)",
-        "BloomNode('Bcd; ', '####', 0.25)",  # c(a a)/c(a) * P(a) = 25/50 * .5.
-      ]))
+      expect(path_values(self.trie, 'a a a')).to(look_like("""
+        BloomNode('Abcd; ', ' ####', 0)
+        a = BloomNode('Bcd; ', '####', 0.5)  # c(a)/total = 50/100.
+          = BloomNode('Abcd; ', ' ####', 0)
+        a = BloomNode('Bcd; ', '####', 0.5)  # c(a a)/c(a) = 25/50.
+          = BloomNode('Abcd; ', ' ####', 0)
+        a = BloomNode('Bcd; ', '####', 0.25)  # c(a a)/c(a) * P(a) = 25/50 * .5.
+      """, remove_comments=True))
 
     with it('expands invented unusual trigrams'):
       node = self.trie['a']
@@ -283,12 +255,12 @@ with description('add_ngrams'):
       node = node['a']
       node = node[' ']
       node = node['a']
-      expect(path(self.trie, 'ab a a')).to(equal([
-        "BloomNode('Abcd; ', ' ####', 0)",
-        "BloomNode('Bcd; ', '####', 0.5)",  # c(a)/total = 50/100.
-        "BloomNode('Cd; ', '###', 0.25)",  # c(ab)/total = 25/100.
-        "BloomNode('Abcd; ', ' ####', 0)",
-        "BloomNode('Bcd; ', '####', 0.1)",
-        "BloomNode('Abcd; ', ' ####', 0)",
-        "BloomNode('Bcd; ', '####', 0.1)",
-      ]))
+      expect(path_values(self.trie, 'ab a a')).to(look_like("""
+        BloomNode('Abcd; ', ' ####', 0)
+        a = BloomNode('Bcd; ', '####', 0.5)  # c(a)/total = 50/100.
+        b = BloomNode('Cd; ', '###', 0.25)  # c(ab)/total = 25/100.
+          = BloomNode('Abcd; ', ' ####', 0)
+        a = BloomNode('Bcd; ', '####', 0.1)
+          = BloomNode('Abcd; ', ' ####', 0)
+        a = BloomNode('Bcd; ', '####', 0.1)
+      """, remove_comments=True))
