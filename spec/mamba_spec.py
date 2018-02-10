@@ -1,19 +1,22 @@
+import io
+import sys
+
 from spec.mamba import *
 
 with description('mamba test helper'):
   with description('call'):
     with it('reprs empty fns'):
-      def example():
+      def example() -> None:
         pass
       expect(repr(call(example))).to(equal('example()'))
 
     with it('reprs functions with simple args'):
-      def example(a, b):
+      def example(a: int, b: int) -> int:
         return a + b
       expect(repr(call(example, 1, 2))).to(equal('example(1, 2) == 3'))
 
     with it('reprs functions with kwargs'):
-      def example(a, b=None):
+      def example(a: int, b: int=None) -> int:
         return a + b
       expect(repr(call(example, 1, b=2))).to(equal('example(1, b=2) == 3'))
 
@@ -34,7 +37,7 @@ with description('mamba test helper'):
 
   with description('calling'):
     with before.all:
-      def bomb():
+      def bomb() -> None:
         raise NotImplementedError()
       self.bomb = bomb
 
@@ -189,3 +192,18 @@ with description('path_values'):
         0 = '01'
         1 = '1'
     """))
+
+
+with description('traceback') as self:
+  with before.each:
+    self._stdout = sys.stdout
+    self._io = io.StringIO()
+    sys.stdout = self._io
+
+  with after.each:
+    sys.stdout = self._stdout
+
+  with it('should print output'):
+    traceback()
+    last_line = self._io.getvalue().splitlines()[-1].strip()
+    expect(last_line).to(equal('traceback()'))

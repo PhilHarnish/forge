@@ -3,7 +3,7 @@ import random
 import re
 import textwrap
 import time
-from typing import Any, Iterable, Match, Optional
+from typing import *
 
 import mock
 from expects import *
@@ -15,8 +15,16 @@ from spec.data import fixtures
 # Convenience.
 fixtures.init()
 
-def _init_breakpoint_global():
+
+def traceback() -> None:
+  import traceback
+  for line in traceback.format_stack()[:-1]:
+    print(line.strip())
+
+
+def _init_globals() -> None:
   setattr(builtins, 'breakpoint', lambda: None)
+  setattr(builtins, 'traceback', traceback)
 
 
 class _Breakpoints(object):
@@ -29,24 +37,24 @@ class _Breakpoints(object):
   Usage (in code):
     breakpoint()  # Executes breakpoint() iff inside of with `breakpoints`.
   """
-  def __enter__(self):
-    def breakpoint():
+  def __enter__(self) -> None:
+    def breakpoint() -> None:
       """Set breakpoint on this line."""
       print('Breakpoint here.')
     setattr(builtins, 'breakpoint', breakpoint)
 
-  def __exit__(self, exc_type, exc_val, exc_tb):
-    _init_breakpoint_global()
+  def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    _init_globals()
 
 breakpoints = _Breakpoints()
-_init_breakpoint_global()
+_init_globals()
 
 
 TARGET_BENCHMARK_RUNTIME_MS = 500
 
 
 class _Benchmark(object):
-  def __init__(self, expected_ms, stddev) -> None:
+  def __init__(self, expected_ms: int, stddev: float) -> None:
     self._expected_ms = expected_ms
     self._stddev = stddev
     self._should_run = False
@@ -88,14 +96,14 @@ benchmark = _Benchmark(5, 1)
 # Mamba.
 self = {}
 
-def description(desc, tag=''):
+def description(desc: str, tag: str = '') -> None:
   del desc
   del tag
 
-def context(desc):
+def context(desc: str) -> None:
   del desc
 
-def it(desc):
+def it(desc: str) -> None:
   del desc
 
 class Hook(object):
@@ -110,30 +118,30 @@ if False:
   expect('no-op')  # Ensures import is not removed.
 
 class be_between(matchers.Matcher):
-  def __init__(self, low, high):
+  def __init__(self, low: float, high: float) -> None:
     self._low = low
     self._high = high
 
-  def _match(self, subject):
+  def _match(self, subject: Any) -> tuple:
     return subject > self._low and subject < self._high, []
 
-  def _failure_message(self, subject, *args):
+  def _failure_message(self, subject: Any, *args: Iterable[Any]) -> str:
     return self._failure_message_negated(subject, *args).replace(' not ', ' ')
 
-  def _failure_message_negated(self, subject, *args):
+  def _failure_message_negated(self, subject: Any, *args: Iterable[Any]) -> str:
     return 'expected: %s not to be between %s and %s' % (
       subject, self._low, self._high)
 
 
 class be_one_of(matchers.Matcher):
-  def __init__(self, *args):
+  def __init__(self, *args: Any) -> None:
     self._options = args
 
-  def _match(self, subject):
+  def _match(self, subject: Any) -> tuple:
     return subject in self._options, [repr(option) for option in self._options]
 
 
-def _fn_name(fn):
+def _fn_name(fn: Callable):
   if isinstance(fn, mock.MagicMock):
     return re.sub(r'^<.*name=\'([^\']*)\'.*$', r'\1', str(fn))
   elif hasattr(fn, '__name__'):
@@ -142,24 +150,24 @@ def _fn_name(fn):
 
 
 class _have_been_called(matchers.Matcher):
-  def __init__(self, *args, **kwargs):
+  def __init__(self, *args: Any, **kwargs: Any) -> None:
     self._args = args
     self._kwargs = kwargs
 
-  def __call__(self, *args, **kwargs):
+  def __call__(self, *args: Any, **kwargs: Any) -> matchers.Matcher:
     return _have_been_called(*args, **kwargs)
 
-  def _match(self, subject):
+  def _match(self, subject: Any) -> tuple:
     if self._args or self._kwargs:
       result = subject.call_args == mock.call(*self._args, **self._kwargs)
     else:
       result = subject.called
     return result, [str(c) for c in subject.call_args_list]
 
-  def _failure_message(self, subject, *args):
+  def _failure_message(self, subject, *args) -> str:
     return self._failure_message_negated(subject, *args).replace(' not ', ' ')
 
-  def _failure_message_negated(self, subject, *args):
+  def _failure_message_negated(self, subject, *args) -> str:
     return 'expected: %s(%s) not to have been called' % (
       _fn_name(subject), repr_format.as_args(*self._args, **self._kwargs))
 
@@ -169,22 +177,22 @@ have_been_called_with = _have_been_called()
 
 
 class have_been_called_times(matchers.Matcher):
-  def __init__(self, times):
+  def __init__(self, times: int) -> None:
     self._times = times
     self._actual_times = 'unknown'
 
-  def __call__(self, times):
+  def __call__(self, times: int) -> matchers.Matcher:
     return have_been_called_times(self._times)
 
-  def _match(self, subject):
+  def _match(self, subject: Any) -> tuple:
     self._actual_times = len(subject.call_args_list)
     return (self._times == self._actual_times,
         [str(c) for c in subject.call_args_list])
 
-  def _failure_message(self, subject, *args):
+  def _failure_message(self, subject: Any, *args: Any) -> str:
     return self._failure_message_negated(subject, *args).replace(' not ', ' ')
 
-  def _failure_message_negated(self, subject, *args):
+  def _failure_message_negated(self, subject: Any, *args: Any) -> str:
     return (
       'expected: %s to have been called %s times,'
       ' called %s times instead' % (
@@ -200,7 +208,7 @@ have_been_called_once = have_been_called_times(1)
 _NOT_SET = {}
 
 class call(object):
-  def __init__(self, fn, *args, **kwargs):
+  def __init__(self, fn: Callable, *args: Any, **kwargs: Any) -> None:
     self._fn = fn
     self._args = args
     self._kwargs = kwargs
@@ -208,7 +216,7 @@ class call(object):
     self._cached_exception = None
 
   @property
-  def _value(self):
+  def _value(self) -> Any:
     if self._cached_exception:
       raise self._cached_exception
     if self._cached_value is _NOT_SET:
@@ -219,7 +227,7 @@ class call(object):
         raise e
     return self._cached_value
 
-  def __repr__(self):
+  def __repr__(self) -> str:
     args = repr_format.as_args(*self._args, **self._kwargs)
     if self._value is None:
       suffix = ''
@@ -227,34 +235,34 @@ class call(object):
       suffix = ' == %s' % repr(self._value)
     return '%s(%s)%s' % (self._fn.__name__, args, suffix)
 
-  def __iter__(self):
+  def __iter__(self) -> Iterable:
     for v in self._value:
       yield v
 
-  def __next__(self):
+  def __next__(self) -> Any:
     return next(self._value)
 
-  def __ge__(self, other):
+  def __ge__(self, other: Any) -> bool:
     # NB: self._value.__gt__(other) will not work for [int] >= [float].
     return self._value >= other
 
-  def __gt__(self, other):
+  def __gt__(self, other: Any) -> bool:
     # NB: self._value.__gt__(other) will not work for [int] > [float].
     return self._value > other
 
-  def __le__(self, other):
+  def __le__(self, other: Any) -> bool:
     # NB: self._value.__lt__(other) will not work for [int] <= [float].
     return self._value <= other
 
-  def __lt__(self, other):
+  def __lt__(self, other: Any) -> bool:
     # NB: self._value.__lt__(other) will not work for [int] < [float].
     return self._value < other
 
 # Install simple overrides. This list could certainly be more exhaustive but
 # there seem to be enough quirks with proxy objects it isn't obvious if a full
 # list would be a good idea.
-def _make_method(name):
-  def method(self, *args, **kwargs):
+def _make_method(name: str) -> Callable:
+  def method(self: Any, *args: Any, **kwargs: Any) -> Any:
     if hasattr(self._value, name):
       return getattr(self._value, name)(*args, **kwargs)
     return NotImplemented
@@ -265,24 +273,24 @@ for method in ['__eq__']:
 
 class calling(call):
   """Returns an object which has yet-to-be called."""
-  def __call__(self, *args, **kwargs):
+  def __call__(self, *args: Any, **kwargs: Any) -> None:
     if args or kwargs:
       raise NotImplementedError()
     return self._value
 
 
 class look_like(equal):
-  def __init__(self, expected, remove_comments=False):
+  def __init__(self, expected: str, remove_comments: bool = False) -> None:
     self._remove_comments = remove_comments
     super(look_like, self).__init__(self._clean(expected))
 
-  def _match(self, subject):
+  def _match(self, subject: str) -> tuple:
     cleaned = self._clean(subject)
     success, _ = super(look_like, self)._match(cleaned)
     error_lines = ['looks like:'] + textwrap.indent(cleaned, ' ').split('\n')
     return success, error_lines
 
-  def _clean(self, s):
+  def _clean(self, s: str) -> str:
     if self._remove_comments:
       def sub(m: Match[str]) -> str:
         if m.group(2) is None:
