@@ -158,7 +158,6 @@ with description('annotations'):
   with it('holds values'):
     node = bloom_node.BloomNode()
     node.annotations({'key': 'value'})
-    expect(node.annotations()).to(equal({'key': 'value'}))
     expect(repr(node)).to(equal("BloomNode('', '', 0, key='value')"))
 
   with it('merges values via +'):
@@ -166,7 +165,6 @@ with description('annotations'):
     a.annotations({'key': 'value'})
     b = bloom_node.BloomNode()
     node = a + b
-    expect(node.annotations()).to(equal({'key': 'value'}))
     expect(repr(node)).to(equal("BloomNode('', '', 0, key='value')"))
 
   with it('merges values via *'):
@@ -174,5 +172,13 @@ with description('annotations'):
     a.annotations({'key': 'value'})
     b = bloom_node.BloomNode()
     node = a * b
-    expect(node.annotations()).to(equal({'key': 'value'}))
     expect(repr(node)).to(equal("BloomNode('', '', 0, key='value')"))
+
+  with it('merges duplicates'):
+    a = bloom_node.BloomNode()
+    a.annotations({'key': 'value1'})
+    b = bloom_node.BloomNode()
+    b.annotations({'key': 'value2'})
+    node = a + b
+    expect(repr(node)).to(
+        equal("BloomNode('', '', 0, key={'value1', 'value2'})"))

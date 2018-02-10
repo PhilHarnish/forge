@@ -1,3 +1,4 @@
+import collections
 from typing import Any, Dict, ItemsView, Iterable, Optional
 
 from data.convert import repr_format
@@ -38,7 +39,7 @@ class BloomNode(_op_mixin.OpMixin):
     self.lengths_mask = 0
     self.match_weight = 0
     self.max_weight = 0
-    self._annotations = {}
+    self._annotations = collections.defaultdict(_AnnotationValue)
     self._edges = {}
 
   def distance(self, length: int) -> None:
@@ -95,7 +96,8 @@ class BloomNode(_op_mixin.OpMixin):
   def annotations(
       self, new_annotations: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     if new_annotations is not None:
-      self._annotations.update(new_annotations)
+      for key, value in new_annotations.items():
+        self._annotations[key].add(value)
     elif self.op:
       bloom_node_reducer.merge(self)
     return self._annotations
@@ -192,3 +194,20 @@ class BloomNode(_op_mixin.OpMixin):
     return '%s(%s)' % (
         self.__class__.__name__,
         ', '.join(args))
+
+
+class _AnnotationValue(set):
+  def add(self, element: Any):
+    if isinstance(element, _AnnotationValue):
+      self.update(element)
+    else:
+      super(_AnnotationValue, self).add(element)
+
+  def __repr__(self) -> str:
+    if not self:
+      return 'None'
+    elif len(self) > 1:
+      return '{%s}' % ', '.join(map(repr, sorted(self, key=repr)))
+    return repr(next(iter(self)))
+
+  __str__ = __repr__
