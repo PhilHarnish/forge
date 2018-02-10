@@ -3,7 +3,7 @@ from typing import Container, ItemsView, List, Optional, Tuple
 
 from data import iter_util
 from data.graph import _op_mixin, bloom_node
-from data.graph.ops import anagram_op
+from data.graph.ops import anagram_op, anagram_transform_op
 
 
 def merge(host: 'bloom_node.BloomNode') -> None:
@@ -31,7 +31,6 @@ def reduce(
   operands = op.operands()
   if not operands:
     return {}.items()
-  iterator_fn, merge_fn, visitor_fn = _operator_functions[op.operator()]
   nodes = []
   edges = []
   extra = []
@@ -41,6 +40,7 @@ def reduce(
       edges.append(operator.edges())
     else:
       extra.append(operator)
+  iterator_fn, merge_fn, visitor_fn = _operator_functions[op.operator()]
   for key, sources in iterator_fn(
       edges,
       whitelist=whitelist,
@@ -48,6 +48,8 @@ def reduce(
     result = visitor_fn(sources, extra)
     if result is not None:
       yield key, result
+  # Merge must run after visit: visit will add host's outgoing edges and set
+  # mask properties which merge expects to be present.
   merge_fn(host, nodes, extra, whitelist=whitelist, blacklist=blacklist)
 
 
@@ -194,9 +196,11 @@ def _visit_fail(
   raise NotImplementedError('Reduce visitor unsupported for this operator')
 
 
+# Note: Order of operators must match _op_mixin.
 _operator_functions = [
   (iter_util.common, _merge_add, _visit_identity),
   (iter_util.both, _merge_add, _visit_add),
   (iter_util.common, _merge_multiply, _visit_multiply),
   (iter_util.none, anagram_op.merge_fn, _visit_fail),
+  (iter_util.none, anagram_transform_op.merge_fn, _visit_fail),
 ]
