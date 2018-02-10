@@ -33,16 +33,13 @@ class _AnagramIndex(object):
       exit_node: 'bloom_node.BloomNode',
       root: anagram_set.AnagramSet) -> None:
     self._exit_node = exit_node
-    anagram_distance = 0
     mask_cache = {}
     for choice in root.choices():
-      anagram_distance += len(choice)
       if choice not in mask_cache:
         anagram_mask = 0
         for c in choice:
           anagram_mask |= bloom_mask.for_alpha(c)
         mask_cache[choice] = anagram_mask
-    self._anagram_distance = anagram_distance
     self._mask_cache = mask_cache
     self._state_cache = {}
 
