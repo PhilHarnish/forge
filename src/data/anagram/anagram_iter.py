@@ -7,8 +7,8 @@ class _AnagramIterIndex(object):
   def __init__(self, choices: List[T]) -> None:
     num_choices = len(choices)
     assert num_choices < 63
-    self._choices = {}
     self._choice_map = {}
+    self._choices = {}
     self._choices_masks = {}
     self._initial_choice_mask = 0
     last_choice = None
@@ -22,15 +22,15 @@ class _AnagramIterIndex(object):
         # 0b01100 =  0b01111      -  0b00011
         self._choices_masks[idx] = ((1 << i) - 1) - (idx - 1)
       idx = 1 << i
-      self._choices[idx] = choice
       self._choice_map[choice] = idx
+      self._choices[idx] = choice
       self._initial_choice_mask |= idx
     if idx is not None:
       self._choices_masks[idx] = ((1 << num_choices) - 1) - (idx - 1)
     self._child_cache = {}
     self.initial_available = (1 << num_choices) - 1
 
-  def available(self, available: int) -> Iterable[T]:
+  def iter(self, available: int) -> Iterable[T]:
     # Only iterate through IDs which align with initial choice mask.
     for candidate in _ids(available & self._initial_choice_mask):
       yield self._choices[candidate]
@@ -57,10 +57,11 @@ class _AnagramIterIndex(object):
       child_available = available - ((match ^ (match >> 1)) & mask)
       yield self._choices[idx], self._get(child_available)
 
-  def final_choices(self, available: int) -> ItemsView[T, 'AnagramIter']:
+  def available(self, available: int) -> ItemsView[T, int]:
     # Only iterate through IDs which align with initial choice mask.
     for idx in _ids(available & self._initial_choice_mask):
-      yield self._choices[idx], self._get(idx)
+      duplicates = len(list(_ids(available & self._choices_masks[idx])))
+      yield self._choices[idx], duplicates
 
 
 class AnagramIter(object):
@@ -79,20 +80,26 @@ class AnagramIter(object):
   def items(self) -> ItemsView[T, 'AnagramIter']:
     yield from self._index.items(self._available)
 
-  def final_choices(self) -> ItemsView[T, 'AnagramIter']:
+  def available(self) -> ItemsView[T, int]:
     """Optimized path for listing each option as though it were the last."""
-    yield from self._index.final_choices(self._available)
+    yield from self._index.available(self._available)
 
   def __iter__(self) -> Iterable[T]:
-    yield from self._index.available(self._available)
+    yield from self._index.iter(self._available)
 
   def __getitem__(self, item: T) -> 'AnagramIter':
     return self._index.get(self._available, item)
 
   def __repr__(self) -> str:
+    available = []
+    for value, duplicates in self.available():
+      if duplicates > 1:
+        available.append('%s*%s' % (value, duplicates))
+      else:
+        available.append(str(value))
     return '%s(%s)' % (
       self.__class__.__name__,
-      bin(self._available),  # TODO: Improve.
+      ', '.join(available),
     )
 
   __str__ = __repr__

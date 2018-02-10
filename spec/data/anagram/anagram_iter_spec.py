@@ -64,11 +64,11 @@ with description('simple iterative usage'):
     expect(calling(lambda: anagram_iter.from_choices([13, 13])[13][13][13])).to(
         raise_error(KeyError, 13))
 
-  with it('produces a list of the final choices'):
+  with it('produces a list of available choices and # of duplicates'):
     ats = anagram_iter.from_choices([13, 13, 15])
-    expect(list(ats.final_choices())).to(equal([
-      (13, ats[15][13]),
-      (15, ats[13][13]),
+    expect(list(ats.available())).to(equal([
+      (13, 2),
+      (15, 1),
     ]))
 
 
