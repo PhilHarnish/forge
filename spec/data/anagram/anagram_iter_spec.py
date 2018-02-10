@@ -80,3 +80,9 @@ with description('complex iterative usage'):
   with it('merges paths with duplicates'):
     ats = anagram_iter.from_choices('abcaa')
     expect(ats['a']['b']).to(equal(ats['b']['a']))
+
+
+with description('repr'):
+  with it('sorts remaining anagrams'):
+    ats = anagram_iter.from_choices('abcxyzabc')
+    expect(repr(ats)).to(equal('AnagramIter(a*2, b*2, c*2, x, y, z)'))

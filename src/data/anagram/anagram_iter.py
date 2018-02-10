@@ -99,7 +99,7 @@ class AnagramIter(object):
         available.append(str(value))
     return '%s(%s)' % (
       self.__class__.__name__,
-      ', '.join(available),
+      ', '.join(sorted(available)),
     )
 
   __str__ = __repr__
