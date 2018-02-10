@@ -6,5 +6,5 @@ def as_args(*args: Any, **kwargs: Any) -> str:
                      repr(arg) for arg in args
                    ] + [
                      '%s=%s' % (key, repr(value)) for key, value in
-                     kwargs.items()
+                     sorted(kwargs.items(), key=lambda x: x[0])
                    ])
