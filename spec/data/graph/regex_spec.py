@@ -229,9 +229,17 @@ Z = BloomNode('', '#', 1)
         o = BloomNode('', '#', 1)
     """))
 
-  with it('attempts anagram syntax with "ANY"'):
-    expect(calling(regex.parse, '{abc.}')).to(
-        raise_error(NotImplementedError, 'Unsupported re value type ANY'))
+  with it('parses anagram regex'):
+    expect(calling(regex.parse, '{abc.}')).not_to(raise_error)
+    node = regex.parse('{abc.}')
+    expect(path_values(node, 'zabc')).to(look_like("""
+        BloomNode('ABCdefghijklmnopqrstuvwxyz', '    #', 0)
+        z = BloomNode('ABC', '   #', 0, anagrams=AnagramIter(todo, todo, todo))
+        a = BloomNode('BC', '  #', 0, anagrams=AnagramIter(todo, todo))
+        b = BloomNode('C', ' #', 0)  # NB: AnagramIter(todo) optimized away.
+        c = BloomNode('', '#', 1)
+    """, remove_comments=True))
+
 
 with description('normalize'):
   with it('leaves normal input alone'):

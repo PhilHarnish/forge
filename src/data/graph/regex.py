@@ -1,11 +1,12 @@
 import sre_constants
 import sre_parse
-from typing import Any, Optional
+from typing import Any, Callable, List, Optional
 
 from data.graph import bloom_mask, bloom_node
 
 _LOWER_ALPHA = 'abcdefghijklmnopqrstuvwxyz'
 _UPPER_ALPHA = _LOWER_ALPHA.upper()
+_TRANSFORMER_CACHE = {}
 
 
 def parse(expression: str, weight: Optional[float] = 1) -> bloom_node.BloomNode:
@@ -39,14 +40,13 @@ class _RegexVisitor(object):
     exit_node = bloom_node.BloomNode()
     exit_node.distance(0)
     exit_node.weight(self._weight, True)
-    return self._visit(exit_node, self._data, [])
+    return self._visit(exit_node, _transform(self._data), [])
 
   def _visit(
       self,
       cursor: bloom_node.BloomNode,
       data: list,
       exits: list) -> bloom_node.BloomNode:
-    data = _transform(data)
     for kind, value in reversed(data):
       fn_name = '_visit_%s' % str(kind).lower()
       if not hasattr(self, fn_name):
@@ -67,13 +67,21 @@ class _RegexVisitor(object):
       groups = [[item] for item in value[0]]
     else:
       groups = value
-    result = []
-    for group in groups:
-      values = []
-      for value in group:
-        values.append(self._visit_value(value))
-      result.append(''.join(values))
-    return cursor / result
+    try:
+      # Try simple anagram first.
+      result = []
+      for group in groups:
+        values = []
+        for value in group:
+          values.append(self._visit_value(value))
+        result.append(''.join(values))
+      return cursor / result
+    except NotImplementedError:
+      # Fallback to anagram of BloomNode transforms.
+      result = []
+      for group in groups:
+        result.append(self._make_regex_anagram_factory(group))
+      return cursor // result
 
   def _visit_any(
       self,
@@ -168,6 +176,17 @@ class _RegexVisitor(object):
     del self
     return chr(value)
 
+  def _make_regex_anagram_factory(
+      self, data: List[tuple]) -> Callable[
+          [bloom_node.BloomNode], bloom_node.BloomNode]:
+    key = hash(tuple(data))
+    if key not in _TRANSFORMER_CACHE:
+      def factory(cursor: bloom_node.BloomNode) -> bloom_node.BloomNode:
+        return self._visit(cursor, data, [])
+      _TRANSFORMER_CACHE[key] = Transformer('todo', factory)
+
+    return _TRANSFORMER_CACHE[key]
+
 
 def _transform(data: list):
   transformed = []
@@ -193,3 +212,20 @@ def _transform(data: list):
     else:
       anagram_groups[-1][-1].append(datum)
   return transformed
+
+
+class Transformer(object):
+  def __init__(
+      self,
+      name: str,
+      fn: Callable[[bloom_node.BloomNode], bloom_node.BloomNode]) -> None:
+    self._name = name
+    self._fn = fn
+
+  def __call__(self, node: bloom_node.BloomNode) -> bloom_node.BloomNode:
+    return self._fn(node)
+
+  def __str__(self) -> str:
+    return self._name
+
+  __repr__ = __str__
