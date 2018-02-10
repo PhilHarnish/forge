@@ -31,6 +31,9 @@ with description('overloading'):
   with it('should accumulate with division'):
     expect(str(Stub() / 'asdf')).to(equal("Stub(anagram(Stub(), 'asdf'))"))
 
+  with it('should accumulate with division'):
+    expect(str(Stub() // 'asdf')).to(equal("Stub(anagram(Stub(), 'asdf'))"))
+
   with it('should accumulate recursively'):
     a = Stub() + Stub()
     b = Stub() + Stub()

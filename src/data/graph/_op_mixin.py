@@ -11,10 +11,12 @@ OP_IDENTITY = next(_next)
 OP_ADD = next(_next)
 OP_MULTIPLY = next(_next)
 OP_DIV = next(_next)
+OP_FLOOR_DIV = next(_next)
 _OPERATOR_STRINGS = [
   ('%s', ''),
   ('(%s)', '+'),
   ('(%s)', '*'),
+  ('anagram(%s)', ', '),
   ('anagram(%s)', ', '),
 ]
 
@@ -32,8 +34,8 @@ class Op(object):
   def operands(self) -> list:
     return self._operands
 
-  def __eq__(self, other: 'Op') -> bool:
-    return self._operator == other._operator
+  def __eq__(self, other: Optional['Op']) -> bool:
+    return other is not None and self._operator == other._operator
 
   def __len__(self) -> int:
     return len(self._operands)
@@ -56,10 +58,7 @@ class OpMixin(pool.Pooled):
 
   def __init__(self, op: Optional[Op] = None):
     super(OpMixin, self).__init__()
-    if op is None:
-      self.op = IDENTITY
-    else:
-      self.op = op
+    self.op = op
 
   def __add__(self, other: Union[Any, 'OpMixin']) -> 'OpMixin':
     return _commutative(self, OP_ADD, other)
@@ -70,11 +69,15 @@ class OpMixin(pool.Pooled):
   def __truediv__(self, other: Union[Any, 'OpMixin']) -> 'OpMixin':
     return _noncommutative(self, OP_DIV, other)
 
-  def __rtruediv__(self, other: Union[Any, 'OpMixin']) -> 'OpMixin':
-    return _noncommutative(self, OP_DIV, other)
+  __rtruediv__ = __truediv__
+
+  def __floordiv__(self, other: Union[Any, 'OpMixin']) -> 'OpMixin':
+    return _noncommutative(self, OP_FLOOR_DIV, other)
+
+  __rfloordiv__ = __floordiv__
 
   def __str__(self) -> str:
-    return '%s(%s)' % (self.__class__.__name__, str(self.op))
+    return '%s(%s)' % (self.__class__.__name__, str(self.op or ''))
 
   __repr__ = __str__
 
