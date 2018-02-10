@@ -4,6 +4,7 @@ import re
 import textwrap
 import time
 from typing import *
+from typing import Match
 
 import mock
 from expects import *
