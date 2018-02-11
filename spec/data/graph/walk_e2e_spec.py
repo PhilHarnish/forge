@@ -1,5 +1,3 @@
-from typing import List
-
 from data import pickle_cache, word_frequencies
 from data.graph import bloom_node, regex, trie, walk
 from spec.mamba import *
@@ -172,3 +170,11 @@ with description('benchmarks: unigram/bigram walk', 'end2end') as self:
         'blue prows', 'blows pure', 'spur below', 'purse blow', 'super blow',
         'super bowl', 'bowl super'))
 
+  with it('should find long anagram patterns'):
+    merged = self.root * regex.parse('{sup..}')
+    x = results(merged)
+    expect(results(merged)).to(contain(
+        'pulse', 'upset', 'pause', 'pious', 'super', 'purse', 'setup', 'pumps',
+        'pulls', 'syrup', 'jumps', 'stump', 'pours', 'plugs', 'lumps', 'slump',
+        'pouts', 'sumps', 'spuds', 'punts', 'pumas', 'burps', 'stoup', 'pucks',
+    ))
