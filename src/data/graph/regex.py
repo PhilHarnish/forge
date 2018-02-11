@@ -1,6 +1,6 @@
 import sre_constants
 import sre_parse
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, Optional, Tuple
 
 from data.graph import bloom_mask, bloom_node
 
@@ -8,6 +8,11 @@ _LOWER_ALPHA = 'abcdefghijklmnopqrstuvwxyz'
 _UPPER_ALPHA = _LOWER_ALPHA.upper()
 _TRANSFORMER_CACHE = {}
 
+
+def transform(expression: str) -> sre_parse.SubPattern:
+  parsed = sre_parse.parse(expression)
+  parsed.data = _transform(parsed.data)
+  return parsed
 
 def parse(expression: str, weight: Optional[float] = 1) -> bloom_node.BloomNode:
   expression = normalize(expression)
@@ -24,7 +29,7 @@ def normalize(expression: str) -> str:
 
 class _RegexVisitor(object):
   def __init__(self, expression: str, weight: float):
-    parsed = sre_parse.parse(expression)
+    parsed = transform(expression)
     self._pattern = parsed.pattern
     self._data = parsed.data
     self._inverted_groups = {
@@ -40,7 +45,7 @@ class _RegexVisitor(object):
     exit_node = bloom_node.BloomNode()
     exit_node.distance(0)
     exit_node.weight(self._weight, True)
-    return self._visit(exit_node, _transform(self._data), [])
+    return self._visit(exit_node, self._data, [])
 
   def _visit(
       self,
@@ -232,10 +237,34 @@ def _visit_value(token: tuple) -> Any:
   return globals()[fn_name](value)
 
 
+def _visit_value_anagram(value: list) -> str:
+  groups = [visit_values(group) for group in value]
+  if len(groups) == 1:
+    return '{%s}' % ''.join(groups)
+  return '{%s}' % ','.join(groups)
+
+
 def _visit_value_any(value: None) -> str:
   del value
   return '.'
 
 
+def _visit_value_in(data: list) -> str:
+  return '[%s]' % visit_values(data)
+
+
 def _visit_value_literal(value: int) -> str:
   return chr(value)
+
+
+def _visit_value_max_repeat(value: Tuple[int, int, list]) -> str:
+  start, end, subpattern_data = value
+  subpattern_value = visit_values(subpattern_data)
+  if start == 0 and end == 1:
+    return '%s?' % subpattern_value
+  return '%s{%s,%s}' % (subpattern_value, start, end)
+
+
+def _visit_value_subpattern(value: int) -> str:
+  group_id, x, y, subpattern_data = value
+  return '(%s)' % visit_values(subpattern_data)

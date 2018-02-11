@@ -1,5 +1,3 @@
-import sre_parse
-
 from data.graph import bloom_node, regex
 from spec.mamba import *
 
@@ -253,9 +251,33 @@ with description('normalize'):
 
 with description('visit_values'):
   with it('handles simple expressions'):
-    pattern = sre_parse.parse('abcdefg')
-    expect(regex.visit_values(pattern)).to(equal('abcdefg'))
+    pattern = regex.transform('abcdefg')
+    expect(regex.visit_values(pattern.data)).to(equal('abcdefg'))
 
   with it('handles ANY'):
-    pattern = sre_parse.parse('abc.efg')
-    expect(regex.visit_values(pattern)).to(equal('abc.efg'))
+    pattern = regex.transform('abc.efg')
+    expect(regex.visit_values(pattern.data)).to(equal('abc.efg'))
+
+  with it('handles optional?'):
+    pattern = regex.transform('abc?efg')
+    expect(regex.visit_values(pattern.data)).to(equal('abc?efg'))
+
+  with it('handles range{1,3}'):
+    pattern = regex.transform('abc{1,3}efg')
+    expect(regex.visit_values(pattern.data)).to(equal('abc{1,3}efg'))
+    pattern = regex.transform('abc{0,1}efg')
+    expect(regex.visit_values(pattern.data)).to(equal('abc?efg'))
+
+  with it('handles [in]'):
+    pattern = regex.transform('ab[cde]fg')
+    expect(regex.visit_values(pattern.data)).to(equal('ab[cde]fg'))
+
+  with it('handles ana{gr}ams'):
+    pattern = regex.transform('ab{cde}fg')
+    expect(regex.visit_values(pattern.data)).to(equal('ab{cde}fg'))
+    pattern = regex.transform('ab{c,de}fg')
+    expect(regex.visit_values(pattern.data)).to(equal('ab{c,de}fg'))
+
+  with it('handles captu(re group)s'):
+    pattern = regex.transform('ab(cde)fg')
+    expect(regex.visit_values(pattern.data)).to(equal('ab(cde)fg'))
