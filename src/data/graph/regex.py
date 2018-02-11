@@ -67,21 +67,20 @@ class _RegexVisitor(object):
       groups = [[item] for item in value[0]]
     else:
       groups = value
-    try:
-      # Try simple anagram first.
-      result = []
-      for group in groups:
-        values = []
-        for value in group:
-          values.append(self._visit_value(value))
-        result.append(''.join(values))
+    # Try simple anagram first.
+    result = []
+    for group in groups:
+      value = visit_values(group)
+      if not all(c.isalpha() or c == ' ' for c in value):
+        break
+      result.append(value)
+    else:
       return cursor / result
-    except NotImplementedError:
-      # Fallback to anagram of BloomNode transforms.
-      result = []
-      for group in groups:
-        result.append(self._make_regex_anagram_factory(group))
-      return cursor // result
+    # Fallback to anagram of BloomNode transforms.
+    result.clear()
+    for group in groups:
+      result.append(self._make_regex_anagram_factory(group))
+    return cursor // result
 
   def _visit_any(
       self,
@@ -100,11 +99,12 @@ class _RegexVisitor(object):
       value: list,
       exits: list) -> bloom_node.BloomNode:
     """Character group."""
+    del self
     del exits
     edges = []
     next_cursor = bloom_node.BloomNode()
     for token in value:
-      character = self._visit_value(token)
+      character = _visit_value(token)
       if character in bloom_mask.SEPARATOR:
         next_cursor.distance(0)
       edges.append(character)
@@ -117,7 +117,7 @@ class _RegexVisitor(object):
       value: int,
       exits: list) -> bloom_node.BloomNode:
     del exits
-    character = self._visit_value_literal(value)
+    character = _visit_value_literal(value)
     next_cursor = bloom_node.BloomNode()
     next_cursor.link(character, cursor)
     if character in bloom_mask.SEPARATOR:
@@ -165,17 +165,6 @@ class _RegexVisitor(object):
     enter.annotations({'ENTER_%s' % group_name: group_id})
     return enter
 
-  def _visit_value(self, token: tuple) -> Any:
-    kind, value = token
-    fn_name = '_visit_value_%s' % str(kind).lower()
-    if not hasattr(self, fn_name):
-      raise NotImplementedError('Unsupported re value type %s' % kind)
-    return getattr(self, fn_name)(value)
-
-  def _visit_value_literal(self, value: int) -> str:
-    del self
-    return chr(value)
-
   def _make_regex_anagram_factory(
       self, data: List[tuple]) -> Callable[
           [bloom_node.BloomNode], bloom_node.BloomNode]:
@@ -183,7 +172,7 @@ class _RegexVisitor(object):
     if key not in _TRANSFORMER_CACHE:
       def factory(cursor: bloom_node.BloomNode) -> bloom_node.BloomNode:
         return self._visit(cursor, data, [])
-      _TRANSFORMER_CACHE[key] = Transformer('todo', factory)
+      _TRANSFORMER_CACHE[key] = Transformer(visit_values(data), factory)
 
     return _TRANSFORMER_CACHE[key]
 
@@ -229,3 +218,24 @@ class Transformer(object):
     return self._name
 
   __repr__ = __str__
+
+
+def visit_values(data: list) -> str:
+  return ''.join(_visit_value(token) for token in data)
+
+
+def _visit_value(token: tuple) -> Any:
+  kind, value = token
+  fn_name = '_visit_value_%s' % str(kind).lower()
+  if fn_name not in globals():
+    raise NotImplementedError('Unsupported re value type %s' % kind)
+  return globals()[fn_name](value)
+
+
+def _visit_value_any(value: None) -> str:
+  del value
+  return '.'
+
+
+def _visit_value_literal(value: int) -> str:
+  return chr(value)

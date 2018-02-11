@@ -1,3 +1,5 @@
+import sre_parse
+
 from data.graph import bloom_node, regex
 from spec.mamba import *
 
@@ -234,9 +236,9 @@ Z = BloomNode('', '#', 1)
     node = regex.parse('{abc.}')
     expect(path_values(node, 'zabc')).to(look_like("""
         BloomNode('ABCdefghijklmnopqrstuvwxyz', '    #', 0)
-        z = BloomNode('ABC', '   #', 0, anagrams=AnagramIter(todo, todo, todo))
-        a = BloomNode('BC', '  #', 0, anagrams=AnagramIter(todo, todo))
-        b = BloomNode('C', ' #', 0)  # NB: AnagramIter(todo) optimized away.
+        z = BloomNode('ABC', '   #', 0, anagrams=AnagramIter(a, b, c))
+        a = BloomNode('BC', '  #', 0, anagrams=AnagramIter(b, c))
+        b = BloomNode('C', ' #', 0)  # NB: AnagramIter(c) optimized away.
         c = BloomNode('', '#', 1)
     """, remove_comments=True))
 
@@ -247,3 +249,13 @@ with description('normalize'):
 
   with it('converts ALL CAPS'):
     expect(regex.normalize('ALL CAPS')).to(equal('all caps'))
+
+
+with description('visit_values'):
+  with it('handles simple expressions'):
+    pattern = sre_parse.parse('abcdefg')
+    expect(regex.visit_values(pattern)).to(equal('abcdefg'))
+
+  with it('handles ANY'):
+    pattern = sre_parse.parse('abc.efg')
+    expect(regex.visit_values(pattern)).to(equal('abc.efg'))
