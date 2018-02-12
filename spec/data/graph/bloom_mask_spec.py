@@ -2,6 +2,57 @@ from data.graph import bloom_mask
 from spec.mamba import *
 
 
+with description('bits'):
+  with it('returns nothing for 0'):
+    expect(list(bloom_mask.bits(0))).to(equal([]))
+
+  with it('returns 1 value for powers of 2'):
+    for x in range(8):
+      expect(list(bloom_mask.bits(2**x))).to(have_len(1))
+
+  with it('returns values in ascending order'):
+    result = list(bloom_mask.bits(0b11111111))
+    for a, b in zip(result, result[1:]):
+      expect(a).to(be_below(b))
+
+  with it('returns matching values'):
+    expect(list(bloom_mask.bits(0b101))).to(equal([
+      0b001,
+      0b100,
+    ]))
+
+
+with description('lengths_product'):
+  with it('returns 0 if either argument is 0'):
+    for a, b in ((0b1, 0b0), (0b0, 0b1)):
+      expect(calling(bloom_mask.lengths_product, a, b)).to(equal(0b0))
+
+  with it('returns other value if either argument is 1'):
+    for a, b in ((0b1, 0b1), (0b1, 0b10), (0b1, 0b100), (0b1, 0b1000)):
+      expect(calling(bloom_mask.lengths_product, a, b)).to(equal(a * b))
+
+  with it('returns product if both arguments are only 1 bit'):
+    for a, b in ((0b10, 0b10), (0b10, 0b100), (0b10, 0b1000)):
+      expect(calling(bloom_mask.lengths_product, a, b)).to(equal(a * b))
+
+  with it('shifts input if either argument is 1 bit'):
+    for a, b in ((0b1010, 0b10), (0b1111, 0b100), (0b1011, 0b1000)):
+      expect(calling(bloom_mask.lengths_product, a, b)).to(equal(a * b))
+
+  with it('handles more complex bitfields'):
+    expect(bin(bloom_mask.lengths_product(0b10101, 0b101))).to(
+        equal('0b1010101'))
+    expect(bin(bloom_mask.lengths_product(0b100001, 0b101))).to(
+        equal('0b10100101'))
+    expect(bin(bloom_mask.lengths_product(0b111, 0b101))).to(equal('0b11111'))
+
+  with it('duplicates make second argument much larger'):
+    for duplicates in range(1, 12):
+      expect(
+          calling(bloom_mask.lengths_product, 1, 2, duplicates=duplicates)
+      ).to(equal(2 ** duplicates))
+
+
 with description('for_alpha'):
   with it('raises for bad input'):
     expect(calling(bloom_mask.for_alpha, 'word')).to(raise_error(ValueError))
@@ -21,26 +72,6 @@ with description('for_alpha'):
       last = bloom_mask.for_alpha(c)
       expect(last & seen).to(equal(0))
       seen |= last
-
-
-with description('bits'):
-  with it('returns nothing for 0'):
-    expect(list(bloom_mask.bits(0))).to(equal([]))
-
-  with it('returns 1 value for powers of 2'):
-    for x in range(8):
-      expect(list(bloom_mask.bits(2**x))).to(have_len(1))
-
-  with it('returns values in ascending order'):
-    result = list(bloom_mask.bits(0b11111111))
-    for a, b in zip(result, result[1:]):
-      expect(a).to(be_below(b))
-
-  with it('returns matching values'):
-    expect(list(bloom_mask.bits(0b101))).to(equal([
-      0b001,
-      0b100,
-    ]))
 
 
 with description('map_to_str'):
