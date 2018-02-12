@@ -2,6 +2,7 @@ import collections
 import heapq
 from typing import ItemsView, Iterable, List, Optional, Set, Tuple
 
+from data.graph import bloom_mask
 
 WorkQueue = List[Tuple[int, int, tuple]]
 
@@ -32,7 +33,7 @@ class _AnagramIndex(object):
     return result
 
   def choices(self, available: int) -> List['str']:
-    return [self._choices[i] for i in _ids(available)]
+    return [self._choices[i] for i in bloom_mask.bits(available)]
 
   def get(
       self,
@@ -44,7 +45,7 @@ class _AnagramIndex(object):
 
   def remaining(self, available: int, prefix: str) -> str:
     choices = []
-    for choice in _ids(available):
+    for choice in bloom_mask.bits(available):
       choices.append(self._choices[choice])
     result = ''.join(choices)
     if not prefix:
@@ -56,7 +57,7 @@ class _AnagramIndex(object):
 
   def _populate_available_without_prefix(
       self, result: Set[str], available: int) -> None:
-    for candidate in _ids(available):
+    for candidate in bloom_mask.bits(available):
       result.add(self._choices[candidate][0])
 
   def _populate_available_with_prefix(
@@ -102,7 +103,7 @@ class _CompoundAnagramIndex(_AnagramIndex):
     prefix_length = len(prefix)
     c = prefix[pos]
     candidates = available & self._choices_char_map[c]
-    for candidate in _ids(candidates):
+    for candidate in bloom_mask.bits(candidates):
       choice = self._choices[candidate]
       if not _match_suffix(prefix, pos, choice):
         continue
@@ -151,7 +152,7 @@ class _CompoundAnagramIndex(_AnagramIndex):
     candidates = available & self._choices_char_map[c]
     options = []
     visited = set()
-    for candidate in _ids(candidates):
+    for candidate in bloom_mask.bits(candidates):
       choice = self._choices[candidate]
       if choice in visited:
         continue
@@ -222,14 +223,6 @@ def from_choices(choices: Iterable[str]) -> AnagramSet:
   else:
     index = _CompoundAnagramIndex(choices)
   return AnagramSet(index)
-
-
-def _ids(available: int) -> Iterable[int]:
-  while available:
-    next_available = available & (available - 1)
-    lowest_choice = available - next_available
-    yield lowest_choice
-    available = next_available
 
 
 def _match_suffix(reference:str, start:int, comparison: str) -> bool:

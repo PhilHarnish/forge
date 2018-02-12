@@ -1,5 +1,7 @@
 from typing import ItemsView, Iterable, List, Optional, TypeVar
 
+from data.graph import bloom_mask
+
 T = TypeVar('T')  # Generic type.
 
 
@@ -32,7 +34,7 @@ class _AnagramIterIndex(object):
 
   def iter(self, available: int) -> Iterable[T]:
     # Only iterate through IDs which align with initial choice mask.
-    for candidate in _ids(available & self._initial_choice_mask):
+    for candidate in bloom_mask.bits(available & self._initial_choice_mask):
       yield self._choices[candidate]
 
   def get(self, available: int, item: T) -> 'AnagramIter':
@@ -51,7 +53,7 @@ class _AnagramIterIndex(object):
 
   def items(self, available: int) -> ItemsView[T, 'AnagramIter']:
     # Only iterate through IDs which align with initial choice mask.
-    for idx in _ids(available & self._initial_choice_mask):
+    for idx in bloom_mask.bits(available & self._initial_choice_mask):
       mask = self._choices_masks[idx]
       match = available & mask
       child_available = available - ((match ^ (match >> 1)) & mask)
@@ -59,8 +61,9 @@ class _AnagramIterIndex(object):
 
   def available(self, available: int) -> ItemsView[T, int]:
     # Only iterate through IDs which align with initial choice mask.
-    for idx in _ids(available & self._initial_choice_mask):
-      duplicates = len(list(_ids(available & self._choices_masks[idx])))
+    for idx in bloom_mask.bits(available & self._initial_choice_mask):
+      duplicates = len(
+          list(bloom_mask.bits(available & self._choices_masks[idx])))
       yield self._choices[idx], duplicates
 
 
@@ -109,11 +112,3 @@ def from_choices(choices: Iterable[T]) -> AnagramIter:
   if not isinstance(choices, list):
     choices = list(choices)
   return AnagramIter(_AnagramIterIndex(choices))
-
-
-def _ids(available: int) -> Iterable[int]:
-  while available:
-    next_available = available & (available - 1)
-    lowest_choice = available - next_available
-    yield lowest_choice
-    available = next_available

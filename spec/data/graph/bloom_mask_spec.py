@@ -23,6 +23,26 @@ with description('for_alpha'):
       seen |= last
 
 
+with description('bits'):
+  with it('returns nothing for 0'):
+    expect(list(bloom_mask.bits(0))).to(equal([]))
+
+  with it('returns 1 value for powers of 2'):
+    for x in range(8):
+      expect(list(bloom_mask.bits(2**x))).to(have_len(1))
+
+  with it('returns values in ascending order'):
+    result = list(bloom_mask.bits(0b11111111))
+    for a, b in zip(result, result[1:]):
+      expect(a).to(be_below(b))
+
+  with it('returns matching values'):
+    expect(list(bloom_mask.bits(0b101))).to(equal([
+      0b001,
+      0b100,
+    ]))
+
+
 with description('map_to_str'):
   with it('produces no output for 0s'):
     expect(bloom_mask.map_to_str(0, 0)).to(equal(''))

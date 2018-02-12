@@ -1,3 +1,5 @@
+from typing import Iterable
+
 BASE_ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 UNIT_SEPARATOR = chr(31)
 WORD_SEPARATOR = ' '
@@ -42,6 +44,13 @@ def for_alpha(character: str) -> int:
   if character in _ALPHA_MAP:
     return _ALPHA_MAP[character]
   raise NotImplementedError('Unable to compute mask for "%s"' % character)
+
+
+def bits(mask: int) -> Iterable[int]:
+  while mask:
+    next_available = mask & (mask - 1)
+    yield mask - next_available
+    mask = next_available
 
 
 class BitMatchAnything(int):
