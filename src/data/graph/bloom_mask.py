@@ -24,6 +24,14 @@ def bits(mask: int) -> Iterable[int]:
     mask = next_available
 
 
+def for_alpha(character: str) -> int:
+  if len(character) != 1:
+    raise ValueError('Only provide 1 character ("%s" given)' % character)
+  if character in _ALPHA_MAP:
+    return _ALPHA_MAP[character]
+  raise NotImplementedError('Unable to compute mask for "%s"' % character)
+
+
 def lengths_product(a: int, b: int, duplicates: int = 1) -> int:
   """Combine lengths a and b, with b optionally repeated duplicates times.
 
@@ -51,14 +59,6 @@ def lengths_product(a: int, b: int, duplicates: int = 1) -> int:
     for x, y in itertools.product(bits(result_next), bits(acc)):
       result |= x * y
   return result
-
-
-def for_alpha(character: str) -> int:
-  if len(character) != 1:
-    raise ValueError('Only provide 1 character ("%s" given)' % character)
-  if character in _ALPHA_MAP:
-    return _ALPHA_MAP[character]
-  raise NotImplementedError('Unable to compute mask for "%s"' % character)
 
 
 def map_to_str(provide_mask: int, require_mask: int) -> str:
