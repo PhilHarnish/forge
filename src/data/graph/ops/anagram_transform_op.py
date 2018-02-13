@@ -1,7 +1,7 @@
 from typing import Callable, Collection, Iterable, List, Union
 
 from data.anagram import anagram_iter
-from data.graph import _op_mixin, bloom_node, bloom_node_reducer
+from data.graph import _op_mixin, bloom_mask, bloom_node, bloom_node_reducer
 
 Transformer = Callable[['bloom_node.BloomNode'], 'bloom_node.BloomNode']
 
@@ -81,7 +81,8 @@ class _AnagramTransformIndex(object):
       path = self._reference_choice_paths[child_choice]
       node.provide_mask |= path.provide_mask
       node.require_mask |= path.require_mask
-      node.lengths_mask *= (path.lengths_mask ** child_duplicates)
+      node.lengths_mask = bloom_mask.lengths_product(
+          node.lengths_mask, path.lengths_mask, duplicates=child_duplicates)
       # TODO: Check for whitespace.
     return choice(node)
 

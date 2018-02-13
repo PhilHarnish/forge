@@ -9,15 +9,20 @@ _ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 class Transformer(object):
   def __init__(self, name: str) -> None:
     self._name = name
+    self._path = name.rstrip('?')
+    self._optional = name.endswith('?')
 
   def __call__(self, node: bloom_node.BloomNode) -> bloom_node.BloomNode:
-    for c in reversed(self._name):
+    start = node
+    for c in reversed(self._path):
       next_node = bloom_node.BloomNode()
       if c == '.':
         next_node.links(_ALPHABET, node)
       else:
         next_node.link(c, node)
       node = next_node
+    if self._optional:
+      return node + start
     return node
 
   def __str__(self) -> str:
@@ -90,4 +95,41 @@ with description('anagram transform op merge') as self:
         b = BloomNode('CD', '  #', 0)
         c = BloomNode('D', ' #', 0)  # NB: AnagramIter(d) optimized away.
         d = BloomNode('', '#', 1)
+    """, remove_comments=True))
+
+  with fit('handles optional characters'):
+    abc = Transformer('abc?')
+    a = Transformer('a')
+    b = Transformer('b')
+    c = Transformer('c')
+    anagram_transform_op.merge_fn(
+        self.host, self.sources, [[abc, a, b, c]])
+    # Clear paths.
+    expect(path_values(self.host, 'cababc')).to(look_like("""
+        BloomNode('ABC', '   #  #', 0)
+        c = BloomNode('ABc', '  #  #', 0, anagrams={AnagramIter(a, abc?, b), AnagramIter(a, b)})
+        a = BloomNode('aBc', ' #  #', 0, anagrams=AnagramIter(abc?, b))
+        b = BloomNode('ABC', '#  #', 1)  # Exit while skipping "abc?".
+        a = BloomNode('BC', '  #', 0)
+        b = BloomNode('C', ' #', 0)
+        c = BloomNode('', '#', 1)
+    """, remove_comments=True))
+    expect(path_values(self.host, 'caabcb')).to(look_like("""
+        BloomNode('ABC', '   #  #', 0)
+        c = BloomNode('ABc', '  #  #', 0, anagrams={AnagramIter(a, abc?, b), AnagramIter(a, b)})
+        a = BloomNode('aBc', ' #  #', 0, anagrams=AnagramIter(abc?, b))
+        a = BloomNode('BC', '   #', 0)
+        b = BloomNode('BC', '  #', 0)
+        c = BloomNode('B', ' #', 0)
+        b = BloomNode('', '#', 1)
+    """, remove_comments=True))
+    # Ambiguous paths.
+    expect(path_values(self.host, 'abcabc')).to(look_like("""
+        BloomNode('ABC', '   #  #', 0)
+        a = BloomNode('aBC', '  #  #', 0, anagrams={AnagramIter(abc?, b, c), AnagramIter(b, c)})
+        b = BloomNode('abC', ' #  #', 0, anagrams=AnagramIter(abc?, c))
+        c = BloomNode('ABC', '#  #', 1, anagrams=AnagramIter(a, b, c))
+        a = BloomNode('BC', '  #', 0, anagrams=AnagramIter(b, c))
+        b = BloomNode('C', ' #', 0)
+        c = BloomNode('', '#', 1)
     """, remove_comments=True))
