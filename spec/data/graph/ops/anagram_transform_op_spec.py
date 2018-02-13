@@ -18,6 +18,14 @@ class Transformer(object):
       next_node = bloom_node.BloomNode()
       if c == '.':
         next_node.links(_ALPHABET, node)
+      elif c == ' ':
+        # Space support is case-by-case.
+        next_node.link(c, node)
+        # Require spaces for this test.
+        next_node.require_mask = next_node.provide_mask
+        # Allow space to mark a completed node (makes a more interesting test).
+        node.distance(0)
+        node.match_weight = node.max_weight
       else:
         next_node.link(c, node)
       node = next_node
@@ -69,8 +77,7 @@ with description('anagram transform op merge') as self:
     abc = Transformer('abc')
     bcd = Transformer('.bcd')
     d = Transformer('d')
-    anagram_transform_op.merge_fn(
-        self.host, self.sources, [[abc, bcd, d]])
+    anagram_transform_op.merge_fn(self.host, self.sources, [[abc, bcd, d]])
     # Clear paths.
     expect(path_values(self.host, 'zbcddabc')).to(look_like("""
         BloomNode('ABCDefghijklmnopqrstuvwxyz', '        #', 0)
@@ -97,13 +104,12 @@ with description('anagram transform op merge') as self:
         d = BloomNode('', '#', 1)
     """, remove_comments=True))
 
-  with fit('handles optional characters'):
+  with it('handles optional characters'):
     abc = Transformer('abc?')
     a = Transformer('a')
     b = Transformer('b')
     c = Transformer('c')
-    anagram_transform_op.merge_fn(
-        self.host, self.sources, [[abc, a, b, c]])
+    anagram_transform_op.merge_fn(self.host, self.sources, [[abc, a, b, c]])
     # Clear paths.
     expect(path_values(self.host, 'cababc')).to(look_like("""
         BloomNode('ABC', '   #  #', 0)
@@ -122,7 +128,7 @@ with description('anagram transform op merge') as self:
         b = BloomNode('BC', '  #', 0)
         c = BloomNode('B', ' #', 0)
         b = BloomNode('', '#', 1)
-    """, remove_comments=True))
+    """))
     # Ambiguous paths.
     expect(path_values(self.host, 'abcabc')).to(look_like("""
         BloomNode('ABC', '   #  #', 0)
@@ -132,4 +138,18 @@ with description('anagram transform op merge') as self:
         a = BloomNode('BC', '  #', 0, anagrams=AnagramIter(b, c))
         b = BloomNode('C', ' #', 0)
         c = BloomNode('', '#', 1)
-    """, remove_comments=True))
+    """))
+
+  with it('handles spaces'):
+    space = Transformer(' ')
+    a = Transformer('a')
+    b = Transformer('b')
+    c = Transformer('c')
+    anagram_transform_op.merge_fn(self.host, self.sources, [[space, a, b, c]])
+    expect(path_values(self.host, 'a bc')).to(look_like("""
+        BloomNode('abc; !', '', 0)
+        a = BloomNode('bc; !', '', 0, anagrams=AnagramIter( , b, c))
+          = BloomNode('BC', '# #', 1, anagrams=AnagramIter(b, c))
+        b = BloomNode('C', ' #', 0)
+        c = BloomNode('', '#', 1)
+    """))

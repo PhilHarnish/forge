@@ -4,7 +4,7 @@ from data.anagram import anagram_iter
 from data.graph import _op_mixin, bloom_mask, bloom_node, bloom_node_reducer
 
 Transformer = Callable[['bloom_node.BloomNode'], 'bloom_node.BloomNode']
-
+_SPACE_MASK = bloom_mask.for_alpha(' ')
 
 def merge_fn(
     host: 'bloom_node.BloomNode',
@@ -77,13 +77,22 @@ class _AnagramTransformIndex(object):
     node.lengths_mask = self._exit_node.lengths_mask
     node.annotations({'anagrams': anagrams})
     node.max_weight = self._exit_node.max_weight
+    nodes_with_spaces = []
     for child_choice, child_duplicates in children:
       path = self._reference_choice_paths[child_choice]
+      if path.require_mask and path.require_mask & _SPACE_MASK:
+        nodes_with_spaces.append(path)
       node.provide_mask |= path.provide_mask
       node.require_mask |= path.require_mask
       node.lengths_mask = bloom_mask.lengths_product(
           node.lengths_mask, path.lengths_mask, duplicates=child_duplicates)
-      # TODO: Check for whitespace.
+    if nodes_with_spaces:
+      # Distance and provide masks should be correct. Reset required values.
+      # Any route to any of the spaces is now okay but 1+ must be taken.
+      node.require_mask = bloom_mask.REQUIRE_NOTHING
+      for node_with_spaces in nodes_with_spaces:
+        # Only require what all node_with_spaces require.
+        node.require_mask &= node_with_spaces.require_mask
     return choice(node)
 
 
