@@ -13,6 +13,7 @@ gcc = _sugar.wrapped_call(_sugar.gcc)
 sum = _sugar.wrapped_call(Numberjack.Sum)
 max = _sugar.wrapped_call(Numberjack.Max)
 min = _sugar.wrapped_call(Numberjack.Min)
+debug = print
 print = _sugar.deferred_call(print)
 
 init = _sugar.init
