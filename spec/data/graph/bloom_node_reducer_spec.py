@@ -206,12 +206,12 @@ with description('reduce'):
       b = a(
           'positional', 'args',
           visit=visit_fn, merge=merge_fn,
-          keword='args'
+          keyword='args'
       )
       expect(repr(b.op)).to(equal(
           "call(BloomNode('', '', 0),"
           " ('positional', 'args'),"
-          " {'visit': visit_fn, 'merge': merge_fn, 'keword': 'args'}"
+          " {'visit': visit_fn, 'merge': merge_fn, 'keyword': 'args'}"
           ")"
       ))
       expect(repr(b)).to(equal("BloomNode('', '', 0)"))
