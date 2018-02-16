@@ -196,3 +196,24 @@ with description('reduce'):
         node = node[c]
       # Ends at end of "common".
       expect(repr(node)).to(equal("BloomNode('', '#', 0.25)"))
+
+  with description('OP_CALL'):
+    with it('accepts no-op functions'):
+      a = bloom_node.BloomNode()
+      a.open('a')  # Needed to trigger visit on `a`.
+      visit_fn = mock.Mock(name='visit_fn', __repr__=lambda x: 'visit_fn')
+      merge_fn = mock.Mock(name='merge_fn', __repr__=lambda x: 'merge_fn')
+      b = a(
+          'positional', 'args',
+          visit=visit_fn, merge=merge_fn,
+          keword='args'
+      )
+      expect(repr(b.op)).to(equal(
+          "call(BloomNode('', '', 0),"
+          " ('positional', 'args'),"
+          " {'visit': visit_fn, 'merge': merge_fn, 'keword': 'args'}"
+          ")"
+      ))
+      expect(repr(b)).to(equal("BloomNode('', '', 0)"))
+      expect(visit_fn).to(have_been_called)
+      expect(merge_fn).to(have_been_called)

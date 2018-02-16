@@ -12,12 +12,14 @@ OP_ADD = next(_next)
 OP_MULTIPLY = next(_next)
 OP_DIV = next(_next)
 OP_FLOOR_DIV = next(_next)
+OP_CALL = next(_next)
 _OPERATOR_STRINGS = [
   ('%s', ''),
   ('(%s)', '+'),
   ('(%s)', '*'),
   ('anagram(%s)', ', '),
   ('anagram(%s)', ', '),
+  ('call(%s)', ', ')
 ]
 
 
@@ -62,6 +64,9 @@ class OpMixin(pool.Pooled):
 
   def __add__(self, other: Union[Any, 'OpMixin']) -> 'OpMixin':
     return _commutative(self, OP_ADD, other)
+
+  def __call__(self, *args, **kwargs) -> 'OpMixin':
+    return self.alloc(Op(OP_CALL, [self, args, kwargs]))
 
   def __mul__(self, other: Union[Any, 'OpMixin']) -> 'OpMixin':
     return _commutative(self, OP_MULTIPLY, other)

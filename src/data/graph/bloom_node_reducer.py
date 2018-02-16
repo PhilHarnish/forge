@@ -87,6 +87,22 @@ def _merge_multiply(
     host.annotations(source.annotations())
 
 
+def _merge_call(
+    host: 'bloom_node.BloomNode',
+    sources: List['bloom_node.BloomNode'],
+    extra: list,
+    **kwargs) -> None:
+  assert len(extra) == 2
+  call_args, call_kwargs = extra
+  call_kwargs = call_kwargs.copy()
+  call_fn = call_kwargs.pop('merge', None)
+  if not call_fn:
+    return
+  call_kwargs.pop('visit', None)
+  call_kwargs.update(kwargs)
+  call_fn(host, sources, *call_args, **call_kwargs)
+
+
 def _visit_identity(
     sources: List['bloom_node.BloomNode'],
     extra: list) -> 'bloom_node.BloomNode':
@@ -189,6 +205,20 @@ def _visit_multiply(
   return reduced
 
 
+def _visit_call(
+    sources: List['bloom_node.BloomNode'],
+    extra: list) -> Optional['bloom_node.BloomNode']:
+  assert len(extra) == 2
+  call_args, call_kwargs = extra
+  call_kwargs = call_kwargs.copy()
+  call_kwargs.pop('merge', None)
+  call_fn = call_kwargs.pop('visit', None)
+  if not call_fn:
+    return
+  call_fn(sources, *call_args, **call_kwargs)
+
+
+
 def _visit_fail(
     sources: List['bloom_node.BloomNode'],
     extra: list) -> None:
@@ -203,4 +233,5 @@ _operator_functions = [
   (iter_util.common, _merge_multiply, _visit_multiply),
   (iter_util.none, anagram_op.merge_fn, _visit_fail),
   (iter_util.none, anagram_transform_op.merge_fn, _visit_fail),
+  (iter_util.both, _merge_call, _visit_call),
 ]
