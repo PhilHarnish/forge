@@ -240,6 +240,9 @@ Z = BloomNode('', '#', 1)
         c = BloomNode('', '#', 1)
     """, remove_comments=True))
 
+  with it('parses input value syntax'):
+    expect(calling(regex.parse, r'${first}${second}')).not_to(raise_error)
+
 
 with description('normalize'):
   with it('leaves normal input alone'):

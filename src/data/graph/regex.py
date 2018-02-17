@@ -184,27 +184,39 @@ class _RegexVisitor(object):
 
 def _transform(data: list):
   transformed = []
-  anagram_groups = []
+  curly_group = []
+  variable = False
   for datum in data:
     kind, value = datum
     if kind == sre_constants.LITERAL:
-      # Look for {ab,c} anagram syntax.
       value = chr(value)
-    elif not anagram_groups:
+    elif kind == sre_constants.AT and value == sre_constants.AT_END:
+      # Look for $variable.
+      variable = True
+    elif not curly_group:
       transformed.append(datum)
       continue
     else:
       value = None
     if value == '{':
-      anagram_groups.append([[]])
-    elif not anagram_groups:
+      # Look for {ab,c} anagram syntax.
+      curly_group.append([[]])
+    elif not curly_group:
       transformed.append(datum)
     elif value == ',':
-      anagram_groups[-1].append([])
+      curly_group[-1].append([])
     elif value == '}':
-      transformed.append(('ANAGRAM', anagram_groups.pop()))
+      group = curly_group.pop()
+      if variable:
+        assert len(group) == 1
+        name = visit_values(group[0])
+        assert name.isalpha()
+        transformed.append(('INPUT', name))
+        variable = False
+      else:
+        transformed.append(('ANAGRAM', group))
     else:
-      anagram_groups[-1][-1].append(datum)
+      curly_group[-1][-1].append(datum)
   return transformed
 
 
