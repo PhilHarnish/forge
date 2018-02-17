@@ -123,8 +123,11 @@ with description('reduce'):
         ]
         node = self.node
         for c, expected in zip('aonly', expecteds):
-          results = list(sorted(
-              bloom_node_reducer.reduce(node), key=lambda x: x[0]))
+          if node.op:
+            items = bloom_node_reducer.reduce(node)
+          else:
+            items = node.items()
+          results = list(sorted(items, key=lambda x: x[0]))
           expect(str(results)).to(equal(expected))
           node = node[c]
         # Ends at end of "common".

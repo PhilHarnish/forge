@@ -141,6 +141,9 @@ def _reduce_add(
 def _visit_add(
     sources: List['bloom_node.BloomNode'],
     extra: list) -> Optional['bloom_node.BloomNode']:
+  if len(sources) == 1:
+    assert not extra
+    return sources[0]
   provide_mask, require_mask, lengths_mask, max_weight, match_weight = (
     _reduce_add(sources, extra))
   reduced = bloom_node.BloomNode(_op_mixin.Op(_op_mixin.OP_ADD, sources))
@@ -182,6 +185,8 @@ def _reduce_multiply(
 def _visit_multiply(
     sources: List['bloom_node.BloomNode'],
     extra: list) -> Optional['bloom_node.BloomNode']:
+  if not extra and len(sources) == 1:
+    return sources[0]
   provide_mask, require_mask, lengths_mask, max_weight, match_weight = (
       _reduce_multiply(sources, extra))
   if not any(source.op for source in sources) and (
