@@ -93,8 +93,8 @@ Z = BloomNode('', '#', 1)
     with it('produces simple graphs'):
       node = regex.parse('a b')
       expect(path_values(node, 'a b')).to(look_like("""
-        BloomNode('A; ', ' #', 0)
-        a = BloomNode(' ', '#', 0)
+        BloomNode('A; !', ' #', 0)
+        a = BloomNode(' !', '#', 0)
           = BloomNode('B', ' #', 0)
         b = BloomNode('', '#', 1)
       """))
@@ -241,7 +241,8 @@ Z = BloomNode('', '#', 1)
     """, remove_comments=True))
 
   with it('parses input value syntax'):
-    expect(calling(regex.parse, r'${first}${second}')).not_to(raise_error)
+    expect(calling(regex.parse, r'${first}${second}')).to(
+        raise_error(NotImplementedError, 'Unsupported re type INPUT'))
 
 
 with description('normalize'):

@@ -140,13 +140,13 @@ with description('test data, multiple word'):
     expect(path_values(self.trie, 'is is is')).to(look_like("""
         BloomNode('adefhinorst; ', ' ####', 0)
         i = BloomNode('ns; ', ' #', 0)
-        s = BloomNode(' ', '#', 0.20339618296512277)
+        s = BloomNode(' !', '#', 0.20339618296512277)
           = BloomNode('adefhinorst; ', ' ####', 0)
         i = BloomNode('ns; ', ' #', 0)
-        s = BloomNode(' ', '#', 0.041370007244781695)
+        s = BloomNode(' !', '#', 0.041370007244781695)
           = BloomNode('adefhinorst; ', ' ####', 0)
         i = BloomNode('ns; ', ' #', 0)
-        s = BloomNode(' ', '#', 0.008414501562828072)
+        s = BloomNode(' !', '#', 0.008414501562828072)
     """))
 
 
@@ -215,37 +215,37 @@ with description('add_ngrams'):
     with it('expands unigrams'):
       expect(path_values(self.trie, 'a')).to(look_like("""
         BloomNode('Abcd; ', ' ####', 0)
-        a = BloomNode('Bcd; ', '####', 0.5)
+        a = BloomNode('bcd; ', '####', 0.5)
       """))
 
     with it('expands specified bigrams'):
       expect(path_values(self.trie, 'a ab')).to(look_like("""
           BloomNode('Abcd; ', ' ####', 0)
-          a = BloomNode('Bcd; ', '####', 0.5)  # c(a)/total = 50/100.
+          a = BloomNode('bcd; ', '####', 0.5)  # c(a)/total = 50/100.
             = BloomNode('Abcd; ', ' ####', 0)
-          a = BloomNode('Bcd; ', '####', 0.5)  # c(a a)/c(a) = 25 / 50.
-          b = BloomNode('Cd; ', '###', 0.3)  # c(a ab)/c(a) = 15 / 50.
+          a = BloomNode('bcd; ', '####', 0.5)  # c(a a)/c(a) = 25 / 50.
+          b = BloomNode('cd; ', '###', 0.3)  # c(a ab)/c(a) = 15 / 50.
       """, remove_comments=True))
 
     with it('expands invented bigrams'):
       expect(path_values(self.trie, 'ab a')).to(look_like("""
         BloomNode('Abcd; ', ' ####', 0)
-        a = BloomNode('Bcd; ', '####', 0.5)  # c(a)/total = 50/100.
-        b = BloomNode('Cd; ', '###', 0.25)  # c(ab)/total = 25/100.
+        a = BloomNode('bcd; ', '####', 0.5)  # c(a)/total = 50/100.
+        b = BloomNode('cd; ', '###', 0.25)  # c(ab)/total = 25/100.
           = BloomNode('Abcd; ', ' ####', 0)
         # P(ab a) = P(ab *)*P(a) = c(ab a)/c(ab)*P(a) = min(ab *)/c(ab)*P(a) =
         # 5/25 * .5 = .1.
-        a = BloomNode('Bcd; ', '####', 0.1)
+        a = BloomNode('bcd; ', '####', 0.1)
       """, remove_comments=True))
 
     with it('expands invented familiar trigrams'):
       expect(path_values(self.trie, 'a a a')).to(look_like("""
         BloomNode('Abcd; ', ' ####', 0)
-        a = BloomNode('Bcd; ', '####', 0.5)  # c(a)/total = 50/100.
+        a = BloomNode('bcd; ', '####', 0.5)  # c(a)/total = 50/100.
           = BloomNode('Abcd; ', ' ####', 0)
-        a = BloomNode('Bcd; ', '####', 0.5)  # c(a a)/c(a) = 25/50.
+        a = BloomNode('bcd; ', '####', 0.5)  # c(a a)/c(a) = 25/50.
           = BloomNode('Abcd; ', ' ####', 0)
-        a = BloomNode('Bcd; ', '####', 0.25)  # c(a a)/c(a) * P(a) = 25/50 * .5.
+        a = BloomNode('bcd; ', '####', 0.25)  # c(a a)/c(a) * P(a) = 25/50 * .5.
       """, remove_comments=True))
 
     with it('expands invented unusual trigrams'):
@@ -257,10 +257,10 @@ with description('add_ngrams'):
       node = node['a']
       expect(path_values(self.trie, 'ab a a')).to(look_like("""
         BloomNode('Abcd; ', ' ####', 0)
-        a = BloomNode('Bcd; ', '####', 0.5)  # c(a)/total = 50/100.
-        b = BloomNode('Cd; ', '###', 0.25)  # c(ab)/total = 25/100.
+        a = BloomNode('bcd; ', '####', 0.5)  # c(a)/total = 50/100.
+        b = BloomNode('cd; ', '###', 0.25)  # c(ab)/total = 25/100.
           = BloomNode('Abcd; ', ' ####', 0)
-        a = BloomNode('Bcd; ', '####', 0.1)
+        a = BloomNode('bcd; ', '####', 0.1)
           = BloomNode('Abcd; ', ' ####', 0)
-        a = BloomNode('Bcd; ', '####', 0.1)
+        a = BloomNode('bcd; ', '####', 0.1)
       """, remove_comments=True))

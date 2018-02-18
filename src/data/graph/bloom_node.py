@@ -77,6 +77,9 @@ class BloomNode(_op_mixin.OpMixin):
       require_edge_mask = bloom_mask.REQUIRE_NOTHING
     if key in bloom_mask.SEPARATOR:
       # Prevent inheriting across word boundary characters.
+      # Additionally, this node is (apparently) terminal and doesn't require
+      # any additional characters (aside from perhaps space itself).
+      self.require_mask &= require_edge_mask
       return
     if node.op:
       bloom_node_reducer.merge(node)
@@ -158,7 +161,7 @@ class BloomNode(_op_mixin.OpMixin):
     return BloomNode(*args, **kwargs)
 
   def _expand(self) -> None:
-    if not self.op:
+    if self.op is None:
       return
     for key, reduced in bloom_node_reducer.reduce(self, blacklist=self._edges):
       self._link(key, reduced, True)
