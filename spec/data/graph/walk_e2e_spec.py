@@ -5,15 +5,24 @@ from spec.mamba import *
 _FIRST_WORD_WEIGHT = 23135851162
 
 
-def get_words(length_mask: int = None, file: str = 'data/g1m_1gram.txt') -> list:
-  for word, value in word_frequencies.parse_file(file):
-    if len(word) > 12:
-      continue
-    elif not word.isalpha():
-      continue
+def get_words(
+    length_mask: int = None,
+    file: str = 'data/g1m_1gram.txt',
+    multi: bool = False) -> list:
+  def _check(word: str) -> bool:
+    if not word.isalpha():
+      return False
     if length_mask and (1 << len(word)) & length_mask == 0:
+      return False
+    return True
+  for line, value in word_frequencies.parse_file(file):
+    if len(line) > 12:
       continue
-    yield word, value
+    if multi and not all(_check(word) for word in line.split()):
+      continue
+    elif not _check(line):
+      continue
+    yield line, value
 
 
 def make_trie(length_mask) -> bloom_node.BloomNode:
@@ -33,7 +42,7 @@ def pickled_ngrams(length_mask: int) -> bloom_node.BloomNode:
   ngrams = [list(get_words(length_mask=length_mask))]
   for i in range(2, 5+1):
     ngrams.append(list(get_words(
-        length_mask=length_mask, file='data/coca_%sgram.txt' % i)))
+        length_mask=length_mask, file='data/coca_%sgram.txt' % i, multi=True)))
   root = bloom_node.BloomNode()
   trie.add_ngrams(root, ngrams)
   return root
@@ -178,3 +187,13 @@ with description('benchmarks: unigram/bigram walk', 'end2end') as self:
         'pulls', 'syrup', 'jumps', 'stump', 'pours', 'plugs', 'lumps', 'slump',
         'pouts', 'sumps', 'spuds', 'punts', 'pumas', 'burps', 'stoup', 'pucks',
     ))
+
+  with it('should sanely tokenize ambiguous strings #1'):
+    root = pickled_ngrams(0b1011000)
+    merged = root * regex.parse(' ?'.join('bannedperandsign'))
+    expect(next(walk.walk(merged))[0]).to(equal('banned per and sign'))
+
+  with it('should sanely tokenize ambiguous strings #2'):
+    root = pickled_ngrams(0b110001100)
+    merged = root * regex.parse(' ?'.join('enjoyedandorsimulate'))
+    expect(next(walk.walk(merged))[0]).to(equal('enjoyed and or simulate'))
