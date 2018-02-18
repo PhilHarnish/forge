@@ -41,7 +41,7 @@ def common(
     remaining = maps
   else:
     # Use smallest input map as reference.
-    sorted_maps = list(sorted(maps, key=len, reverse=True))
+    sorted_maps = list(sorted(maps, key=len))
     reference, remaining = sorted_maps[0], sorted_maps[1:]
   if blacklist:
     return [
