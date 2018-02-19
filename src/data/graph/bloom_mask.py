@@ -102,3 +102,4 @@ class BitMatchAnything(int):
 
 PROVIDE_NOTHING = BitMatchAnything()
 REQUIRE_NOTHING = BitMatchAnything()
+ANY_LENGTHS = BitMatchAnything()
