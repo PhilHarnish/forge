@@ -157,9 +157,6 @@ class BloomNode(_op_mixin.OpMixin):
     for k, v in self.items():
       yield k
 
-  def _alloc(self, *args, **kwargs) -> 'BloomNode':
-    return BloomNode(*args, **kwargs)
-
   def _expand(self) -> None:
     if self.op is None:
       return
@@ -197,6 +194,9 @@ class BloomNode(_op_mixin.OpMixin):
     return '%s(%s)' % (
         self.__class__.__name__,
         ', '.join(args))
+
+# Wire "_alloc" directly to constructor.
+setattr(BloomNode, '_alloc', BloomNode)
 
 
 class _AnnotationValue(set):
