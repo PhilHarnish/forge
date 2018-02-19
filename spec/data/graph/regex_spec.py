@@ -29,22 +29,13 @@ with description('parse'):
         c = BloomNode('', '#', 1)
     """))
 
-  with description('with capitals'):
-    with it('produces simple graphs'):
-      node = regex.parse('aA')
-      expect(path_values(node, 'aA')).to(look_like("""
-          BloomNode('A;A', '  #', 0)
-          a = BloomNode('A', ' #', 0)
-          A = BloomNode('', '#', 1)
-      """))
-
     with it('with "."'):
-      node = regex.parse('a.Z')
-      expect(path_values(node, 'azZ')).to(look_like("""
-BloomNode('Abcdefghijklmnopqrstuvwxyz;ABCDEFGHIJKLMNOPQRSTUVWXYZ', '   #', 0)
-a = BloomNode('abcdefghijklmnopqrstuvwxyz;ABCDEFGHIJKLMNOPQRSTUVWXYZ', '  #', 0)
+      node = regex.parse('a.z')
+      expect(path_values(node, 'azz')).to(look_like("""
+BloomNode('Abcdefghijklmnopqrstuvwxyz', '   #', 0)
+a = BloomNode('abcdefghijklmnopqrstuvwxyz', '  #', 0)
 z = BloomNode('Z', ' #', 0)
-Z = BloomNode('', '#', 1)
+z = BloomNode('', '#', 1)
       """))
 
   with description('with "." character'):
