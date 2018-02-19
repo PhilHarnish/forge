@@ -43,3 +43,12 @@ with description('perf'):
         test
         #0: 1.0/s, 1.0x (1 calls)
     """))
+
+  with it('supports contextlib enter/exit'):
+    b = perf.Head2Head('test', 1)
+    with b.enter(0):
+      next(_CLOCK)
+    expect(str(b)).to(look_like("""
+        test
+        #0: 0.5/s, 1.0x (1 calls)
+    """))

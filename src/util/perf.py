@@ -1,3 +1,4 @@
+import contextlib
 import time
 from typing import Optional
 
@@ -42,6 +43,23 @@ class Head2Head(object):
     calls, elapsed, last = self._timings[variant]
     self._running = None
     self._timings[variant] = (calls, elapsed + (end - last), end)
+
+  @contextlib.contextmanager
+  def enter(self, variant: Optional[int] = None) -> None:
+    if self._running is not None:
+      raise Exception('Already running variant %s' % self._running)
+    if variant is None:
+      variant = self.variant()
+      self._idx += 1
+    calls, elapsed, last = self._timings[variant]
+    calls += 1
+    self._running = variant
+    last = time.perf_counter()
+    yield
+    end = time.perf_counter()
+    self._running = None
+    self._timings[variant] = (calls, elapsed + (end - last), end)
+
 
   def __str__(self) -> str:
     results = [self._name]
