@@ -14,6 +14,8 @@ _ALPHA_MAP = {
   c: 2**i for i, c in enumerate(_ALPHA_CHARACTERS)
 }
 _ALPHA_MAP[UNIT_SEPARATOR] = _ALPHA_MAP[' ']
+_ALPHA_ARRAY = [_ALPHA_MAP.get(chr(c), 0) for c in range(128)]
+
 
 
 def bits(mask: int) -> Iterable[int]:
@@ -26,8 +28,11 @@ def bits(mask: int) -> Iterable[int]:
 def for_alpha(character: str) -> int:
   if len(character) != 1:
     raise ValueError('Only provide 1 character ("%s" given)' % character)
-  if character in _ALPHA_MAP:
-    return _ALPHA_MAP[character]
+  o = ord(character)
+  if o < 128:
+    result = _ALPHA_ARRAY[o]
+    if result:
+      return result
   raise NotImplementedError('Unable to compute mask for "%s"' % character)
 
 
