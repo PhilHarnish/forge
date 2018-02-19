@@ -9,12 +9,22 @@ from typing import Match
 import mock
 from expects import *
 from expects import matchers
+from mamba import formatters
 
 from data.convert import repr_format
 from spec.data import fixtures
-
 # Convenience.
+from util import perf
+
 fixtures.init()
+
+
+class CustomFormatter(formatters.ProgressFormatter):
+  def summary(
+      self, duration, example_count, failed_count, pending_count) -> None:
+    super(CustomFormatter, self).summary(
+        duration, example_count, failed_count, pending_count)
+    print(perf.report())
 
 
 def traceback() -> None:
