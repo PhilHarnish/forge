@@ -23,22 +23,22 @@ with description('populating'):
 
   with description('multi-character'):
     with it('creates if needed'):
-      expect(self.subject.open('abc')).to(be_a(bloom_node.BloomNode))
+      expect(self.subject.open('a')).to(be_a(bloom_node.BloomNode))
 
     with it('retrieves a created node'):
-      abc = self.subject.open('abc')
-      expect(self.subject.open('abc')).to(equal(abc))
+      a = self.subject.open('a')
+      expect(self.subject.open('a')).to(equal(a))
 
   with description('link'):
     with before.each:
       self.child = bloom_node.BloomNode()
 
     with it('allows a child to be linked'):
-      expect(calling(self.subject.link, 'key', self.child)).not_to(raise_error)
+      expect(calling(self.subject.link, 'a', self.child)).not_to(raise_error)
 
     with it('creates a link'):
-      self.subject.link('key', self.child)
-      expect(self.subject['key']).to(equal(self.child))
+      self.subject.link('a', self.child)
+      expect(self.subject['a']).to(equal(self.child))
 
     with it('updates masks at root'):
       self.subject.link('a', self.child)
@@ -62,8 +62,8 @@ with description('populating'):
       expect(repr(cursor['a']['b']['a'])).to(equal("BloomNode('', '#', 1)"))
 
     with it('rejects duplicate links'):
-      self.subject.link('key', self.child)
-      expect(calling(self.subject.link, 'key', self.child)).to(
+      self.subject.link('a', self.child)
+      expect(calling(self.subject.link, 'a', self.child)).to(
           raise_error(KeyError))
 
 
@@ -91,9 +91,9 @@ with description('api'):
     expect(self.subject.provide_mask).to(equal(0b111))
 
   with it('iterates over added keys'):
-    self.subject.open('first')
-    self.subject.open('second')
-    expect(set(self.subject)).to(equal({'first', 'second'}))
+    self.subject.open('a')
+    self.subject.open('b')
+    expect(set(self.subject)).to(equal({'a', 'b'}))
 
 
 with description('sources'):
@@ -104,21 +104,21 @@ with description('sources'):
       child.distance(0)
       child.weight(1, True)
     self.a = bloom_node.BloomNode()
-    add_node(self.a, 'common')  # First bit.
-    add_node(self.a, 'a_only')  # Second bit.
+    add_node(self.a, 'c')  # First bit.
+    add_node(self.a, 'a')  # Second bit.
     self.b = bloom_node.BloomNode()
-    add_node(self.b, 'common')  # First bit.
-    add_node(self.b, 'b_only')  # Third bit.
+    add_node(self.b, 'c')  # First bit.
+    add_node(self.b, 'b')  # Third bit.
     self.combined = self.a * self.b
 
   with it('does not find missing nodes'):
-    expect(lambda: self.combined['missing']).to(raise_error(KeyError))
+    expect(lambda: self.combined['z']).to(raise_error(KeyError))
 
   with it('does find common nodes'):
-    expect(lambda: self.combined['common']).not_to(raise_error(KeyError))
+    expect(lambda: self.combined['c']).not_to(raise_error(KeyError))
 
   with it('propagates common attributes'):
-    c = self.combined['common']
+    c = self.combined['c']
     expect(c.provide_mask).to(equal(0b111))
     expect(c.require_mask).to(equal(0b111))
     expect(c.lengths_mask).to(equal(0b1))
@@ -128,10 +128,10 @@ with description('sources'):
     expect(self.combined).to(have_len(1))
 
   with it('expands edges when iterating'):
-    expect(set(self.combined)).to(equal({'common'}))
+    expect(set(self.combined)).to(equal({'c'}))
 
   with it('safely expands remaining edges if one edge was already accessed'):
-    expect(self.combined['common']).not_to(be_none)
+    expect(self.combined['c']).not_to(be_none)
     expect(calling(repr, self.combined)).not_to(raise_error)
 
 

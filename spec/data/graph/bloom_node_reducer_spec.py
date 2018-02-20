@@ -19,15 +19,15 @@ with description('reduce'):
   with description('OP_IDENTITY'):
     with it('reduces IDENTITY to itself'):
       node = bloom_node.BloomNode()
-      child = node.open('key')
+      child = node.open('a')
       host = bloom_node.BloomNode(_op_mixin.Op(_op_mixin.OP_IDENTITY, [node]))
       expect(list(bloom_node_reducer.reduce(host))).to(equal([
-        ('key', child),
+        ('a', child),
       ]))
 
     with it('raises for IDENTITY + multiple sources'):
       node = bloom_node.BloomNode()
-      node.open('key')
+      node.open('a')
       host = bloom_node.BloomNode(_op_mixin.Op(_op_mixin.OP_IDENTITY, [node, node]))
       expect(calling(next, bloom_node_reducer.reduce(host))).to(
           raise_error(NotImplementedError))
