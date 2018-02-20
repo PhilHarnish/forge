@@ -4,7 +4,7 @@ from typing import Callable, Container, Iterable, List, Mapping, Optional, \
 T = TypeVar('T')  # Generic type.
 
 
-def both(
+def map_both(
     maps: List[Mapping[str, T]],
     whitelist: Optional[Iterable[str]] = None,
     blacklist: Optional[Container[str]] = None
@@ -29,7 +29,7 @@ def both(
   ]
 
 
-def common(
+def map_common(
     maps: List[Mapping[str, T]],
     whitelist: Optional[Container[str]] = None,
     blacklist: Optional[Container[str]] = None
@@ -55,7 +55,7 @@ def common(
   ]
 
 
-def none(
+def map_none(
     maps: List[Mapping[str, T]],
     whitelist: Optional[Iterable[str]] = None,
     blacklist: Optional[Container[str]] = None

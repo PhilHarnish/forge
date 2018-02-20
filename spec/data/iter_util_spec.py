@@ -4,16 +4,16 @@ from spec.mamba import *
 
 with description('common'):
   with it('returns nothing for empty input'):
-    expect(iter_util.common([])).to(equal([]))
+    expect(iter_util.map_common([])).to(equal([]))
 
   with it('returns all items for single object'):
-    expect(iter_util.common([{'a': 1, 'b': .5}])).to(equal([
+    expect(iter_util.map_common([{'a': 1, 'b': .5}])).to(equal([
       ('a', [1]),
       ('b', [.5]),
     ]))
 
   with it('returns common items for multiple'):
-    expect(iter_util.common([
+    expect(iter_util.map_common([
         {'a': 1, 'b': .5},
         {'b': .25, 'c': .15},
     ])).to(equal([
@@ -21,7 +21,7 @@ with description('common'):
     ]))
 
   with it('optionally focuses specified items'):
-    expect(iter_util.common([
+    expect(iter_util.map_common([
         {'a': 1, 'b': .5},
         {'b': .25, 'c': .15},
     ], whitelist={'b'})).to(equal([
@@ -29,13 +29,13 @@ with description('common'):
     ]))
 
   with it('optionally skips specified items'):
-    expect(iter_util.common([
+    expect(iter_util.map_common([
         {'a': 1, 'b': .5},
         {'b': .25, 'c': .15},
     ], blacklist={'b'})).to(equal([]))
 
   with it('optionally skips and focuses specified items'):
-    expect(iter_util.common([
+    expect(iter_util.map_common([
         {'a': 1, 'b': 1, 'c': 1},
         {'_': 2, 'b': 2, 'c': 2},
     ], whitelist={'b'}, blacklist={'c'})).to(equal([
@@ -45,19 +45,19 @@ with description('common'):
 
 with description('both'):
   with it('returns nothing for empty input'):
-    expect(iter_util.both([])).to(equal([]))
+    expect(iter_util.map_both([])).to(equal([]))
 
   with it('returns nothing for empty input + whitelist'):
-    expect(iter_util.both([{'key': 'value'}], whitelist={' '})).to(equal([]))
+    expect(iter_util.map_both([{'key': 'value'}], whitelist={' '})).to(equal([]))
 
   with it('returns all items for single object'):
-    expect(list(sorted(iter_util.both([{'a': 1, 'b': .5}])))).to(equal([
+    expect(list(sorted(iter_util.map_both([{'a': 1, 'b': .5}])))).to(equal([
       ('a', [1]),
       ('b', [.5]),
     ]))
 
   with it('returns either items for multiple'):
-    expect(list(sorted(iter_util.both([
+    expect(list(sorted(iter_util.map_both([
         {'a': 1, 'b': .5},
         {'b': .25, 'c': .15},
     ])))).to(equal([
@@ -67,7 +67,7 @@ with description('both'):
     ]))
 
   with it('optionally focuses specified items'):
-    expect(iter_util.both([
+    expect(iter_util.map_both([
         {'a': 1, 'b': .5},
         {'b': .25, 'c': .15},
     ], whitelist={'b'})).to(equal([
@@ -75,7 +75,7 @@ with description('both'):
     ]))
 
   with it('optionally skips specified items'):
-    expect(list(sorted(iter_util.both([
+    expect(list(sorted(iter_util.map_both([
         {'a': 1, 'b': .5},
         {'b': .25, 'c': .15},
     ], blacklist={'b'})))).to(equal([
@@ -84,7 +84,7 @@ with description('both'):
     ]))
 
   with it('optionally skips and focuses specified items'):
-    expect(list(sorted(iter_util.both([
+    expect(list(sorted(iter_util.map_both([
         {'a': 1, 'b': 1, 'c': 1},
         {'_': 2, 'b': 2, 'c': 2},
     ], whitelist=set('abc'), blacklist={'c'})))).to(equal([
@@ -95,10 +95,10 @@ with description('both'):
 
 with description('none'):
   with it('returns nothing for empty input'):
-    expect(iter_util.none([])).to(equal([]))
+    expect(iter_util.map_none([])).to(equal([]))
 
   with it('returns nothing for simple input'):
-    expect(iter_util.none([{}, {'key': 'value'}])).to(equal([]))
+    expect(iter_util.map_none([{}, {'key': 'value'}])).to(equal([]))
 
 
 with description('reduce binary'):

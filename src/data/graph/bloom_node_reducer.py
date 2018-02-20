@@ -236,10 +236,10 @@ def _visit_fail(
 
 # Note: Order of operators must match _op_mixin.
 _operator_functions = [
-  (iter_util.common, _merge_add, _visit_identity),
-  (iter_util.both, _merge_add, _visit_add),
-  (iter_util.common, _merge_multiply, _visit_multiply),
-  (iter_util.none, anagram_op.merge_fn, _visit_fail),
-  (iter_util.none, anagram_transform_op.merge_fn, _visit_fail),
-  (iter_util.both, _merge_call, _visit_call),
+  (iter_util.map_common, _merge_add, _visit_identity),
+  (iter_util.map_both, _merge_add, _visit_add),
+  (iter_util.map_common, _merge_multiply, _visit_multiply),
+  (iter_util.map_none, anagram_op.merge_fn, _visit_fail),
+  (iter_util.map_none, anagram_transform_op.merge_fn, _visit_fail),
+  (iter_util.map_both, _merge_call, _visit_call),
 ]
