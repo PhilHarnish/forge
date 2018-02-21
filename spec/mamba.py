@@ -22,9 +22,9 @@ fixtures.init()
 class CustomFormatter(formatters.ProgressFormatter):
   def summary(
       self, duration, example_count, failed_count, pending_count) -> None:
+    print(perf.report())
     super(CustomFormatter, self).summary(
         duration, example_count, failed_count, pending_count)
-    print(perf.report())
 
 
 def traceback() -> None:
