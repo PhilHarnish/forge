@@ -41,7 +41,10 @@ def _cache(prefix, test_fn):
         result = pickle.load(_open_pkl_path(pickle_src, 'rb'))
       else:
         result = fn(*args, **kwargs)
-        pickle.dump(result, _open_pkl_path(pickle_src, 'wb'))
+        pickle.dump(
+            result,
+            _open_pkl_path(pickle_src, 'wb'),
+            protocol=pickle.HIGHEST_PROTOCOL)
       return result
 
     return fn_wrapper
