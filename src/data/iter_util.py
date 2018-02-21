@@ -7,7 +7,7 @@ T = TypeVar('T')  # Generic type.
 def map_both(
     maps: List[Mapping[str, T]],
     whitelist: Optional[Iterable[str]] = None,
-    blacklist: Optional[Container[str]] = None
+    blacklist: Optional[Container[str]] = None,
 ) -> Iterable[Tuple[str, List[T]]]:
   if not maps:
     return []
