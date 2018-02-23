@@ -18,8 +18,9 @@ def get_words(
   for line, value in word_frequencies.parse_file(file):
     if len(line) > 12:
       continue
-    if multi and not all(_check(word) for word in line.split()):
-      continue
+    if multi:
+      if not all(_check(word) for word in line.split()):
+        continue
     elif not _check(line):
       continue
     yield line, value
@@ -146,6 +147,7 @@ with description('benchmarks: node merging', 'end2end') as self:
 
 with description('benchmarks: unigram/bigram walk', 'end2end') as self:
   with before.all:
+    #self.root = ngram.get(lengths_mask=0b111111)
     self.root = pickled_ngrams(0b111111)
 
   with it('should find common results'):

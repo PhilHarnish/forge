@@ -153,32 +153,32 @@ with description('repr') as self:
 with description('annotations'):
   with it('starts empty'):
     node = bloom_node.BloomNode()
-    expect(node.annotations()).to(be_empty)
+    expect(node.annotations()).to(be_none)
 
   with it('holds values'):
     node = bloom_node.BloomNode()
-    node.annotations({'key': 'value'})
+    node.annotate({'key': 'value'})
     expect(repr(node)).to(equal("BloomNode('', '', 0, key='value')"))
 
   with it('merges values via +'):
     a = bloom_node.BloomNode()
-    a.annotations({'key': 'value'})
+    a.annotate({'key': 'value'})
     b = bloom_node.BloomNode()
     node = a + b
     expect(repr(node)).to(equal("BloomNode('', '', 0, key='value')"))
 
   with it('merges values via *'):
     a = bloom_node.BloomNode()
-    a.annotations({'key': 'value'})
+    a.annotate({'key': 'value'})
     b = bloom_node.BloomNode()
     node = a * b
     expect(repr(node)).to(equal("BloomNode('', '', 0, key='value')"))
 
   with it('merges duplicates'):
     a = bloom_node.BloomNode()
-    a.annotations({'key': 'value1'})
+    a.annotate({'key': 'value1'})
     b = bloom_node.BloomNode()
-    b.annotations({'key': 'value2'})
+    b.annotate({'key': 'value2'})
     node = a + b
     expect(repr(node)).to(
         equal("BloomNode('', '', 0, key={'value1', 'value2'})"))

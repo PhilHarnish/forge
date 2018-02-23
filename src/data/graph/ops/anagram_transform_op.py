@@ -75,7 +75,7 @@ class _AnagramTransformIndex(object):
     node.provide_mask = self._exit_node.provide_mask
     node.require_mask = self._exit_node.require_mask
     node.lengths_mask = self._exit_node.lengths_mask
-    node.annotations({'anagrams': anagrams})
+    node.annotate({'anagrams': anagrams})
     node.max_weight = self._exit_node.max_weight
     nodes_with_spaces = []
     for child_choice, child_duplicates in children:

@@ -2,13 +2,15 @@ import itertools
 from typing import Container, ItemsView, List, Optional, Tuple
 
 from data import iter_util
-from data.graph import _op_mixin, bloom_node
+from data.graph import _op_mixin, bloom_mask, bloom_node, edge_mask_iter_util
 from data.graph.ops import anagram_op, anagram_transform_op
+
+reduce = bloom_mask.everything.child('reduce')
 
 
 def merge(host: 'bloom_node.BloomNode') -> None:
   op = host.op
-  _, merge_fn, _ = _operator_functions[op.operator()]
+  _, _, merge_fn, _ = _operator_functions[op.operator()]
   operands = op.operands()
   if not operands:
     return
@@ -20,13 +22,18 @@ def merge(host: 'bloom_node.BloomNode') -> None:
     else:
       extra.append(operator)
   merge_fn(
-      host, nodes, extra, whitelist=None, blacklist=host.edges(readonly=True))
+      host, nodes, extra, whitelist=None, blacklist=host.edges(readonly=True),
+      blacklist_mask=host.edge_mask,
+  )
 
 
+@reduce.profile('dict')
 def reduce(
     host: 'bloom_node.BloomNode',
     whitelist: Container[str] = None,
-    blacklist: Container[str] = None) -> ItemsView[str, 'bloom_node.BloomNode']:
+    blacklist: Container[str] = None,
+    whitelist_mask: int = bloom_mask.REQUIRE_NOTHING,
+    blacklist_mask: int = 0) -> ItemsView[str, 'bloom_node.BloomNode']:
   op = host.op
   operands = op.operands()
   if not operands:
@@ -40,7 +47,7 @@ def reduce(
       edges.append(operator.edges())
     else:
       extra.append(operator)
-  iterator_fn, merge_fn, visitor_fn = _operator_functions[op.operator()]
+  _, iterator_fn, merge_fn, visitor_fn = _operator_functions[op.operator()]
   for key, sources in iterator_fn(
       edges,
       whitelist=whitelist,
@@ -50,7 +57,42 @@ def reduce(
       yield key, result
   # Merge must run after visit: visit will add host's outgoing edges and set
   # mask properties which merge expects to be present.
-  merge_fn(host, nodes, extra, whitelist=whitelist, blacklist=blacklist)
+  merge_fn(
+      host, nodes, extra, whitelist=whitelist, blacklist=blacklist,
+      whitelist_mask=whitelist_mask, blacklist_mask=blacklist_mask)
+
+
+@reduce.profile('list')
+def reduce(
+    host: 'bloom_node.BloomNode',
+    whitelist: Container[str] = None,
+    blacklist: Container[str] = None,
+    whitelist_mask: int = bloom_mask.REQUIRE_NOTHING,
+    blacklist_mask: int = 0) -> ItemsView[str, 'bloom_node.BloomNode']:
+  op = host.op
+  operands = op.operands()
+  if not operands:
+    return {}.items()
+  nodes = []
+  extra = []
+  for operator in operands:
+    if hasattr(operator, 'edge_mask'):
+      nodes.append(operator)
+    else:
+      extra.append(operator)
+  iterator_fn, _, merge_fn, visitor_fn = _operator_functions[op.operator()]
+  for key, sources in iterator_fn(
+      nodes,
+      whitelist=whitelist_mask,
+      blacklist=blacklist_mask):
+    result = visitor_fn(sources, extra)
+    if result is not None:
+      yield key, result
+  # Merge must run after visit: visit will add host's outgoing edges and set
+  # mask properties which merge expects to be present.
+  merge_fn(
+      host, nodes, extra, whitelist=whitelist, blacklist=blacklist,
+      whitelist_mask=whitelist_mask, blacklist_mask=blacklist_mask)
 
 
 def _merge_add(
@@ -67,7 +109,7 @@ def _merge_add(
   host.max_weight = max(host.max_weight, max_weight)
   host.match_weight = max(host.match_weight, match_weight)
   for source in sources:
-    host.annotations(source.annotations())
+    host.annotate(source.annotations())
 
 
 def _merge_multiply(
@@ -84,7 +126,7 @@ def _merge_multiply(
   host.max_weight = max(host.max_weight, max_weight)
   host.match_weight = max(host.match_weight, match_weight)
   for source in sources:
-    host.annotations(source.annotations())
+    host.annotate(source.annotations())
 
 
 def _merge_call(
@@ -236,10 +278,10 @@ def _visit_fail(
 
 # Note: Order of operators must match _op_mixin.
 _operator_functions = [
-  (iter_util.map_common, _merge_add, _visit_identity),
-  (iter_util.map_both, _merge_add, _visit_add),
-  (iter_util.map_common, _merge_multiply, _visit_multiply),
-  (iter_util.map_none, anagram_op.merge_fn, _visit_fail),
-  (iter_util.map_none, anagram_transform_op.merge_fn, _visit_fail),
-  (iter_util.map_both, _merge_call, _visit_call),
+  (edge_mask_iter_util.iterable_common, iter_util.map_common, _merge_add, _visit_identity),
+  (edge_mask_iter_util.iterable_both, iter_util.map_both, _merge_add, _visit_add),
+  (edge_mask_iter_util.iterable_common, iter_util.map_common, _merge_multiply, _visit_multiply),
+  (iter_util.map_none, iter_util.map_none, anagram_op.merge_fn, _visit_fail),
+  (iter_util.map_none, iter_util.map_none, anagram_transform_op.merge_fn, _visit_fail),
+  (edge_mask_iter_util.iterable_both, iter_util.map_both, _merge_call, _visit_call),
 ]

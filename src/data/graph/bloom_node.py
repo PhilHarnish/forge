@@ -1,8 +1,14 @@
 import collections
-from typing import Any, Dict, ItemsView, Iterable, Optional
+from typing import Any, Dict, ItemsView, Iterable, List, Optional
 
 from data.convert import repr_format
 from data.graph import _op_mixin, bloom_mask, bloom_node_reducer
+
+everything = bloom_mask.everything
+__init__ = everything.child('init')
+items = everything.child('items')
+_link = everything.child('_link')
+open = everything.child('open')
 
 
 class BloomNode(_op_mixin.OpMixin):
@@ -15,6 +21,8 @@ class BloomNode(_op_mixin.OpMixin):
     'match_weight',
     '_annotations',
     '_edges',
+    'edge_mask',
+    '_edge_list',
   )
 
   # Bloom filter for edge labels provided by descendants.
@@ -31,7 +39,10 @@ class BloomNode(_op_mixin.OpMixin):
   _annotations: Dict[str, Any]
   # Outgoing edges of this node.
   _edges: Dict[str, 'BloomNode']
+  edge_mask: int
+  _edge_list: List['BloomNode']
 
+  @__init__.profile('dict')
   def __init__(self, op: Optional[_op_mixin.Op] = None) -> None:
     super(BloomNode, self).__init__(op)
     self.provide_mask = bloom_mask.PROVIDE_NOTHING
@@ -39,7 +50,28 @@ class BloomNode(_op_mixin.OpMixin):
     self.lengths_mask = 0
     self.match_weight = 0
     self.max_weight = 0
-    self._annotations = collections.defaultdict(_AnnotationValue)
+    self._annotations = None
+    self._edges = {}
+
+  @__init__.after('dict')
+  def __init__(self, op: Optional[_op_mixin.Op] = None) -> None:
+    self.edge_mask = 0
+    self._edge_list = [None] * bloom_mask.SIZE
+
+  @__init__.profile('list')
+  def __init__(self, op: Optional[_op_mixin.Op] = None) -> None:
+    super(BloomNode, self).__init__(op)
+    self.provide_mask = bloom_mask.PROVIDE_NOTHING
+    self.require_mask = bloom_mask.REQUIRE_NOTHING
+    self.lengths_mask = 0
+    self.match_weight = 0
+    self.max_weight = 0
+    self._annotations = None
+    self.edge_mask = 0
+    self._edge_list = [None] * bloom_mask.SIZE
+
+  @__init__.after('list')
+  def __init__(self, op: Optional[_op_mixin.Op] = None) -> None:
     self._edges = {}
 
   def distance(self, length: int) -> None:
@@ -51,9 +83,26 @@ class BloomNode(_op_mixin.OpMixin):
       self._expand()
     return self._edges
 
+  def edge_list(self, readonly=False) -> List['BloomNode']:
+    if not readonly:
+      self._expand()
+    return self._edge_list
+
+  @items.profile('dict')
   def items(self) -> ItemsView[str, 'BloomNode']:
     self._expand()
     yield from self._edges.items()
+
+  @items.profile('list')
+  def items(self) -> ItemsView[str, 'BloomNode']:
+    self._expand()
+    i = 0
+    idx = 1 << i
+    while self.edge_mask >= idx:
+      if self.edge_mask & idx:
+        yield (bloom_mask.ALPHA_CHARACTERS[i], self._edge_list[i])
+      i += 1
+      idx = 1 << i
 
   def link(self, key: str, node: 'BloomNode') -> None:
     """Links `self` to `node` via `key`."""
@@ -63,19 +112,17 @@ class BloomNode(_op_mixin.OpMixin):
     for key in keys:
       self._link(key, node, True)
 
+  @_link.profile('dict')
   def _link(self, key: str, node: 'BloomNode', inherit: bool) -> None:
     if key in self._edges:
       raise KeyError('Key "%s" already linked' % key)
     self._edges[key] = node
     if not inherit:
       return
-    try:
-      edge_mask = bloom_mask.for_alpha(key)  # FIXME: This is inflexible.
-      self.provide_mask |= edge_mask
-      require_edge_mask = edge_mask
-    except ValueError:
-      require_edge_mask = bloom_mask.REQUIRE_NOTHING
-    if key in bloom_mask.SEPARATOR:
+    edge_mask = bloom_mask.for_alpha(key)
+    self.provide_mask |= edge_mask
+    require_edge_mask = edge_mask
+    if key == bloom_mask.WORD_SEPARATOR:
       # Prevent inheriting across word boundary characters.
       # Additionally, this node is (apparently) terminal and doesn't require
       # any additional characters (aside from perhaps space itself).
@@ -96,15 +143,66 @@ class BloomNode(_op_mixin.OpMixin):
     if node.max_weight > self.max_weight:
       self.max_weight = node.max_weight
 
-  def annotations(
+  @_link.after('dict')
+  def _link(self, key: str, node: 'BloomNode', inherit: bool) -> None:
+    del inherit
+    idx = bloom_mask.index_of(key)
+    self._edge_list[idx] = node
+    edge_mask = bloom_mask.for_alpha(key)
+    self.edge_mask |= edge_mask
+
+  @_link.profile('list')
+  def _link(self, key: str, node: 'BloomNode', inherit: bool) -> None:
+    idx = bloom_mask.index_of(key)
+    edge_mask = 1 << idx
+    if edge_mask & self.edge_mask:
+      raise KeyError('Key "%s" already linked' % key)
+    self.edge_mask |= edge_mask
+    self._edge_list[idx] = node
+    if not inherit:
+      return
+    self.provide_mask |= edge_mask
+    if key == bloom_mask.WORD_SEPARATOR:
+      # Prevent inheriting across word boundary characters.
+      # Additionally, this node is (apparently) terminal and doesn't require
+      # any additional characters (aside from perhaps space itself).
+      self.require_mask &= edge_mask
+      return
+    if node.op:
+      bloom_node_reducer.merge(node)
+    self.provide_mask |= node.provide_mask
+    if node.match_weight:
+      # We cannot inherit requirements from a matching node; traversing edge
+      # is a sufficient requirement.
+      require_child_mask = bloom_mask.REQUIRE_NOTHING
+    else:
+      require_child_mask = node.require_mask
+    self.require_mask &= edge_mask | require_child_mask
+    # Inherit matching lengths (offset by 1).
+    self.lengths_mask |= node.lengths_mask << 1
+    if node.max_weight > self.max_weight:
+      self.max_weight = node.max_weight
+
+  @_link.after('list')
+  def _link(self, key: str, node: 'BloomNode', inherit: bool) -> None:
+    del inherit
+    self._edges[key] = node
+
+  def annotate(
       self, new_annotations: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     if new_annotations is not None:
+      if self._annotations is None:
+        self._annotations = collections.defaultdict(_AnnotationValue)
       for key, value in new_annotations.items():
         self._annotations[key].add(value)
-    elif self.op:
+    return self._annotations
+
+  def annotations(self) -> Dict[str, Any]:
+    if self.op:
       bloom_node_reducer.merge(self)
     return self._annotations
 
+  @open.profile('dict')
   def open(self, key: str) -> 'BloomNode':
     """Return outgoing edge `k`. Create node if necessary."""
     if key not in self._edges:
@@ -113,6 +211,28 @@ class BloomNode(_op_mixin.OpMixin):
         child = self._alloc()
       self._link(key, child, False)
     return self._edges[key]
+
+  @open.after('dict')
+  def open(self, key: str) -> None:
+    idx = bloom_mask.index_of(key)
+    self._edge_list[idx] = self._edges[key]
+
+  @open.profile('list')
+  def open(self, key: str) -> 'BloomNode':
+    """Return outgoing edge `k`. Create node if necessary."""
+    idx = bloom_mask.index_of(key)
+    edge_mask = 1 << idx
+    if edge_mask & self.edge_mask == 0:
+      child = self._find(key)
+      if child is None:
+        child = self._alloc()
+      self._link(key, child, False)
+    return self._edge_list[idx]
+
+  @open.after('list')
+  def open(self, key: str) -> None:
+    idx = bloom_mask.index_of(key)
+    self._edges[key] = self._edge_list[idx]
 
   def require(self, mask: int) -> None:
     """Declare requirements for this node."""
@@ -160,7 +280,8 @@ class BloomNode(_op_mixin.OpMixin):
   def _expand(self) -> None:
     if self.op is None:
       return
-    for key, reduced in bloom_node_reducer.reduce(self, blacklist=self._edges):
+    for key, reduced in bloom_node_reducer.reduce(
+        self, blacklist=self._edges, blacklist_mask=self.edge_mask):
       self._link(key, reduced, True)
     self.op = None  # No need to redo this work ever again.
 
@@ -168,7 +289,9 @@ class BloomNode(_op_mixin.OpMixin):
     """Returns common node for `k` from sources, if any."""
     if not self.op:
       return None
-    for key, reduced in bloom_node_reducer.reduce(self, whitelist={key}):
+    target = bloom_mask.for_alpha(key)
+    for key, reduced in bloom_node_reducer.reduce(
+        self, whitelist={key}, whitelist_mask=target):
       return reduced
     return None
 
