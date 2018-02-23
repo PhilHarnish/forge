@@ -67,7 +67,7 @@ def _merge_add(
   host.max_weight = max(host.max_weight, max_weight)
   host.match_weight = max(host.match_weight, match_weight)
   for source in sources:
-    host.annotations(source.annotations())
+    host.annotate(source.annotations())
 
 
 def _merge_multiply(
@@ -84,7 +84,7 @@ def _merge_multiply(
   host.max_weight = max(host.max_weight, max_weight)
   host.match_weight = max(host.match_weight, match_weight)
   for source in sources:
-    host.annotations(source.annotations())
+    host.annotate(source.annotations())
 
 
 def _merge_call(

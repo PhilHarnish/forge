@@ -39,7 +39,7 @@ class BloomNode(_op_mixin.OpMixin):
     self.lengths_mask = 0
     self.match_weight = 0
     self.max_weight = 0
-    self._annotations = collections.defaultdict(_AnnotationValue)
+    self._annotations = None
     self._edges = {}
 
   def distance(self, length: int) -> None:
@@ -69,13 +69,10 @@ class BloomNode(_op_mixin.OpMixin):
     self._edges[key] = node
     if not inherit:
       return
-    try:
-      edge_mask = bloom_mask.for_alpha(key)  # FIXME: This is inflexible.
-      self.provide_mask |= edge_mask
-      require_edge_mask = edge_mask
-    except ValueError:
-      require_edge_mask = bloom_mask.REQUIRE_NOTHING
-    if key in bloom_mask.SEPARATOR:
+    edge_mask = bloom_mask.for_alpha(key)
+    self.provide_mask |= edge_mask
+    require_edge_mask = edge_mask
+    if key == bloom_mask.WORD_SEPARATOR:
       # Prevent inheriting across word boundary characters.
       # Additionally, this node is (apparently) terminal and doesn't require
       # any additional characters (aside from perhaps space itself).
@@ -96,12 +93,17 @@ class BloomNode(_op_mixin.OpMixin):
     if node.max_weight > self.max_weight:
       self.max_weight = node.max_weight
 
-  def annotations(
+  def annotate(
       self, new_annotations: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     if new_annotations is not None:
+      if self._annotations is None:
+        self._annotations = collections.defaultdict(_AnnotationValue)
       for key, value in new_annotations.items():
         self._annotations[key].add(value)
-    elif self.op:
+    return self._annotations
+
+  def annotations(self) -> Dict[str, Any]:
+    if self.op:
       bloom_node_reducer.merge(self)
     return self._annotations
 

@@ -2,18 +2,17 @@ import itertools
 from typing import Iterable
 
 BASE_ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
-UNIT_SEPARATOR = chr(31)
 WORD_SEPARATOR = ' '
 EXTRA = "'"
-SEPARATOR = {UNIT_SEPARATOR, WORD_SEPARATOR}
+SEPARATOR = WORD_SEPARATOR
 
 
 # Should letter frequency ('etaoinshrdlcumwfgypbvkjxqz') be used instead?
 _ALPHA_CHARACTERS = BASE_ALPHABET + WORD_SEPARATOR + EXTRA
+SIZE = len(_ALPHA_CHARACTERS)
 _ALPHA_MAP = {
   c: 2**i for i, c in enumerate(_ALPHA_CHARACTERS)
 }
-_ALPHA_MAP[UNIT_SEPARATOR] = _ALPHA_MAP[' ']
 _ALPHA_ARRAY = [_ALPHA_MAP.get(chr(c), 0) for c in range(128)]
 
 

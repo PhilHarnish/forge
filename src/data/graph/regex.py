@@ -165,9 +165,9 @@ class _RegexVisitor(object):
     assert y == 0
     exit_node = cursor
     group_name = self._inverted_groups.get(group_id, group_id)
-    exit_node.annotations({'EXIT_%s' % group_name: group_id})
+    exit_node.annotate({'EXIT_%s' % group_name: group_id})
     enter = self._visit(cursor, pattern, exits[-1][-1])
-    enter.annotations({'ENTER_%s' % group_name: group_id})
+    enter.annotate({'ENTER_%s' % group_name: group_id})
     return enter
 
   def _make_regex_anagram_factory(
