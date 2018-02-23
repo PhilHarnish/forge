@@ -18,37 +18,45 @@ with description('perf'):
     perf.pop()
 
   with it('constructs for 2 variants, by default'):
-    expect(calling(perf.Head2Head, 'test')).not_to(raise_error)
-    expect(str(perf.Head2Head('test'))).to(look_like("""
+    expect(calling(perf.Perf, 'test')).not_to(raise_error)
+    expect(str(perf.Perf('test'))).to(look_like("""
         test
-        #0: 0 (0 calls)
-        #1: 0 (0 calls)
+        1: 0 (0 calls)
+        2: 0 (0 calls)
     """))
 
   with it('benchmarks variable number of variants'):
-    b = perf.Head2Head('test', 4)
+    b = perf.Perf('test', 4)
     expect(str(b)).to(look_like("""
         test
-        #0: 0 (0 calls)
-        #1: 0 (0 calls)
-        #2: 0 (0 calls)
-        #3: 0 (0 calls)
+        1: 0 (0 calls)
+        2: 0 (0 calls)
+        3: 0 (0 calls)
+        4: 0 (0 calls)
     """))
 
-  with it('increments time with start & end calls'):
-    b = perf.Head2Head('test', 1)
-    b.start()
-    b.end()
+  with it('annotates functions'):
+    b = perf.Perf('test', 1)
+    @b.profile(1)
+    def fn() -> None:
+      pass
+    fn()
     expect(str(b)).to(look_like("""
         test
-        #0: 1.0/s, 1.0x (1 calls)
+        1: 1.00/s, 1.00x (1 calls, 1000.00u)
     """))
 
-  with it('supports contextlib enter/exit'):
-    b = perf.Head2Head('test', 1)
-    with b.enter(0):
-      next(_CLOCK)
-    expect(str(b)).to(look_like("""
-        test
-        #0: 0.5/s, 1.0x (1 calls)
-    """))
+  with it('registers before and after functions'):
+    b = perf.Perf('test', 1)
+    called = []
+    @b.before(1)
+    def fn() -> None:
+      called.append('before')
+    @fn.profile(1)
+    def fn() -> None:
+      called.append('profile')
+    @fn.after(1)
+    def fn() -> None:
+      called.append('after')
+    fn()
+    expect(called).to(equal(['before', 'profile', 'after']))

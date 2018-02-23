@@ -1,81 +1,74 @@
-import contextlib
+import random
 import time
-from typing import Optional
-
+from typing import Any, Callable, Dict, List, NamedTuple, Union
 
 _STATES = []
 _ALL_PERFS = []
+Variant = Union[str, int]
+Implementation = Dict[Variant, Callable]
+class ImplementationHooks(NamedTuple):
+  before: Implementation
+  body: Implementation
+  after: Implementation
 
 
-class Head2Head(object):
-  def __init__(self, name, variants: int = 2) -> None:
+class Perf(object):
+  def __init__(self, name: str, variants: Union[List[str], int] = 2) -> None:
     self._name = name
-    self._idx = 0
-    self._variants = variants
-    self._running = None
-    self._timings = [(0, 0, 0)] * variants
+    if isinstance(variants, int):
+      self._variants = list(range(1, variants + 1))
+    else:
+      self._variants = variants
+    self._variants_map = {
+      name: index for index, name in enumerate(self._variants)
+    }
+    self._timings = [(0, 0, 0)] * len(self._variants)
+    self._parent = None
     _ALL_PERFS.append(self)
 
-  def variant(self) -> int:
-    return self._running or (self._idx % self._variants)
+  def next_variant(self) -> Variant:
+    return random.choice(self._variants)
 
-  def start(self, variant: Optional[int] = None) -> None:
-    if self._running is not None:
-      raise Exception('Already running variant %s' % self._running)
-    if variant is None:
-      variant = self.variant()
-      self._idx += 1
+  def child(self, name) -> 'Perf':
+    result = Perf('%s: %s' % (self._name, name), self._variants)
+    result._parent = self
+    return result
+
+  def increment(self, name: Variant, delta: float):
+    if self._parent:
+      self._parent.increment(name, delta)
+    variant = self._variants_map[name]
     calls, elapsed, last = self._timings[variant]
-    calls += 1
-    self._running = variant
-    self._timings[variant] = (calls, elapsed, time.perf_counter())
+    self._timings[variant] = (calls + 1, elapsed + delta, last)
 
-  def end(self, variant: Optional[int] = None) -> None:
-    end = time.perf_counter()
-    if self._running is None:
-      raise Exception('Benchmark not running')
-    if variant is None:
-      variant = self._running
-    elif variant != self._running:
-      raise Exception('Specified variant %s but % is running instead' % (
-        variant, self._running
-      ))
-    calls, elapsed, last = self._timings[variant]
-    self._running = None
-    self._timings[variant] = (calls, elapsed + (end - last), end)
+  def before(self, name) -> Callable:
+    return _Decorator(self).before(name)
 
-  @contextlib.contextmanager
-  def enter(self, variant: Optional[int] = None) -> None:
-    if self._running is not None:
-      raise Exception('Already running variant %s' % self._running)
-    if variant is None:
-      variant = self.variant()
-      self._idx += 1
-    calls, elapsed, last = self._timings[variant]
-    calls += 1
-    self._running = variant
-    last = time.perf_counter()
-    yield
-    end = time.perf_counter()
-    self._running = None
-    self._timings[variant] = (calls, elapsed + (end - last), end)
+  def profile(self, name) -> Callable:
+    return _Decorator(self).profile(name)
 
+  def after(self, name) -> Callable:
+    return _Decorator(self).after(name)
 
   def __str__(self) -> str:
     results = [self._name]
     if any(elapsed for _, elapsed, _ in self._timings):
-      best = min(elapsed for _, elapsed, _ in self._timings if elapsed)
+      worst = min(
+          calls / elapsed for calls, elapsed, _ in self._timings if elapsed)
     else:
-      best = 0
-    for variant, (calls, elapsed, last) in enumerate(self._timings):
+      worst = 0
+    for index, (calls, elapsed, last) in enumerate(self._timings):
       if elapsed:
         cps = calls / elapsed
-        x = elapsed / best
-        results.append('#%s: %s/s, %sx (%s calls)' % (variant, cps, x, calls))
+        x = cps / worst
+        results.append('%s: %.2f/s, %.2fx (%s calls, %.2fu)' % (
+          self._variants[index], cps, x, calls, 1000 * elapsed))
       elif calls:
-        results.append('#%s: inf (%s calls)' % (variant, calls))
+        results.append('%s: inf (%s calls)' % (
+          self._variants[index], calls))
       else:
-        results.append('#%s: 0 (0 calls)' % variant)
+        results.append('%s: 0 (0 calls)' % (
+          self._variants[index]))
     return '\n'.join(results)
 
 
@@ -91,3 +84,46 @@ def push() -> None:
 def pop() -> None:
   global _ALL_PERFS
   _ALL_PERFS = _STATES.pop()
+
+
+class _Decorator(object):
+  def __init__(self, perf: Perf) -> None:
+    self._perf = perf
+    self._before_hooks = {}
+    self._implementations = {}
+    self._after_hooks = {}
+    self._proxy = lambda *args, **kwargs: self._exec(args, kwargs)
+    setattr(self._proxy, 'before', self.before)
+    setattr(self._proxy, 'profile', self.profile)
+    setattr(self._proxy, 'after', self.after)
+
+  def _exec(self, args, kwargs) -> Any:
+    variant = self._perf.next_variant()
+    if variant in self._before_hooks:
+      self._before_hooks[variant](*args, **kwargs)
+    implementation = self._implementations[variant]
+    start = time.perf_counter()
+    result = implementation(*args, **kwargs)
+    end = time.perf_counter()
+    self._perf.increment(variant, end - start)
+    if variant in self._after_hooks:
+      self._after_hooks[variant](*args, **kwargs)
+    return result
+
+  def before(self, name: str) -> Callable:
+    def setter(fn: Callable) -> Callable:
+      self._before_hooks[name] = fn
+      return self._proxy
+    return setter
+
+  def profile(self, name: str) -> Callable:
+    def setter(fn: Callable) -> Callable:
+      self._implementations[name] = fn
+      return self._proxy
+    return setter
+
+  def after(self, name: str) -> Callable:
+    def setter(fn: Callable) -> Callable:
+      self._after_hooks[name] = fn
+      return self._proxy
+    return setter
