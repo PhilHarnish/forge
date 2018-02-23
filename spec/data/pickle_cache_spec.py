@@ -85,7 +85,7 @@ with description('pickle_cache'):
       expect(self.patched_open).to(have_been_called_with(
           'patched/prefix/1/key-value.pkl', 'wb'))
       expect(self.patched_pickle.dump).to(have_been_called_with(
-          ((1,), {'key': 'value'}), '<opened pkl>'))
+          ((1,), {'key': 'value'}), '<opened pkl>', protocol=mock.ANY))
 
   with description('cache_from_file'):
     with before.each:
