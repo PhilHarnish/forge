@@ -3,23 +3,30 @@ import os
 import pickle
 import re
 import sys
+from typing import Any, Callable, IO, Iterable
 
 from data import data
 
 _PICKLE_PATH = data.project_path('data/_pkl_cache')
 _SANITIZE_RE = re.compile(r'[^A-Za-z0-9]')
+_DISABLED_PREFIXES = set()
 
 
-def cache(prefix):
-  def test_fn(pickle_source, args, kwargs):
+TransformFn = Callable[[Callable], Callable]
+TestFn = Callable[[str, tuple, dict], bool]
+
+
+def cache(prefix: str) -> TransformFn:
+  def test_fn(pickle_source: str, args: tuple, kwargs: dict) -> bool:
     del args, kwargs
     # Always use pickle_source if present.
     return os.path.exists(pickle_source)
   return _cache(prefix, test_fn)
 
 
-def cache_from_file(prefix, path_fn = lambda *args: args[-1]):
-  def test_fn(pickle_source, args, kwargs):
+def cache_from_file(
+    prefix: str, path_fn: Callable = lambda *args: args[-1]) -> TransformFn:
+  def test_fn(pickle_source: str, args: tuple, kwargs: dict) -> bool:
     file_source = path_fn(*args, **kwargs)
     if 'pickle_cache_spec' in file_source:
       return False  # Quick fix to make testing easy.
@@ -30,9 +37,19 @@ def cache_from_file(prefix, path_fn = lambda *args: args[-1]):
   return _cache(prefix, test_fn)
 
 
-def _cache(prefix, test_fn):
-  def decorator(fn):
-    def fn_wrapper(*args, **kwargs):
+def disable(prefixes: Iterable) -> None:
+  _DISABLED_PREFIXES.update(prefixes)
+
+
+def enable(prefixes: Iterable) -> None:
+  _DISABLED_PREFIXES.difference_update(prefixes)
+
+
+def _cache(prefix: str, test_fn: TestFn) -> TransformFn:
+  def decorator(fn: Callable) -> Callable:
+    def fn_wrapper(*args: Any, **kwargs: Any) -> Any:
+      if prefix in _DISABLED_PREFIXES:
+        return fn(*args, **kwargs)
       pickle_src = _path_for_prefix_and_args(prefix, args, kwargs)
       parent_dir = os.path.dirname(pickle_src)
       if not os.path.exists(parent_dir):
@@ -52,8 +69,7 @@ def _cache(prefix, test_fn):
   return decorator
 
 
-
-def _resolve_path(file_source):
+def _resolve_path(file_source: str) -> str:
   for base in sys.path:
     candidate = os.path.join(base, file_source)
     if os.path.exists(candidate):
@@ -61,11 +77,11 @@ def _resolve_path(file_source):
   raise IOError('Unable to stat %s' % file_source)
 
 
-def _open_pkl_path(path, mode):
+def _open_pkl_path(path: str, mode: str) -> IO:
   return open(path, mode)
 
 
-def _path_for_prefix_and_args(prefix, args, kwargs):
+def _path_for_prefix_and_args(prefix: str, args: tuple, kwargs: dict):
   parts = [_PICKLE_PATH, prefix]
   if not args and not kwargs:
     parts.append('_')
@@ -76,7 +92,7 @@ def _path_for_prefix_and_args(prefix, args, kwargs):
   return os.path.join(*parts) + '.pkl'
 
 
-def _sanitize(o):
+def _sanitize(o: Any) -> str:
   if isinstance(o, dict):
     return _sanitize_dict(o)
   elif isinstance(o, list):
@@ -93,13 +109,13 @@ def _sanitize(o):
   return '_' + _hash(as_str)
 
 
-def _sanitize_list(o):
+def _sanitize_list(o: Iterable) -> str:
   if not o:
     return '_empty_list'
   return ','.join(_sanitize(i) for i in o)
 
 
-def _sanitize_dict(o):
+def _sanitize_dict(o: dict) -> str:
   if not o:
     return '_empty_dict'
   sorted_items = sorted(o.items(), key=lambda i: i[0])
@@ -108,5 +124,5 @@ def _sanitize_dict(o):
   )
 
 
-def _hash(s):
+def _hash(s: str) -> str:
   return hashlib.md5(bytes(s, encoding='UTF-8')).hexdigest()[:9]
