@@ -238,6 +238,10 @@ class call(object):
         raise e
     return self._cached_value
 
+  @property
+  def __class__(self) -> Type:
+    return type(self._value)
+
   def __repr__(self) -> str:
     args = repr_format.as_args(*self._args, **self._kwargs)
     if self._value is None:
