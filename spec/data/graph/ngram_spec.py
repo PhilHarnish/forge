@@ -19,7 +19,7 @@ new    3000
 been   2000
 one    1000
 man     500
-""".strip()
+"""
 _2GRAM = """
 and the 750000
 for the 700000
@@ -31,7 +31,7 @@ are not 430000
 are the 425000
 you are 425000
 not the 420000 
-""".strip()
+"""
 _3GRAM = """
 and the only 440000
 for the next 438000
@@ -51,7 +51,7 @@ not for the  433000
 and not the  432000
 and not a    431000
 and the man  431000
-""".strip()
+"""
 _4GRAM = """
 the end of the   440000
 at the end of    430000
@@ -64,7 +64,7 @@ and the end of   423000
 and the only way 423000
 was not the only 423000
 was not in the   422000
-""".strip()
+"""
 _5GRAM = """
 for the rest of the  390000
 and the rest of the  390000
@@ -80,14 +80,18 @@ for the end of the   392000
 and was one of the   392000
 was the one who was  391000
 for the sake of argument 391000
-""".strip()
+"""
+
+def normalize(s: str) -> str:
+  s = s.strip()
+  return '\n'.join(' '.join(line.split()) for line in s.split('\n'))
 
 _FILES = {
-  'data/g1m_1gram.txt': _1GRAM,
-  'data/coca_2gram.txt': _2GRAM,
-  'data/coca_3gram.txt': _3GRAM,
-  'data/coca_4gram.txt': _4GRAM,
-  'data/coca_5gram.txt': _5GRAM,
+  'data/g1m_1gram.txt': normalize(_1GRAM),
+  'data/coca_2gram.txt': normalize(_2GRAM),
+  'data/coca_3gram.txt': normalize(_3GRAM),
+  'data/coca_4gram.txt': normalize(_4GRAM),
+  'data/coca_5gram.txt': normalize(_5GRAM),
 }
 
 def open_project_path_stub(f: str) -> Iterable[str]:

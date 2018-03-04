@@ -3,14 +3,20 @@
 Caches constructed tree for subsequent access (both in memory and on disk).
 """
 import functools
-from typing import Dict, List, Tuple
+from typing import Container, Dict, List, Tuple
 
-from data import data, pickle_cache, types
-from data.graph import bloom_mask, bloom_node, trie
+from data import data, pickle_cache
+from data.graph import bloom_mask, bloom_node
 
+_SPACE_MASK = bloom_mask.for_alpha(' ')
+_NGRAM_ROOT = bloom_node.BloomNode()
 _FILES = [
   'data/g1m_1gram.txt',
 ] + ['data/coca_%sgram.txt' % i for i in range(2, 5+1)]
+
+
+NgramLeaf = Tuple[str, int, tuple]
+NgramEntry = Tuple[str, int, NgramLeaf]
 
 
 @functools.lru_cache(1)
@@ -19,10 +25,11 @@ def get(
     initial_mask: int = bloom_mask.REQUIRE_NOTHING,
     require_mask: int = bloom_mask.REQUIRE_NOTHING,
     lengths_mask: int = bloom_mask.ANY_LENGTHS) -> bloom_node.BloomNode:
-  root = bloom_node.BloomNode()
-  # TODO: Replace trie with in-place construction.
-  trie.add_ngrams(root, _ngrams(initial_mask, require_mask, lengths_mask))
-  return root
+  prefix = ''
+  return _NGRAM_ROOT(
+      prefix,
+      _ngrams(prefix, initial_mask, require_mask, lengths_mask),
+      merge=_merge_expand_initial)
 
 
 def matching(node: bloom_node.BloomNode) -> bloom_node.BloomNode:
@@ -36,12 +43,14 @@ def matching(node: bloom_node.BloomNode) -> bloom_node.BloomNode:
 
 
 def _ngrams(
-    initial_mask, require_mask, lengths_mask) -> List[List[types.WeightedWord]]:
-  # TODO: Profile and optimize.
-  result = []
-  for f in _FILES:
-    results = []
-    result.append(results)
+    prefix: str,
+    initial_mask: int = bloom_mask.REQUIRE_NOTHING,
+    require_mask: int = bloom_mask.REQUIRE_NOTHING,
+    lengths_mask: int = bloom_mask.ANY_LENGTHS,
+) -> List[NgramEntry]:
+  results = []
+  n_words = prefix.count(' ') + 1
+  for word_count, f in enumerate(_FILES[:n_words], 1):
     for initial, length_entries in index(f).items():
       initial_alpha = bloom_mask.for_alpha(initial)
       if not initial_alpha & initial_mask:
@@ -61,26 +70,34 @@ def _ngrams(
         length_mask_remaining -= cursor  # Remove this bit from mask.
         for entry in entries:
           word, weight, masks = entry
+          if not prefix:
+            pass
+          elif not word.startswith(prefix):
+            continue
+          else:
+            # Matching prefix.
+            pass
           _, word_requires, _ = masks
           if require_mask and (require_mask & word_requires) != require_mask:
             continue  # Some of require_mask was missing from word.
-          results.append((word, weight))
-  return result
+          results.append(entry)
+  return results
 
 
 @pickle_cache.cache('data/graph/ngram/index')
-def index(src: str) -> Dict[str, List[Tuple[str, str, tuple]]]:
+def index(src: str) -> Dict[str, List[List[NgramEntry]]]:
   """Open `src` and return a list of lists of lists of int.
 
   The leaves (char, int, tuple), nested recursively, and describe require_mask.
-  These require_masks are wrapped as (word, weight, masks).
+  These leaf entries are wrapped as (words, weight, masks) in a List.
   Next, a List, ordered by length.
   Finally, a Dict keyed by initial character.
   """
   result = {c: [] for c in bloom_mask.BASE_ALPHABET}
   for line in data.open_project_path(src):
-    words = line.split()
-    word = words[0]
+    parts = line.rpartition(' ')
+    words = parts[0]
+    word, _, _ = words.partition(' ')  # Discard other words.
     initial = word[0]
     row = result[initial]
     length = len(word)
@@ -88,9 +105,8 @@ def index(src: str) -> Dict[str, List[Tuple[str, str, tuple]]]:
     if missing > 0:
       row.extend([] for _ in range(missing))
     masks = _char_masks(word)
-    weight = int(words.pop())
-    # TODO: Remove ' '.join(words).
-    row[length - 1].append((' '.join(words), weight, masks))
+    weight = int(parts[2])
+    row[length - 1].append((words, weight, masks))
   return result
 
 
@@ -119,3 +135,65 @@ def _char_masks(s: str) -> tuple:
     _CHAR_MASK_CACHE[s[-suffix_length:]] = result
     suffix_length += 1
   return result
+
+
+def _merge_expand_initial(
+    host: bloom_node.BloomNode,
+    sources: List[bloom_node.BloomNode],
+    prefix: str,
+    ngrams: List[NgramEntry],
+    whitelist: Container[str] = None,
+    blacklist: Container[str] = None) -> None:
+  del sources
+  assert not whitelist
+  assert not blacklist
+  assert not prefix
+  children = []
+  children_initial = None
+  provide_mask = _SPACE_MASK
+  require_mask = bloom_mask.REQUIRE_NOTHING
+  lengths_mask = 0
+  max_weight = 0
+  for word, weight, masks in ngrams:
+    initial, mask, child_mask = masks
+    child_length_mask = 1 << len(word)
+    provide_mask |= mask
+    require_mask &= mask
+    lengths_mask |= child_length_mask
+    if weight > max_weight:
+      max_weight = weight
+    if children and initial != children_initial:
+      child_node = _NGRAM_ROOT(
+          prefix + children_initial, children, merge=_merge_expand_entries)
+      tmp_op = child_node.op
+      child_node.op = None  # Avoid early expansion.
+      host.link(children_initial, child_node)
+      child_node.op = tmp_op
+      children = []
+    if child_mask:
+      children.append((child_length_mask >> 1, weight, child_mask))
+    children_initial = initial
+  if children:
+    _NGRAM_ROOT(
+        prefix + children_initial, children, merge=_merge_expand_entries)
+  host.provide_mask = provide_mask
+  host.require_mask = require_mask
+  host.lengths_mask = lengths_mask
+  host.max_weight = max_weight
+
+
+def _merge_expand_entries(
+    host: bloom_node.BloomNode,
+    sources: List[bloom_node.BloomNode],
+    prefix: str,
+    ngrams: List[NgramEntry],
+    whitelist: Container[str] = None,
+    blacklist: Container[str] = None) -> None:
+  del host
+  del sources
+  del prefix
+  del ngrams
+  assert not whitelist
+  assert not blacklist
+  # TODO: Expand entries.
+  pass
