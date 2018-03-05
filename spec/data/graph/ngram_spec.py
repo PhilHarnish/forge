@@ -145,3 +145,12 @@ with description('get'):
   with it('returns a bloom node'):
     node = ngram.get()
     expect(repr(node)).to(equal("BloomNode('abdefhilmnorstwxy; ', ' ####', 0)"))
+
+  with it('expands results'):
+    node = ngram.get()
+    expect(path_values(node, 'the')).to(look_like("""
+      BloomNode('abdefhilmnorstwxy; ', ' ####', 0)
+      t = BloomNode('EH; ', '  #', 0)
+      h = BloomNode('E; ', ' #', 0)
+      e = BloomNode('', '#', 1000000)
+    """))

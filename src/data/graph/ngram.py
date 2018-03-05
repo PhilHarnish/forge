@@ -3,7 +3,7 @@
 Caches constructed tree for subsequent access (both in memory and on disk).
 """
 import functools
-from typing import Container, Dict, List, Tuple
+from typing import Container, Dict, Iterable, List, Tuple
 
 from data import data, pickle_cache
 from data.graph import bloom_mask, bloom_node
@@ -17,6 +17,7 @@ _FILES = [
 
 NgramLeaf = Tuple[str, int, tuple]
 NgramEntry = Tuple[str, int, NgramLeaf]
+ChildEntry = Tuple[int, int, NgramLeaf]
 
 
 @functools.lru_cache(1)
@@ -141,59 +142,80 @@ def _merge_expand_initial(
     host: bloom_node.BloomNode,
     sources: List[bloom_node.BloomNode],
     prefix: str,
-    ngrams: List[NgramEntry],
+    ngrams: Iterable[NgramEntry],
     whitelist: Container[str] = None,
     blacklist: Container[str] = None) -> None:
-  del sources
   assert not whitelist
   assert not blacklist
   assert not prefix
-  children = []
-  children_initial = None
-  provide_mask = _SPACE_MASK
-  require_mask = bloom_mask.REQUIRE_NOTHING
-  lengths_mask = 0
-  max_weight = 0
-  for word, weight, masks in ngrams:
-    initial, mask, child_mask = masks
-    child_length_mask = 1 << len(word)
-    provide_mask |= mask
-    require_mask &= mask
-    lengths_mask |= child_length_mask
-    if weight > max_weight:
-      max_weight = weight
-    if children and initial != children_initial:
-      child_node = _NGRAM_ROOT(
-          prefix + children_initial, children, merge=_merge_expand_entries)
-      tmp_op = child_node.op
-      child_node.op = None  # Avoid early expansion.
-      host.link(children_initial, child_node)
-      child_node.op = tmp_op
-      children = []
-    if child_mask:
-      children.append((child_length_mask >> 1, weight, child_mask))
-    children_initial = initial
-  if children:
-    _NGRAM_ROOT(
-        prefix + children_initial, children, merge=_merge_expand_entries)
-  host.provide_mask = provide_mask
-  host.require_mask = require_mask
-  host.lengths_mask = lengths_mask
-  host.max_weight = max_weight
+  _merge_expand_entries(
+      host, sources, prefix, _unpack_initial_ngrams(ngrams),
+      whitelist=whitelist,
+      blacklist=blacklist)
 
 
 def _merge_expand_entries(
     host: bloom_node.BloomNode,
     sources: List[bloom_node.BloomNode],
     prefix: str,
-    ngrams: List[NgramEntry],
+    ngrams: Iterable[ChildEntry],
     whitelist: Container[str] = None,
     blacklist: Container[str] = None) -> None:
-  del host
   del sources
-  del prefix
-  del ngrams
   assert not whitelist
   assert not blacklist
-  # TODO: Expand entries.
-  pass
+  children = []
+  children_initial = None
+  provide_mask = _SPACE_MASK
+  require_mask = bloom_mask.REQUIRE_NOTHING
+  lengths_mask = 0
+  max_weight = 0
+  match_weight = 0
+  for child_length_mask, weight, masks in ngrams:
+    initial, mask, child_mask = masks
+    provide_mask |= mask
+    require_mask &= mask
+    lengths_mask |= child_length_mask
+    if weight > max_weight:
+      max_weight = weight
+    if children_initial and initial != children_initial:
+      _link_child(
+          host, prefix + children_initial, children_initial, match_weight,
+          children)
+      children = []
+      match_weight = 0
+    if child_mask:
+      children.append((child_length_mask >> 1, weight, child_mask))
+    else:
+      match_weight = weight
+    children_initial = initial
+  _link_child(
+      host, prefix + children_initial, children_initial, match_weight, children)
+  host.provide_mask = provide_mask
+  host.require_mask = require_mask
+  host.lengths_mask = lengths_mask
+  host.max_weight = max_weight
+
+
+def _link_child(
+    host: bloom_node.BloomNode, prefix: str, initial: str, match_weight: int,
+    ngrams: Iterable[ChildEntry]) -> None:
+  if ngrams:
+    child_node = _NGRAM_ROOT(prefix, ngrams, merge=_merge_expand_entries)
+  elif match_weight:
+    child_node = bloom_node.BloomNode()
+    child_node.weight(match_weight, match=True)
+    child_node.distance(0)
+    # TODO: Link ' ' back to root with mutiplier.
+  else:
+    raise TypeError('No children or match_weight for %s' % initial)
+  tmp_op = child_node.op
+  child_node.op = None  # HACK: Avoid early expansion.
+  host.link(initial, child_node)
+  child_node.op = tmp_op
+
+
+def _unpack_initial_ngrams(
+    ngrams: Iterable[NgramEntry]) -> Iterable[ChildEntry]:
+  for word, weight, masks in ngrams:
+    yield 1 << len(word), weight, masks
