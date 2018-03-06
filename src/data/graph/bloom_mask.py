@@ -5,7 +5,7 @@ BASE_ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
 WORD_SEPARATOR = ' '
 EXTRA = "'"
 SEPARATOR = WORD_SEPARATOR
-
+ALPHABET = BASE_ALPHABET + WORD_SEPARATOR + EXTRA
 
 # Should letter frequency ('etaoinshrdlcumwfgypbvkjxqz') be used instead?
 _ALPHA_CHARACTERS = BASE_ALPHABET + WORD_SEPARATOR + EXTRA
@@ -80,10 +80,6 @@ def map_to_str(provide_mask: int, require_mask: int) -> str:
     if block:
       blocks.append(''.join(block))
   return ';'.join(blocks)
-
-
-def normalize(string: str) -> str:
-  return string.replace(UNIT_SEPARATOR, ' ')
 
 
 class BitMatchAnything(int):
