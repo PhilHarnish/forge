@@ -10,6 +10,8 @@ from data.graph import bloom_mask, bloom_node
 
 _SPACE_MASK = bloom_mask.for_alpha(' ')
 _NGRAM_ROOT = bloom_node.BloomNode()
+_LOOPBACK_SCALE = 1/1024
+_SCALED_ROOTS = {}
 _FILES = [
   'data/g1m_1gram.txt',
 ] + ['data/coca_%sgram.txt' % i for i in range(2, 5+1)]
@@ -206,16 +208,31 @@ def _link_child(
     child_node = bloom_node.BloomNode()
     child_node.weight(match_weight, match=True)
     child_node.distance(0)
-    # TODO: Link ' ' back to root with mutiplier.
+    root = _get_scaled_root(_LOOPBACK_SCALE)
+    _cheap_link(child_node, ' ', root)
   else:
     raise TypeError('No children or match_weight for %s' % initial)
-  tmp_op = child_node.op
-  child_node.op = None  # HACK: Avoid early expansion.
-  host.link(initial, child_node)
-  child_node.op = tmp_op
+  _cheap_link(host, initial, child_node)
+
+
+def _cheap_link(
+    parent: bloom_node.BloomNode,
+    initial: str,
+    child: bloom_node.BloomNode) -> None:
+  tmp_op = child.op
+  child.op = None  # HACK: Avoid early expansion.
+  parent.link(initial, child)
+  child.op = tmp_op
+
 
 
 def _unpack_initial_ngrams(
     ngrams: Iterable[NgramEntry]) -> Iterable[ChildEntry]:
   for word, weight, masks in ngrams:
     yield 1 << len(word), weight, masks
+
+
+def _get_scaled_root(scale: float) -> bloom_node.BloomNode:
+  if scale not in _SCALED_ROOTS:
+    _SCALED_ROOTS[scale] = get() * scale
+  return _SCALED_ROOTS[scale]

@@ -152,5 +152,5 @@ with description('get'):
       BloomNode('abdefhilmnorstwxy; ', ' ####', 0)
       t = BloomNode('EH; ', '  #', 0)
       h = BloomNode('E; ', ' #', 0)
-      e = BloomNode('', '#', 1000000)
+      e = BloomNode(' !', '#', 1000000)
     """))
