@@ -154,3 +154,16 @@ with description('get'):
       h = BloomNode('E; ', ' #', 0)
       e = BloomNode(' !', '#', 1000000)
     """))
+
+  with it('supports bigrams'):
+    node = ngram.get()
+    expect(path_values(node, 'and the')).to(look_like("""
+      BloomNode('abdefhilmnorstwxy; ', ' ####', 0)
+      a = BloomNode('denr; ', '  #', 0)
+      n = BloomNode('D; ', ' #', 0)
+      d = BloomNode(' !', '#', 500000)
+        = BloomNode('abdefhilmnorstwxy; ', ' ####', 0)
+      t = BloomNode('EH; ', '  #', 0)
+      h = BloomNode('E; ', ' #', 0)
+      e = BloomNode(' !', '#', 750000)
+    """))
