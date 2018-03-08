@@ -118,3 +118,35 @@ with description('reduce binary'):
   with it('calls reducer a minimum number of times'):
     iter_util.reduce_binary(self.reducer, range(32))
     expect(self.reducer).to(have_been_called_times(31))
+
+
+with description('iter_alphabetical_prefixes') as self:
+  with before.each:
+    self.subject = lambda x: list(iter_util.iter_alphabetical_prefixes(x))
+
+  with it('returns nothing for empty input'):
+    expect(self.subject([])).to(equal([]))
+
+  with it('returns given results for one iterable'):
+    expect(self.subject([['a']])).to(equal([('a', None)]))
+
+  with it('returns grouped results for one iterable'):
+    expect(self.subject([['a', 'b']])).to(equal([('a', None), ('b', None)]))
+
+  with it('groups similar results for multiple iterables'):
+    expect(self.subject([['a', 'b'], ['a a', 'a b']])).to(
+        equal([('a', [('a a', None), ('a b', None)]), ('b', [])]))
+
+  with it('groups many results for multiple iterables'):
+    expect(self.subject([
+      ['a',     'b',                      'c'],
+      ['a a',   'b a', 'b b',             'c a'],
+      ['a a a', 'b a a', 'b b a', 'b b b'],
+    ])).to(equal([
+      ('a', [('a a', [('a a a', None)])]),
+      ('b', [
+        ('b a', [('b a a', None)]),
+        ('b b', [('b b a', None), ('b b b', None)]),
+      ]),
+      ('c', [('c a', [])]),
+    ]))

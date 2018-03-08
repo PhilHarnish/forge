@@ -2,6 +2,7 @@ from typing import Callable, Container, Iterable, List, Mapping, Optional, \
   Tuple, TypeVar
 
 T = TypeVar('T')  # Generic type.
+_EXHAUSTED = {}
 
 
 def map_both(
@@ -12,7 +13,7 @@ def map_both(
   if not maps:
     return []
   if whitelist:
-    reference = {key for key in whitelist if any(key in map for map in maps)}
+    reference = {key for key in whitelist if any(key in m for m in maps)}
   else:
     # Combine keys from all maps as reference.
     reference = set()
@@ -83,3 +84,41 @@ def reduce_binary(
       queue.append(items.pop())
     items = queue
   return items[0]
+
+
+def iter_alphabetical_prefixes(
+    iterables: List[Iterable[str]]) -> Iterable[Iterable[str]]:
+  """Iter through all iterables simultaneously and yield grouped results.
+
+  Yields once for each item in iterables[0] such that result[1:] is a prefix of
+  result[0].
+  """
+  if not iterables:
+    return
+  cursors = [iter(i) for i in iterables]
+  next_values = [next(c, _EXHAUSTED) for c in cursors]
+  last_pos = len(iterables) - 1
+  results = []
+  stack = [('', results)]
+  while True:
+    if all(v is _EXHAUSTED for v in next_values):
+      break
+    pos = len(stack) - 1
+    parent, children = stack[pos]
+    next_value = next_values[pos]
+    if next_value is not _EXHAUSTED and next_value.startswith(parent):
+      pass  # Go deeper.
+    elif children is results:  # At end of stack.
+      yield from results
+      results.clear()
+    else:
+      stack.pop()  # Return up stack and retry.
+      continue
+    next_values[pos] = next(cursors[pos], _EXHAUSTED)
+    if pos < last_pos:
+      stack.append((next_value, []))
+      children.append(stack[pos + 1])
+    else:
+      # At the end of iterables.
+      children.append((next_value, None))
+  yield from results
