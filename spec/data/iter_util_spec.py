@@ -120,6 +120,31 @@ with description('reduce binary'):
     expect(self.reducer).to(have_been_called_times(31))
 
 
+with fdescription('ensure_prefix') as self:
+  with before.each:
+    self.subject = lambda *args: list(iter_util.ensure_prefix(args[0], args[1]))
+
+  with it('returns nothing for empty input'):
+    expect(self.subject([], [])).to(equal([]))
+
+  with it('returns from first if only first is provided'):
+    expect(self.subject(['a', 'b', 'c'], [])).to(equal(['a', 'b', 'c']))
+
+  with it('returns from first if only second is provided'):
+    expect(self.subject([], ['a c', 'b b', 'c a'])).to(equal(['a', 'b', 'c']))
+
+  with it('ignores second if prefixes are already ensured'):
+    expect(self.subject(['a', 'b', 'c'], ['a c', 'b b', 'c a'])).to(
+        equal(['a', 'b', 'c']))
+
+  with it('invents prefixes if required'):
+    expect(self.subject(['a', 'c'], ['a c', 'b b', 'c a'])).to(
+        equal(['a', 'b', 'c']))
+
+  with it('does not invents prefixes if not required'):
+    expect(self.subject(['a', 'c'], ['a c', 'c a'])).to(equal(['a', 'c']))
+
+
 with description('iter_alphabetical_prefixes') as self:
   with before.each:
     self.subject = lambda x: list(iter_util.iter_alphabetical_prefixes(x))

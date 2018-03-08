@@ -86,6 +86,28 @@ def reduce_binary(
   return items[0]
 
 
+def ensure_prefix(
+    source: Iterable[str], reference: Iterable[str],
+    delimiter: str = ' ') -> Iterable[str]:
+  """Returns iterable which ensures `source` always prefix `reference`."""
+  source_iter = iter(source)
+  source_next = next(source_iter, _EXHAUSTED)
+  for ref in reference:
+    ref_left, _, ref_right = ref.rpartition(delimiter)
+    while source_next is not _EXHAUSTED:
+      if source_next < ref_left:
+        yield source_next
+      elif source_next == ref_left:
+        pass  # NB: source_next == ref_left yields below.
+      else:
+        break
+      source_next = next(source_iter, _EXHAUSTED)
+    yield ref_left
+  if source_next is not _EXHAUSTED:
+    yield source_next
+    yield from source_iter
+
+
 def iter_alphabetical_prefixes(
     iterables: List[Iterable[str]]) -> Iterable[Iterable[str]]:
   """Iter through all iterables simultaneously and yield grouped results.
