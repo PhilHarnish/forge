@@ -58,6 +58,7 @@ def _cache(prefix: str, test_fn: TestFn) -> TransformFn:
         result = pickle.load(_open_pkl_path(pickle_src, 'rb'))
       else:
         result = fn(*args, **kwargs)
+        # TODO: Add async support.
         pickle.dump(
             result,
             _open_pkl_path(pickle_src, 'wb'),
