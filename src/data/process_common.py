@@ -52,16 +52,20 @@ def aggregate_prefixes(
 
   The iterable streams will be tee'd and consumed like so:
   0 1 2 3 4 ...
-  |/|/|/|/|
+  | | | |/|
+  | | |/| |
+  | |/| | |
+  |/| | | |
   x x x x x ...
   """
   n_iterables = len(iterables)
-  extras = [[]] * n_iterables
-  for i in range(1, n_iterables):
-    left, right = itertools.tee(iterables[i])
-    iterables[i] = left
-    extras[i] = right
-  for i in reversed(range(n_iterables - 1)):
-    iterables[i] = iter_util.ensure_prefix(
-        iterables[i], extras[i + 1], delimiter=delimiter)
+  if n_iterables == 1:
+    yield from iter_util.iter_alphabetical_prefixes(iterables)
+    return
+  carry, iterables[-1] = itertools.tee(iterables[-1])
+  for i in reversed(range(1, n_iterables - 1)):
+    carry, iterables[i] = itertools.tee(
+        iter_util.ensure_prefix(iterables[i], carry, delimiter=delimiter))
+  iterables[0] = iter_util.ensure_prefix(
+      iterables[0], carry, delimiter=delimiter)
   yield from iter_util.iter_alphabetical_prefixes(iterables)

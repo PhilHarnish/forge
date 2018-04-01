@@ -53,3 +53,8 @@ with description('aggregate_prefixes') as self:
       ('b', [('b b', None)]),
       ('c', [('c a', None)]),
     ]))
+
+  with it('should ensure prefixes from distant streams'):
+    expect(self.subject([], [], [], ['a b c d'])).to(equal([
+      ('a', [('a b', [('a b c', [('a b c d', None)])])]),
+    ]))
