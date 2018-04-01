@@ -1,3 +1,8 @@
+import itertools
+from typing import Iterable, List, Optional, Tuple
+
+from data import iter_util
+
 VOWELS = set('aeiouy')
 ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\'-'
 WHITELIST = [chr(code) in ALPHABET for code in range(128)]
@@ -38,3 +43,25 @@ def score(word: str, count: int, year: int) -> int:
   # Expect 1+ vowel in every 4 letters.
   vowel_scale = max(.25, min((n_vowels * 4) / len(word), 1))
   return int(count * year_scale * word_scale * vowel_scale)
+
+
+def aggregate_prefixes(
+    iterables: List[Iterable[str]],
+    delimiter: str = ' ') -> Iterable[Tuple[str, Optional[tuple]]]:
+  """Aggregate iterables into nested tuples with shared prefixes.
+
+  The iterable streams will be tee'd and consumed like so:
+  0 1 2 3 4 ...
+  |/|/|/|/|
+  x x x x x ...
+  """
+  n_iterables = len(iterables)
+  extras = [[]] * n_iterables
+  for i in range(1, n_iterables):
+    left, right = itertools.tee(iterables[i])
+    iterables[i] = left
+    extras[i] = right
+  for i in reversed(range(n_iterables - 1)):
+    iterables[i] = iter_util.ensure_prefix(
+        iterables[i], extras[i + 1], delimiter=delimiter)
+  yield from iter_util.iter_alphabetical_prefixes(iterables)
