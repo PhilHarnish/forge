@@ -120,7 +120,7 @@ with description('reduce binary'):
     expect(self.reducer).to(have_been_called_times(31))
 
 
-with fdescription('ensure_prefix') as self:
+with description('ensure_prefix') as self:
   with before.each:
     self.subject = lambda *args: list(iter_util.ensure_prefix(args[0], args[1]))
 
