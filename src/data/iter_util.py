@@ -109,7 +109,7 @@ def ensure_prefix(
 
 
 def iter_alphabetical_prefixes(
-    iterables: List[Iterable[str]]) -> Iterable[Iterable[str]]:
+    iterables: List[Iterable[str]]) -> Iterable[Tuple[str, Optional[tuple]]]:
   """Iter through all iterables simultaneously and yield grouped results.
 
   Yields once for each item in iterables[0] such that result[1:] is a prefix of
