@@ -92,24 +92,31 @@ def ensure_prefix(
   """Returns iterable which ensures `source` always prefix `reference`."""
   source_iter = iter(source)
   source_next = next(source_iter, _EXHAUSTED)
+  last_yield = None
   for ref in reference:
-    ref_left, _, ref_right = ref.rpartition(delimiter)
     while source_next is not _EXHAUSTED:
-      if source_next < ref_left:
-        yield source_next
-      elif source_next == ref_left:
+      expected_delimiter_pos = len(source_next)
+      if (len(ref) > expected_delimiter_pos and
+          ref[expected_delimiter_pos] == delimiter and
+          ref.startswith(source_next)):
         pass  # NB: source_next == ref_left yields below.
+      elif source_next < ref:
+        yield source_next
       else:
         break
       source_next = next(source_iter, _EXHAUSTED)
-    yield ref_left
+    ref_left, _, _ = ref.rstrip(delimiter).rpartition(delimiter)
+    if last_yield != ref_left:
+      yield ref_left
+    last_yield = ref_left
   if source_next is not _EXHAUSTED:
     yield source_next
     yield from source_iter
 
 
 def iter_alphabetical_prefixes(
-    iterables: List[Iterable[str]]) -> Iterable[Tuple[str, Optional[tuple]]]:
+    iterables: List[Iterable[str]],
+    delimiter: str = ' ') -> Iterable[Tuple[str, Optional[tuple]]]:
   """Iter through all iterables simultaneously and yield grouped results.
 
   Yields once for each item in iterables[0] such that result[1:] is a prefix of
@@ -128,7 +135,12 @@ def iter_alphabetical_prefixes(
     pos = len(stack) - 1
     parent, children = stack[pos]
     next_value = next_values[pos]
-    if next_value is not _EXHAUSTED and next_value.startswith(parent):
+    expected_delimiter_pos = len(parent)
+    prefix_match = expected_delimiter_pos == 0 or (
+        len(next_value) > expected_delimiter_pos and
+        next_value[expected_delimiter_pos] == delimiter and
+        next_value.startswith(parent))
+    if next_value is not _EXHAUSTED and prefix_match:
       pass  # Go deeper.
     elif children is results:  # At end of stack.
       yield from results

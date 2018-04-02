@@ -144,6 +144,9 @@ with description('ensure_prefix') as self:
   with it('does not invents prefixes if not required'):
     expect(self.subject(['a', 'c'], ['a c', 'c a'])).to(equal(['a', 'c']))
 
+  with it('does emit duplicates if reference is redundant'):
+    expect(self.subject([], ['a a', 'a b', 'a c'])).to(equal(['a']))
+
 
 with description('iter_alphabetical_prefixes') as self:
   with before.each:
