@@ -136,7 +136,7 @@ def iter_alphabetical_prefixes(
     parent, children = stack[pos]
     next_value = next_values[pos]
     expected_delimiter_pos = len(parent)
-    prefix_match = expected_delimiter_pos == 0 or (
+    prefix_match = (
         len(next_value) > expected_delimiter_pos and
         next_value[expected_delimiter_pos] == delimiter and
         next_value.startswith(parent))
