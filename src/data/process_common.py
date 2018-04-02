@@ -60,7 +60,8 @@ def aggregate_prefixes(
   """
   n_iterables = len(iterables)
   if n_iterables == 1:
-    yield from iter_util.iter_alphabetical_prefixes(iterables)
+    yield from iter_util.iter_alphabetical_prefixes(
+        iterables, delimiter=delimiter)
     return
   carry, iterables[-1] = itertools.tee(iterables[-1])
   for i in reversed(range(1, n_iterables - 1)):
@@ -68,4 +69,5 @@ def aggregate_prefixes(
         iter_util.ensure_prefix(iterables[i], carry, delimiter=delimiter))
   iterables[0] = iter_util.ensure_prefix(
       iterables[0], carry, delimiter=delimiter)
-  yield from iter_util.iter_alphabetical_prefixes(iterables)
+  yield from iter_util.iter_alphabetical_prefixes(
+      iterables, delimiter=delimiter)

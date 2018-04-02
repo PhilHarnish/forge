@@ -58,3 +58,20 @@ with description('aggregate_prefixes') as self:
     expect(self.subject([], [], [], ['a b c d'])).to(equal([
       ('a', [('a b', [('a b c', [('a b c d', None)])])]),
     ]))
+
+  with it('handles regression'):
+    expect(self.subject(
+        ['a'], ['a ba'], ['a babe in'], ['a babe in the'],
+        ['a babe in the woods'])
+    ).to(equal([
+        ('a', [
+          ('a ba', []),
+          ('a babe', [
+            ('a babe in', [
+              ('a babe in the', [
+                ('a babe in the woods', None),
+              ]),
+            ]),
+          ]),
+        ]),
+    ]))
