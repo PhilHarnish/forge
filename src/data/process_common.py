@@ -47,7 +47,7 @@ def score(word: str, count: int, year: int) -> int:
 
 def aggregate_prefixes(
     iterables: List[Iterable[str]],
-    delimiter: str = ' ') -> Iterable[Tuple[str, Optional[tuple]]]:
+    delimiter: str = ' ') -> Iterable[Tuple[str, Optional[list]]]:
   """Aggregate iterables into nested tuples with shared prefixes.
 
   The iterable streams will be tee'd and consumed like so:
