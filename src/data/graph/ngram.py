@@ -13,7 +13,7 @@ _NGRAM_ROOT = bloom_node.BloomNode()
 _LOOPBACK_SCALE = 1/1024
 _SCALED_ROOTS = {}
 _FILES = [
-  'data/g1m_1gram.txt',
+  'data/g1m_1gram.txt',  # TODO: This library assumes files are sorted!
 ] + ['data/coca_%sgram.txt' % i for i in range(2, 5+1)]
 
 
@@ -39,7 +39,7 @@ def _get(
     lengths_mask: int) -> bloom_node.BloomNode:
   return _NGRAM_ROOT(
       prefix,
-      _ngrams(prefix, initial_mask, require_mask, lengths_mask),
+      _ngrams_prefix(prefix, initial_mask, require_mask, lengths_mask),
       merge=_merge_expand_initial)
 
 
@@ -60,7 +60,10 @@ def _ngrams(
     lengths_mask: int = bloom_mask.ANY_LENGTHS,
 ) -> List[NgramEntry]:
   results = []
-  n_words = prefix.count(' ') + 1
+  if not prefix:
+    n_words = 1
+  else:
+    n_words = prefix.count(' ') + 2
   for initial, length_entries in index(_FILES[n_words - 1]).items():
     initial_alpha = bloom_mask.for_alpha(initial)
     if not initial_alpha & initial_mask:
@@ -94,6 +97,35 @@ def _ngrams(
   return results
 
 
+def _ngrams_prefix(
+    prefix: str,
+    initial_mask: int = bloom_mask.REQUIRE_NOTHING,
+    require_mask: int = bloom_mask.REQUIRE_NOTHING,
+    lengths_mask: int = bloom_mask.ANY_LENGTHS,
+) -> List[NgramEntry]:
+  results = []
+  if not prefix:
+    n_words = 1
+  else:
+    n_words = prefix.count(' ') + 2
+  ngram_index = prefix_index(_FILES[n_words - 1])
+  key = hash(prefix)
+  if key not in ngram_index:
+    return results
+  for entry in ngram_index[key]:
+    word, weight, masks = entry
+    if not masks & require_mask:
+      continue
+    word_initial_alpha = bloom_mask.for_alpha(word[0])
+    if not word_initial_alpha & initial_mask:
+      continue
+    word_length_mask = 1 << len(word)
+    if not word_length_mask & lengths_mask:
+      continue
+    results.append(entry)
+  return results
+
+
 @pickle_cache.cache('data/graph/ngram/index')
 def index(src: str) -> Dict[str, List[List[NgramEntry]]]:
   """Open `src` and return a list of lists of lists of int.
@@ -117,6 +149,26 @@ def index(src: str) -> Dict[str, List[List[NgramEntry]]]:
     masks = _char_masks(word)
     weight = int(parts[2])
     row[length - 1].append((words, weight, masks))
+  return result
+
+
+@pickle_cache.cache('data/graph/ngram/prefix_index')
+def prefix_index(src: str) -> Dict[int, List[List[NgramEntry]]]:
+  """TODO: Docs."""
+  result = {}
+  collisions = {}  # TODO: Delete. Only needed for 1 round of end2end testing.
+  for line in data.open_project_path(src):
+    words, _, weight = line.rpartition(' ')
+    prefix, _, word = words.rpartition(' ')
+    masks = _char_masks(word)
+    weight = int(weight)
+    key = hash(prefix)
+    if key not in result:
+      result[key] = []
+      collisions[key] = prefix
+    else:
+      assert collisions[key] == prefix
+    result[key].append((word, weight, masks))
   return result
 
 
@@ -157,7 +209,7 @@ def _merge_expand_initial(
   assert not whitelist
   assert not blacklist
   _merge_expand_entries(
-      host, sources, prefix, _unpack_initial_ngrams(prefix, ngrams),
+      host, sources, prefix, _unpack_initial_ngrams(ngrams),
       whitelist=whitelist,
       blacklist=blacklist)
 
@@ -188,7 +240,11 @@ def _merge_expand_entries(
     lengths_mask |= child_length_mask
     if weight > max_weight:
       max_weight = weight
-    if children_initial and initial != children_initial:
+    if not children_initial:
+      pass
+    elif initial < children_initial:
+      raise ValueError('Entries must be alphabetized')
+    elif initial != children_initial:
       _link_child(
           host, prefix + children_initial, children_initial, match_weight,
           children)
@@ -221,7 +277,7 @@ def _link_child(
     root = _get_scaled_root(_LOOPBACK_SCALE)
     # TODO: Find better requirements.
     ngrams = _get(
-        prefix + ' ', bloom_mask.REQUIRE_NOTHING, bloom_mask.REQUIRE_NOTHING,
+        prefix, bloom_mask.REQUIRE_NOTHING, bloom_mask.REQUIRE_NOTHING,
         bloom_mask.ANY_LENGTHS)
     _cheap_link(child_node, ' ', root + ngrams)
   else:
@@ -241,10 +297,9 @@ def _cheap_link(
 
 
 def _unpack_initial_ngrams(
-    prefix: str, ngrams: Iterable[NgramEntry]) -> Iterable[ChildEntry]:
-  length_offset = len(prefix)
+    ngrams: Iterable[NgramEntry]) -> Iterable[ChildEntry]:
   for word, weight, masks in ngrams:
-    yield 1 << (len(word) - length_offset), weight, masks
+    yield 1 << len(word), weight, masks
 
 
 def _get_scaled_root(scale: float) -> bloom_node.BloomNode:

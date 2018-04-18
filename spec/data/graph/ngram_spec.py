@@ -2,6 +2,7 @@ from data import pickle_cache
 from data.graph import ngram
 from spec.mamba import *
 
+
 _1GRAM = """
 the 1000000
 a    750000
@@ -84,7 +85,7 @@ for the sake of argument 391000
 
 def normalize(s: str) -> str:
   s = s.strip()
-  return '\n'.join(' '.join(line.split()) for line in s.split('\n'))
+  return '\n'.join(sorted(' '.join(line.split()) for line in s.split('\n')))
 
 _FILES = {
   'data/g1m_1gram.txt': normalize(_1GRAM),
@@ -94,10 +95,11 @@ _FILES = {
   'data/coca_5gram.txt': normalize(_5GRAM),
 }
 
-def open_project_path_stub(f: str) -> Iterable[str]:
-  return _FILES[f].split('\n')
+def open_project_path_stub(file: str) -> Iterable[str]:
+  return _FILES[file].split('\n')
 
 open_project_path = mock.patch('data.graph.ngram.data.open_project_path')
+
 
 with description('indexing') as self:
   with before.each:
@@ -133,6 +135,7 @@ with description('get'):
     pickle_cache.disable((
       'data/graph/ngram/graph',
       'data/graph/ngram/index',
+      'data/graph/ngram/prefix_index',
     ))
 
   with after.each:
@@ -140,6 +143,7 @@ with description('get'):
     pickle_cache.enable((
       'data/graph/ngram/graph',
       'data/graph/ngram/index',
+      'data/graph/ngram/prefix_index',
     ))
 
   with it('returns a bloom node'):
