@@ -51,6 +51,7 @@ def _cache(prefix: str, test_fn: TestFn) -> TransformFn:
       if prefix in _DISABLED_PREFIXES:
         return fn(*args, **kwargs)
       pickle_src = _path_for_prefix_and_args(prefix, args, kwargs)
+      # TODO: Benchmark zip read performance.
       parent_dir = os.path.dirname(pickle_src)
       if not os.path.exists(parent_dir):
         os.makedirs(parent_dir, exist_ok=True)
