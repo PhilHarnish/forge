@@ -1,6 +1,7 @@
 import collections
 import contextlib
 import heapq
+import subprocess
 from typing import Dict, Iterable, TextIO, Tuple
 
 from data import data, process_common
@@ -9,7 +10,9 @@ SRCS_PATTERN = 'data/corpus/g1m_ngram/googlebooks-eng-1M-1gram-20090715-%s.csv'
 AGGREGATED_PATTERN = 'data/corpus/g1m_ngram/aggregated-1gram-20090715-%s.csv'
 SORTED_PATTERN = 'data/corpus/g1m_ngram/sorted-1gram-20090715-%s.csv'
 MERGED_OUT_PATTERN = 'data/g1m_1gram.txt'
+MERGED_OUT_SORTED_PATTERN = 'data/g1m_sorted_1gram.txt'
 PROPER_NOUN_OUT_PATTERN = 'data/g1m_proper_1gram.txt'
+PROPER_NOUN_OUT_SORTED_PATTERN = 'data/g1m_proper_sorted_1gram.txt'
 
 SCREEN_FILE = 'data/clues_processed.txt'
 SCREEN_THRESHOLD = 400
@@ -49,11 +52,8 @@ def aggregate() -> None:
           continue
         word, year, count, _, _ = line.split('\t')
         canonicalized = word.lower()
-        try:
-          year = int(year)
-          count = int(count)
-        except:
-          continue
+        year = int(year)
+        count = int(count)
         word_score = process_common.score(word, count, year)
         if not word_score:
           continue
@@ -115,11 +115,21 @@ def merge() -> None:
       proper_nouns.write('%s\t%s\n' % (word, -weight))
 
 
+def alphasort() -> None:
+  print('sorting unigrams')
+  with data.open_project_path(MERGED_OUT_SORTED_PATTERN, mode='w') as out:
+    subprocess.call(['sort', data.project_path(MERGED_OUT_PATTERN)], stdout=out)
+  print('sorting proper unigrams')
+  with data.open_project_path(PROPER_NOUN_OUT_SORTED_PATTERN, mode='w') as out:
+    subprocess.call(
+        ['sort', data.project_path(PROPER_NOUN_OUT_PATTERN)], stdout=out)
+
 
 def main() -> None:
   aggregate()
   sort_and_sum()
   merge()
+  alphasort()
 
 
 main()
