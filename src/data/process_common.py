@@ -3,7 +3,8 @@ from typing import Iterable, List, Optional, Tuple
 
 from data import iter_util
 
-VOWELS = set('aeiouy')
+VOWELS = frozenset('aeiouyAEIOUY')
+SPECIAL = frozenset('a')  # "a" is a reasonable short word.
 ALPHABET = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ\'-'
 WHITELIST = [chr(code) in ALPHABET for code in range(128)]
 
@@ -19,10 +20,10 @@ def score(word: str, count: int, year: int) -> int:
   last_c = ''
   consecutive = 1
   for c in word:
-    if c in VOWELS:
-      n_vowels += 1
     if ord(c) > 128 or not WHITELIST[ord(c)]:
       return 0
+    if c in VOWELS:
+      n_vowels += 1
     if c == last_c:
       if consecutive >= 2:
         return 0
@@ -30,7 +31,9 @@ def score(word: str, count: int, year: int) -> int:
     else:
       consecutive = 1
     last_c = c
-  if word[0].isupper():
+  if word in SPECIAL:
+    word_scale = 1
+  elif word[0].isupper():
     if word.isupper():
       word_scale = .5  # All uppercase.
     else:

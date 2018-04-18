@@ -34,6 +34,11 @@ with description('score'):
   with it('does not punish words with many duplicates'):
     expect(process_common.score('balloon', 10, 0)).to(equal(10))
 
+  with it('does not punish special short word "a"'):
+    expect(process_common.score('a', 10, 0)).to(equal(10))
+
+  with it('reduces score for I but not too harsly'):
+    expect(process_common.score('I', 10, 0)).to(be_between(4, 8))
 
 with description('aggregate_prefixes') as self:
   with before.each:
