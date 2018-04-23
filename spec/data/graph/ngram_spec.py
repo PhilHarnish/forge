@@ -85,10 +85,15 @@ for the sake of argument 391000
 
 def normalize(s: str) -> str:
   s = s.strip()
-  return '\n'.join(sorted(' '.join(line.split()) for line in s.split('\n')))
+  result = []
+  for line in s.split('\n'):
+    parts = line.split()
+    weight = parts.pop()
+    result.append('%s\t%s' % (' '.join(parts), weight))
+  return '\n'.join(sorted(result))
 
 _FILES = {
-  'data/g1m_1gram.txt': normalize(_1GRAM),
+  'data/g1m_sorted_1gram.txt': normalize(_1GRAM),
   'data/coca_2gram.txt': normalize(_2GRAM),
   'data/coca_3gram.txt': normalize(_3GRAM),
   'data/coca_4gram.txt': normalize(_4GRAM),
@@ -112,7 +117,7 @@ with description('indexing') as self:
     pickle_cache.enable(('data/graph/ngram/index',))
 
   with it('returns index for unigrams'):
-    result = ngram.index('data/g1m_1gram.txt')
+    result = ngram.index('data/g1m_sorted_1gram.txt')
     expect(result).to(be_a(dict))
     expect(result['a']).to(equal([
       [('a', 750000, ('a', 1, None))],

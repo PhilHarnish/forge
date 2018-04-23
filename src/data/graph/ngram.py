@@ -137,7 +137,7 @@ def index(src: str) -> Dict[str, List[List[NgramEntry]]]:
   """
   result = {c: [] for c in bloom_mask.BASE_ALPHABET}
   for line in data.open_project_path(src):
-    parts = line.rpartition(' ')
+    parts = line.rpartition('\t')
     words = parts[0]
     _, _, word = words.rpartition(' ')  # Discard other words.
     initial = word[0]
@@ -158,7 +158,7 @@ def prefix_index(src: str) -> Dict[int, List[List[NgramEntry]]]:
   result = {}
   collisions = {}  # TODO: Delete. Only needed for 1 round of end2end testing.
   for line in data.open_project_path(src):
-    words, _, weight = line.rpartition(' ')
+    words, _, weight = line.rpartition('\t')
     prefix, _, word = words.rpartition(' ')
     masks = _char_masks(word)
     weight = int(weight)
