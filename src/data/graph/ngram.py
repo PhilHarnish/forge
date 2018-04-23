@@ -13,7 +13,7 @@ _NGRAM_ROOT = bloom_node.BloomNode()
 _LOOPBACK_SCALE = 1/1024
 _SCALED_ROOTS = {}
 _FILES = [
-  'data/g1m_1gram.txt',  # TODO: This library assumes files are sorted!
+  'data/g1m_sorted_1gram.txt',
 ] + ['data/coca_%sgram.txt' % i for i in range(2, 5+1)]
 
 
