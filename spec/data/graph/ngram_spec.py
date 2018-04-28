@@ -119,13 +119,13 @@ with description('indexing') as self:
   with it('returns index for unigrams'):
     result = ngram.index('data/g1m_sorted_1gram.txt')
     expect(result).to(be_a(dict))
-    expect(result['a']).to(equal([
-      [('a', 750000, ('a', 1, None))],
-      [],
-      [
-        ('and', 500000, ('a', 8201, ('n', 8200, ('d', 8, None)))),
-        ('are', 18000, ('a', 131089, ('r', 131088, ('e', 16, None)))),
-      ]
+    expect(result).to(have_len(1))
+    expect(next(iter(result.values()))[:5]).to(equal([
+      ('a', 750000, ('a', 1, None)),
+      ('and', 500000, ('a', 8201, ('n', 8200, ('d', 8, None)))),
+      ('are', 18000, ('a', 131089, ('r', 131088, ('e', 16, None)))),
+      ('been', 2000, ('b', 8210, ('e', 8208, ('e', 8208, ('n', 8192, None))))),
+      ('for', 25000, ('f', 147488, ('o', 147456, ('r', 131072, None))))
     ]))
 
   with it('returns index for other unigrams'):
@@ -140,7 +140,6 @@ with description('get'):
     pickle_cache.disable((
       'data/graph/ngram/graph',
       'data/graph/ngram/index',
-      'data/graph/ngram/prefix_index',
     ))
 
   with after.each:
@@ -148,7 +147,6 @@ with description('get'):
     pickle_cache.enable((
       'data/graph/ngram/graph',
       'data/graph/ngram/index',
-      'data/graph/ngram/prefix_index',
     ))
 
   with it('returns a bloom node'):
@@ -168,7 +166,7 @@ with description('get'):
     node = ngram.get()
     expect(path_values(node, 'and the')).to(look_like("""
       BloomNode('abdefhilmnorstwxy; ', ' ####', 0)
-      a = BloomNode('denr; ', '  #', 0)
+      a = BloomNode('denr; ', '  #', 750000)
       n = BloomNode('D; ', ' #', 0)
       d = BloomNode(' !', '#', 500000)
         = BloomNode('abdefhilmnorstwxy; ', ' ####', 0)

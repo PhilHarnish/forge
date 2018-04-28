@@ -64,7 +64,7 @@ def _ngrams(
     n_words = 1
   else:
     n_words = prefix.count(' ') + 2
-  ngram_index = prefix_index(_FILES[n_words - 1])
+  ngram_index = index(_FILES[n_words - 1])
   key = hash(prefix)
   if key not in ngram_index:
     return results
@@ -83,8 +83,8 @@ def _ngrams(
   return results
 
 
-@pickle_cache.cache('data/graph/ngram/prefix_index')
-def prefix_index(src: str) -> Dict[int, List[List[NgramEntry]]]:
+@pickle_cache.cache('data/graph/ngram/index')
+def index(src: str) -> Dict[int, List[List[NgramEntry]]]:
   """TODO: Docs."""
   result = {}
   for line in data.open_project_path(src):
@@ -155,16 +155,22 @@ def _merge_expand_entries(
   require_mask = bloom_mask.REQUIRE_NOTHING
   lengths_mask = 0
   max_weight = 0
-  match_weight = 0
-  for child_length_mask, weight, masks in ngrams:
-    initial, mask, child_mask = masks
+  child_provide_mask = _SPACE_MASK
+  child_require_mask = bloom_mask.REQUIRE_NOTHING
+  child_lengths_mask = 0
+  child_max_weight = 0
+  child_match_weight = 0
+  for ngram_lengths_mask, weight, masks in ngrams:
+    initial, mask, child_masks = masks
+    # TODO: Why does a "pa" (use) breakpoint trigger here multiple times?
+    # TODO: What is creating so many duplicate nodes?
     if whitelist and initial not in whitelist:
       continue
     elif blacklist and initial in blacklist:
       continue
     provide_mask |= mask
     require_mask &= mask
-    lengths_mask |= child_length_mask
+    lengths_mask |= ngram_lengths_mask
     if weight > max_weight:
       max_weight = weight
     if not children_initial:
@@ -172,20 +178,32 @@ def _merge_expand_entries(
     elif initial < children_initial:
       raise ValueError('Entries must be alphabetized')
     elif initial != children_initial:
+      # Start a new group of children based on this initial.
       _link_child(
-          host, prefix + children_initial, children_initial, match_weight,
-          children)
+          host, prefix + children_initial, children_initial, child_provide_mask,
+          child_require_mask, child_lengths_mask, child_max_weight,
+          child_match_weight, children)
       children = []
-      match_weight = 0
-    if child_mask:
-      children.append((child_length_mask >> 1, weight, child_mask))
+      child_match_weight = 0
+      child_provide_mask = _SPACE_MASK
+      child_require_mask = bloom_mask.REQUIRE_NOTHING
+      child_max_weight = 0
+    if child_masks:
+      if weight > child_max_weight:
+        child_max_weight = weight
+      _, child_mask, _ = child_masks
+      child_provide_mask |= child_mask
+      child_require_mask &= child_mask
+      child_lengths_mask |= ngram_lengths_mask >> 1
+      children.append((ngram_lengths_mask >> 1, weight, child_masks))
     else:
-      match_weight = weight
+      child_match_weight = weight
     children_initial = initial
   if children_initial:
     _link_child(
-        host, prefix + children_initial, children_initial, match_weight,
-        children)
+        host, prefix + children_initial, children_initial, child_provide_mask,
+        child_require_mask, child_lengths_mask, child_max_weight,
+        child_match_weight, children)
   host.provide_mask = provide_mask
   host.require_mask = require_mask
   host.lengths_mask = lengths_mask
@@ -193,7 +211,8 @@ def _merge_expand_entries(
 
 
 def _link_child(
-    host: bloom_node.BloomNode, prefix: str, initial: str, match_weight: int,
+    host: bloom_node.BloomNode, prefix: str, initial: str, provide_mask: int,
+    require_mask: int, lengths_mask:int, max_weight: int, match_weight: int,
     ngrams: Iterable[ChildEntry]) -> None:
   if not ngrams and not match_weight:
     raise TypeError('No children or match_weight for %s' % initial)
@@ -201,6 +220,10 @@ def _link_child(
     child_node = _NGRAM_ROOT(prefix, ngrams, merge=_merge_expand_entries)
   else:
     child_node = bloom_node.BloomNode()
+  child_node.provide_mask = provide_mask
+  child_node.require_mask = require_mask
+  child_node.lengths_mask = lengths_mask
+  child_node.max_weight = max_weight
   if match_weight:
     child_node.weight(match_weight, match=True)
     child_node.distance(0)
