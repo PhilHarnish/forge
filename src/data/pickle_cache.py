@@ -1,3 +1,4 @@
+import functools
 import hashlib
 import os
 import pickle
@@ -9,7 +10,8 @@ from data import data
 
 _PICKLE_PATH = data.project_path('data/_pkl_cache')
 _SANITIZE_RE = re.compile(r'[^A-Za-z0-9]')
-_DISABLED_PREFIXES = set()
+_DEFAULT_CACHE_SIZE = 16
+_DISABLED_PREFIXES = {}
 
 
 TransformFn = Callable[[Callable], Callable]
@@ -38,15 +40,19 @@ def cache_from_file(
 
 
 def disable(prefixes: Iterable) -> None:
-  _DISABLED_PREFIXES.update(prefixes)
+  for prefix in prefixes:
+    _DISABLED_PREFIXES[prefix] = 0
 
 
 def enable(prefixes: Iterable) -> None:
-  _DISABLED_PREFIXES.difference_update(prefixes)
+  for prefix in prefixes:
+    del _DISABLED_PREFIXES[prefix]
 
 
 def _cache(prefix: str, test_fn: TestFn) -> TransformFn:
   def decorator(fn: Callable) -> Callable:
+    @functools.lru_cache(
+        maxsize=_DISABLED_PREFIXES.get(prefix, _DEFAULT_CACHE_SIZE))
     def fn_wrapper(*args: Any, **kwargs: Any) -> Any:
       if prefix in _DISABLED_PREFIXES:
         return fn(*args, **kwargs)
