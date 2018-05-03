@@ -2,7 +2,7 @@ import itertools
 from typing import Container, ItemsView, List, Optional, Tuple
 
 from data import iter_util
-from data.graph import _op_mixin, bloom_mask, bloom_node, edge_mask_iter_util
+from data.graph import _op_mixin, bloom_mask, bloom_node
 from data.graph.ops import anagram_op, anagram_transform_op
 
 reduce = bloom_mask.everything.child('reduce')
@@ -221,6 +221,8 @@ def _reduce_multiply(
     max_weight *= source.max_weight  # Trends to 0.
     match_weight *= source.match_weight
     pos += 1
+  if lengths_mask & 1 == 0:
+    match_weight = 0
   return provide_mask, require_mask, lengths_mask, max_weight, match_weight
 
 
@@ -278,10 +280,10 @@ def _visit_fail(
 
 # Note: Order of operators must match _op_mixin.
 _operator_functions = [
-  (edge_mask_iter_util.iterable_common, iter_util.map_common, _merge_add, _visit_identity),
-  (edge_mask_iter_util.iterable_both, iter_util.map_both, _merge_add, _visit_add),
-  (edge_mask_iter_util.iterable_common, iter_util.map_common, _merge_multiply, _visit_multiply),
+  (iter_util.map_common, iter_util.map_common, _merge_add, _visit_identity),
+  (iter_util.map_both, iter_util.map_both, _merge_add, _visit_add),
+  (iter_util.map_common, iter_util.map_common, _merge_multiply, _visit_multiply),
   (iter_util.map_none, iter_util.map_none, anagram_op.merge_fn, _visit_fail),
   (iter_util.map_none, iter_util.map_none, anagram_transform_op.merge_fn, _visit_fail),
-  (edge_mask_iter_util.iterable_both, iter_util.map_both, _merge_call, _visit_call),
+  (iter_util.map_both, iter_util.map_both, _merge_call, _visit_call),
 ]

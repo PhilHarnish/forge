@@ -17,7 +17,17 @@ _DISABLED_PREFIXES = {}
 
 
 read = perf.Perf('read', ['pkl', 'pkl.gz'])
+"""
+read
+pkl: 192.12/s, 1.37x (114 calls, 593.38u)
+pkl.gz: 140.05/s, 1.00x (114 calls, 813.99u)
+"""
 write = perf.Perf('write', ['pkl', 'pkl.gz'])
+"""
+write
+pkl: 261.02/s, 18.07x (116 calls, 444.41u)
+pkl.gz: 14.45/s, 1.00x (116 calls, 8028.63u)
+"""
 
 
 TransformFn = Callable[[Callable], Callable]
