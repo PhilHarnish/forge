@@ -1,8 +1,6 @@
-from data import pickle_cache, word_frequencies
-from data.graph import bloom_node, regex, trie, walk
+from data import word_frequencies
+from data.graph import bloom_node, ngram, regex, walk
 from spec.mamba import *
-
-_FIRST_WORD_WEIGHT = 23135851162
 
 
 def get_words(
@@ -25,34 +23,12 @@ def get_words(
     yield line, value
 
 
-def make_trie(length_mask) -> bloom_node.BloomNode:
-  root = bloom_node.BloomNode()
-  for word, value in get_words(length_mask=length_mask):
-    trie.add(root, word, value / _FIRST_WORD_WEIGHT)
-  return root
-
-
-@pickle_cache.cache('data/graph/walk_e2e_spec/trie')
-def pickled_trie(length_mask: int) -> bloom_node.BloomNode:
-  return make_trie(length_mask)
-
-
-@pickle_cache.cache('data/graph/walk_e2e_spec/ngrams')
 def pickled_ngrams(length_mask: int) -> bloom_node.BloomNode:
-  ngrams = [list(get_words(length_mask=length_mask))]
-  for i in range(2, 5+1):
-    ngrams.append(list(get_words(
-        length_mask=length_mask, file='data/coca_%sgram.txt' % i, multi=True)))
-  root = bloom_node.BloomNode()
-  trie.add_ngrams(root, ngrams)
-  return root
+  return ngram.get(lengths_mask=length_mask)
 
 
 def results(root) -> List[str]:
-  results = []
-  for word, _ in walk.walk(root):
-    results.append(word)
-  return results
+  return [w for w, _ in walk.walk(root)]
 
 
 def path(root: bloom_node.BloomNode, path: str) -> List[str]:
@@ -82,35 +58,9 @@ def head2head(patterns, trie, words) -> tuple:
   return expected, actual
 
 
-with description('benchmarks: trie creation', 'end2end'):
-  with it('creates unigram trie'):
-    with benchmark(1030) as should_run:
-      if should_run:
-        root = make_trie(0b111111110)
-        expect(repr(root)).to(equal(
-            "BloomNode('abcdefghijklmnopqrstuvwxyz', ' ########', 0)"))
-
-  with it('creates unigram + bigram trie'):
-    with benchmark(7000) as should_run:
-      if should_run:
-        unigrams = list(get_words())
-        bigrams = list(get_words(file='data/count_2w_aggregated.txt'))
-        root = bloom_node.BloomNode()
-        trie.add_ngrams(root, [unigrams, bigrams])
-        expect(path(root, 'to be a')).to(equal([
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', ' ############', 0)",
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 6.867071358893854e-06)",
-          "BloomNode('abcdefghiklmnopqrstuvwxyz; ', '###########', 0.0004906526796536196)",
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', ' ############', 0)",
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 1.8976823503140278e-07)",
-          "BloomNode('abcdefghiklmnopqrstuvwxyz; ', '###########', 1.313779931343778e-05)",
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', ' ############', 0)",
-          "BloomNode('abcdefghijklmnopqrstuvwxyz; ', '############', 4.709283276142498e-06)"
-        ]))
-
 with description('benchmarks: node merging', 'end2end') as self:
   with before.all:
-    self.root = pickled_trie(1 << 7)
+    self.root = pickled_ngrams(1 << 7)
     self.words = list(get_words())
 
   with it('finds nodes matching .e.k.n.'):
@@ -144,6 +94,7 @@ with description('benchmarks: node merging', 'end2end') as self:
     expect(expected).to(equal(actual))
     expect(actual).to(equal(['recalls', 'befalls']))
 
+
 with description('benchmarks: unigram/bigram walk', 'end2end') as self:
   with before.all:
     self.root = pickled_ngrams(0b111111)
@@ -155,12 +106,29 @@ with description('benchmarks: unigram/bigram walk', 'end2end') as self:
       if len(words) > 10:
         break
     expect(words).to(equal([
-      'the', 'and', 'that', 'the the', 'a the', 'an the', 'and the', 'that the',
-      'for', 'for the', 'was'
+      'the', 'and', 'that', 'for', 'was', 'with', 'are', 'not', 'from', 'his',
+      'have'
     ]))
 
   with it('should find explicit solutions'):
     merged = self.root * regex.parse('plums of wrath')
+    expect(path_values(merged, 'plums of wrath')).to(look_like("""
+      BloomNode('LMPSU; !', '     #', 0)
+      p = BloomNode('LMSU; !', '    #', 0)
+      l = BloomNode('MSU; !', '   #', 0)
+      u = BloomNode('MS; !', '  #', 0)
+      m = BloomNode('S; !', ' #', 0)
+      s = BloomNode(' !', '#', 0)
+        = BloomNode('FO; !', '  #', 0)
+      o = BloomNode('F; !', ' #', 0)
+      f = BloomNode(' !', '#', 0)
+        = BloomNode('AHRTW', '     #', 0)
+      w = BloomNode('AHRT', '    #', 0)
+      r = BloomNode('AHT', '   #', 0)
+      a = BloomNode('HT', '  #', 0)
+      t = BloomNode('H', ' #', 0)
+      h = BloomNode(' !', '#', 0.05183982849121094)
+    """))
     expect(results(merged)).to(equal(['plums of wrath']))
 
   with it('should find constrained solutions'):
