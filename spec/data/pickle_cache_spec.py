@@ -8,7 +8,7 @@ from spec.mamba import *
 pickle_patch = patch('data.pickle_cache.pickle')
 pickle_path_patch = patch.object(pickle_cache, '_PICKLE_PATH', 'patched')
 cache_size_patch = patch.object(pickle_cache, '_DEFAULT_CACHE_SIZE', 0)
-open_patch = patch.object(pickle_cache, '_open_pkl_path')
+open_patch = patch.object(pickle_cache, '_open_path')
 os_patch = patch('data.pickle_cache.os')
 
 

@@ -1,4 +1,5 @@
 import functools
+import gzip
 import hashlib
 import os
 import pickle
@@ -7,11 +8,16 @@ import sys
 from typing import Any, Callable, IO, Iterable
 
 from data import data
+from util import perf
 
 _PICKLE_PATH = data.project_path('data/_pkl_cache')
 _SANITIZE_RE = re.compile(r'[^A-Za-z0-9]')
 _DEFAULT_CACHE_SIZE = 16
 _DISABLED_PREFIXES = {}
+
+
+read = perf.Perf('read', ['pkl', 'pkl.gz'])
+write = perf.Perf('write', ['pkl', 'pkl.gz'])
 
 
 TransformFn = Callable[[Callable], Callable]
@@ -56,25 +62,48 @@ def _cache(prefix: str, test_fn: TestFn) -> TransformFn:
     def fn_wrapper(*args: Any, **kwargs: Any) -> Any:
       if prefix in _DISABLED_PREFIXES:
         return fn(*args, **kwargs)
-      pickle_src = _path_for_prefix_and_args(prefix, args, kwargs)
-      # TODO: Benchmark zip read performance.
-      parent_dir = os.path.dirname(pickle_src)
+      pickle_source = _path_for_prefix_and_args(prefix, args, kwargs)
+      parent_dir = os.path.dirname(pickle_source)
       if not os.path.exists(parent_dir):
         os.makedirs(parent_dir, exist_ok=True)
-      if test_fn(pickle_src, args, kwargs):
-        result = pickle.load(_open_pkl_path(pickle_src, 'rb'))
+      if test_fn(pickle_source, args, kwargs):
+        result = _pickle_load(pickle_source)
       else:
         result = fn(*args, **kwargs)
-        # TODO: Add async support.
-        pickle.dump(
-            result,
-            _open_pkl_path(pickle_src, 'wb'),
-            protocol=pickle.HIGHEST_PROTOCOL)
+        _pickle_dump(pickle_source, result)
       return result
 
     return fn_wrapper
 
   return decorator
+
+
+def _pickle_load(pickle_source: str) -> Any:
+  pickle_gzip_source = '%s.gz' % pickle_source
+  if os.path.exists(pickle_gzip_source):
+    with read.benchmark('pkl.gz'):
+      f = _open_gzip(pickle_gzip_source, 'rb')
+      pickle.load(f)
+
+  with read.benchmark('pkl'):
+    f = _open_path(pickle_source, 'rb')
+    pkl = pickle.load(f)
+  return pkl
+
+
+def _pickle_dump(pickle_source: str, data: Any) -> None:
+  # TODO: Add async support.
+  with write.benchmark('pkl'):
+    pickle.dump(
+        data,
+        _open_path(pickle_source, 'wb'),
+        protocol=pickle.HIGHEST_PROTOCOL)
+  with write.benchmark('pkl.gz'):
+    pickle_gzip_source = '%s.gz' % pickle_source
+    pickle.dump(
+        data,
+        _open_gzip(pickle_gzip_source, 'wb'),
+        protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def _resolve_path(file_source: str) -> str:
@@ -85,8 +114,12 @@ def _resolve_path(file_source: str) -> str:
   raise IOError('Unable to stat %s' % file_source)
 
 
-def _open_pkl_path(path: str, mode: str) -> IO:
+def _open_path(path: str, mode: str) -> IO:
   return open(path, mode)
+
+
+def _open_gzip(path: str, mode: str) -> IO:
+  return gzip.open(path, mode=mode)
 
 
 def _path_for_prefix_and_args(prefix: str, args: tuple, kwargs: dict):
