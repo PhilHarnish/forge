@@ -118,3 +118,63 @@ with description('reduce binary'):
   with it('calls reducer a minimum number of times'):
     iter_util.reduce_binary(self.reducer, range(32))
     expect(self.reducer).to(have_been_called_times(31))
+
+
+with description('ensure_prefix') as self:
+  with before.each:
+    self.subject = lambda *args: list(iter_util.ensure_prefix(args[0], args[1]))
+
+  with it('returns nothing for empty input'):
+    expect(self.subject([], [])).to(equal([]))
+
+  with it('returns from first if only first is provided'):
+    expect(self.subject(['a', 'b', 'c'], [])).to(equal(['a', 'b', 'c']))
+
+  with it('returns from first if only second is provided'):
+    expect(self.subject([], ['a c', 'b b', 'c a'])).to(equal(['a', 'b', 'c']))
+
+  with it('ignores second if prefixes are already ensured'):
+    expect(self.subject(['a', 'b', 'c'], ['a c', 'b b', 'c a'])).to(
+        equal(['a', 'b', 'c']))
+
+  with it('invents prefixes if required'):
+    expect(self.subject(['a', 'c'], ['a c', 'b b', 'c a'])).to(
+        equal(['a', 'b', 'c']))
+
+  with it('does not invents prefixes if not required'):
+    expect(self.subject(['a', 'c'], ['a c', 'c a'])).to(equal(['a', 'c']))
+
+  with it('does emit duplicates if reference is redundant'):
+    expect(self.subject([], ['a a', 'a b', 'a c'])).to(equal(['a']))
+
+
+with description('iter_alphabetical_prefixes') as self:
+  with before.each:
+    self.subject = lambda x: list(iter_util.iter_alphabetical_prefixes(x))
+
+  with it('returns nothing for empty input'):
+    expect(self.subject([])).to(equal([]))
+
+  with it('returns given results for one iterable'):
+    expect(self.subject([['a']])).to(equal([('a', None)]))
+
+  with it('returns grouped results for one iterable'):
+    expect(self.subject([['a', 'b']])).to(equal([('a', None), ('b', None)]))
+
+  with it('groups similar results for multiple iterables'):
+    expect(self.subject([['a', 'b'], ['a a', 'a b']])).to(
+        equal([('a', [('a a', None), ('a b', None)]), ('b', [])]))
+
+  with it('groups many results for multiple iterables'):
+    expect(self.subject([
+      ['a',     'b',                      'c'],
+      ['a a',   'b a', 'b b',             'c a'],
+      ['a a a', 'b a a', 'b b a', 'b b b'],
+    ])).to(equal([
+      ('a', [('a a', [('a a a', None)])]),
+      ('b', [
+        ('b a', [('b a a', None)]),
+        ('b b', [('b b a', None), ('b b b', None)]),
+      ]),
+      ('c', [('c a', [])]),
+    ]))

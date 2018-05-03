@@ -20,6 +20,12 @@ with description('mamba test helper'):
         return a + b
       expect(repr(call(example, 1, b=2))).to(equal('example(1, b=2) == 3'))
 
+    with it('pretends to be instanceof value'):
+      def example(x: Any) -> Any:
+        return x
+      expect(call(example, 1)).to(be_an(int))
+      expect(call(example, 'test')).to(be_a(str))
+
     with context('operator overloading'):
       with before.each:
         self.bool_fn = lambda *args, **kwargs: True

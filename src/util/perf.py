@@ -1,3 +1,4 @@
+import contextlib
 import random
 import time
 from typing import Any, Callable, Dict, List, NamedTuple, Union
@@ -41,14 +42,21 @@ class Perf(object):
     calls, elapsed, last = self._timings[variant]
     self._timings[variant] = (calls + 1, elapsed + delta, last)
 
-  def before(self, name) -> Callable:
+  def before(self, name: Variant) -> Callable:
     return _Decorator(self).before(name)
 
-  def profile(self, name) -> Callable:
+  def profile(self, name: Variant) -> Callable:
     return _Decorator(self).profile(name)
 
-  def after(self, name) -> Callable:
+  def after(self, name: Variant) -> Callable:
     return _Decorator(self).after(name)
+
+  @contextlib.contextmanager
+  def benchmark(self, name: Variant):
+    start = time.perf_counter()
+    yield
+    end = time.perf_counter()
+    self.increment(name, end - start)
 
   def __str__(self) -> str:
     results = [self._name]
@@ -80,6 +88,7 @@ def push() -> None:
   global _ALL_PERFS
   _STATES.append(_ALL_PERFS)
   _ALL_PERFS = []
+
 
 def pop() -> None:
   global _ALL_PERFS

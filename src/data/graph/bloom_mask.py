@@ -4,18 +4,16 @@ from typing import Iterable, List
 from util import perf
 
 BASE_ALPHABET = 'abcdefghijklmnopqrstuvwxyz'
-UNIT_SEPARATOR = chr(31)
 WORD_SEPARATOR = ' '
 EXTRA = "'"
-SEPARATOR = {UNIT_SEPARATOR, WORD_SEPARATOR}
+SEPARATOR = WORD_SEPARATOR
 ALPHA_CHARACTERS = BASE_ALPHABET + WORD_SEPARATOR + EXTRA
 SIZE = len(ALPHA_CHARACTERS)
 
-# Should letter frequency ('etaoinshrdlcumwfgypbvkjxqz') be used instead?
+ALPHABET = BASE_ALPHABET + WORD_SEPARATOR + EXTRA
 _ALPHA_MAP = {
   c: 1 << i for i, c in enumerate(ALPHA_CHARACTERS)
 }
-_ALPHA_MAP[UNIT_SEPARATOR] = _ALPHA_MAP[' ']
 _ALPHA_ARRAY = [_ALPHA_MAP.get(chr(c), 0) for c in range(128)]
 _INDEX_MAP = {
   c: i for i, c in enumerate(ALPHA_CHARACTERS)
@@ -178,10 +176,6 @@ def map_to_str(provide_mask: int, require_mask: int) -> str:
     if block:
       blocks.append(''.join(block))
   return ';'.join(blocks)
-
-
-def normalize(string: str) -> str:
-  return string.replace(UNIT_SEPARATOR, ' ')
 
 
 class BitMatchAnything(int):

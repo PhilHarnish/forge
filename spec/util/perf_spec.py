@@ -60,3 +60,18 @@ with description('perf'):
       called.append('after')
     fn()
     expect(called).to(equal(['before', 'profile', 'after']))
+
+  with it('allows benchmarking code segments'):
+    b = perf.Perf('test', 2)
+    with b.benchmark(1):
+      pass
+    with b.benchmark(1):
+      pass
+    with b.benchmark(2):
+      pass
+    expect(str(b)).to(look_like("""
+        test
+        1: 1.00/s, 1.00x (2 calls, 2000.00u)
+        2: 1.00/s, 1.00x (1 calls, 1000.00u)
+    """))
+

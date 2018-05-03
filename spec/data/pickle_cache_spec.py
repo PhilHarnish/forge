@@ -7,13 +7,16 @@ from spec.mamba import *
 
 pickle_patch = patch('data.pickle_cache.pickle')
 pickle_path_patch = patch.object(pickle_cache, '_PICKLE_PATH', 'patched')
+cache_size_patch = patch.object(pickle_cache, '_DEFAULT_CACHE_SIZE', 0)
 open_patch = patch.object(pickle_cache, '_open_pkl_path')
 os_patch = patch('data.pickle_cache.os')
 
-with description('pickle_cache'):
+
+with description('pickle_cache') as self:
   with before.each:
     self.patched_pickle = pickle_patch.start()
     pickle_path_patch.start()
+    cache_size_patch.start()
     self.patched_open = open_patch.start()
     original_join = os.path.join
     original_dirname = os.path.dirname
@@ -24,6 +27,7 @@ with description('pickle_cache'):
   with after.each:
     pickle_patch.stop()
     pickle_path_patch.stop()
+    cache_size_patch.stop()
     open_patch.stop()
     os_patch.stop()
     self.patched_os.stop()
@@ -56,7 +60,7 @@ with description('pickle_cache'):
       ))
 
   with description('cache'):
-    with before.all:
+    with before.each:
       @pickle_cache.cache('prefix')
       def fn(*args, **kwargs):
         return args, kwargs
@@ -117,3 +121,49 @@ with description('pickle_cache'):
       self.src_time = 0
       self.fn('file.py')
       expect(self.patched_pickle.load).to(have_been_called)
+
+  with description('disable/enable'):
+    with before.each:
+      @pickle_cache.cache('a')
+      def a(*args, **kwargs) -> tuple:
+        return args, kwargs
+
+      @pickle_cache.cache('b')
+      def b(*args, **kwargs) -> tuple:
+        return args, kwargs
+
+      self.a = a
+      self.b = b
+
+    with it('initially uses pkl'):
+      self.patched_os.path.exists.return_value = True
+      self.patched_open.return_value = '<opened pkl>'
+      self.a()
+      expect(self.patched_open).to(have_been_called_with(
+          'patched/a/_.pkl', 'rb'))
+      self.b()
+      expect(self.patched_open).to(have_been_called_with(
+          'patched/b/_.pkl', 'rb'))
+
+    with it('avoids pkl if disabled'):
+      self.patched_os.path.exists.return_value = True
+      self.patched_open.return_value = '<opened pkl>'
+      pickle_cache.disable('a')
+      self.a()
+      expect(self.patched_open).not_to(have_been_called_with(
+          'patched/a/_.pkl', 'rb'))
+      self.b()
+      expect(self.patched_open).to(have_been_called_with(
+          'patched/b/_.pkl', 'rb'))
+
+    with it('re-enables prefix'):
+      self.patched_os.path.exists.return_value = True
+      self.patched_open.return_value = '<opened pkl>'
+      pickle_cache.disable('a')
+      self.a()
+      expect(self.patched_open).not_to(have_been_called_with(
+          'patched/a/_.pkl', 'rb'))
+      pickle_cache.enable('a')
+      self.a()
+      expect(self.patched_open).to(have_been_called_with(
+          'patched/a/_.pkl', 'rb'))

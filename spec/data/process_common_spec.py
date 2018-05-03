@@ -2,7 +2,7 @@ from data import process_common
 from spec.mamba import *
 
 
-with description('process_common'):
+with description('score'):
   with it('scores 0 for bad years'):
     for year in [1, 1900, 2500]:
       expect(calling(process_common.score, 'word', 10, year)).to(equal(0))
@@ -33,3 +33,50 @@ with description('process_common'):
 
   with it('does not punish words with many duplicates'):
     expect(process_common.score('balloon', 10, 0)).to(equal(10))
+
+  with it('does not punish special short word "a"'):
+    expect(process_common.score('a', 10, 0)).to(equal(10))
+
+  with it('reduces score for I but not too harsly'):
+    expect(process_common.score('I', 10, 0)).to(be_between(4, 8))
+
+with description('aggregate_prefixes') as self:
+  with before.each:
+    self.subject = lambda *a: list(process_common.aggregate_prefixes(list(a)))
+
+  with it('should produce no output for empty input'):
+    expect(self.subject([])).to(equal([]))
+    expect(self.subject([], [])).to(equal([]))
+
+  with it('should return first elements for single stream'):
+    expect(self.subject(['a', 'b', 'c'])).to(equal([
+      ('a', None), ('b', None), ('c', None)]))
+
+  with it('should invent elements if first stream is empty'):
+    expect(self.subject([], ['a c', 'b b', 'c a'])).to(equal([
+      ('a', [('a c', None)]),
+      ('b', [('b b', None)]),
+      ('c', [('c a', None)]),
+    ]))
+
+  with it('should ensure prefixes from distant streams'):
+    expect(self.subject([], [], [], ['a b c d'])).to(equal([
+      ('a', [('a b', [('a b c', [('a b c d', None)])])]),
+    ]))
+
+  with it('handles regression'):
+    expect(self.subject(
+        ['a'], ['a ba'], ['a babe in'], ['a babe in the'],
+        ['a babe in the woods'])
+    ).to(equal([
+        ('a', [
+          ('a ba', []),
+          ('a babe', [
+            ('a babe in', [
+              ('a babe in the', [
+                ('a babe in the woods', None),
+              ]),
+            ]),
+          ]),
+        ]),
+    ]))
