@@ -162,8 +162,6 @@ def _merge_expand_entries(
   child_match_weight = 0
   for ngram_lengths_mask, weight, masks in ngrams:
     initial, mask, child_masks = masks
-    # TODO: Why does a "pa" (use) breakpoint trigger here multiple times?
-    # TODO: What is creating so many duplicate nodes?
     if whitelist and initial not in whitelist:
       continue
     elif blacklist and initial in blacklist:
@@ -224,6 +222,7 @@ def _link_child(
   child_node.require_mask = require_mask
   child_node.lengths_mask = lengths_mask
   child_node.max_weight = max_weight
+  child_node.annotate()
   if match_weight:
     child_node.weight(match_weight, match=True)
     child_node.distance(0)

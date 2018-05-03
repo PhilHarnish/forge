@@ -177,6 +177,7 @@ with description('reduce'):
       trie.add(b, 'bonly', 1)
       trie.add(b, 'com', .25)
       trie.add(b, 'common', .5)
+      trie.add(b, 'co', .45)
       node = a * b
       expecteds = [
         # START.

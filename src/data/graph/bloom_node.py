@@ -95,6 +95,8 @@ class BloomNode(_op_mixin.OpMixin):
 
   def annotate(
       self, new_annotations: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    if self._annotations is None:
+      self._annotations = collections.defaultdict(_AnnotationValue)
     if new_annotations is not None:
       if self._annotations is None:
         self._annotations = collections.defaultdict(_AnnotationValue)
@@ -103,7 +105,8 @@ class BloomNode(_op_mixin.OpMixin):
     return self._annotations
 
   def annotations(self) -> Dict[str, Any]:
-    if self.op:
+    if self.op and self._annotations is None:
+      self.annotate()
       bloom_node_reducer.merge(self)
     return self._annotations
 
