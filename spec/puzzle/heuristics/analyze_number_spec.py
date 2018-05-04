@@ -47,6 +47,9 @@ with description('analyze_number'):
     with it('accepts input'):
       expect(self.first(analyze_number._alphabet, 312)).to(equal('cab'))
 
+    with it('accepts base 100 input'):
+      expect(self.first(analyze_number._alphabet, 152312, 100)).to(equal('owl'))
+
   with description('ascii'):
     with it('rejects invalid input'):
       expect(self.run(analyze_number._ascii, 101)).to(be_empty)

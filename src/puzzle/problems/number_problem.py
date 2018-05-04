@@ -44,19 +44,17 @@ class NumberProblem(problem.Problem):
       for (
       solution, weight), notes in analyze_number.digit_solutions_with_notes(
           digits):
+        scaled_weight = weight * scale_factor
+        if scaled_weight < required_weight:
+          continue
         if offset:
           solution_str = '%s +%s' % (solution, offset)
         else:
           solution_str = solution
-        result[solution_str] = weight * scale_factor
+        result[solution_str] = scaled_weight
         if offset:
           self._notes[solution_str].append('offset +%s' % offset)
         self._notes[solution_str] += notes
-        required_weight = max(weight, required_weight)
-      if required_weight == 1:
-        break  # Good enough.
-      elif scale_factor < required_weight:
-        break  # Scale factor will prevent finding anything better.
     return result
 
 
@@ -102,15 +100,6 @@ def _parse(lines):
     return None
   if len(digits) == 1:
     return digits
-  # Well formed data heuristic.
-  if len(segment_lengths) == len(bases) and len(bases) == len(digits):
-    target_length = segment_lengths[0]
-    target_base = bases[0]
-    length = len(digits)
-    if (all(segment_lengths[i] == target_length for i in range(length)) and
-      all(bases[i] == target_base for i in range(length))):
-      # This data should be considered well formed already.
-      max_digit = target_base ** target_length
   if len(digits) >= 30:  # Chosen arbitrarily.
     return None
   return digits
