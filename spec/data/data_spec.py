@@ -1,7 +1,7 @@
 import collections
 
-from spec.mamba import *
 from data import data
+from spec.mamba import *
 
 _TestClass = collections.namedtuple('_TestClass', ['name', 'lines'])
 
@@ -29,3 +29,11 @@ with description('load_lines'):
     expect(result).to(have_keys('example', 'another'))
     expect(result['another'].name).to(equal('another'))
     expect(result['another'].lines).to(equal(['Second']))
+
+  with it('ignores leading, trailing blank line'):
+    result = data.load_lines(textwrap.dedent("""
+      [example]
+      Text
+    """).split('\n'), _TestClass)
+    expect(result).to(have_key('example'))
+    expect(result['example'].lines).to(equal(['Text']))
