@@ -65,6 +65,11 @@ with description('CrosswordProblem'):
     problem = crossword_problem.CrosswordProblem('ex', [' 1. example (3)'])
     expect(problem.lines).to(equal(['example (3)']))
 
+  with it('address stripping is not fooled by "St. Mark"'):
+    problem = crossword_problem.CrosswordProblem(
+        'ex', ['Wandering Magi following St. Mark (6)'])
+    expect(problem.lines).to(equal(['Wandering Magi following St. Mark (6)']))
+
   with description('constraints'):
     with it('constrains to fixed lengths'):
       problem = crossword_problem.CrosswordProblem('ex', ['example (3)'])

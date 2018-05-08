@@ -4,7 +4,7 @@ from data.alphabets import crossword_indicators
 from puzzle.problems import problem
 
 _CROSSWORD_REGEX = re.compile(r'^.*\(([\d\s,|]+)? ?(wo?r?ds)?(hyphe?n?)?\.?\)$')
-_ADDRESS = re.compile(r'\s*\d*\.\s')
+_ADDRESS = re.compile(r'\s*\d+\.\s')
 _INT_REGEX = re.compile(r'(\d+)')
 
 
