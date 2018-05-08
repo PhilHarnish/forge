@@ -9,7 +9,7 @@ from typing import Match
 import mock
 from expects import *
 from expects import matchers
-from mamba import formatters
+from mamba import formatters, runnable
 
 from data.convert import repr_format
 from spec.data import fixtures
@@ -78,6 +78,9 @@ class _Benchmark(object):
           random.random() < TARGET_BENCHMARK_RUNTIME_MS / self._expected_ms)
     else:
       self._should_run = True
+    if not self._should_run:
+      raise runnable.SkipException('Skipping with probability %s / %s' % (
+          TARGET_BENCHMARK_RUNTIME_MS, self._expected_ms))
     return self._should_run
 
   def __exit__(self, exc_type, exc_val, exc_tb) -> None:
