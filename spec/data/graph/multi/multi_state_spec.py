@@ -34,3 +34,14 @@ with description('multi_state'):
       a = multi_state.State({'a': 1, 'c': 3})
       b = multi_state.State({'b': 2, 'c': 3})
       expect(a & b).to(equal(multi_state.State({'a': 1, 'b': 2, 'c': 3})))
+
+  with description('dict keys'):
+    with it('hashes reliably'):
+      first = multi_state.State({'a': 1})
+      second = multi_state.State({'a': 1})
+      index = {
+        first: 'value1',
+      }
+      expect(index).to(have_len(1))
+      index[second] = 'value2'
+      expect(index).to(have_len(1))

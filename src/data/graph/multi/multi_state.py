@@ -2,6 +2,8 @@ from typing import Optional
 
 
 class State(dict):
+  _hash = None
+
   def __eq__(self, other: 'State') -> bool:
     if self is other:
       return True
@@ -27,5 +29,9 @@ class State(dict):
     combined_constraints.update(a)
     return State(combined_constraints)
 
+  def __hash__(self) -> int:
+    if self._hash is None:
+      self._hash = hash(tuple(sorted(self.items(), key=lambda x: x[0])))
+    return self._hash
 
 BLANK = State()
