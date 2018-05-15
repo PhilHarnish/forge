@@ -34,4 +34,12 @@ class State(dict):
       self._hash = hash(tuple(sorted(self.items(), key=lambda x: x[0])))
     return self._hash
 
+  def __str__(self) -> str:
+    if not self:
+      return 'multi_state.BLANK'
+    return 'multi_state.State(%s)' % dict(self)
+
+  __repr__ = __str__
+
+
 BLANK = State()
