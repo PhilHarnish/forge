@@ -33,3 +33,9 @@ def diff_property(prop: str) -> None:
 with description('grid'):
   with it('grayscale'):
     diff_property('grayscale')
+
+  with it('threshold'):
+    diff_property('threshold')
+
+  with it('with_lines'):
+    diff_property('with_lines')
