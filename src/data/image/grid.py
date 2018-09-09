@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 
 from data import lazy
+from data.image import coloring
 
 _CROSS = np.array([
   [0, 1, 0],
@@ -28,6 +29,12 @@ class Grid(object):
   @lazy.prop
   def grayscale(self) -> np.ndarray:
     return cv2.cvtColor(self._original, cv2.COLOR_BGR2GRAY)
+
+  @lazy.prop
+  def with_components(self) -> np.ndarray:
+    output = np.copy(self._original)
+    n_labels, labels, stats, centroids = self._components
+    return coloring.color_components(n_labels, output, labels, stats)
 
   @lazy.prop
   def with_lines(self) -> np.ndarray:
@@ -56,6 +63,11 @@ class Grid(object):
 
       cv2.line(output, (x1, y1), (x2, y2), (0, 0, 255, 255), thickness=2)
     return output
+
+  @lazy.prop
+  def _components(
+      self) -> typing.Tuple[int, np.ndarray, np.ndarray, np.ndarray]:
+    return cv2.connectedComponentsWithStats(self.threshold)
 
   @lazy.prop
   def _hough_lines(self) -> typing.List[typing.Tuple[float, float]]:
@@ -113,7 +125,7 @@ def _normalize(src: np.ndarray) -> np.ndarray:
     for col in row:
       if not col[3]:
         col[0], col[1], col[2] = 255, 255, 255
-  return src
+  return cv2.cvtColor(src, cv2.COLOR_BGRA2BGR)
 
 
 def _gap_threshold(rhos: typing.List[int]) -> int:
