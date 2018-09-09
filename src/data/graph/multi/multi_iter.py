@@ -33,7 +33,6 @@ def multi_iter(sources: Iterable[Iterable[ResultIn]]) -> Iterable[ResultOut]:
     single_list[0] = weighted_word
     single_group[state] = single_list
     swap, bucket_groups[pos] = bucket_groups[pos], single_group
-    print(list(dict(g) for g in bucket_groups))
     for weight, result in _emit(bucket_groups):
       result_heap.push(weight, result)
     if result_heap:
