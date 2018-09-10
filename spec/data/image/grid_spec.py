@@ -42,5 +42,8 @@ with description('grid'):
   with it('with_components'):
     diff_property('with_components')
 
+  with it('with_largest_component'):
+    diff_property('with_largest_component')
+
   with it('with_lines'):
     diff_property('with_lines')

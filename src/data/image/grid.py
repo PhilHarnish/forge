@@ -37,6 +37,12 @@ class Grid(object):
     return coloring.color_components(n_labels, output, labels, stats)
 
   @lazy.prop
+  def with_largest_component(self) -> np.ndarray:
+    output = np.copy(self._original)
+    n_labels, labels, stats, centroids = self._components
+    return coloring.color_components(2, output, labels, stats)
+
+  @lazy.prop
   def with_lines(self) -> np.ndarray:
     output = np.copy(self._original)
     for rho, theta in self._hough_lines:

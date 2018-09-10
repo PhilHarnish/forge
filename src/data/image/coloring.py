@@ -5,37 +5,40 @@ import cv2
 import numpy as np
 
 _MAX_COLORS_PER_HLS_SLICE = 7
+_BLACK = np.fromiter([0, 0, 0], dtype=np.int32)
+_WHITE = np.fromiter([255, 255, 255], dtype=np.int32)
 
 
 def color_components(
     n_components: int, result: np.ndarray, labels: np.ndarray,
     stats: np.ndarray) -> np.ndarray:
-  colors = _colors(n_components, result.dtype)
+  """Colors n largest components."""
+  n_stats = stats.shape[0]
+  colors = _colors(n_stats)
   sizes_sorted = sorted(
-      list(range(n_components)),
+      list(range(n_stats)),
       key=lambda i: stats[i, cv2.CC_STAT_AREA],
       reverse=True)
   # Invert sizes_sorted array to produce a color map.
-  color_map = [0] * n_components
+  color_map = [0] * len(sizes_sorted)
   for idx, i in enumerate(sizes_sorted):
     color_map[i] = idx
   height, width = labels.shape
   for y in range(height):
     for x in range(width):
-      color = colors[color_map[labels[y, x]]]
+      color_idx = color_map[labels[y, x]]
+      if color_idx >= n_components:
+        color_idx = 0  # Erase this component to leave only n_components.
+      color = colors[color_idx]
       result[y, x] = color
   return result
 
 
-def _colors(n: int, dtype: np.dtype) -> typing.List[np.ndarray]:
-  if not n:
-    return []
-  result = [
-    np.fromiter([0, 0, 0], dtype=dtype),
-  ]
-  if n == 1:
+def _colors(n: int) -> typing.List[np.ndarray]:
+  """Returns n (or more) colors."""
+  result = [_BLACK, _WHITE]
+  if n <= 2:
     return result
-  result.append(np.fromiter([255, 255, 255], dtype=dtype))
   n -= 2
   n_slices = int(n / _MAX_COLORS_PER_HLS_SLICE) + 1
   lightness_scale = 0.25  # 50% +/- 25%.
@@ -51,7 +54,8 @@ def _colors(n: int, dtype: np.dtype) -> typing.List[np.ndarray]:
       saturation = 1.0
       r, g, b = colorsys.hls_to_rgb(hue, lightness, saturation)
       result.append(
-          np.fromiter([int(r * 255), int(g * 255), int(b * 255)], dtype=dtype))
+          np.fromiter(
+              [int(r * 255), int(g * 255), int(b * 255)], dtype=np.int32))
     n -= _MAX_COLORS_PER_HLS_SLICE
     lightness_scale *= -1
   return result
