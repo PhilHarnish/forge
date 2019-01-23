@@ -32,7 +32,7 @@ def diff_property(prop: str) -> None:
     # TODO: Diff.
 
 
-with description('grid'):
+with description('grid', 'end2end') as self:
   with it('grayscale'):
     diff_property('grayscale')
 
