@@ -90,6 +90,7 @@ SHORTHAND_CONVERSIONS = {
   'left': ['l'],
   'microphone': ['mic'],
 }
+# "Set of books" = OT (old testament) or NT (new testament).
 
 ALL_INDICATORS = collections.defaultdict(list)
 for group in [
