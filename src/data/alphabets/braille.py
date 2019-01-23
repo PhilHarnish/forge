@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 BITFIELD_ALPHABET = [
   ' ',  # 0: ⠀ </>
   'a',  # 1: ⠁ 1
@@ -64,6 +66,119 @@ BITFIELD_ALPHABET = [
   None,  # 62: ⠾ 23456
   None,  # 63: ⠿ 123456
 ]
+
+
+def _parse_braille(txt: str) -> Dict[str, List[str]]:
+  result = {}
+  for k, chunk in zip('abcdefghijklmnopqrstuvwxyz', txt.strip('\n').split('-')):
+    result[k] = chunk.split('\n')
+  return result
+
+
+braille = _parse_braille("""
+#
+
+
+-
+# 
+# 
+
+-
+##
+
+
+-
+##
+ #
+
+
+-
+# 
+ #
+
+-
+##
+# 
+
+-
+##
+##
+-
+# 
+##
+
+-
+ #
+# 
+
+-
+ #
+##
+
+-
+# 
+
+# 
+-
+# 
+# 
+# 
+-
+##
+#
+
+-
+##
+ #
+# 
+-
+# 
+ #
+# 
+-
+##
+# 
+# 
+-
+##
+##
+# 
+-
+# 
+##
+# 
+-
+ #
+# 
+# 
+-
+ #
+##
+# 
+-
+# 
+
+##
+-
+# 
+# 
+##
+-
+ #
+##
+ #
+-
+##
+##
+-
+##
+ #
+##
+-
+# 
+ #
+##
+""")
 
 
 if __name__ == '__main__':
