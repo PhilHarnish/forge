@@ -24,7 +24,7 @@ with description('clue_keywords'):
   with it('tokenizes and alphabetizes what remains'):
     expect(crossword.clue_keywords(
         'Vegetable that gives Popeye superhuman strength (7)'
-    )).to(equal(['vegetable', 'gives', 'popeye', 'superhuman', 'strength']))
+    )).to(equal(['vegetable', 'give', 'popeye', 'superhuman', 'strength']))
 
 
 with description('db'):
