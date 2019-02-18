@@ -26,6 +26,7 @@ ANAGRAM_INDICATORS = frozenset([
   'round',
   'shake',
   'transform',
+  'turn',
   'upset',
   'wander',
   'wandering',
