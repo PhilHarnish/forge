@@ -10,7 +10,8 @@ _OFFSETS = None
 
 class NumberProblem(problem.Problem):
   def __init__(
-      self, name: str, lines: List[str], allow_offsets: bool=True, **kwargs):
+      self, name: str, lines: List[str], allow_offsets: bool=True, **kwargs
+  ) -> None:
     super(NumberProblem, self).__init__(name, lines, **kwargs)
     self._digits = _parse(lines)
     self._allow_offsets = allow_offsets
