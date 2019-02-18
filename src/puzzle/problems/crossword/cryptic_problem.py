@@ -205,7 +205,7 @@ def _visit_anagram(tokens, positions, solutions):
           continue
         acc_length = new_length
         acc.append((word, i))
-        if new_length >= min_length and new_length <= max_length:
+        if min_length <= new_length <= max_length:
           _add(acc, banned_max)
         elif new_length < max_length:
           _crawl(i + 1, acc, acc_length)
