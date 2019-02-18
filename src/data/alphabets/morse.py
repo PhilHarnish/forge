@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 ALPHABET = {
   'a': '.-',
   'b': '-...',
@@ -46,7 +48,7 @@ TRANSLATION_TABLES = [
 ]
 
 
-def translate(code):
+def translate(code: str) -> Optional[List[str]]:
   parts = code.split(' ')
   result = []
   for part in parts:

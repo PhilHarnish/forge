@@ -1,4 +1,5 @@
 import sys
+from typing import List, Optional
 
 from data import warehouse
 from puzzle.heuristics import analyze_number
@@ -8,13 +9,14 @@ _OFFSETS = None
 
 
 class NumberProblem(problem.Problem):
-  def __init__(self, name, lines, allow_offsets=True, **kwargs):
+  def __init__(
+      self, name: str, lines: List[str], allow_offsets: bool=True, **kwargs):
     super(NumberProblem, self).__init__(name, lines, **kwargs)
     self._digits = _parse(lines)
     self._allow_offsets = allow_offsets
 
   @staticmethod
-  def score(lines):
+  def score(lines: List[str]) -> float:
     if not lines:
       return 0
     parsed = _parse(lines)
@@ -28,7 +30,7 @@ class NumberProblem(problem.Problem):
     max_information = max(parsed) ** len(parsed)
     return max(sys.float_info.epsilon, min(max_information / 0xAAAA, 1))
 
-  def _solve(self):
+  def _solve(self) -> dict:
     # TODO: Much optimization needed here.
     result = {}
     required_weight = self._threshold
@@ -58,7 +60,7 @@ class NumberProblem(problem.Problem):
     return result
 
 
-def _parse(lines):
+def _parse(lines: List[str]) -> Optional[List[int]]:
   """Converts a space-separated list of digits into 1 number."""
   if not lines:
     return None
@@ -105,7 +107,7 @@ def _parse(lines):
   return digits
 
 
-def _get_offsets():
+def _get_offsets() -> List[int]:
   global _OFFSETS
   if _OFFSETS is None:
     _OFFSETS = [0] + [

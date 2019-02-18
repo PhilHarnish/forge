@@ -1,8 +1,13 @@
 import collections
 import math
+from typing import Callable, Iterable, List, Tuple
 
 from data.alphabets import braille, keyboard_intersection, leet, morse, t9
 from puzzle.heuristics import acrostic
+
+Digits = List[int]
+Notes = List[str]
+Solutions = Iterable[Tuple[str, float]]
 
 _BASE_HIGH_PRIORITY = [
   10, 16, 26, 36, 32, 2,
@@ -14,18 +19,19 @@ _BASE_PRIORITY = _BASE_HIGH_PRIORITY + [
 _HEURISTICS = []  # Updated at end.
 
 
-def solutions(n):
+def solutions(n: int) -> Iterable[str]:
   if not n:
     return
   for solution, notes in solutions_with_notes(n):
     yield solution
 
 
-def solutions_with_notes(n):
+def solutions_with_notes(n: int) -> Iterable[Tuple[str, Notes]]:
   yield from digit_solutions_with_notes([n])
 
 
-def digit_solutions_with_notes(source):
+def digit_solutions_with_notes(
+    source: List[int]) -> Iterable[Tuple[str, Notes]]:
   for base in _BASE_PRIORITY:
     for digits, notes in _convert_digits_to_base(source, base):
       min_digit = min(digits)
@@ -36,11 +42,11 @@ def digit_solutions_with_notes(source):
           yield result, result_notes
 
 
-def _heuristic_name(fn):
+def _heuristic_name(fn: Callable) -> str:
   return fn.__name__.replace('_', ' ').strip()
 
 
-def _solutions_for_letters(letters):
+def _solutions_for_letters(letters: List[str]) -> Solutions:
   l = len(letters)
   if l > 8:
     freq = collections.Counter(letters)
@@ -53,7 +59,7 @@ def _solutions_for_letters(letters):
   yield from acrostic.Acrostic(letters).items()
 
 
-def _get_digits_in_base(n, b):
+def _get_digits_in_base(n: int, b: int) -> Digits:
   """Converts and returns n in base b."""
   digits = []
   while n:
@@ -63,7 +69,8 @@ def _get_digits_in_base(n, b):
   return list(reversed(digits or [0]))
 
 
-def _find_pattern_in_digits(digits, notes):
+def _find_pattern_in_digits(
+    digits: Digits, notes: Notes) -> Iterable[Tuple[Digits, Notes]]:
   """Yields if a pattern was found.
 
   - A pattern of spacer digits are discovered then another yield occurs with
@@ -128,7 +135,8 @@ def _find_pattern_in_digits(digits, notes):
     yield grouped, notes + ['groups of %s' % n]
 
 
-def _convert_digits_to_base(digits, b):
+def _convert_digits_to_base(
+    digits: Digits, b: int) -> Iterable[Tuple[Digits, Notes]]:
   combined = []
   delimited = []
   use_delimited = True
@@ -151,23 +159,26 @@ def _convert_digits_to_base(digits, b):
     yield from _find_pattern_in_digits(combined, notes + ['with 0 delimiter'])
 
 
-def _run_length(digits, max_length):
-  """Returns [digit, n_seen], ... for input digits."""
-  active = [digits[0], 0]
-  result = [active]
-  for digit in digits:
-    if digit == active[0]:
-      active[1] += 1
-      if active[1] > max_length:
+def _run_length(digits: Digits, max_length: int) -> List[Tuple[int, int]]:
+  """Returns [(digit, count), ...] for input digits."""
+  count = 1
+  last = digits[0]
+  result = []
+  for digit in digits[1:]:
+    if digit == last:
+      count += 1
+      if count > max_length:
         return []  # Invalid.
     else:
-      active = [digit, 1]
-      result.append(active)
+      result.append((last, count))
+      count = 1
+      last = digit
+  result.append((last, count))
   return result
 
 
 # Heuristics.
-def _alphabet(digits, min_digit, max_digit):
+def _alphabet(digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   if min_digit == 0:
     return
   if max_digit > 26:
@@ -179,7 +190,7 @@ def _alphabet(digits, min_digit, max_digit):
   yield from _solutions_for_letters(as_letters)
 
 
-def _ascii(digits, min_digit, max_digit):
+def _ascii(digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   if not chr(min_digit).isprintable():
     return
   elif max_digit > 0x110000 or not chr(max_digit).isprintable():
@@ -190,9 +201,9 @@ def _ascii(digits, min_digit, max_digit):
     if not letter.isprintable():
       return
     as_letters.append(letter)
-  solutions = set()
+  results = set()
   for solution in _solutions_for_letters(as_letters):
-    solutions.add(solution)
+    results.add(solution)
     yield solution
   if len(as_letters) < 10:
     return
@@ -205,11 +216,11 @@ def _ascii(digits, min_digit, max_digit):
   n_high_printable = sum(c > 255 for c in digits)
   p_noise = n_high_printable / len(as_letters)
   garbage_scale = 1 - p_noise
-  if printable_result not in solutions:
+  if printable_result not in results:
     yield printable_result, 0.25 * garbage_scale
 
 
-def _ascii_nibbles(digits, min_digit, max_digit):
+def _ascii_nibbles(digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   num_digits = len(digits)
   if min_digit >= 16:
     return
@@ -240,7 +251,7 @@ def _ascii_nibbles(digits, min_digit, max_digit):
   yield from _solutions_for_letters(as_letters)
 
 
-def _base_n(digits, min_digit, max_digit):
+def _base_n(digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   """Convert digits to letters assuming baseN (eg hex has A-F)."""
   if min_digit < 10:
     return
@@ -253,7 +264,7 @@ def _base_n(digits, min_digit, max_digit):
   yield from _solutions_for_letters(as_letters)
 
 
-def _braille(digits, min_digit, max_digit):
+def _braille(digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   """Braille.
   
   Increasing sequences of 1..6 specify raised dots (in column-major order, as
@@ -283,7 +294,7 @@ def _braille(digits, min_digit, max_digit):
   yield from _solutions_for_letters(as_letters)
 
 
-def _hexspeak(digits, min_digit, max_digit):
+def _hexspeak(digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   del min_digit
   if max_digit > 15:
     return
@@ -296,7 +307,8 @@ def _hexspeak(digits, min_digit, max_digit):
   yield from _solutions_for_letters(as_letters)
 
 
-def _keyboard_intersection(digits, min_digit, max_digit):
+def _keyboard_intersection(
+    digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   del min_digit, max_digit
   if len(digits) % 2 != 0:
     return
@@ -310,7 +322,8 @@ def _keyboard_intersection(digits, min_digit, max_digit):
   yield from _solutions_for_letters(as_letters)
 
 
-def _lexicographical_ordering(digits, min_digit, max_digit):
+def _lexicographical_ordering(
+    digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   if min_digit != 0:
     return
   elif max_digit > 5:
@@ -339,7 +352,7 @@ def _lexicographical_ordering(digits, min_digit, max_digit):
   yield from _solutions_for_letters(as_letters)
 
 
-def _morse(digits, min_digit, max_digit):
+def _morse(digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   """Use 0, 1, 2 for morse. Sadly, there is no universal standard."""
   del min_digit
   if max_digit > 2:
@@ -352,7 +365,7 @@ def _morse(digits, min_digit, max_digit):
     yield from _solutions_for_letters(translated)
 
 
-def _phone_number(digits, min_digit, max_digit):
+def _phone_number(digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   del min_digit
   n_digits = len(digits)
   if max_digit > 9:  # Not decimal.
@@ -384,7 +397,7 @@ def _phone_number(digits, min_digit, max_digit):
     yield prefix + word, score
 
 
-def _positional(digits, min_digit, max_digit):
+def _positional(digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   del min_digit
   if len(digits) != 26:
     return
@@ -409,7 +422,7 @@ def _positional(digits, min_digit, max_digit):
   yield from _solutions_for_letters(as_letters)
 
 
-def _runlength(digits, min_digit, max_digit):
+def _runlength(digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   del min_digit, max_digit
   chunks = _run_length(digits, 26)
   if len(chunks) < 3:
@@ -437,7 +450,7 @@ def _runlength(digits, min_digit, max_digit):
   yield from _solutions_for_letters(as_letters)
 
 
-def _t9(digits, min_digit, max_digit):
+def _t9(digits: Digits, min_digit: int, max_digit: int) -> Solutions:
   """Presses on phone keypad."""
   if min_digit < 2:
     return
@@ -446,12 +459,9 @@ def _t9(digits, min_digit, max_digit):
   as_letters = []
   for digit, length in _run_length(digits, 4):
     offset = length - 1  # 1 based -> 0 based.
-    try:
-      if length > len(t9.KEYS[digit]):
-        return
-      as_letters.append(t9.KEYS[digit][offset])
-    except:
+    if length > len(t9.KEYS[digit]):
       return
+    as_letters.append(t9.KEYS[digit][offset])
   if not as_letters:
     return
   yield from _solutions_for_letters(as_letters)

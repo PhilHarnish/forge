@@ -1,5 +1,6 @@
 import collections
 import itertools
+from typing import Callable, ItemsView, Iterable, List
 
 from data import meta
 
@@ -7,7 +8,8 @@ _THRESHOLD = 0.01
 
 
 class Problem(object):
-  def __init__(self, name, lines, threshold=_THRESHOLD):
+  def __init__(
+      self, name: str, lines: List[str], threshold: float=_THRESHOLD) -> None:
     self.name = name
     self.lines = lines
     self._threshold = threshold or _THRESHOLD
@@ -21,11 +23,11 @@ class Problem(object):
     ]
 
   @property
-  def kind(self):
+  def kind(self) -> str:
     return str(type(self)).strip("'<>").split('.').pop()
 
   @property
-  def solution(self):
+  def solution(self) -> str:
     if self._filtered_solutions.magnitude() >= 1:
       # At least one satisfactory answer already found.
       return self._filtered_solutions.peek()
@@ -34,33 +36,33 @@ class Problem(object):
     # Solutions will either be exhausted or include at least one with 1+ score.
     return self._filtered_solutions.peek()
 
-  def constrain(self, fn):
+  def constrain(self, fn: Callable[[str, float], bool]) -> None:
     self._constraints.append(fn)
     # Invalidate solutions.
     self._filtered_solutions_iterator = self._filter_solutions_iter()
     self._filtered_solutions = meta.Meta()
 
-  def solutions(self):
+  def solutions(self) -> meta.Meta:
     for _ in self._filtered_solutions_iterator:
       # Exhaust the _filtered_solutions_iterator.
       pass
     return self._filtered_solutions
 
-  def __iter__(self):
+  def __iter__(self) -> Iterable[ItemsView]:
     yield from self._filtered_solutions_iterator
 
-  def notes_for(self, solution):
+  def notes_for(self, solution) -> List[str]:
     return self._notes.get(solution, [])
 
-  def _solve_iter(self):
+  def _solve_iter(self) -> Iterable[ItemsView[str, float]]:
     return iter(self._solve().items())
 
-  def _take_solutions_iter(self):
+  def _take_solutions_iter(self) -> ItemsView[str, float]:
     for k, v in self._solve_iter():
       self._all_solutions[k] = v
       yield k, v
 
-  def _filter_solutions_iter(self):
+  def _filter_solutions_iter(self) -> Iterable[ItemsView]:
     # First review any existing values in _all_solutions. This is empty unless
     # the Problem's constraints changed mid-solve.
     for k, v in itertools.chain(
@@ -70,18 +72,18 @@ class Problem(object):
         self._filtered_solutions[k] = v
         yield k, v
 
-  def _filter_solutions_until(self, min_score=float('inf')):
+  def _filter_solutions_until(self, min_score: float=float('inf')) -> None:
     for k, v in self._filtered_solutions_iterator:
       if v >= min_score:
         break
 
-  def _solve(self):
+  def _solve(self) -> dict:
     """Solves Problem.
 
     Returns:
       dict Dict mapping solution to score.
     """
-    raise NotImplementedError()
+    return self._all_solutions
 
-  def __repr__(self):
+  def __repr__(self) -> str:
     return '%s()' % self.__class__.__name__
