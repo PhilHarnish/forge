@@ -1,10 +1,12 @@
 import collections
 import itertools
-from typing import Callable, ItemsView, Iterable, List
+from typing import Callable, Iterable, List, Tuple
 
 from data import meta
 
 _THRESHOLD = 0.01
+Solution = Tuple[str, float]
+Solutions = Iterable[Solution]
 
 
 class Problem(object):
@@ -48,21 +50,21 @@ class Problem(object):
       pass
     return self._filtered_solutions
 
-  def __iter__(self) -> Iterable[ItemsView]:
+  def __iter__(self) -> Solutions:
     yield from self._filtered_solutions_iterator
 
   def notes_for(self, solution) -> List[str]:
     return self._notes.get(solution, [])
 
-  def _solve_iter(self) -> Iterable[ItemsView[str, float]]:
+  def _solve_iter(self) -> Solutions:
     return iter(self._solve().items())
 
-  def _take_solutions_iter(self) -> ItemsView[str, float]:
+  def _take_solutions_iter(self) -> Solution:
     for k, v in self._solve_iter():
       self._all_solutions[k] = v
       yield k, v
 
-  def _filter_solutions_iter(self) -> Iterable[ItemsView]:
+  def _filter_solutions_iter(self) -> Solutions:
     # First review any existing values in _all_solutions. This is empty unless
     # the Problem's constraints changed mid-solve.
     for k, v in itertools.chain(
