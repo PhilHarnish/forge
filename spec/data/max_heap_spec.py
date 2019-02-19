@@ -1,7 +1,7 @@
 from data import max_heap
 from spec.mamba import *
 
-with description(max_heap.MaxHeap) as self:
+with description('max_heap.MaxHeap') as self:
   with before.each:
     self.subject = max_heap.MaxHeap()
 
@@ -40,3 +40,25 @@ with description(max_heap.MaxHeap) as self:
       self.subject.push(0, 'smallest')
       self.subject.push(10, 'large')
       expect(self.subject.best_weight()).to(equal(100))
+
+  with description('pop_with_weight'):
+    with it('raises for empty input'):
+      expect(calling(self.subject.pop_with_weight)).to(raise_error)
+
+    with it('returns value with weight'):
+      self.subject.push(1, 'small')
+      expect(self.subject.pop_with_weight()).to(equal(('small', 1)))
+
+  with description('pop_with_weight_until'):
+    with it('raises for empty input'):
+      expect(calling(list, self.subject.pop_with_weight_until(10))).not_to(raise_error)
+
+    with it('returns value with weight'):
+      self.subject.push(1, 'small')
+      self.subject.push(100, 'largest')
+      self.subject.push(0, 'smallest')
+      self.subject.push(10, 'large')
+      expect(list(self.subject.pop_with_weight_until(10))).to(equal([
+        ('largest', 100),
+        ('large', 10),
+      ]))
