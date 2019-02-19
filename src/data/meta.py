@@ -11,7 +11,7 @@ class Meta(collections.OrderedDict, typing.MutableMapping[str, float]):
 
   def __setitem__(self, key: str, value: float) -> None:
     if key in self and self[key] == value:
-      raise AssertionError('Redundant assignment')
+      raise AssertionError('Redundant assignment: %s = %s' % (key, value))
     if value > self._smallest:
       self._ordered = False
     else:
