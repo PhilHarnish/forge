@@ -134,7 +134,7 @@ with description('with wordnet', 'end2end') as self:
       expect(len(results) / len(self.problems)).to(be_above_or_equal(2 / 3))
 
   with it('solves a GPH Zero Space puzzle'):
-    with benchmark(1000):
+    with benchmark(1000, stddev=.2):
       problem = cryptic_problem.CrypticProblem(
           'gphzs', ['Fiery spouts put oven coals in a mess (9)'])
       solutions = problem.solutions()
