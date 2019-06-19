@@ -1,5 +1,5 @@
 import collections
-import typing
+from typing import List, NamedTuple, Tuple
 
 import cv2
 import numpy as np
@@ -12,6 +12,18 @@ _CROSS = np.array([
   [1, 1, 1],
   [0, 1, 0],
 ], np.uint8)
+_SIZES = []
+pos = 16
+for backwards in range(-1, -11, -1):
+  for _ in range(0, 8):
+    _SIZES.append(pos)
+    pos += 1
+  _SIZES.append(16 + backwards)
+
+
+class Dimensions(NamedTuple):
+  rows: int
+  columns: int
 
 
 class Grid(object):
@@ -71,12 +83,17 @@ class Grid(object):
     return output
 
   @lazy.prop
+  def dimensions(self) -> Dimensions:
+    nonzero_y, nonzero_x = self.threshold.nonzero()
+    return Dimensions(_n_cells(nonzero_y), _n_cells(nonzero_x))
+
+  @lazy.prop
   def _components(
-      self) -> typing.Tuple[int, np.ndarray, np.ndarray, np.ndarray]:
+      self) -> Tuple[int, np.ndarray, np.ndarray, np.ndarray]:
     return cv2.connectedComponentsWithStats(self.threshold)
 
   @lazy.prop
-  def _hough_lines(self) -> typing.List[typing.Tuple[float, float]]:
+  def _hough_lines(self) -> List[Tuple[float, float]]:
     edges = cv2.Canny(self.threshold, 50, 150, apertureSize=3)
     hough_lines = []
     cv_hough_lines = cv2.HoughLines(edges, 1, np.pi / 180, 200)
@@ -88,7 +105,7 @@ class Grid(object):
     return sorted(hough_lines, key=lambda x: x[0])
 
   @lazy.prop
-  def _grid_lines(self) -> typing.List[typing.Tuple[float, float]]:
+  def _grid_lines(self) -> List[Tuple[float, float]]:
     horizontal_lines = []
     vertical_lines = []
     for rho, theta in self._hough_lines:
@@ -103,7 +120,6 @@ class Grid(object):
         vertical_lines.append((rho, theta))
       else:
         # TODO: Actually measure "askew" instead of clamping.
-        print('theta is too askew: %s' % theta)
         continue
     horizontal_threshold = _gap_threshold([rho for rho, _ in horizontal_lines])
     vertical_threshold = _gap_threshold([rho for rho, _ in vertical_lines])
@@ -134,7 +150,7 @@ def _normalize(src: np.ndarray) -> np.ndarray:
   return cv2.cvtColor(src, cv2.COLOR_BGRA2BGR)
 
 
-def _gap_threshold(rhos: typing.List[int]) -> int:
+def _gap_threshold(rhos: List[int]) -> int:
   if not rhos:
     return 0
   extent = rhos[-1] - rhos[0]
@@ -156,9 +172,9 @@ def _gap_threshold(rhos: typing.List[int]) -> int:
 
 
 def _threshold_lines(
-    lines: typing.List[typing.Tuple[float, float]],
+    lines: List[Tuple[float, float]],
     threshold: float,
-) -> typing.List[typing.Tuple[float, float]]:
+) -> List[Tuple[float, float]]:
   right_edge = float('-inf')
   bucket = []
   buckets = [bucket]
@@ -176,3 +192,28 @@ def _threshold_lines(
     average_theta = sum(theta for _, theta in bucket) / len(bucket)
     result.append((average_rho, average_theta))
   return result
+
+
+def _n_cells(nonzero: np.array) -> int:
+  # counts indicates how many times a nonzero coordinate was seen; it is a
+  # histogram of how often an x (or y) value coordinate was seen.
+  counts = np.trim_zeros(np.bincount(nonzero))
+  ediff = np.abs(np.ediff1d(counts))
+  rolling = np.convolve(ediff, np.ones(3, dtype=int), 'valid')
+  ptile = np.percentile(ediff, 90, interpolation='higher')
+  width = len(counts)
+  best_match = 0
+  best_cells = -1
+  for size in _SIZES:
+    cells = int(width // size)
+    for offset in range(0, size):
+      hits = np.sum(rolling[offset::size] > ptile)
+      matched = hits / cells
+      if matched < .55:
+        continue
+      elif matched >= 1:
+        return cells
+      elif matched > best_match:
+        best_match = matched
+        best_cells = cells
+  return best_cells
