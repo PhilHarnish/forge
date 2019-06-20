@@ -43,6 +43,14 @@ class Grid(object):
     return cv2.cvtColor(self._original, cv2.COLOR_BGR2GRAY)
 
   @lazy.prop
+  def grid(self) -> np.ndarray:
+    grayscale = self.grayscale
+    gray_only = np.where((grayscale > 5) & (grayscale < 250), grayscale, 0)
+    morphed = cv2.morphologyEx(gray_only, cv2.MORPH_OPEN, _CROSS,
+        iterations=2)
+    return np.where(morphed == 0, self.threshold, 0)
+
+  @lazy.prop
   def with_components(self) -> np.ndarray:
     output = np.copy(self._original)
     n_labels, labels, stats, centroids = self._components
@@ -84,7 +92,7 @@ class Grid(object):
 
   @lazy.prop
   def dimensions(self) -> Dimensions:
-    nonzero_y, nonzero_x = self.threshold.nonzero()
+    nonzero_y, nonzero_x = self.grid.nonzero()
     return Dimensions(_n_cells(nonzero_y), _n_cells(nonzero_x))
 
   @lazy.prop

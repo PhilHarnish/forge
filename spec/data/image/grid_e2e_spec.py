@@ -42,8 +42,12 @@ with description('grid', 'end2end') as self:
     with benchmark(2250):
       diff_property('grayscale')
 
+  with it('grid'):
+    with benchmark(2400):
+      diff_property('grid')
+
   with it('threshold'):
-    with benchmark(2000):
+    with benchmark(2400):
       diff_property('threshold')
 
   with it('with_components'):
@@ -55,11 +59,11 @@ with description('grid', 'end2end') as self:
       diff_property('with_largest_component')
 
   with it('with_lines'):
-    with benchmark(3500, stddev=.25):  # 3800
+    with benchmark(3500, stddev=.25):
       diff_property('with_lines')
 
   with it('calculates dimensions'):
-    with benchmark(2000, stddev=.25):  # 2500
+    with benchmark(2500, stddev=.25):
       # These don't work with current method.
       todo = {
         'askew.png',  # Strange angles.
@@ -67,7 +71,6 @@ with description('grid', 'end2end') as self:
         'pentopia.png',  # Shape bank.
         'skyscraper.png',  # Numbers on perimeter.
         'strimko.png',  # Round shapes.
-        'thermo.png',  # Needs thresholding.
         'wordsearch.png',  # Fractional cell sizes.
         'wordsearch_with_bank.png',  # Strange shape with word bank.
       }
@@ -82,6 +85,7 @@ with description('grid', 'end2end') as self:
         'multi.png': grid.Dimensions(rows=15, columns=15),
         'nurimaze.png': grid.Dimensions(rows=17, columns=17),
         'slitherlink.png': grid.Dimensions(rows=9, columns=10),
+        'thermo.png': grid.Dimensions(rows=10, columns=9),  # Has title row.
       }
       for name, g in grids():
         if focus and name not in focus:
