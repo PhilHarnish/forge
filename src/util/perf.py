@@ -58,6 +58,9 @@ class Perf(object):
     end = time.perf_counter()
     self.increment(name, end - start)
 
+  def __len__(self) -> int:
+    return sum(calls for calls, _, _ in self._timings)
+
   def __str__(self) -> str:
     results = [self._name]
     if any(elapsed for _, elapsed, _ in self._timings):
@@ -81,7 +84,7 @@ class Perf(object):
 
 
 def report() -> str:
-  return '\n\n'.join(str(perf) for perf in _ALL_PERFS)
+  return '\n\n'.join(str(perf) for perf in _ALL_PERFS if perf)
 
 
 def push() -> None:
