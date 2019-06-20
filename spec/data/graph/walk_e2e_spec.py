@@ -3,6 +3,9 @@ from data.graph import bloom_node, ngram, regex, walk
 from spec.mamba import *
 
 
+comparison = perf.Perf('trie v regex', ['trie', 'regex'])
+
+
 def get_words(
     length_mask: int = None,
     file: str = 'data/g1m_1gram.txt',
@@ -42,19 +45,16 @@ def path(root: bloom_node.BloomNode, path: str) -> List[str]:
 
 
 def head2head(patterns, trie, words) -> tuple:
-  start = time.time()
-  merged = trie
-  for pattern in patterns:
-    merged *= regex.parse(pattern)
-  actual = results(merged)
-  trie_elapsed = time.time() - start
-  start = time.time()
-  expressions = [re.compile('^%s$' % pattern) for pattern in patterns]
-  expected = [
-    word for word, _ in words if all(re.match(exp, word) for exp in expressions)
-  ]
-  re_elapsed = time.time() - start
-  print('trie %.2fx faster for %s' % (re_elapsed / trie_elapsed, patterns))
+  with comparison.benchmark('trie'):
+    merged = trie
+    for pattern in patterns:
+      merged *= regex.parse(pattern)
+    actual = results(merged)
+  with comparison.benchmark('regex'):
+    expressions = [re.compile('^%s$' % pattern) for pattern in patterns]
+    expected = [
+      word for word, _ in words if all(re.match(exp, word) for exp in expressions)
+    ]
   return expected, actual
 
 
