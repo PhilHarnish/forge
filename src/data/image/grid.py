@@ -7,19 +7,9 @@ import numpy as np
 from data import lazy
 from data.image import coloring
 
-_WHITE = [255, 255, 255]
-_CROSS = np.array([
-  [0, 1, 0],
-  [1, 1, 1],
-  [0, 1, 0],
-], np.uint8)
-_BIG_CROSS = np.array([
-  [0, 0, 1, 0, 0],
-  [0, 0, 1, 0, 0],
-  [1, 1, 1, 1, 1],
-  [0, 0, 1, 0, 0],
-  [0, 0, 1, 0, 0],
-], np.uint8)
+_MAX = 255
+_WHITE = [_MAX, _MAX, _MAX]
+_THRESHOLD = 5
 _SIZES = []
 pos = 16
 for backwards in range(-1, -11, -1):
@@ -44,7 +34,7 @@ class Grid(object):
     result = cv2.adaptiveThreshold(
         self.grayscale, maxValue=255, adaptiveMethod=cv2.ADAPTIVE_THRESH_MEAN_C,
         thresholdType=cv2.THRESH_BINARY_INV, blockSize=11, C=15)
-    return cv2.dilate(result, _CROSS, iterations=1)
+    return cv2.dilate(result, self._cross, iterations=1)
 
   @lazy.prop
   def grayscale(self) -> np.ndarray:
@@ -110,20 +100,42 @@ class Grid(object):
   def layers(self, n: int = 5) -> Iterator[np.ndarray]:
     grayscale = self.grayscale_inv
     counts = np.bincount(grayscale.ravel())
+    # Some images are dim.
+    interesting_threshold = int(counts[0] * .001)
+    brightest = len(counts) - 1
+    while counts[brightest] < interesting_threshold:
+      brightest -= 1
     top_n = list(range(-1, -n, -1))
     partitioned = np.argpartition(counts, top_n)
     for i in top_n:
       target = partitioned[i]
-      if target > 250 or target < 5:
+      if target > (brightest - _THRESHOLD) or target < _THRESHOLD:
         continue
       targeted = np.where(grayscale == target, grayscale, 0)
       # Erode and then over-dilate to eliminate noise.
-      morphed = cv2.dilate(cv2.erode(targeted, _CROSS, iterations=1), _CROSS,
+      morphed = cv2.dilate(
+          cv2.erode(targeted, self._cross, iterations=1),
+          self._cross,
           iterations=2)
       if not morphed.any():
         continue  # Nothing left after eroded.
       reselected = np.where(targeted == morphed, targeted, 0)
       yield reselected
+
+  @lazy.prop
+  def _cross(self) -> np.ndarray:
+    src = self._original
+    size = int(max(src.shape) * .0025)
+    if size < 3:
+      size = 3
+    elif size % 2 == 0:
+      size += 1
+    cross = np.zeros((size, size), np.uint8)
+    for x in range(size):
+      middle = (size - 1) >> 1
+      cross[middle][x] = 1
+      cross[x][middle] = 1
+    return cross
 
   @lazy.prop
   def _components(
