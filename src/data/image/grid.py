@@ -50,7 +50,7 @@ class Grid(object):
     for layer in self.layers():
       grayscale -= layer
     return cv2.threshold(
-        grayscale, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+        grayscale, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
   @lazy.prop
   def with_components(self) -> np.ndarray:
