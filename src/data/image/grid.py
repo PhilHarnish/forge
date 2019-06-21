@@ -1,5 +1,5 @@
 import collections
-from typing import List, NamedTuple, Tuple
+from typing import Iterator, List, NamedTuple, Tuple
 
 import cv2
 import numpy as np
@@ -7,6 +7,7 @@ import numpy as np
 from data import lazy
 from data.image import coloring
 
+_WHITE = [255, 255, 255]
 _CROSS = np.array([
   [0, 1, 0],
   [1, 1, 1],
@@ -35,7 +36,7 @@ class Dimensions(NamedTuple):
 
 class Grid(object):
   def __init__(self, cv_image: np.ndarray) -> None:
-    self._original = _normalize(cv_image)
+    self._original = _crop(_normalize(cv_image))
     self._scratch = np.copy(self._original)
 
   @lazy.prop
@@ -50,14 +51,16 @@ class Grid(object):
     return cv2.cvtColor(self._original, cv2.COLOR_BGR2GRAY)
 
   @lazy.prop
+  def grayscale_inv(self) -> np.ndarray:
+    return cv2.bitwise_not(self.grayscale)
+
+  @lazy.prop
   def grid(self) -> np.ndarray:
-    grayscale = cv2.bitwise_not(self.grayscale)
-    gray_only = np.where(grayscale <= 250, grayscale, 0)
-    morphed = cv2.morphologyEx(gray_only, cv2.MORPH_OPEN, _BIG_CROSS,
-        iterations=2)
-    cleaned = grayscale - morphed
+    grayscale = self.grayscale_inv
+    for layer in self.layers():
+      grayscale -= layer
     return cv2.threshold(
-        cleaned, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+        grayscale, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
   @lazy.prop
   def with_components(self) -> np.ndarray:
@@ -104,6 +107,24 @@ class Grid(object):
     nonzero_y, nonzero_x = self.grid.nonzero()
     return Dimensions(_n_cells(nonzero_y), _n_cells(nonzero_x))
 
+  def layers(self, n: int = 5) -> Iterator[np.ndarray]:
+    grayscale = self.grayscale_inv
+    counts = np.bincount(grayscale.ravel())
+    top_n = list(range(-1, -n, -1))
+    partitioned = np.argpartition(counts, top_n)
+    for i in top_n:
+      target = partitioned[i]
+      if target > 250 or target < 5:
+        continue
+      targeted = np.where(grayscale == target, grayscale, 0)
+      # Erode and then over-dilate to eliminate noise.
+      morphed = cv2.dilate(cv2.erode(targeted, _CROSS, iterations=1), _CROSS,
+          iterations=2)
+      if not morphed.any():
+        continue  # Nothing left after eroded.
+      reselected = np.where(targeted == morphed, targeted, 0)
+      yield reselected
+
   @lazy.prop
   def _components(
       self) -> Tuple[int, np.ndarray, np.ndarray, np.ndarray]:
@@ -111,7 +132,7 @@ class Grid(object):
 
   @lazy.prop
   def _hough_lines(self) -> List[Tuple[float, float]]:
-    edges = cv2.Canny(self.threshold, 50, 150, apertureSize=3)
+    edges = cv2.Canny(self.grid, 50, 150, apertureSize=3)
     hough_lines = []
     cv_hough_lines = cv2.HoughLines(edges, 1, np.pi / 180, 200)
     if cv_hough_lines is None:
@@ -165,6 +186,20 @@ def _normalize(src: np.ndarray) -> np.ndarray:
       if not col[3]:
         col[0], col[1], col[2] = 255, 255, 255
   return cv2.cvtColor(src, cv2.COLOR_BGRA2BGR)
+
+
+def _crop(src: np.ndarray) -> np.ndarray:
+  while np.all(src[0] == _WHITE):
+    src = src[1:]
+  while np.all(src[-1] == _WHITE):
+    src = src[:-1]
+  src = np.swapaxes(src, 0, 1)  # Swap x/y axis.
+  while np.all(src[0] == _WHITE):
+    src = src[1:]
+  while np.all(src[-1] == _WHITE):
+    src = src[:-1]
+  src = np.swapaxes(src, 0, 1)  # Swap x/y axis.
+  return src
 
 
 def _gap_threshold(rhos: List[int]) -> int:
