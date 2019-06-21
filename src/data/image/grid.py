@@ -12,6 +12,13 @@ _CROSS = np.array([
   [1, 1, 1],
   [0, 1, 0],
 ], np.uint8)
+_BIG_CROSS = np.array([
+  [0, 0, 1, 0, 0],
+  [0, 0, 1, 0, 0],
+  [1, 1, 1, 1, 1],
+  [0, 0, 1, 0, 0],
+  [0, 0, 1, 0, 0],
+], np.uint8)
 _SIZES = []
 pos = 16
 for backwards in range(-1, -11, -1):
@@ -44,11 +51,13 @@ class Grid(object):
 
   @lazy.prop
   def grid(self) -> np.ndarray:
-    grayscale = self.grayscale
-    gray_only = np.where((grayscale > 5) & (grayscale < 250), grayscale, 0)
-    morphed = cv2.morphologyEx(gray_only, cv2.MORPH_OPEN, _CROSS,
+    grayscale = cv2.bitwise_not(self.grayscale)
+    gray_only = np.where(grayscale <= 250, grayscale, 0)
+    morphed = cv2.morphologyEx(gray_only, cv2.MORPH_OPEN, _BIG_CROSS,
         iterations=2)
-    return np.where(morphed == 0, self.threshold, 0)
+    cleaned = grayscale - morphed
+    return cv2.threshold(
+        cleaned, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
   @lazy.prop
   def with_components(self) -> np.ndarray:
