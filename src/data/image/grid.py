@@ -1,4 +1,5 @@
 import collections
+import itertools
 from typing import Iterator, List, NamedTuple, Tuple
 
 import cv2
@@ -47,8 +48,8 @@ class Grid(object):
   @lazy.prop
   def grid(self) -> np.ndarray:
     grayscale = self.grayscale_inv
-    for layer in self.layers():
-      grayscale -= layer
+    for mask in itertools.chain(self._layer_masks(), self._component_masks()):
+      grayscale -= mask
     return cv2.threshold(
         grayscale, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
@@ -96,31 +97,6 @@ class Grid(object):
   def dimensions(self) -> Dimensions:
     nonzero_y, nonzero_x = self.grid.nonzero()
     return Dimensions(_n_cells(nonzero_y), _n_cells(nonzero_x))
-
-  def layers(self, n: int = 5) -> Iterator[np.ndarray]:
-    grayscale = self.grayscale_inv
-    counts = np.bincount(grayscale.ravel())
-    # Some images are dim.
-    interesting_threshold = int(counts[0] * .001)
-    brightest = len(counts) - 1
-    while counts[brightest] < interesting_threshold:
-      brightest -= 1
-    top_n = list(range(-1, -n, -1))
-    partitioned = np.argpartition(counts, top_n)
-    for i in top_n:
-      target = partitioned[i]
-      if target > (brightest - _THRESHOLD) or target < _THRESHOLD:
-        continue
-      targeted = np.where(grayscale == target, grayscale, 0)
-      # Erode and then over-dilate to eliminate noise.
-      morphed = cv2.dilate(
-          cv2.erode(targeted, self._cross, iterations=1),
-          self._cross,
-          iterations=2)
-      if not morphed.any():
-        continue  # Nothing left after eroded.
-      reselected = np.where(targeted == morphed, targeted, 0)
-      yield reselected
 
   @lazy.prop
   def _cross(self) -> np.ndarray:
@@ -176,6 +152,34 @@ class Grid(object):
 
     return (_threshold_lines(horizontal_lines, horizontal_threshold) +
             _threshold_lines(vertical_lines, vertical_threshold))
+
+  def _component_masks(self) -> Iterator[np.ndarray]:
+    yield from []
+
+  def _layer_masks(self, n: int = 5) -> Iterator[np.ndarray]:
+    grayscale = self.grayscale_inv
+    counts = np.bincount(grayscale.ravel())
+    # Some images are dim.
+    interesting_threshold = int(counts[0] * .001)
+    brightest = len(counts) - 1
+    while counts[brightest] < interesting_threshold:
+      brightest -= 1
+    top_n = list(range(-1, -n, -1))
+    partitioned = np.argpartition(counts, top_n)
+    for i in top_n:
+      target = partitioned[i]
+      if target > (brightest - _THRESHOLD) or target < _THRESHOLD:
+        continue
+      targeted = np.where(grayscale == target, grayscale, 0)
+      # Erode and then over-dilate to eliminate noise.
+      morphed = cv2.dilate(
+          cv2.erode(targeted, self._cross, iterations=1),
+          self._cross,
+          iterations=2)
+      if not morphed.any():
+        continue  # Nothing left after eroded.
+      reselected = np.where(targeted == morphed, targeted, 0)
+      yield reselected
 
 
 def _normalize(src: np.ndarray) -> np.ndarray:
