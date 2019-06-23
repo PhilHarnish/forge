@@ -1,7 +1,7 @@
 from puzzle.examples.gph.y2019 import peaches
 from spec.mamba import *
 
-with description('peaches') as self:
+with _description('peaches') as self:
   with description('boo'):
     with it('unagi -> ungi'):
       expect(peaches.boo('turf')).to(equal('toarf'))

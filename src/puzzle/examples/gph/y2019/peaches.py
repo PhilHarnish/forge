@@ -201,7 +201,6 @@ def search_inner(
     current, acc, remaining = queue.popleft()
     if last_depth != remaining:
       last_depth = remaining
-      print('depth = %s; len = %s' % (remaining, len(queue)))
     if remaining <= 0:
       continue
     for desc, mutation in mutations(characters, current, acc):
