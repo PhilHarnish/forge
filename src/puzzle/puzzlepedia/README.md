@@ -26,6 +26,10 @@ https://www.google.com/search?q=TWENTY+FIVE+PAIR&rlz=1C5CHFA_enUS729US732&oq=TWE
     121202101201211011102210222202021021201102
     +O+O O+ +O +O++ +++ OO+ OOOO O O+ O+O ++ O
 
+## Pattern recognition
+* Metas
+* In GPH 2019 Colors, everything had just 1 zero.
+
 ## Misc
 * Identifying things which belong to sets
 * Identifying fonts (installed fonts can save time but only with access to PDF)
