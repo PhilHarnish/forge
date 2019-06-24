@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 
 from data import lazy
-from data.image import coloring
+from data.image import coloring, utils
 
 _MAX = 255
 _WHITE = [_MAX, _MAX, _MAX]
@@ -27,7 +27,7 @@ class Dimensions(NamedTuple):
 
 class Grid(object):
   def __init__(self, cv_image: np.ndarray) -> None:
-    self._original = _crop(_normalize(cv_image))
+    self._original = utils.crop(_normalize(cv_image), _WHITE)
     self._scratch = np.copy(self._original)
 
   @lazy.prop
@@ -202,20 +202,6 @@ def _normalize(src: np.ndarray) -> np.ndarray:
       if not col[3]:
         col[0], col[1], col[2] = 255, 255, 255
   return cv2.cvtColor(src, cv2.COLOR_BGRA2BGR)
-
-
-def _crop(src: np.ndarray) -> np.ndarray:
-  while np.all(src[0] == _WHITE):
-    src = src[1:]
-  while np.all(src[-1] == _WHITE):
-    src = src[:-1]
-  src = np.swapaxes(src, 0, 1)  # Swap x/y axis.
-  while np.all(src[0] == _WHITE):
-    src = src[1:]
-  while np.all(src[-1] == _WHITE):
-    src = src[:-1]
-  src = np.swapaxes(src, 0, 1)  # Swap x/y axis.
-  return src
 
 
 def _gap_threshold(rhos: List[int]) -> int:
