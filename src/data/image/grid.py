@@ -1,12 +1,12 @@
 import collections
 import itertools
-from typing import Iterable, Iterator, List, NamedTuple, Tuple
+from typing import Iterable, List, NamedTuple, Tuple
 
 import cv2
 import numpy as np
 
 from data import lazy
-from data.image import coloring, component, utils
+from data.image import coloring, component, component_database, utils
 
 _MAX = 255
 _WHITE = [_MAX, _MAX, _MAX]
@@ -55,21 +55,22 @@ class Grid(object):
 
   @lazy.prop
   def grid(self) -> np.ndarray:
+    # TODO: Keep metadata on component positions.
     grayscale = self.grayscale_inv
     for mask in itertools.chain(self._layer_masks(), self._component_masks()):
-      grayscale -= mask
+      grayscale = np.where(mask == 0, grayscale, 0)
     return grayscale
 
   @lazy.prop
   def with_components(self) -> np.ndarray:
     output = np.copy(self._original)
-    n_labels, labels, stats, centroids = self._components
+    n_labels, labels, stats, centroids = self._component_stats
     return coloring.color_components(n_labels, output, labels, stats)
 
   @lazy.prop
   def with_largest_component(self) -> np.ndarray:
     output = np.copy(self._original)
-    n_labels, labels, stats, centroids = self._components
+    n_labels, labels, stats, centroids = self._component_stats
     return coloring.color_components(2, output, labels, stats)
 
   @lazy.prop
@@ -102,28 +103,8 @@ class Grid(object):
 
   @lazy.prop
   def components(self) -> Iterable[component.Component]:
-    n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-        self.grid_with_components)
-    width, height = labels.shape
-    total_area = width * height
-    max_allowed_area = int(total_area * 0.05)
-    min_allowed_area = 16
-    min_allowed_dimension = 2
-    max_allowed_dimension = max(width, height) * .10
-    for i in range(n_labels):
-      area = stats[i, cv2.CC_STAT_AREA]
-      if area > max_allowed_area or area < min_allowed_area:
-        continue
-      left = stats[i, cv2.CC_STAT_LEFT]
-      top = stats[i, cv2.CC_STAT_TOP]
-      width = stats[i, cv2.CC_STAT_WIDTH]
-      height = stats[i, cv2.CC_STAT_HEIGHT]
-      if (max(width, height) > max_allowed_dimension or
-          min(width, height) < min_allowed_dimension):
-        continue
-      selected = np.where(labels == i, self.grid_with_components, 0)
-      cropped = selected[top:top + height, left:left + width]
-      yield component.Component(cropped)
+    for _, c in self._components_with_source():
+      yield c
 
   @lazy.prop
   def dimensions(self) -> Dimensions:
@@ -146,7 +127,7 @@ class Grid(object):
     return cross
 
   @lazy.prop
-  def _components(
+  def _component_stats(
       self) -> Tuple[int, np.ndarray, np.ndarray, np.ndarray]:
     return cv2.connectedComponentsWithStats(self.threshold)
 
@@ -185,10 +166,40 @@ class Grid(object):
     return (_threshold_lines(horizontal_lines, horizontal_threshold) +
             _threshold_lines(vertical_lines, vertical_threshold))
 
-  def _component_masks(self) -> Iterator[np.ndarray]:
-    yield from []
+  def _components_with_source(
+      self) -> Iterable[Tuple[component.Component, np.ndarray]]:
+    n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+        self.grid_with_components)
+    width, height = labels.shape
+    total_area = width * height
+    max_allowed_area = int(total_area * 0.05)
+    min_allowed_area = 16
+    min_allowed_dimension = 2
+    max_allowed_dimension = max(width, height) * .10
+    for i in range(n_labels):
+      area = stats[i, cv2.CC_STAT_AREA]
+      if area > max_allowed_area or area < min_allowed_area:
+        continue
+      left = stats[i, cv2.CC_STAT_LEFT]
+      top = stats[i, cv2.CC_STAT_TOP]
+      width = stats[i, cv2.CC_STAT_WIDTH]
+      height = stats[i, cv2.CC_STAT_HEIGHT]
+      if (max(width, height) > max_allowed_dimension or
+          min(width, height) < min_allowed_dimension):
+        continue
+      selected = np.where(labels == i, self.grid_with_components, 0)
+      cropped = selected[top:top + height, left:left + width]
+      yield component.Component(cropped), selected
 
-  def _layer_masks(self, n: int = 5) -> Iterator[np.ndarray]:
+  def _component_masks(self) -> Iterable[np.ndarray]:
+    db = component_database.ComponentDatabase()
+    for c, src in self._components_with_source():
+      identified = db.identify(c)
+      # TODO: Should "IGNORE" even be indexed?
+      if identified and identified.labels.get('symbol') != 'IGNORE':
+        yield cv2.dilate(src, self._cross, iterations=1)
+
+  def _layer_masks(self, n: int = 5) -> Iterable[np.ndarray]:
     grayscale = self.grayscale_inv
     counts = np.bincount(grayscale.ravel())
     # Some images are dim.
