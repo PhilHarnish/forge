@@ -55,7 +55,7 @@ def grids() -> Iterator[grid.Grid]:
 
 def components(grid: grid.Grid) -> Iterator[component.Component]:
   n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-      grid.grid)
+      grid.grid_with_components)
   width, height = labels.shape
   total_area = width * height
   max_allowed_area = int(total_area * 0.05)
