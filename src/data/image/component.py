@@ -4,13 +4,14 @@ import numpy as np
 
 
 class Component(object):
-  _image: np.ndarray
+  image: np.ndarray
 
   def __init__(self, image: np.ndarray) -> None:
-    self._image = image.copy()
+    self.image = image.copy()
+    self.image.setflags(write=False)
 
   def __hash__(self) -> int:
     return hash(tuple(itertools.chain(
-      self._image.shape,
-      self._image.flat,
+      self.image.shape,
+      self.image.flat,
     )))
