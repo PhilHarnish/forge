@@ -87,13 +87,13 @@ def interactive_click_to_remove(
     if event != cv2.EVENT_LBUTTONUP:
       return
     for (c_x, c_y), c in positioned_components:
-      if x < c_x or x < c_y:
+      if x < c_x or y < c_y:
         continue
       height, width = c.image.shape
       if x > c_x + width or y > c_y + height:
         continue
       del all_components[hash(c)]
-      image[c_y:c_y + height, c_x:c_x + width] = 255
+      image[c_y:c_y + height, c_x:c_x + width] = 128
 
   cv2.namedWindow(_IMSHOW_TITLE)
   cv2.setMouseCallback(_IMSHOW_TITLE, on_mouse_click)
@@ -136,6 +136,9 @@ def classify(all_components: AllComponents) -> None:
       key = chr(code & 0xFF)
       if code == 27:  # ESC
         return
+      elif code == 0:
+        shift = True
+        continue
       elif code == 32:  # SPACE
         all_components[hash_id] = ClassifiedComponent(
             input('classification:'), c)
@@ -154,8 +157,6 @@ def classify(all_components: AllComponents) -> None:
         all_components[hash_id] = ClassifiedComponent(key, c)
         manual_mode = False
         shift = False
-      elif key == 0:
-        shift = True
       else:
         print('unrecognized:', code)
       i += 1
@@ -191,7 +192,7 @@ def illustrate_classified_components(
     position_information.append((cursor_x, cursor_y))
     cursor_x += width
     max_row_height = max(max_row_height, height)
-  total_width = max(total_width, cursor_x)
+  total_width = max(total_width, cursor_x) + 8  # Arbitrary padding.
   total_height = cursor_y + max_row_height
 
   shape = (total_height, total_width)
