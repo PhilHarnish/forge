@@ -8,11 +8,12 @@ import cv2
 import numpy as np
 
 from data import data
-from data.image import component, grid
+from data.image import component, component_model, grid
 
 _CLASSIFIED_COMPONENTS = data.project_path('data/grid/classified_components')
 _CLASSIFIED_MAX_WIDTH = 960
-_COMPONENT_OUTPUT = data.project_path('data/grid/components.pkl')
+_COMPONENT_SCRATCH = data.project_path('data/grid/components.pkl')
+_COMPONENT_INDEX = data.project_path('data/grid/component_index.pkl')
 _GRID_FILE_PATTERN = data.project_path('data/grid/original/*.png')
 _IMSHOW_TITLE = 'component'
 _TODO = {
@@ -54,9 +55,9 @@ def grids() -> Iterator[grid.Grid]:
 
 
 def read_classified() -> AllComponents:
-  if not os.path.exists(_COMPONENT_OUTPUT):
+  if not os.path.exists(_COMPONENT_SCRATCH):
     return {}
-  all_components = pickle.load(open(_COMPONENT_OUTPUT, 'rb'))
+  all_components = pickle.load(open(_COMPONENT_SCRATCH, 'rb'))
   print('Loaded %s' % len(all_components))
   return all_components
 
@@ -111,7 +112,16 @@ def write_classified(all_components: AllComponents) -> None:
   print('Writing %s' % len(all_components))
   pickle.dump(
       all_components,
-      open(_COMPONENT_OUTPUT, 'wb'),
+      open(_COMPONENT_SCRATCH, 'wb'),
+      protocol=pickle.HIGHEST_PROTOCOL)
+  index = {}
+  for k, v in all_components.items():
+    index[k] = component_model.ComponentModel(v.component, {
+      'symbol': v.classification,
+    })
+  pickle.dump(
+      all_components,
+      open(_COMPONENT_INDEX, 'wb'),
       protocol=pickle.HIGHEST_PROTOCOL)
 
 
