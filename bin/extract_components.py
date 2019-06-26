@@ -120,7 +120,7 @@ def write_classified(all_components: AllComponents) -> None:
       'symbol': v.classification,
     })
   pickle.dump(
-      all_components,
+      index,
       open(_COMPONENT_INDEX, 'wb'),
       protocol=pickle.HIGHEST_PROTOCOL)
 
