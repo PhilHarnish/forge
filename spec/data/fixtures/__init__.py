@@ -10,6 +10,11 @@ def _get_words_api():
   return _words_api
 
 
+# Image sources.
+def _get_image_components():
+  return {}
+
+
 # Data sources.
 def _get_unigram():
   return collections.OrderedDict(tries.kitchen_sink_data())
@@ -43,6 +48,7 @@ def init():
 
 warehouse.init()
 warehouse.register('/api/words', _get_words_api)
+warehouse.register('/image/components', _get_image_components)
 warehouse.register('/phrases/crossword', _get_crossword)
 warehouse.register('/phrases/crossword/connection', _get_crossword_connection)
 warehouse.register('/phrases/crossword/cursor', _get_crossword_cursor)

@@ -1,4 +1,5 @@
 import collections
+import pickle
 
 from data import crossword, data, pickle_cache, trie, warehouse, \
   word_frequencies
@@ -14,6 +15,9 @@ _DEADLINE_MS = 5000
 def _get_words_api():
   return word_api.get_api('wordnet')
 
+
+def _get_components():
+  return pickle.load(open(data.project_path('data/grid/component_index.pkl'), 'rb'))
 
 # Data sources.
 def _get_words_top():
@@ -116,6 +120,7 @@ def init() -> None:
   analyze.init()
   warehouse.init(deadline_ms=_DEADLINE_MS)
   warehouse.register('/api/words', _get_words_api)
+  warehouse.register('/image/components', _get_components)
   warehouse.register('/phrases/crossword', _get_crossword)
   warehouse.register('/phrases/crossword/connection', _get_crossword_connection)
   warehouse.register('/phrases/crossword/cursor', _get_crossword_cursor)
