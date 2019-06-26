@@ -1,12 +1,12 @@
 import collections
 import itertools
-from typing import Iterator, List, NamedTuple, Tuple
+from typing import Iterable, Iterator, List, NamedTuple, Tuple
 
 import cv2
 import numpy as np
 
 from data import lazy
-from data.image import coloring, utils
+from data.image import coloring, component, utils
 
 _MAX = 255
 _WHITE = [_MAX, _MAX, _MAX]
@@ -58,8 +58,7 @@ class Grid(object):
     grayscale = self.grayscale_inv
     for mask in itertools.chain(self._layer_masks(), self._component_masks()):
       grayscale -= mask
-    return cv2.threshold(
-        grayscale, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+    return grayscale
 
   @lazy.prop
   def with_components(self) -> np.ndarray:
@@ -100,6 +99,31 @@ class Grid(object):
 
       cv2.line(output, (x1, y1), (x2, y2), (0, 0, 255, 255), thickness=2)
     return output
+
+  @lazy.prop
+  def components(self) -> Iterable[component.Component]:
+    n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
+        self.grid_with_components)
+    width, height = labels.shape
+    total_area = width * height
+    max_allowed_area = int(total_area * 0.05)
+    min_allowed_area = 16
+    min_allowed_dimension = 2
+    max_allowed_dimension = max(width, height) * .10
+    for i in range(n_labels):
+      area = stats[i, cv2.CC_STAT_AREA]
+      if area > max_allowed_area or area < min_allowed_area:
+        continue
+      left = stats[i, cv2.CC_STAT_LEFT]
+      top = stats[i, cv2.CC_STAT_TOP]
+      width = stats[i, cv2.CC_STAT_WIDTH]
+      height = stats[i, cv2.CC_STAT_HEIGHT]
+      if (max(width, height) > max_allowed_dimension or
+          min(width, height) < min_allowed_dimension):
+        continue
+      selected = np.where(labels == i, self.grid_with_components, 0)
+      cropped = selected[top:top + height, left:left + width]
+      yield component.Component(cropped)
 
   @lazy.prop
   def dimensions(self) -> Dimensions:

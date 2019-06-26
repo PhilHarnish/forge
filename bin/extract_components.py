@@ -53,31 +53,6 @@ def grids() -> Iterator[grid.Grid]:
     yield grid.Grid(image)
 
 
-def components(grid: grid.Grid) -> Iterator[component.Component]:
-  n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-      grid.grid_with_components)
-  width, height = labels.shape
-  total_area = width * height
-  max_allowed_area = int(total_area * 0.05)
-  min_allowed_area = 16
-  min_allowed_dimension = 2
-  max_allowed_dimension = max(width, height) * .10
-  for i in range(n_labels):
-    area = stats[i, cv2.CC_STAT_AREA]
-    if area > max_allowed_area or area < min_allowed_area:
-      continue
-    left = stats[i, cv2.CC_STAT_LEFT]
-    top = stats[i, cv2.CC_STAT_TOP]
-    width = stats[i, cv2.CC_STAT_WIDTH]
-    height = stats[i, cv2.CC_STAT_HEIGHT]
-    if (max(width, height) > max_allowed_dimension or
-        min(width, height) < min_allowed_dimension):
-      continue
-    selected = np.where(labels == i, grid.grid, 0)
-    cropped = selected[top:top + height, left:left + width]
-    yield component.Component(cropped)
-
-
 def read_classified() -> AllComponents:
   if not os.path.exists(_COMPONENT_OUTPUT):
     return {}
@@ -144,7 +119,7 @@ def classify(all_components: AllComponents) -> None:
   manual_mode = False
   shift = False
   for g in grids():
-    unclassified_components = list(components(g))
+    unclassified_components = list(g.components)
     i = 0
     while i < len(unclassified_components):
       c = unclassified_components[i]
