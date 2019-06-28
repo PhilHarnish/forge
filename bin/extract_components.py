@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 from data import data
-from data.image import component, component_model, grid
+from data.image import component, grid
 
 _CLASSIFIED_COMPONENTS = data.project_path('data/grid/classified_components')
 _CLASSIFIED_MAX_WIDTH = 960
@@ -116,7 +116,7 @@ def write_classified(all_components: AllComponents) -> None:
       protocol=pickle.HIGHEST_PROTOCOL)
   index = {}
   for k, v in all_components.items():
-    index[k] = component_model.ComponentModel(v.component, {
+    index[k] = component.Component(v.component.image, {
       'symbol': v.classification,
     })
   pickle.dump(
