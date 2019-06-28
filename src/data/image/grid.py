@@ -38,8 +38,32 @@ class Grid(object):
     return cv2.dilate(result, self._cross, iterations=1)
 
   @lazy.prop
-  def grayscale(self) -> np.ndarray:
+  def _grayscale(self) -> np.ndarray:
     return cv2.cvtColor(self._original, cv2.COLOR_BGR2GRAY)
+
+  @lazy.prop
+  def grayscale(self) -> np.ndarray:
+    scaled = self._grayscale
+    # Some images are dim.
+    counts = self._grayscale_bincount
+    interesting_threshold = int(counts.max() * .001)
+    darkest = 0
+    while counts[darkest] < interesting_threshold:
+      darkest += 1
+    brightest = len(counts) - 1
+    while counts[brightest] < interesting_threshold:
+      brightest -= 1
+    if darkest:
+      # If the first "darkest" color with nontrivial count is nonzero then shift
+      # down.
+      scaled -= darkest
+    current_range = brightest - darkest
+    if current_range < _MAX:
+      # If less than the entire spectrum is used (255), scale.
+      # E.g.: 3 / 4 -> 4 / 4 == 3 * x = 4 == x = 4 / 3.
+      factor = _MAX / current_range
+      scaled = np.multiply(scaled, factor, out=scaled, casting='unsafe')
+    return scaled
 
   @lazy.prop
   def grayscale_inv(self) -> np.ndarray:
@@ -48,8 +72,17 @@ class Grid(object):
   @lazy.prop
   def grid_with_components(self) -> np.ndarray:
     grayscale = self.grayscale_inv
-    for mask in self._layer_masks():
-      grayscale -= mask
+    for mask, color in self._layer_masks():
+      grayscale = np.where(mask == 0, grayscale, color)
+    return cv2.threshold(
+        grayscale, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+
+  @lazy.prop
+  def grid_with_components_inv(self) -> np.ndarray:
+    grayscale = self.grayscale_inv
+    for mask, color in itertools.chain(
+        self._layer_masks(), self._component_masks(include_inverted=False)):
+      grayscale = np.where(mask == 0, grayscale, color)
     return cv2.threshold(
         grayscale, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
@@ -57,8 +90,9 @@ class Grid(object):
   def grid(self) -> np.ndarray:
     # TODO: Keep metadata on component positions.
     grayscale = self.grayscale_inv
-    for mask in itertools.chain(self._layer_masks(), self._component_masks()):
-      grayscale = np.where(mask == 0, grayscale, 0)
+    for mask, color in itertools.chain(
+        self._layer_masks(), self._component_masks(include_inverted=True)):
+      grayscale = np.where(mask == 0, grayscale, color)
     return grayscale
 
   @lazy.prop
@@ -103,7 +137,7 @@ class Grid(object):
 
   @lazy.prop
   def components(self) -> Iterable[component.Component]:
-    for _, c in self._components_with_source():
+    for c, _ in self._components_with_source():
       yield c
 
   @lazy.prop
@@ -167,51 +201,45 @@ class Grid(object):
             _threshold_lines(vertical_lines, vertical_threshold))
 
   def _components_with_source(
-      self) -> Iterable[Tuple[component.Component, np.ndarray]]:
-    n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-        self.grid_with_components)
-    width, height = labels.shape
-    total_area = width * height
-    max_allowed_area = int(total_area * 0.05)
-    min_allowed_area = 16
-    min_allowed_dimension = 2
-    max_allowed_dimension = max(width, height) * .10
-    for i in range(n_labels):
-      area = stats[i, cv2.CC_STAT_AREA]
-      if area > max_allowed_area or area < min_allowed_area:
-        continue
-      left = stats[i, cv2.CC_STAT_LEFT]
-      top = stats[i, cv2.CC_STAT_TOP]
-      width = stats[i, cv2.CC_STAT_WIDTH]
-      height = stats[i, cv2.CC_STAT_HEIGHT]
-      if (max(width, height) > max_allowed_dimension or
-          min(width, height) < min_allowed_dimension):
-        continue
-      selected = np.where(labels == i, self.grid_with_components, 0)
-      cropped = selected[top:top + height, left:left + width]
-      yield component.Component(cropped), selected
+      self,
+      include_inverted: bool = False
+  ) -> Iterable[Tuple[component.Component, np.ndarray]]:
+    yield from _components_with_source_for_image(
+        self.grid_with_components, inverted=False)
+    if include_inverted:
+      yield from _components_with_source_for_image(
+          cv2.bitwise_not(self.grid_with_components_inv), inverted=True)
 
-  def _component_masks(self) -> Iterable[np.ndarray]:
+  def _component_masks(
+      self, include_inverted: bool = False) -> Iterable[Tuple[np.ndarray, int]]:
     db = component_database.ComponentDatabase()
-    for c, src in self._components_with_source():
+    for c, src in self._components_with_source(
+        include_inverted=include_inverted):
       identified = db.identify(c)
       # TODO: Should "IGNORE" even be indexed?
       if identified and identified.labels.get('symbol') != 'IGNORE':
-        yield cv2.dilate(src, self._cross, iterations=1)
+        if c.labels.get('inverted'):
+          color = _MAX
+        else:
+          color = 0
+        yield cv2.dilate(src, self._cross, iterations=1), color
 
-  def _layer_masks(self, n: int = 5) -> Iterable[np.ndarray]:
-    grayscale = self.grayscale_inv
-    counts = np.bincount(grayscale.ravel())
-    # Some images are dim.
-    interesting_threshold = int(counts[0] * .001)
-    brightest = len(counts) - 1
-    while counts[brightest] < interesting_threshold:
-      brightest -= 1
+  @lazy.prop
+  def _grayscale_bincount(self) -> np.ndarray:
+    return np.bincount(self._grayscale.ravel())
+
+  @lazy.prop
+  def _grayscale_inv_bincount(self) -> np.ndarray:
+    return np.bincount(self.grayscale_inv.ravel())
+
+  def _layer_masks(self, n: int = 5) -> Iterable[Tuple[np.ndarray, int]]:
+    counts = self._grayscale_inv_bincount
     top_n = list(range(-1, -n, -1))
     partitioned = np.argpartition(counts, top_n)
+    grayscale = self.grayscale_inv
     for i in top_n:
       target = partitioned[i]
-      if target > (brightest - _THRESHOLD) or target < _THRESHOLD:
+      if target > (_MAX - _THRESHOLD) or target < _THRESHOLD:
         continue
       targeted = np.where(grayscale == target, grayscale, 0)
       # Erode and then over-dilate to eliminate noise.
@@ -222,7 +250,7 @@ class Grid(object):
       if not morphed.any():
         continue  # Nothing left after eroded.
       reselected = np.where(targeted == morphed, targeted, 0)
-      yield reselected
+      yield reselected, 0
 
 
 def _normalize(src: np.ndarray) -> np.ndarray:
@@ -314,3 +342,38 @@ def _n_cells(nonzero: np.array) -> int:
         best_match = matched
         best_cells = cells
   return best_cells
+
+
+def _components_with_source_for_image(
+    image: np.ndarray,
+    inverted: bool = False
+) -> Iterable[Tuple[component.Component, np.ndarray]]:
+  n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(image)
+  width, height = labels.shape
+  total_area = width * height
+  max_allowed_area = int(total_area * 0.05)
+  min_allowed_area = 8
+  max_allowed_area_ratio = .9
+  min_allowed_dimension = 8
+  max_allowed_dimension = max(width, height) * .10
+  for i in range(n_labels):
+    area = stats[i, cv2.CC_STAT_AREA]
+    if area > max_allowed_area or area < min_allowed_area:
+      continue  # Too big compared to overall image.
+    left = stats[i, cv2.CC_STAT_LEFT]
+    top = stats[i, cv2.CC_STAT_TOP]
+    width = stats[i, cv2.CC_STAT_WIDTH]
+    height = stats[i, cv2.CC_STAT_HEIGHT]
+    if area > (width * height * max_allowed_area_ratio):
+      continue  # Too dense (e.g. full square block).
+    if (max(width, height) > max_allowed_dimension or
+        width + height < min_allowed_dimension or
+        min(width, height) < 2):
+      continue
+    selected = np.where(labels == i, image, 0)
+    cropped = selected[top:top + height, left:left + width]
+    if inverted:
+      component_labels = {'inverted': True}
+    else:
+      component_labels = None
+    yield component.Component(cropped, labels=component_labels), selected
