@@ -1,13 +1,15 @@
-import typing
+from typing import Any, Callable, TypeVar
+
+T = TypeVar('T')
 
 
-def prop(fn: typing.Callable[[typing.Any], typing.Any]):
+def prop(fn: Callable[[Any], T]) -> property:
   attr_name = '__cached__' + fn.__name__
 
   @property
-  def prop(self: typing.Any) -> typing.Any:
+  def wrapped(self: Any) -> T:
     if not hasattr(self, attr_name):
       setattr(self, attr_name, fn(self))
     return getattr(self, attr_name)
 
-  return prop
+  return wrapped
