@@ -1,12 +1,11 @@
-import collections
 import itertools
-from typing import Iterable, List, NamedTuple, Tuple
+from typing import Iterable, Tuple
 
 import cv2
 import numpy as np
 
 from data import lazy
-from data.image import coloring, component, component_database, utils
+from data.image import component, component_database, utils
 
 _MAX = 255
 _WHITE = [_MAX, _MAX, _MAX]
@@ -20,15 +19,9 @@ for backwards in range(-1, -11, -1):
   _SIZES.append(16 + backwards)
 
 
-class Dimensions(NamedTuple):
-  rows: int
-  columns: int
-
-
 class Grid(object):
   def __init__(self, cv_image: np.ndarray) -> None:
     self._original = utils.crop(_normalize(cv_image), _WHITE)
-    self._scratch = np.copy(self._original)
 
   @lazy.prop
   def threshold(self) -> np.ndarray:
@@ -45,6 +38,7 @@ class Grid(object):
   def grayscale(self) -> np.ndarray:
     scaled = self._grayscale
     # Some images are dim.
+    # TODO: This normalization should happen even earlier.
     counts = self._grayscale_bincount
     interesting_threshold = int(counts.max() * .001)
     darkest = 0
@@ -96,54 +90,9 @@ class Grid(object):
     return grayscale
 
   @lazy.prop
-  def with_components(self) -> np.ndarray:
-    output = np.copy(self._original)
-    n_labels, labels, stats, centroids = self._component_stats
-    return coloring.color_components(n_labels, output, labels, stats)
-
-  @lazy.prop
-  def with_largest_component(self) -> np.ndarray:
-    output = np.copy(self._original)
-    n_labels, labels, stats, centroids = self._component_stats
-    return coloring.color_components(2, output, labels, stats)
-
-  @lazy.prop
-  def with_lines(self) -> np.ndarray:
-    output = np.copy(self._original)
-    for rho, theta in self._hough_lines:
-      a = np.cos(theta)
-      b = np.sin(theta)
-      x0 = a * rho
-      y0 = b * rho
-      x1 = int(x0 + 5000 * -b)
-      y1 = int(y0 + 5000 * a)
-      x2 = int(x0 - 5000 * -b)
-      y2 = int(y0 - 5000 * a)
-
-      cv2.line(output, (x1, y1), (x2, y2), (255, 0, 0, 255), thickness=1)
-
-    for rho, theta in self._grid_lines:
-      a = np.cos(theta)
-      b = np.sin(theta)
-      x0 = a * rho
-      y0 = b * rho
-      x1 = int(x0 + 5000 * -b)
-      y1 = int(y0 + 5000 * a)
-      x2 = int(x0 - 5000 * -b)
-      y2 = int(y0 - 5000 * a)
-
-      cv2.line(output, (x1, y1), (x2, y2), (0, 0, 255, 255), thickness=2)
-    return output
-
-  @lazy.prop
   def components(self) -> Iterable[component.Component]:
     for c, _ in self._components_with_source():
       yield c
-
-  @lazy.prop
-  def dimensions(self) -> Dimensions:
-    nonzero_y, nonzero_x = self.grid.nonzero()
-    return Dimensions(_n_cells(nonzero_y), _n_cells(nonzero_x))
 
   @lazy.prop
   def _cross(self) -> np.ndarray:
@@ -159,46 +108,6 @@ class Grid(object):
       cross[middle][x] = 1
       cross[x][middle] = 1
     return cross
-
-  @lazy.prop
-  def _component_stats(
-      self) -> Tuple[int, np.ndarray, np.ndarray, np.ndarray]:
-    return cv2.connectedComponentsWithStats(self.threshold)
-
-  @lazy.prop
-  def _hough_lines(self) -> List[Tuple[float, float]]:
-    edges = cv2.Canny(self.grid, 50, 150, apertureSize=3)
-    hough_lines = []
-    cv_hough_lines = cv2.HoughLines(edges, 1, np.pi / 180, 200)
-    if cv_hough_lines is None:
-      return []
-    for line in cv_hough_lines:
-      for rho, theta in line:
-        hough_lines.append((rho, theta))
-    return sorted(hough_lines, key=lambda x: x[0])
-
-  @lazy.prop
-  def _grid_lines(self) -> List[Tuple[float, float]]:
-    horizontal_lines = []
-    vertical_lines = []
-    for rho, theta in self._hough_lines:
-      clamped_theta = (round(10 * theta / np.pi) % 10) / 10
-      if rho < 0:
-        continue  # TODO: Do real math to find where this line enters image.
-      if clamped_theta == 0.5:
-        # Horizontal.
-        horizontal_lines.append((rho, theta))
-      elif clamped_theta == 0.0:
-        # Vertical.
-        vertical_lines.append((rho, theta))
-      else:
-        # TODO: Actually measure "askew" instead of clamping.
-        continue
-    horizontal_threshold = _gap_threshold([rho for rho, _ in horizontal_lines])
-    vertical_threshold = _gap_threshold([rho for rho, _ in vertical_lines])
-
-    return (_threshold_lines(horizontal_lines, horizontal_threshold) +
-            _threshold_lines(vertical_lines, vertical_threshold))
 
   def _components_with_source(
       self,
@@ -273,75 +182,6 @@ def _normalize(src: np.ndarray) -> np.ndarray:
       if not col[3]:
         col[0], col[1], col[2] = 255, 255, 255
   return cv2.cvtColor(src, cv2.COLOR_BGRA2BGR)
-
-
-def _gap_threshold(rhos: List[int]) -> int:
-  if not rhos:
-    return 0
-  extent = rhos[-1] - rhos[0]
-  n_squares_guess = collections.Counter()
-  for left, right in zip(rhos, rhos[1:]):
-    delta = right - left
-    n_squares = int(extent / delta)
-    if n_squares > 100:
-      continue
-    n_squares_guess[n_squares] += 1
-  if not n_squares_guess:
-    return 0
-  freq_dist = n_squares_guess.most_common()  # Freq, ordered most -> least.
-  largest_n_guess = freq_dist[0][0]
-  # Look for the "largest" number that touches the "most common".
-  while n_squares_guess[largest_n_guess + 1]:
-    largest_n_guess += 1
-  return int(extent / largest_n_guess)
-
-
-def _threshold_lines(
-    lines: List[Tuple[float, float]],
-    threshold: float,
-) -> List[Tuple[float, float]]:
-  right_edge = float('-inf')
-  bucket = []
-  buckets = [bucket]
-  for rho, theta in lines:
-    if rho > right_edge:
-      right_edge = rho + threshold
-      bucket = []
-      buckets.append(bucket)
-    bucket.append((rho, theta))
-  result = []
-  for bucket in buckets:
-    if not bucket:
-      continue
-    average_rho = sum(rho for rho, _ in bucket) / len(bucket)
-    average_theta = sum(theta for _, theta in bucket) / len(bucket)
-    result.append((average_rho, average_theta))
-  return result
-
-
-def _n_cells(nonzero: np.array) -> int:
-  # counts indicates how many times a nonzero coordinate was seen; it is a
-  # histogram of how often an x (or y) value coordinate was seen.
-  counts = np.trim_zeros(np.bincount(nonzero))
-  ediff = np.abs(np.ediff1d(counts))
-  rolling = np.convolve(ediff, np.ones(3, dtype=int), 'valid')
-  ptile = np.percentile(ediff, 90, interpolation='higher')
-  width = len(counts)
-  best_match = 0
-  best_cells = -1
-  for size in _SIZES:
-    cells = int(width // size)
-    for offset in range(0, size):
-      hits = np.sum(rolling[offset::size] > ptile)
-      matched = hits / cells
-      if matched < .55:
-        continue
-      elif matched >= 1:
-        return cells
-      elif matched > best_match:
-        best_match = matched
-        best_cells = cells
-  return best_cells
 
 
 def _components_with_source_for_image(
