@@ -11,7 +11,7 @@ from data import data
 from data.image import component, grid
 
 _CLASSIFIED_COMPONENTS = data.project_path('data/grid/classified_components')
-_CLASSIFIED_MAX_WIDTH = 960
+_CLASSIFIED_MAX_WIDTH = 480
 _COMPONENT_SCRATCH = data.project_path('data/grid/components.pkl')
 _COMPONENT_INDEX = data.project_path('data/grid/component_index.pkl')
 _GRID_FILE_PATTERN = data.project_path('data/grid/original/*.png')
@@ -26,6 +26,8 @@ _TODO = {
   'pentopia.png',
   # Inverted letters.
   'strimko.png',
+}
+_FOCUS = {
 }
 
 
@@ -47,6 +49,8 @@ def images() -> Iterator[np.ndarray]:
 
 def grids() -> Iterator[grid.Grid]:
   for name, image in images():
+    if _FOCUS and name not in _FOCUS:
+      continue
     if name in _TODO:
       print('Skipping unsupported image:', name)
       continue
