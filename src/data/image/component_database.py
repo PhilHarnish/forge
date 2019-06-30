@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict
 
 from data import warehouse
 from data.image import component
@@ -11,8 +11,7 @@ class ComponentDatabase(object):
     # Initial version uses a pre-identified index.
     self._index = warehouse.get('/image/components')
 
-  def identify(
-      self, c: component.Component) -> Optional[component.Component]:
+  def identify(self, c: component.Component) -> component.Component:
     identified = self._index.get(hash(c))
     if identified:
       c.labels.update(identified.labels)
