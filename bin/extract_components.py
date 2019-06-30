@@ -17,15 +17,6 @@ _COMPONENT_INDEX = data.project_path('data/grid/component_index.pkl')
 _GRID_FILE_PATTERN = data.project_path('data/grid/original/*.png')
 _IMSHOW_TITLE = 'component'
 _TODO = {
-  # Numbers are inverted and so "components" tend to be in negative space.
-  # E.g. the negative space in "4" or "8".
-  'kakuro.png',
-  # Thresholding and component identification pretty busted.
-  'nonogram.png',
-  # Also has inverted letters. Has tetrimino cubes.
-  'pentopia.png',
-  # Inverted letters.
-  'strimko.png',
 }
 _FOCUS = {
 }
@@ -120,6 +111,8 @@ def write_classified(all_components: AllComponents) -> None:
       protocol=pickle.HIGHEST_PROTOCOL)
   index = {}
   for k, v in all_components.items():
+    if v.classification == '-':
+      continue
     index[k] = component.Component(v.component.image, {
       'symbol': v.classification,
     })
@@ -165,6 +158,10 @@ def classify(all_components: AllComponents) -> None:
         i += 1
         manual_mode = True
         continue
+      elif code == 45:
+        all_components[hash_id] = ClassifiedComponent('-', c)
+        manual_mode = False
+        shift = False
       elif key.isalnum():
         if shift:
           key = key.upper()
