@@ -74,8 +74,7 @@ class Grid(object):
   @lazy.prop
   def grid_with_components_inv(self) -> np.ndarray:
     grayscale = self.grayscale_inv
-    for mask, color in itertools.chain(
-        self._layer_masks(), self._component_masks(include_inverted=False)):
+    for mask, color in self._layer_masks():
       grayscale = np.where(mask == 0, grayscale, color)
     return cv2.threshold(
         grayscale, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
@@ -87,11 +86,14 @@ class Grid(object):
     for mask, color in itertools.chain(
         self._layer_masks(), self._component_masks(include_inverted=True)):
       grayscale = np.where(mask == 0, grayscale, color)
-    return grayscale
+    inv = cv2.bitwise_not(grayscale)
+    return cv2.adaptiveThreshold(
+        inv, maxValue=255, adaptiveMethod=cv2.ADAPTIVE_THRESH_MEAN_C,
+        thresholdType=cv2.THRESH_BINARY_INV, blockSize=11, C=15)
 
   @lazy.prop
   def components(self) -> Iterable[component.Component]:
-    for c, _ in self._components_with_source():
+    for c, _ in self._components_with_source(include_inverted=True):
       yield c
 
   @lazy.prop
@@ -125,8 +127,8 @@ class Grid(object):
     for c, src in self._components_with_source(
         include_inverted=include_inverted):
       identified = db.identify(c)
-      # TODO: Should "IGNORE" even be indexed?
-      if identified and identified.labels.get('symbol') != 'IGNORE':
+      symbol = identified.labels.get('symbol')
+      if symbol:
         if c.labels.get('inverted'):
           color = _MAX
         else:
@@ -194,8 +196,8 @@ def _components_with_source_for_image(
   max_allowed_area = int(total_area * 0.05)
   min_allowed_area = 8
   max_allowed_area_ratio = .9
-  min_allowed_dimension = 8
-  max_allowed_dimension = max(width, height) * .10
+  min_allowed_dimension = min(width, height) * .01  # Max 100 symbols/row.
+  max_allowed_dimension = max(width, height) * .10  # Min 10 symbols/row.
   for i in range(n_labels):
     area = stats[i, cv2.CC_STAT_AREA]
     if area > max_allowed_area or area < min_allowed_area:
@@ -204,10 +206,11 @@ def _components_with_source_for_image(
     top = stats[i, cv2.CC_STAT_TOP]
     width = stats[i, cv2.CC_STAT_WIDTH]
     height = stats[i, cv2.CC_STAT_HEIGHT]
-    if area > (width * height * max_allowed_area_ratio):
+    if (width > min_allowed_dimension and  # Special exception for | shapes.
+        area > (width * height * max_allowed_area_ratio)):
       continue  # Too dense (e.g. full square block).
-    if (max(width, height) > max_allowed_dimension or
-        width + height < min_allowed_dimension or
+    elif (max(width, height) > max_allowed_dimension or
+        height < min_allowed_dimension or
         min(width, height) < 2):
       continue
     selected = np.where(labels == i, image, 0)
