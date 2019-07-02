@@ -20,14 +20,14 @@ def image_path(pattern: str, subdir: str = 'original') -> str:
   return path.join(data.project_path('data/grid'), subdir, pattern)
 
 
-def images(subdir: str = 'original') -> Iterator[np.ndarray]:
+def images(subdir: str = 'original') -> Iterable[np.ndarray]:
   for filename in sorted(glob.glob(image_path(_FILE_PATTERN, subdir))):
     yield (
       path.basename(filename),
       cv2.imread(filename, flags=cv2.IMREAD_UNCHANGED))
 
 
-def grids(subdir: str = 'original') -> Iterator[Tuple[str, grid.Grid]]:
+def grids(subdir: str = 'original') -> Iterable[Tuple[str, grid.Grid]]:
   for name, image in images(subdir):
     if _FOCUS and name not in _FOCUS:
       continue
