@@ -1,5 +1,5 @@
 import colorsys
-import typing
+from typing import List
 
 import cv2
 import numpy as np
@@ -14,7 +14,7 @@ def color_components(
     stats: np.ndarray) -> np.ndarray:
   """Colors n largest components."""
   n_stats = stats.shape[0]
-  colors = _colors(n_stats)
+  color_list = colors(n_stats, with_black_and_white=True)
   sizes_sorted = sorted(
       list(range(n_stats)),
       key=lambda i: stats[i, cv2.CC_STAT_AREA],
@@ -29,17 +29,20 @@ def color_components(
       color_idx = color_map[labels[y, x]]
       if color_idx >= n_components:
         color_idx = 0  # Erase this component to leave only n_components.
-      color = colors[color_idx]
+      color = color_list[color_idx]
       result[y, x] = color
   return result
 
 
-def _colors(n: int) -> typing.List[np.ndarray]:
+def colors(n: int, with_black_and_white=False) -> List[np.ndarray]:
   """Returns n (or more) colors."""
-  result = [_BLACK, _WHITE]
-  if n <= 2:
+  if with_black_and_white:
+    result = [_BLACK, _WHITE]
+  else:
+    result = []
+  n -= len(result)
+  if n <= 0:
     return result
-  n -= 2
   n_slices = int(n / _MAX_COLORS_PER_HLS_SLICE) + 1
   lightness_scale = 0.25  # 50% +/- 25%.
   for slice_n in range(n_slices):
@@ -55,7 +58,7 @@ def _colors(n: int) -> typing.List[np.ndarray]:
       r, g, b = colorsys.hls_to_rgb(hue, lightness, saturation)
       result.append(
           np.fromiter(
-              [int(r * 255), int(g * 255), int(b * 255)], dtype=np.int32))
+              [int(r * 255), int(g * 255), int(b * 255)], dtype=np.uint8))
     n -= _MAX_COLORS_PER_HLS_SLICE
     lightness_scale *= -1
   return result
