@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 from spec.mamba import *
@@ -34,6 +36,19 @@ with description('np2d'):
       expect(np2d.orientation(L, R, B)).not_to(equal(
           np2d.orientation(L, B, R)))
 
+  with description('overlap'):
+    with it('returns 0 for non-overlapping lines'):
+      expect(np2d.overlap((BL, B), (M, R))).to(equal(0))
+
+    with it('returns 0 for steep inclines'):
+      expect(np2d.overlap((BL, BR), (TL, BR))).to(equal(0))
+
+    with it('returns overlap'):
+      expect(np2d.overlap((BL, BR), (M, R))).to(equal(1))
+
+    with it('allows steep inclines if specified'):
+      expect(np2d.overlap((BL, BR), (M, BR), threshold=math.pi)).to(equal(1))
+
   with description('point_to_point_distance'):
     with it('returns 0 for coincident points'):
       expect(np2d.point_to_point_distance(M, M)).to(equal(0.0))
@@ -53,6 +68,13 @@ with description('np2d'):
 
     with it('returns distance to left edge when off right side'):
       expect(np2d.point_to_segment_distance(R, (M, L))).to(equal(1.0))
+
+  with description('slope'):
+    with it('returns 0 for horizontal'):
+      expect(np2d.slope((L, R))).to(equal(0))
+
+    with it('returns pi/2 for vertical'):
+      expect(np2d.slope((T, B))).to(equal(math.pi / 2))
 
   with description('segments_intersect'):
     with it('returns false for parallel lines'):

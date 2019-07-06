@@ -49,50 +49,10 @@ def segment_area(s1, s2):
     print('segments:', s1, s2)
   return area2
 ```
-
-Rotating s1 with y=0; verifying x overlap between s1 and s2:
-```
-def slope(s):
-  a, b = s
-  dx, dy = b - a
-  if dx == 0:
-    return np.pi / 2
-  return np.arctan(dy / dx)
-
-_SIMILAR_ANGLES = math.pi / 10
-def segments_overlap(s1, s2):
-  slope1 = slope(s1)
-  slope2 = slope(s2)
-  if abs(slope1 - slope2) >= _SIMILAR_ANGLES:
-    return False
-  # Undo slope1's rotation on s1 and s2.
-  c, s = np.cos(slope1), np.sin(slope1)
-  rotational_transformation = np.array(((c, s), (-s, c)))
-  s1 = np.array([
-      np.dot(rotational_transformation, s1[0]),
-      np.dot(rotational_transformation, s1[1]),
-  ], dtype=np.int32)
-  s2 = np.array([
-      np.dot(rotational_transformation, s2[0]),
-      np.dot(rotational_transformation, s2[1]),
-  ], dtype=np.int32)
-  left1 = s1[0][0]
-  right1 = s1[1][0]
-  if left1 > right1:
-    left1, right1 = right1, left1
-  left2 = s2[0][0]
-  right2 = s2[1][0]
-  if left2 > right2:
-    left2, right2 = right2, left2
-  # Throw out segments which don't overlap in x.
-  if left1 > left2:
-    left1, left2 = left2, left1
-    right1, right2 = right2, right1
-  return not (right1 < left2)
-```
 """
 
 import itertools
+import math
 from typing import Iterable, Tuple
 
 import numpy as np
@@ -119,6 +79,42 @@ def orientation(a: Point, b: Point, c: Point) -> int:
   return int(np.sign(np.cross(b-a, c-b)))
 
 
+_SIMILAR_ANGLES = math.pi / 10
+def overlap(
+    s1: Segment, s2: Segment, threshold: float = _SIMILAR_ANGLES) -> float:
+  """Rotate s1, s2 such that y=0 for s1; measure x overlap between s1 and s2."""
+  slope1 = slope(s1)
+  slope2 = slope(s2)
+  if abs(slope1 - slope2) >= threshold:
+    return 0
+  # Undo slope1's rotation on s1 and s2.
+  c = np.cos(slope1)
+  s = np.sin(slope1)
+  rotational_transformation = np.array(((c, s), (-s, c)))
+  s1p1 = np.dot(rotational_transformation, s1[0])
+  s1p2 = np.dot(rotational_transformation, s1[1])
+  s2p1 = np.dot(rotational_transformation, s2[0])
+  s2p2 = np.dot(rotational_transformation, s2[1])
+  left1 = s1p1[0]
+  right1 = s1p2[0]
+  if left1 > right1:
+    left1, right1 = right1, left1
+  left2 = s2p1[0]
+  right2 = s2p2[0]
+  if left2 > right2:
+    left2, right2 = right2, left2
+  if left1 > left2:
+    left1, left2 = left2, left1
+    right1, right2 = right2, right1
+  min_width = min(right1 - left1, right2 - left2)
+  max_y = max(abs(s2p1[1]), abs(s2p2[1]))
+  if abs(max_y - abs(s1p1[1])) > min_width:
+    # s2 is too far away from s1.
+    return 0
+  # Return overlap as % of smaller segment.
+  return (right1 - left2) / min_width
+
+
 def point_to_point_distance(point1: Point, point2: Point) -> float:
   return np.hypot(*(point1 - point2))
 
@@ -135,6 +131,15 @@ def point_to_segment_distance(point: Point, segment: Segment) -> float:
   else:  # `t * dx/dy` distance from s1.
     dx_dy = point - (s1 + t * dx_dy)
   return np.hypot(*dx_dy)
+
+
+def slope(s: Segment) -> float:
+  """Returns the slope, in radians, for a given segment."""
+  a, b = s
+  dx, dy = b - a
+  if dx == 0:
+    return np.pi / 2
+  return np.arctan(dy / dx)
 
 
 def segments_intersect(s1: Segment, s2: Segment) -> bool:
