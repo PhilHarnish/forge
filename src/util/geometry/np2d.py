@@ -84,7 +84,11 @@ def overlap(
     s1: Segment, s2: Segment, threshold: float = _SIMILAR_ANGLES) -> float:
   """Rotate s1, s2 such that y=0 for s1; measure x overlap between s1 and s2."""
   slope1 = slope(s1)
+  if slope1 < 0:
+    slope1 += math.pi  # "Modulo" 360 degrees to make numbers comparable.
   slope2 = slope(s2)
+  if slope2 < 0:
+    slope2 += math.pi  # "Modulo" 360 degrees to make numbers comparable.
   if abs(slope1 - slope2) >= threshold:
     return 0
   # Undo slope1's rotation on s1 and s2.
