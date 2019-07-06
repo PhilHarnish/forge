@@ -58,6 +58,9 @@ class Perf(object):
     end = time.perf_counter()
     self.increment(name, end - start)
 
+  def __getitem__(self, item: Variant):
+    return self.benchmark(item)
+
   def __len__(self) -> int:
     return sum(calls for calls, _, _ in self._timings)
 

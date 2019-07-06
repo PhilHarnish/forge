@@ -81,6 +81,15 @@ with description('perf'):
         2: 1.00/s, 1.00x (1 calls, 1000.00u)
     """))
 
+  with it('aliases __getitem__ to benchmark'):
+    b = perf.Perf('test', 1)
+    with b[1]:
+      pass
+    expect(str(b)).to(look_like("""
+        test
+        1: 1.00/s, 1.00x (1 calls, 1000.00u)
+    """))
+
   with it('reports length equal to total number of calls'):
     b = perf.Perf('test', 2)
     expect(b).to(have_len(0))
