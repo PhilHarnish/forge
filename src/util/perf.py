@@ -68,18 +68,21 @@ class Perf(object):
           calls / elapsed for calls, elapsed, _ in self._timings if elapsed)
     else:
       worst = 0
-    for index, (calls, elapsed, last) in enumerate(self._timings):
+    longest_name_length = max(len(str(s)) for s in self._variants)
+    for index, (calls, elapsed, last) in sorted(
+        enumerate(self._timings),
+        key=lambda x: x[1][0] / (x[1][1] or float('inf'))):
+      prefix = (
+          '%s:' % self._variants[index]).ljust(longest_name_length + 1, ' ')
       if elapsed:
         cps = calls / elapsed
         x = cps / worst
-        results.append('%s: %.2f/s, %.2fx (%s calls, %.2fu)' % (
-          self._variants[index], cps, x, calls, 1000 * elapsed))
+        results.append('%s %.2f/s, %.2fx (%s calls, %.2fu)' % (
+          prefix, cps, x, calls, 1000 * elapsed))
       elif calls:
-        results.append('%s: inf (%s calls)' % (
-          self._variants[index], calls))
+        results.append('%s inf (%s calls)' % (prefix, calls))
       else:
-        results.append('%s: 0 (0 calls)' % (
-          self._variants[index]))
+        results.append('%s 0 (0 calls)' % prefix)
     return '\n'.join(results)
 
 

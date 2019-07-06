@@ -4,8 +4,14 @@ from spec.mamba import *
 from util import perf
 
 _CLOCK = itertools.count()
+def tick(n: int = 0) -> int:
+  while n:
+    next(_CLOCK)
+    n -= 1
+  return next(_CLOCK)
+
 _perf_counter_patch = mock.patch(
-    'util.perf.time.perf_counter', side_effect=lambda: next(_CLOCK))
+    'util.perf.time.perf_counter', side_effect=tick)
 
 
 with description('perf'):
@@ -83,3 +89,16 @@ with description('perf'):
     with b.benchmark(2):
       pass
     expect(b).to(have_len(2))
+
+  with it('formats names neatly'):
+    b = perf.Perf('test', ['missing', 'short', 'really_long'])
+    with b.benchmark('short'):
+      tick(1)
+    with b.benchmark('really_long'):
+      tick(10)
+    expect(str(b)).to(look_like("""
+        test
+        missing:     0 (0 calls)
+        really_long: 0.08/s, 1.00x (1 calls, 12000.00u)
+        short:       0.33/s, 4.00x (1 calls, 3000.00u)
+    """))
