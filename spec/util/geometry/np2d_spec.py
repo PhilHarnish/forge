@@ -16,6 +16,15 @@ from util.geometry import np2d
 ])
 
 
+_EAST_MIRROR = (
+  np.array([[1315,  786], [1422,  788]]),
+  np.array([[1422,  783], [1315,  784]]),
+)
+_SSE = (
+  np.array([[770, 1360], [779, 1467]]),
+  np.array([[782, 1468], [774, 1360]]),
+)
+
 with description('np2d'):
   with description('iter_segments'):
     with it('iterates list of coordinates'):
@@ -75,6 +84,23 @@ with description('np2d'):
 
     with it('returns pi/2 for vertical'):
       expect(np2d.slope((T, B))).to(equal(math.pi / 2))
+
+  with description('slopes'):
+    with it('returns slopes for horizontal segments'):
+      expect(np.degrees(np2d.slopes((L, M), (M, R))).tolist()).to(equal(
+          [0, 0, 0]))
+
+    with it('returns slopes for right angle segments'):
+      expect(np.degrees(np2d.slopes((T, M), (M, R))).tolist()).to(equal(
+          [90, 0, 90]))
+
+    with it('returns small delta segments nearly pointing east'):
+      _, _, delta = np.degrees(np2d.slopes(*_EAST_MIRROR)).tolist()
+      expect(delta).to(be_between(0, 2))
+
+    with it('returns small delta for segments pointing SSE'):
+      _, _, delta = np.degrees(np2d.slopes(*_SSE)).tolist()
+      expect(delta).to(be_between(0, 2))
 
   with description('segments_intersect'):
     with it('returns false for parallel lines'):

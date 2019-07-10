@@ -83,13 +83,8 @@ _SIMILAR_ANGLES = math.pi / 10
 def overlap(
     s1: Segment, s2: Segment, threshold: float = _SIMILAR_ANGLES) -> float:
   """Rotate s1, s2 such that y=0 for s1; measure x overlap between s1 and s2."""
-  slope1 = slope(s1)
-  if slope1 < 0:
-    slope1 += math.pi  # "Modulo" 360 degrees to make numbers comparable.
-  slope2 = slope(s2)
-  if slope2 < 0:
-    slope2 += math.pi  # "Modulo" 360 degrees to make numbers comparable.
-  if abs(slope1 - slope2) >= threshold:
+  slope1, slope2, slope_delta = slopes(s1, s2)
+  if slope_delta >= threshold:
     return 0
   # Undo slope1's rotation on s1 and s2.
   c = np.cos(slope1)
@@ -111,8 +106,11 @@ def overlap(
     left1, left2 = left2, left1
     right1, right2 = right2, right1
   min_width = min(right1 - left1, right2 - left2)
-  max_y = max(abs(s2p1[1]), abs(s2p2[1]))
-  if abs(max_y - abs(s1p1[1])) > min_width:
+  max_delta = max(
+      abs(s2p1[1] - s1p1[1]),
+      abs(s2p2[1] - s1p1[1]),
+  )
+  if max_delta > min_width:
     # s2 is too far away from s1.
     return 0
   # Return overlap as % of smaller segment.
@@ -144,6 +142,14 @@ def slope(s: Segment) -> float:
   if dx == 0:
     return np.pi / 2
   return np.arctan(dy / dx)
+
+
+def slopes(s1: Segment, s2: Segment) -> Tuple[float, float, float]:
+  slope1 = slope(s1)
+  slope2 = slope(s2)
+  delta = (slope1 - slope2) % math.pi
+  delta = min(delta, math.pi - delta)
+  return slope1, slope2, delta
 
 
 def segments_intersect(s1: Segment, s2: Segment) -> bool:
