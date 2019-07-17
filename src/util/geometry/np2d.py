@@ -53,7 +53,7 @@ def segment_area(s1, s2):
 
 import itertools
 import math
-from typing import Iterable, Tuple
+from typing import Iterable, Optional, Tuple
 
 import numpy as np
 
@@ -79,12 +79,13 @@ def orientation(a: Point, b: Point, c: Point) -> int:
   return int(np.sign(np.cross(b-a, c-b)))
 
 
-_SIMILAR_ANGLES = math.pi / 10
+_SIMILAR_ANGLES = math.pi / 7
 def overlap(
-    s1: Segment, s2: Segment, threshold: float = _SIMILAR_ANGLES) -> float:
+    s1: Segment, s2: Segment, slope_threshold: float = _SIMILAR_ANGLES,
+    gap_threshold: Optional[float] = None) -> float:
   """Rotate s1, s2 such that y=0 for s1; measure x overlap between s1 and s2."""
   slope1, slope2, slope_delta = slopes(s1, s2)
-  if slope_delta >= threshold:
+  if slope_delta >= slope_threshold:
     return 0
   # Undo slope1's rotation on s1 and s2.
   c = np.cos(slope1)
@@ -105,16 +106,19 @@ def overlap(
   if left1 > left2:
     left1, left2 = left2, left1
     right1, right2 = right2, right1
-  min_width = min(right1 - left1, right2 - left2)
+  avg_width = ((right1 - left1) + (right2 - left2)) / 2
+  if gap_threshold is None:
+    # Use average line width if no threshold was specified.
+    gap_threshold = avg_width
   max_delta = max(
       abs(s2p1[1] - s1p1[1]),
       abs(s2p2[1] - s1p1[1]),
   )
-  if max_delta > min_width:
+  if max_delta > gap_threshold:
     # s2 is too far away from s1.
     return 0
-  # Return overlap as % of smaller segment.
-  return (right1 - left2) / min_width
+  # Return overlap as % of average.
+  return (right1 - left2) / avg_width
 
 
 def point_to_point_distance(point1: Point, point2: Point) -> float:

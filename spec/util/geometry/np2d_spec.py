@@ -24,6 +24,30 @@ _SSE = (
   np.array([[770, 1360], [779, 1467]]),
   np.array([[782, 1468], [774, 1360]]),
 )
+_1U_APART = (
+  np.array([[105, 151], [ 82, 137]]),
+  np.array([[ 79, 167], [103, 181]]),
+)
+# Tuples of (line1, line2).
+_OVERLAP_REGRESSION_TESTS = [
+  (
+    np.array([[86, 194], [88, 192]]),
+    np.array([[89, 190], [84, 192]]),
+  ),
+  (
+    np.array([[ 88, 192], [ 93, 190]]),
+    np.array([[ 91, 188], [ 89, 190]]),
+  ),
+  (
+    np.array([[ 93, 190], [ 95, 188]]),
+    np.array([[ 96, 186], [ 91, 188]]),
+  ),
+  (
+    np.array([[ 95, 188], [100, 186]]),
+    np.array([[ 98, 184], [ 96, 186]]),
+  ),
+]
+
 
 with description('np2d'):
   with description('iter_segments'):
@@ -53,10 +77,21 @@ with description('np2d'):
       expect(np2d.overlap((BL, BR), (TL, BR))).to(equal(0))
 
     with it('returns overlap'):
-      expect(np2d.overlap((BL, BR), (M, R))).to(equal(1))
+      expect(np2d.overlap((BL, BR), (M, R))).to(equal(1 / ((2 + 1) / 2)))
 
-    with it('allows steep inclines if specified'):
-      expect(np2d.overlap((BL, BR), (M, BR), threshold=math.pi)).to(equal(1))
+    with it('rejects gaps greater than specified'):
+      segment_length = np2d.point_to_point_distance(*_1U_APART[0])
+      expect(np2d.overlap(*_1U_APART, gap_threshold=segment_length * 0.9)).to(
+          equal(0))
+
+    with it('accepts gaps given sufficient threshold'):
+      segment_length = np2d.point_to_point_distance(*_1U_APART[0])
+      expect(np2d.overlap(*_1U_APART, gap_threshold=segment_length * 1.1)).to(
+          be_above(.5))
+
+    with it('does not regress on earlier segments'):
+      for s1, s2 in _OVERLAP_REGRESSION_TESTS:
+        expect(calling(np2d.overlap, s1, s2)).to(be_above(.5))
 
   with description('point_to_point_distance'):
     with it('returns 0 for coincident points'):
