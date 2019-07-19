@@ -59,6 +59,36 @@ with description('np2d'):
         (TL, TR), (TR, BR), (BR, BL), (BL, TL),
       ]).tolist()))
 
+  with description('kernel_circle'):
+    with it('returns a point for size 1'):
+      expect(np2d.kernel_circle(1).tolist()).to(equal([[1]]))
+
+    with it('returns a cross at small sizes'):
+      expect(np2d.kernel_circle(3).tolist()).to(
+          equal(np2d.kernel_cross(3).tolist()))
+
+    with it('returns a circle shape at larger sizes'):
+      expect(np2d.kernel_circle(5).tolist()).to(equal([
+        [0, 0, 1, 0, 0],
+        [0, 1, 1, 1, 0],
+        [1, 1, 1, 1, 1],
+        [0, 1, 1, 1, 0],
+        [0, 0, 1, 0, 0]
+      ]))
+
+  with description('kernel_cross'):
+    with it('returns a point for size 1'):
+      expect(np2d.kernel_cross(1).tolist()).to(equal([[1]]))
+
+    with it('returns a cross shape at larger sizes'):
+      expect(np2d.kernel_cross(5).tolist()).to(equal([
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [1, 1, 1, 1, 1],
+        [0, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0]
+      ]))
+
   with description('orientation'):
     with it('identifies colinear'):
       expect(np2d.orientation(L, M, R)).to(equal(0))
