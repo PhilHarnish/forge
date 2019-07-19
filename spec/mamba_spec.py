@@ -74,6 +74,22 @@ with description('mamba test helper'):
       expect(1).to(be_one_of(*range(3)))
       expect(2).to(be_one_of(*range(3)))
 
+  with description('be_unique'):
+    with it('should accept empty input'):
+      expect([]).to(be_unique)
+
+    with it('should accept unique str iterable'):
+      expect('asdf').to(be_unique)
+
+    with it('should accept unique list iterable'):
+      expect([1, 2, 3]).to(be_unique)
+
+    with it('should reject list with duplicates'):
+      expect([1, 2, 3, 3]).not_to(be_unique)
+
+    with it('should reject iterable with duplicates'):
+      expect(sorted([1, 2, 3, 3])).not_to(be_unique)
+
   with description('look like'):
     with it('should normally behave like equals'):
       expect('a').to(look_like('a'))

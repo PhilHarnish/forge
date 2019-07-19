@@ -155,6 +155,29 @@ class be_one_of(matchers.Matcher):
     return subject in self._options, [repr(option) for option in self._options]
 
 
+class _be_unique(matchers.Matcher):
+  def _match(self, subject: Any) -> tuple:
+    subject = list(subject)
+    ids = set()
+    hashes = set()
+    for i in subject:
+      i_id = id(i)
+      if i_id in ids:
+        return False, subject
+      ids.add(i_id)
+      try:
+        i_hash = hash(i)
+      except TypeError:
+        i_hash = hash(repr(i))
+      if i_hash in hashes:
+        return False, subject
+      hashes.add(i_hash)
+    return True, []
+
+
+be_unique = _be_unique()
+
+
 def _fn_name(fn: Callable):
   if isinstance(fn, mock.MagicMock):
     return re.sub(r'^<.*name=\'([^\']*)\'.*$', r'\1', str(fn))
