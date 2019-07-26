@@ -1,6 +1,11 @@
 from typing import List, Union
 
+import cv2
 import numpy as np
+
+
+def antialias(src: np.ndarray) -> np.ndarray:
+  return cv2.dilate(src, _ANTIALIAS_KERNEL, iterations=2)
 
 
 def crop(
@@ -35,3 +40,22 @@ def kernel_cross(size: int) -> np.ndarray:
     array[middle][x] = 1
     array[x][middle] = 1
   return array
+
+
+def preserve_stroke(
+    src: np.ndarray, threshold: int, thickness: float) -> np.ndarray:
+  """Maintains strokes >= `threshold` brightness and `thickness` width."""
+  min_pixels = int(threshold * _OPEN_KERNEL_SIZE * thickness)
+  filtered = cv2.filter2D(
+      src,
+      cv2.CV_8UC1,
+      _OPEN_KERNEL,
+      delta=-min_pixels,
+      borderType=cv2.BORDER_ISOLATED)
+  return np.where(filtered > _THRESHOLD, src, 0)
+
+
+_ANTIALIAS_KERNEL = kernel_circle(3)
+_OPEN_KERNEL_SIZE = 5
+_OPEN_KERNEL = kernel_circle(_OPEN_KERNEL_SIZE)
+_THRESHOLD = 5

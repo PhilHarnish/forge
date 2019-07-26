@@ -4,6 +4,16 @@ from data.image import utils
 from spec.mamba import *
 
 with description('utils'):
+  with description('antialias'):
+    with it('expands input image'):
+      given = np.array([
+        [0, 0, 0],
+        [0, 1, 0],
+        [0, 0, 0],
+      ], dtype=np.uint8)
+      actual = utils.antialias(given)
+      expect(actual.min()).to(be_above(0))
+
   with description('crop'):
     with it('removes 0 pixels'):
       given = np.array([
@@ -59,3 +69,27 @@ with description('utils'):
         [0, 0, 1, 0, 0],
         [0, 0, 1, 0, 0]
       ]))
+
+  with description('preserve_stroke'):
+    with it('removes noise'):
+      given = np.array([
+        [0, 0, 0],
+        [0, 255, 0],
+        [0, 0, 0],
+      ], dtype=np.uint8)
+      actual = utils.preserve_stroke(given, 255, 1)
+      expect(actual.max()).to(equal(0))
+
+    with it('preserves lines'):
+      given = np.array([
+        [0, 0, 0, 0, 255, 0, 0, 0, 0],
+      ] * 9, dtype=np.uint8)
+      actual = utils.preserve_stroke(given, 255, 0.9)
+      expect(actual.max()).to(equal(255))
+
+    with it('erases skinny lines'):
+      given = np.array([
+        [0, 0, 0, 0, 255, 0, 0, 0, 0],
+      ] * 9, dtype=np.uint8)
+      actual = utils.preserve_stroke(given, 255, 2)
+      expect(actual.max()).to(equal(0))
