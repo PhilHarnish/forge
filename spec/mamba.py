@@ -9,7 +9,7 @@ from typing import Match
 import mock
 from expects import *
 from expects import matchers
-from mamba import formatters, runnable
+from mamba import example, formatters, runnable
 
 from data.convert import repr_format
 from spec.data import fixtures
@@ -20,11 +20,43 @@ fixtures.init()
 
 
 class CustomFormatter(formatters.ProgressFormatter):
+  def __init__(self, settings) -> None:
+    super(CustomFormatter, self).__init__(settings)
+    formatters.sys.stdout.isatty = lambda: not settings.no_color
+    self.slow_examples = []
+
+  def append_slow_example(self, ex: example.Example, note: str) -> None:
+    self.slow_examples.append(
+        '%s is slow%s' % (self._format_full_example_name(ex), note))
+
   def summary(
       self, duration, example_count, failed_count, pending_count) -> None:
-    print(perf.report())
+    if self.slow_examples:
+      formatters.puts()
+      formatters.puts('\n'.join(self.slow_examples))
+    formatters.puts(perf.report())
     super(CustomFormatter, self).summary(
         duration, example_count, failed_count, pending_count)
+
+  def example_passed(self, ex: example.Example):
+    super(CustomFormatter, self).example_passed(ex)
+    slow_note = self._format_slow_test(ex)
+    if slow_note:
+      self.append_slow_example(ex, slow_note)
+
+  def example_failed(self, ex: example.Example):
+    super(CustomFormatter, self).example_failed(ex)
+    slow_note = self._format_slow_test(ex)
+    if slow_note:
+      self.append_slow_example(ex, slow_note)
+
+  def _format_traceback(self, ex: example.Example) -> str:
+    tb = self._traceback(ex)
+    messages = []
+    for message in reversed(formatters.traceback.format_tb(tb)):
+      if '/expects/' not in message:
+        messages.append(message[2:])
+    return ''.join(messages)
 
 
 def traceback() -> None:
