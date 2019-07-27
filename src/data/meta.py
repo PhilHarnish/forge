@@ -1,15 +1,18 @@
 import collections
 import typing
+from typing import TypeVar
+
+Key = TypeVar('Key')
 
 
-class Meta(collections.OrderedDict, typing.MutableMapping[str, float]):
+class Meta(collections.OrderedDict, typing.MutableMapping[Key, float]):
   def __init__(self, *args, **kwargs) -> None:
     self._smallest = float('inf')
     self._largest = 0
     self._ordered = True
     super(Meta, self).__init__(*args, **kwargs)
 
-  def __setitem__(self, key: str, value: float) -> None:
+  def __setitem__(self, key: Key, value: float) -> None:
     if key in self and self[key] == value:
       raise AssertionError('Redundant assignment: %s = %s' % (key, value))
     if value > self._smallest:
@@ -21,16 +24,16 @@ class Meta(collections.OrderedDict, typing.MutableMapping[str, float]):
     super(Meta, self).__setitem__(key, value)
     self._changed()
 
-  def items(self) -> typing.ItemsView[str, float]:
+  def items(self) -> typing.ItemsView[Key, float]:
     self._reorder()
     return super(Meta, self).items()
 
-  def first(self) -> typing.Tuple[str, float]:
+  def first(self) -> typing.Tuple[Key, float]:
     self._reorder()
     for k, v in self.items():
       return k, v
 
-  def peek(self) -> str:
+  def peek(self) -> Key:
     self._reorder()
     for first in self:
       return first
@@ -46,5 +49,5 @@ class Meta(collections.OrderedDict, typing.MutableMapping[str, float]):
       self.move_to_end(k)
     self._ordered = True
 
-  def _changed(self):
+  def _changed(self) -> None:
     pass
