@@ -54,7 +54,7 @@ class CustomFormatter(formatters.ProgressFormatter):
     tb = self._traceback(ex)
     messages = []
     for message in reversed(formatters.traceback.format_tb(tb)):
-      if '/expects/' not in message:
+      if '/expects/' not in message and '/spec/mamba.py' not in message:
         messages.append(message[2:])
     return ''.join(messages)
 
@@ -160,8 +160,7 @@ before = Hook()
 after = Hook()
 
 # Expects.
-if False:
-  expect('no-op')  # Ensures import is not removed.
+expect('no-op')  # Ensures import is not removed.
 
 class be_between(matchers.Matcher):
   def __init__(self, low: float, high: float) -> None:
