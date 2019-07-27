@@ -1,19 +1,21 @@
+import numpy as np
+
 from puzzle.heuristics import analyze
-from puzzle.problems import anagram_problem, problem
+from puzzle.problems import anagram_problem, image_problem, problem
 from puzzle.problems.crossword import crossword_problem, cryptic_problem
 from spec.mamba import *
 
 
 class ExampleProblemZeroes(problem.Problem):
   @staticmethod
-  def score(lines):
+  def score(lines: problem.ProblemData):
     src = '\n'.join(lines)
     return src.count('0') / len(src)
 
 
 class ExampleProblemOnes(problem.Problem):
   @staticmethod
-  def score(lines):
+  def score(lines: problem.ProblemData):
     src = '\n'.join(lines)
     return src.count('1') / len(src)
 
@@ -23,15 +25,15 @@ with description('register'):
     analyze.reset()
 
   with it('registers types'):
-    class Example(object):
+    class Example(problem.Problem):
       pass
     analyze.register(Example)
     expect(analyze.problem_types()).to(equal({Example}))
 
 
 with description('identify'):
-  with it('is a no-op without problem types registered'):
-    expect(analyze.identify('')).to(be_empty)
+  with it('raises exception without problem types registered'):
+    expect(calling(analyze.identify, '')).to(raise_error(NotImplementedError))
 
   with context('ExampleProblem'):
     with before.all:
@@ -84,6 +86,11 @@ with description('identify'):
       expect(identified[cryptic_problem.CrypticProblem]).to(equal(1))
       expect(identified[cryptic_problem.CrypticProblem]).to(be_above(
           identified[crossword_problem.CrosswordProblem]))
+
+    with it('identifies numpy data'):
+      identified = analyze.identify(np.zeros((3, 3), dtype=np.uint8))
+      expect(identified).to(have_key(image_problem.ImageProblem))
+      expect(identified[image_problem.ImageProblem]).to(equal(1))
 
     with it('string hints override group preferences'):
       identified = analyze.identify(

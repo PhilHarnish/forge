@@ -1,20 +1,35 @@
+import collections
+from typing import List, Optional, Set, Tuple, Type, Union
+
+import numpy as np
+
 from data import meta
 from puzzle.problems import acrostic_problem, anagram_problem, \
-  cryptogram_problem, logic_problem, morse_problem, number_problem, \
-  solved_problem
+  cryptogram_problem, image_problem, logic_problem, morse_problem, \
+  number_problem, problem, solved_problem
 from puzzle.problems.crossword import crossword_problem, cryptic_problem
 
+Hint = Optional[Union[str, type]]
+
+
 _PROBLEM_TYPES = set()
-_IDENTIFY_ORDER = []
+_IDENTIFY_ORDER = collections.defaultdict(list)
 
 
-def identify(lines, hint=None):
+def identify(
+    data: problem.ProblemData, hint: Hint = None) -> meta.Meta[problem.Problem]:
   scores = meta.Meta()
-  for group in _IDENTIFY_ORDER:
+  try:
+    matched_type = type(next(iter(data)))
+  except StopIteration:
+    matched_type = str
+  if matched_type not in _IDENTIFY_ORDER:
+    raise NotImplementedError('Unable to identify type %s' % matched_type)
+  for group in _IDENTIFY_ORDER[matched_type]:
     group_count = 0
     group_scale = 2 * len(group)
     for t in group:
-      score = t.score(lines)
+      score = t.score(data)
       if score:
         # For group size of 5: 1, .9, .8, .7, .6, .5.
         penalty_multiplier = 1 - (group_count / group_scale)
@@ -42,7 +57,9 @@ def identify(lines, hint=None):
   return scores
 
 
-def identify_problems(lines, hint=None):
+def identify_problems(
+    lines: problem.ProblemData, hint: Hint = None
+) -> List[Tuple[meta.Meta, problem.ProblemData]]:
   if len(lines) > 1:
     # Try to parse the entire thing at once first.
     identified = identify(lines, hint=hint)
@@ -56,7 +73,7 @@ def identify_problems(lines, hint=None):
   return results
 
 
-def init():
+def init() -> None:
   if _PROBLEM_TYPES:
     return
   register(solved_problem.SolvedProblem)
@@ -67,20 +84,24 @@ def init():
   register(logic_problem.LogicProblem)
   register(morse_problem.MorseProblem)
   register(number_problem.NumberProblem)
+  # Generic image problem will be replaced with more specific matchers later.
+  register(image_problem.ImageProblem, match_type=np.ndarray)
 
 
-def reset():
+def reset() -> None:
   _PROBLEM_TYPES.clear()
   _IDENTIFY_ORDER.clear()
 
 
-def problem_types():
+def problem_types() -> Set[Type[problem.Problem]]:
   return _PROBLEM_TYPES
 
 
-def register(*problems):
-  for problem in problems:
-    if problem in _PROBLEM_TYPES:
-      raise IndexError('%s already registered' % problem)
-    _PROBLEM_TYPES.add(problem)
-  _IDENTIFY_ORDER.append(problems)
+def register(
+    *problems: Type[problem.Problem],
+    match_type: Type = str) -> None:
+  for p in problems:
+    if p in _PROBLEM_TYPES:
+      raise IndexError('%s already registered' % p)
+    _PROBLEM_TYPES.add(p)
+  _IDENTIFY_ORDER[match_type].append(problems)
