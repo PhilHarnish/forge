@@ -178,11 +178,8 @@ def _normalize(src: np.ndarray) -> np.ndarray:
     return src
   elif n_channels != 4:  # RGBA.
     raise ValueError('Unsupported number of channels %s' % n_channels)
-  # Make transparent pixels white.
-  for row in src:
-    for col in row:
-      if not col[3]:
-        col[0], col[1], col[2] = 255, 255, 255
+  # Make any pixel with 0 alpha chanel white.
+  src[src[:,:,3] == 0] = 255
   return cv2.cvtColor(src, cv2.COLOR_BGRA2BGR)
 
 
