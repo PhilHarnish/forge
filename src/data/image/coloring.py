@@ -1,13 +1,20 @@
 import colorsys
 from typing import Iterable, List
 
+import cv2
 import numpy as np
 
+from util import perf
+
+MAX = 255
+_MAX_ENHANCE_DISTANCE = 64
 _MAX_COLORS_PER_HLS_SLICE = 7
-_MAX = 255
 _THRESHOLD = 5
 _BLACK = np.array([0, 0, 0], dtype=np.uint8)
-_WHITE = np.array([_MAX, _MAX, _MAX], dtype=np.uint8)
+_WHITE = np.array([MAX, MAX, MAX], dtype=np.uint8)
+
+
+p = perf.Perf('enhance', ['cv2', 'oldschool'])
 
 
 def colors(n: int, with_black_and_white=False) -> Iterable[np.ndarray]:
@@ -37,6 +44,28 @@ def colors(n: int, with_black_and_white=False) -> Iterable[np.ndarray]:
     lightness_scale *= -1
 
 
+def enhance(src: np.ndarray, out: np.ndarray = None) -> np.ndarray:
+  if src.dtype != np.uint8:
+    raise NotImplementedError('enhance() only supports uint8')
+  nonzero = src[src != 0]
+  if not nonzero.size:
+    return src
+  lowest, highest = np.percentile(nonzero, (1, 90), interpolation='lower')
+  # NB: np.percentile() returns ndarray which confuses addWeighted.
+  lowest = min(int(lowest), _MAX_ENHANCE_DISTANCE)
+  highest = max(int(highest), MAX - _MAX_ENHANCE_DISTANCE)
+  current_range = highest - lowest
+  if not current_range:
+    return np.add(src, MAX - lowest, out=out, dtype=np.uint8)
+  elif current_range == MAX:
+    return np.array(src, dtype=np.uint8)
+  # If less than the entire spectrum is used (255), scale to fit.
+  # E.g.: 3 / 4 -> 4 / 4 == 3 * x = 4 == x = 4 / 3.
+  factor = MAX / current_range
+  # cv2.addWeighted is >5x faster than `a = m*x + b` style.
+  return cv2.addWeighted(src, factor, 0, 0, -int(lowest), dst=out)
+
+
 def top_n_color_clusters(
     counts: np.ndarray, n: int, threshold: int = _THRESHOLD
 ) -> Iterable[List[int]]:
@@ -53,8 +82,9 @@ def top_n_color_clusters(
     if (counts[partitioned[i]] and
         threshold < partitioned[i] < (max_value - threshold)):
       positions.append(partitioned[i])
+  # TODO: positions = [partitioned[i] for i in top_n]
   for position in sorted(positions):
-    if last and abs(last - position) > threshold:
+    if last is not None and abs(last - position) > threshold:
       yield batch
       # Start a new batch.
       batch = []

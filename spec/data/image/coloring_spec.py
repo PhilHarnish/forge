@@ -21,6 +21,24 @@ with description('coloring'):
     with it('returns unique colors'):
       expect(self.tolist(coloring.colors(200))).to(be_unique)
 
+  with description('enhance'):
+    with it('does not modify zeros'):
+      given = np.zeros((3, 3), dtype=np.uint8)
+      expect(coloring.enhance(given).tolist()).to(equal(given.tolist()))
+
+    with it('does not modify black and white'):
+      given = np.zeros((3, 3), dtype=np.uint8)
+      given[1][1] = coloring.MAX
+      expect(coloring.enhance(given).tolist()).to(equal(given.tolist()))
+
+    with it('scales up to reach MAX'):
+      given = np.array([
+        [0] * 10,
+        [10] * 10,
+        [200] * 10,
+      ], dtype=np.uint8)
+      expect(coloring.enhance(given).max()).to(equal(coloring.MAX))
+
   with description('top_n_color_clusters'):
     with it('generates empty output for empty input'):
       expect(coloring.top_n_color_clusters(np.array([]), 10)).to(be_empty)
