@@ -1,11 +1,22 @@
-from unittest import mock
-
 from puzzle.problems import problem
 from spec.mamba import *
 
 with description('Problem'):
   with it('instantiates'):
     expect(problem.Problem('example', [''])).not_to(be_none)
+
+  with it('strs itself'):
+    src = ['a', 'b', 'c']
+    expect(str(problem.Problem('example', src))).to(look_like("""
+      a
+      b
+      c
+    """))
+
+  with it('reprs itself'):
+    expect(repr(problem.Problem('example', ['src']))).to(look_like("""
+      Problem('example', ['src'])
+    """))
 
   with it('caches solutions'):
     class ExampleProblem(problem.Problem):
@@ -46,7 +57,7 @@ with description('Problem'):
         ('bad value', 0.5),
       ]
       self.pos = 0
-      def solve_iter_source():
+      def solve_iter_source() -> problem.Solutions:
         while self.pos < len(results):
           yield results[self.pos]
           self.pos += 1

@@ -90,5 +90,9 @@ class Problem(object):
     """
     return self._all_solutions
 
+  def __str__(self) -> str:
+    return '\n'.join(self.lines)
+
   def __repr__(self) -> str:
-    return '%s()' % self.__class__.__name__
+    return '%s(%s, %s)' % (
+      self.__class__.__name__, repr(self.name), repr(self.lines))
