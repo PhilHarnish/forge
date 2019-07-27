@@ -1,17 +1,20 @@
 import collections
 import itertools
-from typing import Callable, Iterable, List, Tuple
+from typing import Callable, Collection, Iterable, List, Tuple, Union
+
+import numpy as np
 
 from data import meta
 
 _THRESHOLD = 0.01
 Solution = Tuple[str, float]
 Solutions = Iterable[Solution]
+ProblemData = Collection[Union[str, np.integer]]
 
 
 class Problem(object):
   def __init__(
-      self, name: str, lines: List[str], threshold: float=_THRESHOLD) -> None:
+      self, name: str, lines: ProblemData, threshold: float=_THRESHOLD) -> None:
     self.name = name
     self.lines = lines
     self._threshold = threshold or _THRESHOLD
