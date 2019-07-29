@@ -14,3 +14,6 @@ class ImageProblem(problem.Problem):
     if data.dtype == np.uint8:
       return 1
     return .5
+
+  def __str__(self) -> str:
+    return '<image data>'
