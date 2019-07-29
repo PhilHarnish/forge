@@ -22,5 +22,11 @@ with description('NumberInRange'):
     with it('rejects missing arguments'):
       expect(calling(validator.NumberInRange)).to(raise_error)
 
-    with it('rejects mismatched types'):
-      expect(calling(validator.NumberInRange, 2, 2.0)).to(raise_error)
+  with description('instance checks'):
+    with it('accepts numbers within range (int)'):
+      v = validator.NumberInRange(1, 5)
+      expect(4).to(be_a(v))
+
+    with it('accepts numbers within range (float'):
+      v = validator.NumberInRange(1.0, 5.0)
+      expect(4.0).to(be_a(v))

@@ -1,6 +1,5 @@
-from typing import Any, Optional, TypeVar
-
-Number = TypeVar('Number', int, float)
+import numbers
+from typing import Any, Optional
 
 
 class Validator(object):
@@ -13,27 +12,21 @@ class Validator(object):
 
 
 class NumberInRange(Validator):
-  _min_value: float = float('-inf')
-  _max_value: float = float('inf')
+  _min_value: numbers.Number = float('-inf')
+  _max_value: numbers.Number = float('inf')
 
   def __init__(
       self,
-      min_value: Optional[Number] = None,
-      max_value: Optional[Number] = None):
+      min_value: Optional[numbers.Number] = None,
+      max_value: Optional[numbers.Number] = None):
     if min_value is None and max_value is None:
       raise ValueError('min_value and max_value are both None')
-    elif (min_value is not None and max_value is not None and
-        type(min_value) != type(max_value)):
-      raise ValueError('type of min_value (%s) and max_value (%s) must match' %
-                       (type(min_value), type(max_value)))
     if min_value is not None:
-      self._base_type = type(min_value)
       self._min_value = min_value
     if max_value is not None:
-      self._base_type = type(max_value)
       self._max_value = max_value
 
   def __instancecheck__(self, obj: Any) -> bool:
-    if not self._base_type.__instancecheck__(obj):
+    if not isinstance(obj, numbers.Number):
       return False
     return self._min_value <= obj <= self._max_value
