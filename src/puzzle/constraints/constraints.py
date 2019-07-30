@@ -6,20 +6,44 @@ Constraints are:
 * May have one or more values
 """
 
-from typing import Any, Generic, Iterable, Tuple, Union
+from typing import Any, Callable, Generic, Iterable, NamedTuple, Tuple, Union
+
+from rx import subjects
+
+
+class ConstraintChange(NamedTuple):
+  key: str
+  previous: Any
+  current: Any
+
 
 # Find penultimate class from typing module. ("object" is final base class.)
 _TYPING_BASES = (type(Union).mro()[-2], Generic)
 
+Observer = Union[subjects.Subject, Callable[[Any], None]]
+
+
 class Constraints(object):
+  __slots__ = ('_subject', )
+
+  def __init__(self) -> None:
+    self._subject = subjects.Subject()
+
+  def subscribe(self, observer: Observer):
+    self._subject.subscribe(observer)
+
   def __setattr__(self, key: str, value: Any) -> None:
+    if key in self.__slots__:
+      object.__setattr__(self, key, value)
+      return
     annotation = _resolve_annotation(self.__class__, key)
     if not _type_check(value, annotation):
       raise ValueError('%s.%s must be %s (%s given)' % (
           self.__class__.__name__, key, annotation, value,
       ))
+    previous = object.__getattribute__(self, key)
     object.__setattr__(self, key, value)
-
+    self._subject.on_next(ConstraintChange(key, previous, value))
 
 def _type_check(value: Any, annotation: type) -> bool:
   if (not isinstance(annotation, _TYPING_BASES) or

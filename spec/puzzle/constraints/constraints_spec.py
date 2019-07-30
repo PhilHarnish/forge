@@ -128,3 +128,20 @@ with description('constraints'):
       expect(calling(setattr, self.ex, 'optional_int_in_range',
           None)).not_to(raise_error)
       expect(self.ex.optional_int_in_range).to(equal(None))
+
+  with description('observing changes'):
+    with it('notifies subscribers of changes'):
+      ex = TestConstraints()
+      subscriber = mock.Mock()
+      ex.subscribe(subscriber)
+      ex.str_with_default = 'foobar'
+      expect(subscriber.on_next).to(have_been_called_once)
+      expect(subscriber.on_next).to(have_been_called_with(
+          ('str_with_default', 'default', 'foobar')))
+
+    with it('missed changes are not queued'):
+      ex = TestConstraints()
+      subscriber = mock.Mock()
+      ex.str_with_default = 'foobar'
+      ex.subscribe(subscriber)
+      expect(subscriber.on_next).not_to(have_been_called)
