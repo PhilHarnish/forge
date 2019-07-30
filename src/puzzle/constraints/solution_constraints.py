@@ -7,8 +7,8 @@ _THRESHOLD = 0.01
 
 class SolutionConstraints(constraints.Constraints):
   solution_enumeration: Optional[List[int]] = None
-  solution_length: Optional[validator.StrLenInRange(min_value=0)] = None
-  solution_min_length: Optional[validator.StrLenInRange(min_value=0)] = None
+  solution_length: Optional[validator.NumberInRange(min_value=0)] = None
+  solution_min_length: Optional[validator.NumberInRange(min_value=0)] = None
   weight_threshold: validator.NumberInRange(
       min_value=0.0, max_value=1.0) = _THRESHOLD
 
