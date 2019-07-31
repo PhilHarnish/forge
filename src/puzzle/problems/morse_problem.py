@@ -5,6 +5,7 @@ from typing import Iterable, List, NamedTuple, Optional, Tuple
 from data import max_heap
 from data.alphabets import morse
 from puzzle.problems import problem
+from puzzle.steps import generate_solutions
 
 _IGNORE_DELIMITER = 'ignored'
 _CHARACTER_DELIMITER = 'character delimiter'
@@ -43,9 +44,10 @@ class MorseProblem(problem.Problem):
   def score(lines: List[str]) -> float:
     return _score(lines)
 
-  def _solve_iter(self) -> problem.Solutions:
-    fringe: max_heap.MaxHeap[problem.Solutions] = max_heap.MaxHeap()
-    solution_buffer: max_heap.MaxHeap[problem.Solutions] = max_heap.MaxHeap()
+  def _solve_iter(self) -> generate_solutions.Solutions:
+    fringe: max_heap.MaxHeap[generate_solutions.Solutions] = max_heap.MaxHeap()
+    solution_buffer: max_heap.MaxHeap[generate_solutions.Solutions] = (
+      max_heap.MaxHeap())
     # Initialize options with weights.
     for weight, interpretation in _generate_interpretations(self._normalized):
       fringe.push(weight, self._iter_interpretation(interpretation))
@@ -70,7 +72,7 @@ class MorseProblem(problem.Problem):
     yield from solution_buffer.pop_with_weight_until(float('-inf'))
 
   def _iter_interpretation(
-      self, interpretation: _Interpretation) -> problem.Solutions:
+      self, interpretation: _Interpretation) -> generate_solutions.Solutions:
     acc = []
     result = []
     for c in self._normalized:
