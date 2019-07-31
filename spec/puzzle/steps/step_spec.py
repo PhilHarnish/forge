@@ -14,3 +14,19 @@ with description('step'):
     with it('adds dependencies'):
       s = step.Step(dependencies=[step.Step()])
       expect(s).to(have_len(2))
+
+    with it('tracks a tree of dependencies'):
+      left_left = step.Step()
+      left_right = step.Step()
+      left = step.Step((left_left, left_right))
+      right = step.Step()
+      root = step.Step((left, right))
+      resolution_order = list(root.resolution_order())
+      expect(len(resolution_order)).to(equal(5))
+      expect(resolution_order).to(equal([
+        left_left,
+        left_right,
+        left,
+        right,
+        root,
+      ]))
