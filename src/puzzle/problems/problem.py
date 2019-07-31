@@ -20,7 +20,7 @@ import numpy as np
 
 from data import meta
 from puzzle.constraints import solution_constraints
-from puzzle.steps import generate_solutions
+from puzzle.steps import generate_solutions, step
 
 _THRESHOLD = 0.01
 ProblemData = Collection[Union[str, np.integer]]
@@ -50,6 +50,9 @@ class Problem(object):
 
   def notes_for(self, solution) -> List[str]:
     return self._notes.get(solution, [])
+
+  def steps(self) -> step.Dependencies:
+    yield from self._solutions_generator.resolution_order()
 
   def __iter__(self) -> generate_solutions.Solutions:
     yield from self._solutions_generator
