@@ -42,7 +42,7 @@ class AcrosticProblem(problem.Problem):
 
   def _solve_iter(self):
     for solution, weight in self._acrostic.items():
-      if weight < self._threshold:
+      if weight < self._solution_constraints.weight_threshold:
         return
       yield solution, weight
 

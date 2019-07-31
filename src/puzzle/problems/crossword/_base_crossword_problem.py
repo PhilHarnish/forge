@@ -27,18 +27,18 @@ class _BaseCrosswordProblem(problem.Problem):
           pass
         elif len(lengths) == 1:
           target = int(lengths[0])
-          self.constrain(lambda x, _: len(x) == target)
+          self._solution_constraints.solution_length = target
           self._min_length = target
           self._max_length = target
         else:
           target = sum(map(int, lengths))
           if '|' in line:
-            self.constrain(lambda x, _: len(x) >= target)
+            self._solution_constraints.solution_min_length = target
             self._min_length = target
             self._max_length = float('inf')
           else:
             # TODO: Verify 2, 3 -> 2 letter word & 3 letter word.
-            self.constrain(lambda x, _: len(x) == target)
+            self._solution_constraints.solution_length = target
             self._min_length = target
             self._max_length = target
         break
