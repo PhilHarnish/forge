@@ -10,6 +10,12 @@ class Validator(object):
     raise NotImplementedError(
         'Validator %s missing __instancecheck__' % self.__class__.__name__)
 
+  def __repr__(self) -> str:
+    return '%s(%s)' % (self.__class__.__name__, self._args())
+
+  def _args(self) -> str:
+    return ''
+
 
 class NumberInRange(Validator):
   _min_value: numbers.Number = float('-inf')
@@ -30,3 +36,6 @@ class NumberInRange(Validator):
     if not isinstance(obj, numbers.Number):
       return False
     return self._min_value <= obj <= self._max_value
+
+  def _args(self) -> str:
+    return 'min_value=%s, max_value=%s' % (self._min_value, self._max_value)
