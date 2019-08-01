@@ -6,7 +6,8 @@ Constraints are:
 * May have one or more values
 """
 
-from typing import Any, Callable, Generic, Iterable, NamedTuple, Tuple, Union
+from typing import Any, Callable, Generic, Iterable, NamedTuple, Optional, \
+  Tuple, Union
 
 from rx import subjects
 
@@ -32,11 +33,19 @@ class Constraints(object):
   def subscribe(self, observer: Observer):
     self._subject.subscribe(observer)
 
+  def __iter__(self) -> Iterable[Tuple[str, Any, type]]:
+    for key in sorted(dir(self)):
+      annotation = _resolve_annotation(type(self), key)
+      if annotation:
+        yield key, getattr(self, key), annotation
+
   def __setattr__(self, key: str, value: Any) -> None:
     if key in self.__slots__:
       object.__setattr__(self, key, value)
       return
     annotation = _resolve_annotation(self.__class__, key)
+    if not annotation:
+      raise AttributeError('%s not in %s' % (key, self.__class__.__name__))
     if not _type_check(value, annotation):
       raise ValueError('%s.%s must be %s (%s given)' % (
           self.__class__.__name__, key, annotation, value,
@@ -44,6 +53,9 @@ class Constraints(object):
     previous = object.__getattribute__(self, key)
     object.__setattr__(self, key, value)
     self._subject.on_next(ConstraintChange(key, previous, value))
+
+  def __str__(self) -> str:
+    return '\n'.join('%s = %s' % (key, repr(value)) for key, value, _ in self)
 
 def _type_check(value: Any, annotation: type) -> bool:
   if (not isinstance(annotation, _TYPING_BASES) or
@@ -69,9 +81,9 @@ def _type_check(value: Any, annotation: type) -> bool:
   return False
 
 
-def _resolve_annotation(cls: type, k: str) -> type:
+def _resolve_annotation(cls: type, k: str) -> Optional[type]:
   for klass in cls.mro():
-    if k not in klass.__annotations__:
+    if not hasattr(klass, '__annotations__') or k not in klass.__annotations__:
       continue
     return klass.__annotations__[k]
-  raise AttributeError('%s not in %s' % (k, cls.__name__))
+  return None

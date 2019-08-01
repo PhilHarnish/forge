@@ -18,8 +18,8 @@ class Validator(object):
 
 
 class NumberInRange(Validator):
-  _min_value: numbers.Number = float('-inf')
-  _max_value: numbers.Number = float('inf')
+  min_value: numbers.Number = float('-inf')
+  max_value: numbers.Number = float('inf')
 
   def __init__(
       self,
@@ -28,14 +28,14 @@ class NumberInRange(Validator):
     if min_value is None and max_value is None:
       raise ValueError('min_value and max_value are both None')
     if min_value is not None:
-      self._min_value = min_value
+      self.min_value = min_value
     if max_value is not None:
-      self._max_value = max_value
+      self.max_value = max_value
 
   def __instancecheck__(self, obj: Any) -> bool:
     if not isinstance(obj, numbers.Number):
       return False
-    return self._min_value <= obj <= self._max_value
+    return self.min_value <= obj <= self.max_value
 
   def _args(self) -> str:
-    return 'min_value=%s, max_value=%s' % (self._min_value, self._max_value)
+    return 'min_value=%s, max_value=%s' % (self.min_value, self.max_value)

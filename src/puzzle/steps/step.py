@@ -26,6 +26,9 @@ class Step(object):
     else:
       self._constraints = []
 
+  def constraints(self) -> Constraints:
+    return self._constraints
+
   def resolution_order(self) -> Dependencies:
     for dep in self._dependencies:
       yield from dep.resolution_order()
@@ -33,3 +36,6 @@ class Step(object):
 
   def __len__(self) -> int:
     return sum(1 for _ in self.resolution_order())
+
+  def __str__(self) -> str:
+    return self.__class__.__name__

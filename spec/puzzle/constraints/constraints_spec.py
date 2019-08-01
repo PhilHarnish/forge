@@ -89,7 +89,7 @@ with description('constraints'):
           [3, 4])).to(raise_error)
       expect(self.ex.optional_tuple).to(equal((1, 'two', 3.0)))
 
-    with description('inheritance') as self:
+    with description('inheritance'):
       with before.each:
         self.ex = InheritedConstraints()
 
@@ -145,3 +145,34 @@ with description('constraints'):
       ex.str_with_default = 'foobar'
       ex.subscribe(subscriber)
       expect(subscriber.on_next).not_to(have_been_called)
+
+  with description('__iter__'):
+    with it('yields information needed to reflectively constrain'):
+      expect(list(TestConstraints())).to(have_len(4))
+
+    with it('includes inherited constraints'):
+      expect(list(InheritedConstraints())).to(have_len(5))
+
+    with it('includes type information'):
+      types = {k: t for k, _, t in TestConstraints()}
+      expect(types).to(have_key('str_with_default', str))
+      expect(types).to(
+          have_key('optional_with_collection', Optional[List[int]]))
+
+  with description('__str__'):
+    with it('produces readable output for base class'):
+      expect(str(TestConstraints())).to(look_like("""
+        optional_str_with_default = 'optional default'
+        optional_tuple = (1, 'two', 3.0)
+        optional_with_collection = [1, 2]
+        str_with_default = 'default'
+      """))
+
+    with it('produces readable output for descendent class'):
+      expect(str(InheritedConstraints())).to(look_like("""
+        int_with_default = 42
+        optional_str_with_default = 'optional default'
+        optional_tuple = (1, 'two', 3.0)
+        optional_with_collection = [1, 2]
+        str_with_default = 'default'
+      """))
