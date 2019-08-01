@@ -32,7 +32,7 @@ with description('generate_solutions') as self:
       generate_solutions.GenerateSolutions(self.constraints, source)
       expect(source).not_to(have_been_called_once)
 
-  with description('generation') as self:
+  with description('generation'):
     with before.each:
       self.source_iter = _source()
       self.source = mock.Mock(return_value=self.source_iter)
@@ -65,3 +65,35 @@ with description('generate_solutions') as self:
       # Prove there are still items left in the iterator:
       expect(calling(next, self.source_iter)).to(equal(
           ('after_early_high', 0.9)))
+
+  with description('interrupting iteration'):
+    with before.each:
+      self.iterations = 0
+      self.stop_iterations = 0
+      def source_iter() -> generate_solutions.Solutions:
+        for k, v in _SOLUTIONS.items():
+          while v < self.constraints.weight_threshold:
+            self.stop_iterations += 1
+            yield StopIteration()
+          self.iterations += 1
+          yield k, v
+      self.source_iter = source_iter()
+      self.source = mock.Mock(return_value=self.source_iter)
+      self.ex = generate_solutions.GenerateSolutions(self.constraints, self.source)
+
+    with it('still produces solutions'):
+      expect(self.ex.solutions()).to(equal(_SOLUTIONS))
+      expect(self.iterations).to(equal(len(_SOLUTIONS)))
+
+    with it('stops if constraints require'):
+      self.constraints.weight_threshold = 0.5
+      self.ex.solutions()
+      expect(self.iterations).to(be_below(len(_SOLUTIONS)))
+      expect(self.stop_iterations).to(equal(1))
+
+    with it('resumes if constraints change'):
+      self.constraints.weight_threshold = 0.5
+      self.ex.solutions()
+      self.constraints.weight_threshold = 0.0
+      self.ex.solutions()
+      expect(self.iterations).to(equal(len(_SOLUTIONS)))

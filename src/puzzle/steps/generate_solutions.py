@@ -1,12 +1,12 @@
 import itertools
-from typing import Any, Callable, Iterable, Tuple
+from typing import Any, Callable, Iterable, Tuple, Union
 
 from data import meta
 from puzzle.constraints import solution_constraints
 from puzzle.steps import step
 
 Solution = Tuple[str, float]
-Solutions = Iterable[Solution]
+Solutions = Iterable[Union[Solution, StopIteration]]
 
 
 class GenerateSolutions(step.Step):
@@ -58,15 +58,23 @@ class GenerateSolutions(step.Step):
     self._filtered_solutions = meta.Meta()
 
   def _all_solutions_iter(self) -> Solution:
-    for k, v in self._source():
-      self._all_solutions[k] = v
-      yield k, v
+    for next_value in self._source():
+      if not isinstance(next_value, StopIteration):
+        k, v = next_value
+        self._all_solutions[k] = v
+      yield next_value
 
   def _filter_solutions_iter(self) -> Solutions:
     # First review any existing values in _all_solutions. This is empty unless
     # the Problem's constraints changed mid-solve.
-    for k, v in itertools.chain(
+    for next_value in itertools.chain(
         self._all_solutions.items(), self._all_solutions_iterator):
+      if isinstance(next_value, StopIteration):
+        # We shouldn't expect any further values to survive filtering.
+        # Stop iteration for now; iteration may restart again in future with
+        # different constraints.
+        return
+      k, v = next_value
       if self.is_solution_valid(k, v):
         self._filtered_solutions[k] = v
         yield k, v
