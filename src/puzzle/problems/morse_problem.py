@@ -12,6 +12,10 @@ _CHARACTER_DELIMITER = 'character delimiter'
 _WORD_DELIMITER = 'word delimiter'
 _DOT = '.'
 _DASH = '-'
+_MORSE_DENSITY = 3.3  # Typical number of morse characters per character.
+_TARGET_WORD_LENGTH = 3  # Require 3+ letters.
+_TARGET_LENGTH = _MORSE_DENSITY * _TARGET_WORD_LENGTH
+
 
 class _Interpretation(NamedTuple):
   dot: str
@@ -44,8 +48,12 @@ class MorseProblem(problem.Problem):
   def score(lines: List[str]) -> float:
     return _score(lines)
 
+  def _solve(self) -> dict:
+    raise NotImplementedError()  # Explicitly unsupported.
+
   def _solve_iter(self) -> generate_solutions.Solutions:
-    fringe: max_heap.MaxHeap[generate_solutions.Solutions] = max_heap.MaxHeap()
+    fringe: max_heap.MaxHeap[Tuple[generate_solutions.Solutions, str, bool]] = (
+      max_heap.MaxHeap())
     solution_buffer: max_heap.MaxHeap[generate_solutions.Solutions] = (
       max_heap.MaxHeap())
     # Initialize options with weights.
@@ -57,9 +65,13 @@ class MorseProblem(problem.Problem):
         next_best_weight = fringe.best_weight()
       else:
         next_best_weight = float('-inf')
+      while next_best_weight < self._solution_constraints.weight_threshold:
+        yield StopIteration()  # Good solutions are impossible.
       yield from solution_buffer.pop_with_weight_until(next_best_weight)
       for result in group_generator:
-        (solution, weight), notes = result
+        (solution, weight), notes, has_ignored = result
+        if has_ignored and solution in self._notes:
+          continue  # Skip duplicates which can occur with ignored characters.
         self._notes[solution] = notes  # Save (and throw away) notes.
         solution_weight = group_weight * weight
         if solution_weight > next_best_weight:
@@ -72,7 +84,8 @@ class MorseProblem(problem.Problem):
     yield from solution_buffer.pop_with_weight_until(float('-inf'))
 
   def _iter_interpretation(
-      self, interpretation: _Interpretation) -> generate_solutions.Solutions:
+      self, interpretation: _Interpretation
+  ) -> Tuple[generate_solutions.Solutions, str, bool]:
     acc = []
     result = []
     for c in self._normalized:
@@ -105,7 +118,9 @@ class MorseProblem(problem.Problem):
       else:
         return
     solution = (''.join(result), 1.0)
-    yield solution, _interpretation_notes(interpretation)
+    yield (
+      solution, _interpretation_notes(interpretation),
+      bool(interpretation.ignored))
 
 
 def _score(lines: List[str]) -> float:
@@ -122,12 +137,16 @@ def _score(lines: List[str]) -> float:
   if all(c in _ALPHABET for c in counts):
     return 1  # Looks like ordinary morse.
   elif '.' in counts and '-' in counts:
-    margin_of_error = .1
+    margin_of_error = 0.1
+  elif len(counts) < len(_ALPHABET) - 1:  # No ignored symbols
+    margin_of_error = 0.5
   else:
-    margin_of_error = 1
+    margin_of_error = 1.0
   # Increase confidence asymptotically with the size of input. Long inputs
   # with only 3 symbols are very morse-like.
-  return (1 - margin_of_error) + (margin_of_error * (1 - 1 / size))
+  return max((
+    0, (1 - margin_of_error) + (margin_of_error * (1 - _TARGET_LENGTH / size))
+  ))
 
 
 def _generate_interpretations(
@@ -138,7 +157,7 @@ def _generate_interpretations(
   max_score = first_n * first_n + second_n + 1  # +1 to reserve true 1.0.
   def _scored_interpretation(
       dot: str, dash: str, character_delimiter: Optional[str],
-      word_delimiter: Optional[str], ignored: set
+      word_delimiter: Optional[str], ignored: set, weight_penalty: float,
   ) -> Tuple[float, _Interpretation]:
     interpretation = _Interpretation(
         dot, dash, character_delimiter, word_delimiter, ignored)
@@ -147,13 +166,16 @@ def _generate_interpretations(
       base_score = max_score
     else:
       base_score = (first_n * frequencies[dot] + frequencies[dash])
+      if dot == '-' and dash == '.':
+        # Improbable but interesting assignment.
+        base_score *= 0.8
     if ignored and not word_delimiter:
       penalty = len(ignored)  # Discourage wasted characters.
     else:
       penalty = 0
     # Prefer assigning (dot, dash) to 1st and 2nd most common, respectively.
     return (
-      base_score / (max_score + penalty),
+      weight_penalty * base_score / (max_score + penalty),
       interpretation,
     )
   n_chars = len(frequencies)
@@ -163,9 +185,9 @@ def _generate_interpretations(
       word_delimiter = None
       ignored = set()
       results.append(_scored_interpretation(
-          x, y, character_delimiter, word_delimiter, ignored))
+          x, y, character_delimiter, word_delimiter, ignored, 1.0))
       results.append(_scored_interpretation(
-          y, x, character_delimiter, word_delimiter, ignored))
+          y, x, character_delimiter, word_delimiter, ignored, 1.0))
     elif n_chars == 3:
       character_delimiter = None
       for c in frequencies:
@@ -176,9 +198,9 @@ def _generate_interpretations(
       word_delimiter = None
       ignored = set()
       results.append(_scored_interpretation(
-          x, y, character_delimiter, word_delimiter, ignored))
+          x, y, character_delimiter, word_delimiter, ignored, 1.0))
       results.append(_scored_interpretation(
-          y, x, character_delimiter, word_delimiter, ignored))
+          y, x, character_delimiter, word_delimiter, ignored, 1.0))
     else:
       # Need to choose both a character and word delimiter.
       options = []
@@ -190,8 +212,12 @@ def _generate_interpretations(
       last = None
       for character_delimiter, word_delimiter in itertools.permutations(
           options, 2):
+        if given[-1] == word_delimiter:
+          continue  # This interpretation would require a space at the end.
         need_char = False  # Allow arbitrary delimiters to start.
         saw_word_delimiter = False  # Require character between word_delimiter.
+        max_word_length = 0
+        acc_word_length = 0
         for c in given:
           if c != word_delimiter:
             pass
@@ -199,9 +225,12 @@ def _generate_interpretations(
             break  # Two word delimiters occurred between a character.
           else:
             saw_word_delimiter = True
+            max_word_length = max(acc_word_length, max_word_length)
+            acc_word_length = 0
           if c in (x, y):
             need_char = False  # Found a character. Reset expectations.
             saw_word_delimiter = False
+            acc_word_length += 1
           elif need_char and c == last:
             break  # Needed a character and delimiter repeated. Break.
           elif c in (character_delimiter, word_delimiter):
@@ -214,23 +243,32 @@ def _generate_interpretations(
             if c in (character_delimiter, word_delimiter):
               continue
             ignored.add(c)
+          if given.startswith(word_delimiter) or given.endswith(word_delimiter):
+            weight_penalty = 0.25
+          else:
+            weight_penalty = 1.0
+          if max_word_length < _TARGET_WORD_LENGTH:
+            weight_penalty *= 0.1
           results.append(_scored_interpretation(
-              x, y, character_delimiter, word_delimiter, ignored))
+              x, y, character_delimiter, word_delimiter, ignored,
+              weight_penalty))
           results.append(_scored_interpretation(
-              y, x, character_delimiter, word_delimiter, ignored))
-          # Perhaps delimiters are ignored.
+              y, x, character_delimiter, word_delimiter, ignored,
+              weight_penalty))
+          # Perhaps word delimiters are ignored.
           ignored = ignored.copy()
           ignored.add(word_delimiter)
           results.append(_scored_interpretation(
-              x, y, character_delimiter, None, ignored))
+              x, y, character_delimiter, None, ignored, weight_penalty * 0.9))
           results.append(_scored_interpretation(
-              y, x, character_delimiter, None, ignored))
+              y, x, character_delimiter, None, ignored, weight_penalty * 0.9))
+          # Perhaps all delimiters are ignored.
           ignored = ignored.copy()
           ignored.add(character_delimiter)
           results.append(_scored_interpretation(
-              x, y, None, None, ignored))
+              x, y, None, None, ignored, weight_penalty * 0.8))
           results.append(_scored_interpretation(
-              y, x, None, None, ignored))
+              y, x, None, None, ignored, weight_penalty * 0.8))
   return sorted(results, key=lambda key: key[0], reverse=True)
 
 

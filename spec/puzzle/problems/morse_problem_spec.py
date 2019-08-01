@@ -56,6 +56,9 @@ with description('MorseProblem'):
     with it('accepts PUZZLE'):
       expect(morse_problem.MorseProblem.score(PUZZLE)).to(be_above(.9))
 
+    with it('rejects "puzzle"'):
+      expect(morse_problem.MorseProblem.score(['puzzle'])).to(equal(0))
+
   with description('_generate_interpretations') as self:
     with before.all:
       self.fn = getattr(morse_problem, '_generate_interpretations')
@@ -106,16 +109,10 @@ with description('MorseProblem'):
       expect([tuple(pair) for _, pair in self.fn('\n'.join(PUZZLE))]).to(
           equal([
             ('.', '-', '|', '\n', set()),
-            ('.', '-', '\n', '|', set()),
             ('.', '-', '|', None, {'\n'}),
-            ('.', '-', '\n', None, {'|'}),
-            ('.', '-', None, None, {'|', '\n'}),
             ('.', '-', None, None, {'|', '\n'}),
             ('-', '.', '|', '\n', set()),
-            ('-', '.', '\n', '|', set()),
             ('-', '.', '|', None, {'\n'}),
-            ('-', '.', '\n', None, {'|'}),
-            ('-', '.', None, None, {'|', '\n'}),
             ('-', '.', None, None, {'|', '\n'}),
           ]))
 
@@ -129,3 +126,7 @@ with description('MorseProblem'):
     with it('solves PUZZLE'):
       solutions = morse_problem.MorseProblem('ex', PUZZLE).solutions()
       expect(solutions).to(have_key('evacuation'))
+
+    with it('does not raise for "puzzle"'):
+      problem = morse_problem.MorseProblem('ex', ['puzzle'])
+      expect(calling(problem.solutions)).not_to(raise_error)
