@@ -34,9 +34,9 @@ class Problem(object):
     self.lines = lines
     self._solution_constraints = solution_constraints.SolutionConstraints()
     self._solution_constraints.weight_threshold = threshold
-    self._solution_constraints.subscribe(self._on_solutions_change)
     self._solutions_generator = generate_solutions.GenerateSolutions(
         self._solution_constraints, self._solve_iter)
+    self._solutions_generator.subscribe(self._on_solutions_change)
     self._notes = collections.defaultdict(list)
     self._subject = subjects.Subject()
 
