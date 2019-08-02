@@ -74,12 +74,11 @@ class _MetaProblem(observable_meta.ObservableMeta):
 
   def __init__(self) -> None:
     super(_MetaProblem, self).__init__()
-    self._active = None
     self._solution = self._NO_SOLUTION
 
   @property
   def active(self) -> problem.Problem:
-    return self._active or self.peek()
+    return self.peek()
 
   @property
   def solution(self) -> str:
