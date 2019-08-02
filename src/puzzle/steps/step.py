@@ -4,6 +4,9 @@ A step may have dependencies and constraints.
 
 from typing import Iterable, Optional
 
+from rx import subjects
+
+from data import types
 from puzzle.constraints import constraints as constraints_module
 
 Constraints = Iterable[constraints_module.Constraints]
@@ -25,6 +28,7 @@ class Step(object):
       self._constraints = list(constraints)
     else:
       self._constraints = []
+    self._subject = subjects.Subject()
 
   def constraints(self) -> Constraints:
     return self._constraints
@@ -33,6 +37,9 @@ class Step(object):
     for dep in self._dependencies:
       yield from dep.resolution_order()
     yield self
+
+  def subscribe(self, observer: types.Observer):
+    self._subject.subscribe(observer)
 
   def __len__(self) -> int:
     return sum(1 for _ in self.resolution_order())

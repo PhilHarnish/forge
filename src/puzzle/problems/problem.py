@@ -17,8 +17,9 @@ import collections
 from typing import Collection, List, Union
 
 import numpy as np
+from rx import subjects
 
-from data import meta
+from data import meta, types
 from puzzle.constraints import solution_constraints
 from puzzle.steps import generate_solutions, step
 
@@ -33,9 +34,11 @@ class Problem(object):
     self.lines = lines
     self._solution_constraints = solution_constraints.SolutionConstraints()
     self._solution_constraints.weight_threshold = threshold
+    self._solution_constraints.subscribe(self._on_solutions_change)
     self._solutions_generator = generate_solutions.GenerateSolutions(
         self._solution_constraints, self._solve_iter)
     self._notes = collections.defaultdict(list)
+    self._subject = subjects.Subject()
 
   @property
   def kind(self) -> str:
@@ -54,6 +57,9 @@ class Problem(object):
   def steps(self) -> step.Dependencies:
     yield from self._solutions_generator.resolution_order()
 
+  def subscribe(self, observer: types.Observer):
+    self._subject.subscribe(observer)
+
   def __iter__(self) -> generate_solutions.Solutions:
     yield from self._solutions_generator
 
@@ -63,6 +69,10 @@ class Problem(object):
   def __repr__(self) -> str:
     return '%s(%s, %s)' % (
       self.__class__.__name__, repr(self.name), repr(self.lines))
+
+  def _on_solutions_change(
+      self, event: generate_solutions.SolutionsChangeEvent) -> None:
+    self._subject.on_next(event)
 
   def _solve_iter(self) -> generate_solutions.Solutions:
     return iter(self._solve().items())

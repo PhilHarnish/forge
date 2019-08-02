@@ -36,7 +36,8 @@ with description('generate_solutions') as self:
     with before.each:
       self.source_iter = _source()
       self.source = mock.Mock(return_value=self.source_iter)
-      self.ex = generate_solutions.GenerateSolutions(self.constraints, self.source)
+      self.ex = generate_solutions.GenerateSolutions(
+          self.constraints, self.source)
 
     with it('produces solutions'):
       expect(self.ex.solutions()).to(equal(_SOLUTIONS))
@@ -65,6 +66,13 @@ with description('generate_solutions') as self:
       # Prove there are still items left in the iterator:
       expect(calling(next, self.source_iter)).to(equal(
           ('after_early_high', 0.9)))
+
+    with description('event broadcasting'):
+      with it('sends an event solutions have changed'):
+        on_change_stub = mock.Mock()
+        self.ex.subscribe(on_change_stub)
+        self.constraints.weight_threshold = 0.5
+        expect(on_change_stub.on_next).to(have_been_called_once)
 
   with description('interrupting iteration'):
     with before.each:

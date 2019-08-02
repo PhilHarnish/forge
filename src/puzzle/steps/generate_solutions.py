@@ -1,5 +1,5 @@
 import itertools
-from typing import Any, Callable, Iterable, Tuple, Union
+from typing import Any, Callable, Iterable, NamedTuple, Tuple, Union
 
 from data import meta
 from puzzle.constraints import solution_constraints
@@ -7,6 +7,10 @@ from puzzle.steps import step
 
 Solution = Tuple[str, float]
 Solutions = Iterable[Union[Solution, StopIteration]]
+
+
+class SolutionsChangeEvent(NamedTuple):
+  pass
 
 
 class GenerateSolutions(step.Step):
@@ -56,6 +60,7 @@ class GenerateSolutions(step.Step):
     # Invalidate filtered solutions.
     self._filtered_solutions_iterator = self._filter_solutions_iter()
     self._filtered_solutions = meta.Meta()
+    self._subject.on_next(SolutionsChangeEvent())
 
   def _all_solutions_iter(self) -> Solution:
     for next_value in self._source():
