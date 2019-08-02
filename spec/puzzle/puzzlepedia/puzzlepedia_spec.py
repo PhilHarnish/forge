@@ -17,12 +17,26 @@ with description('puzzlepedia'):
     puzzlepedia.reset()
 
   with it('does not initialize on import'):
-    expect(puzzlepedia._INITIALIZED).to(be_false)
+    expect(puzzlepedia.initialized()).to(be_false)
 
   with description('parse'):
     with it('initializes after calling parse'):
       puzzlepedia.parse('')
-      expect(puzzlepedia._INITIALIZED).to(be_true)
+      expect(puzzlepedia.initialized()).to(be_true)
+
+    with it('does not read from clipboard if input is given'):
+      with mock.patch(
+          'puzzle.puzzlepedia.puzzlepedia._get_clipboard', return_value=''
+      ) as patched_clipboard:
+        puzzlepedia.parse('')
+        expect(patched_clipboard).not_to(have_been_called)
+
+    with it('reads from clipboard if no input is given'):
+      with mock.patch(
+          'puzzle.puzzlepedia.puzzlepedia._get_clipboard', return_value=''
+      ) as patched_clipboard:
+        puzzlepedia.parse()
+        expect(patched_clipboard).to(have_been_called)
 
   with description('interact_with'):
     with before.each:

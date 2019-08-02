@@ -8,7 +8,7 @@ from puzzle.heuristics import analyze
 from puzzle.problems import problem
 from puzzle.puzzlepedia import solution_stream
 
-PuzzleTypes = Union['Puzzle', problem.ProblemData]
+PuzzleSources = Union['Puzzle', str, problem.ProblemData]
 
 
 class Puzzle(subjects.Subject):
@@ -16,7 +16,10 @@ class Puzzle(subjects.Subject):
   _child_streams: List[solution_stream.SolutionStream]
 
   def __init__(
-      self, name: str, source: PuzzleTypes, hint: str = None, **kwargs) -> None:
+      self, name: str,
+      source: PuzzleSources,
+      hint: str = None,
+      **kwargs) -> None:
     super(Puzzle, self).__init__()
     self._meta_problems = []
     self._child_streams = []
