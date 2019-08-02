@@ -60,6 +60,17 @@ class Constraints(object):
   def __str__(self) -> str:
     return '\n'.join('%s = %s' % (key, repr(value)) for key, value, _ in self)
 
+
+def unwrap_optional(annotation: type) -> Optional[type]:
+  if (not isinstance(annotation, type(Union)) or
+      not hasattr(annotation, '__args__')):
+    return None
+  args = getattr(annotation, '__args__')
+  if len(args) != 2:
+    return None
+  return next(a for a in args if a is not type(None))  # First non-None value.
+
+
 def _type_check(value: Any, annotation: type) -> bool:
   if (not isinstance(annotation, _TYPING_BASES) or
       not hasattr(annotation, '__args__')):

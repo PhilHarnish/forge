@@ -18,7 +18,12 @@ class ValidatedConstraints(constraints.Constraints):
   float_in_range: validator.NumberInRange(0, 1) = 0.5
 
 
-with description('constraints'):
+class T(object):
+  def __eq__(self, other: Any) -> bool:
+    return NotImplemented
+
+
+with description('constraints.Constraints'):
   with description('constructor'):
     with it('constructs without error'):
       expect(calling(constraints.Constraints)).not_to(raise_error)
@@ -176,3 +181,20 @@ with description('constraints'):
         optional_with_collection = [1, 2]
         str_with_default = 'default'
       """))
+
+
+with description('unwrap_optional'):
+  with it('returns None if Optional is not used'):
+    expect(calling(constraints.unwrap_optional, int)).to(equal(None))
+    expect(calling(constraints.unwrap_optional, tuple)).to(equal(None))
+
+  with it('returns type when Optional is used'):
+    expect(constraints.unwrap_optional(Optional[T])).to(equal(T))
+
+  with it('returns type when Union is used'):
+    expect(constraints.unwrap_optional(Union[None, T])).to(equal(T))
+    expect(constraints.unwrap_optional(Union[T, None])).to(equal(T))
+
+  with it('returns None if Union is used with multiple types'):
+    expect(calling(constraints.unwrap_optional, Union[None, int, float])).to(
+        equal(None))
