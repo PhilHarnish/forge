@@ -6,13 +6,18 @@ Constraints are:
 * May have one or more values
 """
 
-from typing import Any, Callable, Generic, Iterable, NamedTuple, Optional, \
+from typing import Any, Generic, Iterable, NamedTuple, Optional, \
   Tuple, Union
 
 from rx import subjects
 
+from data import types
+from puzzle.constraints import validator
 
-class ConstraintChange(NamedTuple):
+Constraint = Union[validator.Validator, type]
+
+
+class ConstraintChangeEvent(NamedTuple):
   key: str
   previous: Any
   current: Any
@@ -21,8 +26,6 @@ class ConstraintChange(NamedTuple):
 # Find penultimate class from typing module. ("object" is final base class.)
 _TYPING_BASES = (type(Union).mro()[-2], Generic)
 
-Observer = Union[subjects.Subject, Callable[[Any], None]]
-
 
 class Constraints(object):
   __slots__ = ('_subject', )
@@ -30,7 +33,7 @@ class Constraints(object):
   def __init__(self) -> None:
     self._subject = subjects.Subject()
 
-  def subscribe(self, observer: Observer):
+  def subscribe(self, observer: types.Observer):
     self._subject.subscribe(observer)
 
   def __iter__(self) -> Iterable[Tuple[str, Any, type]]:
@@ -52,7 +55,7 @@ class Constraints(object):
       ))
     previous = object.__getattribute__(self, key)
     object.__setattr__(self, key, value)
-    self._subject.on_next(ConstraintChange(key, previous, value))
+    self._subject.on_next(ConstraintChangeEvent(key, previous, value))
 
   def __str__(self) -> str:
     return '\n'.join('%s = %s' % (key, repr(value)) for key, value, _ in self)
