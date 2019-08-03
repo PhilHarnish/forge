@@ -9,10 +9,10 @@ _INT_REGEX = re.compile(r'(\d+)')
 
 
 class _BaseCrosswordProblem(problem.Problem):
-  def __init__(self, name, lines, **kwargs):
+  def __init__(self, name: str, lines: problem.ProblemData, **kwargs) -> None:
     if len(lines) > 1:
       raise NotImplementedError('Only one crossword clue per problem')
-    lines[0] = _clean(lines[0])
+    lines = [_clean(line) for line in lines]
     super(_BaseCrosswordProblem, self).__init__(name, lines, **kwargs)
     self._min_length = 1
     self._max_length = float('inf')
@@ -43,14 +43,13 @@ class _BaseCrosswordProblem(problem.Problem):
             self._max_length = target
         break
 
-  def _solve(self):
+  def _solve(self) -> dict:
     raise NotImplementedError()
 
-
-def score(lines):
+def score(lines: problem.ProblemData) -> float:
   if len(lines) > 1:
     return 0
-  src = lines[0]
+  src = next(iter(lines))
   if _CROSSWORD_REGEX.match(src):
     return 1
   words = src.split()
@@ -66,7 +65,7 @@ def score(lines):
   return base_score * (min(5, num_words) / 5)
 
 
-def _clean(line):
+def _clean(line: str) -> str:
   # Remove leading/trailing whitespace.
   line = line.strip()
   # Remove leading "12. "
