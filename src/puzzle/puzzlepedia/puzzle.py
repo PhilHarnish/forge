@@ -6,13 +6,13 @@ from rx import subjects
 from data import meta, observable_meta
 from puzzle.heuristics import analyze
 from puzzle.problems import problem
-from puzzle.puzzlepedia import solution_stream
+from puzzle.puzzlepedia import meta_problem, solution_stream
 
 PuzzleSources = Union['Puzzle', str, problem.ProblemData]
 
 
 class Puzzle(subjects.Subject):
-  _meta_problems: List['_MetaProblem']
+  _meta_problems: List[meta_problem.MetaProblem]
   _child_streams: List[solution_stream.SolutionStream]
 
   def __init__(
@@ -34,16 +34,16 @@ class Puzzle(subjects.Subject):
     else:
       raise NotImplementedError(
           'Puzzle source type %s unsupported' % type(source))
-    for i, (meta_problem, consumed) in enumerate(
+    for i, (mp, consumed) in enumerate(
         analyze.identify_problems(data, hint=hint)):
-      p = _reify(meta_problem, '#%s' % i, consumed, **kwargs)
+      p = _reify(mp, '#%s' % (i + 1), consumed, **kwargs)
       self._meta_problems.append(p)
       self._child_streams.append(solution_stream.SolutionStream(str(i), p))
     self._observable = solution_stream.SolutionStream(
         name, observable_meta.ObservableMeta(), self._child_streams)
     self._observable.subscribe(self)
 
-  def problem(self, index: int) -> '_MetaProblem':
+  def problem(self, index: int) -> meta_problem.MetaProblem:
     return self._meta_problems[index]
 
   def problems(self) -> List['problem.Problem']:
@@ -57,38 +57,12 @@ class Puzzle(subjects.Subject):
 
 
 def _reify(
-    meta_problem: meta.Meta[Type[problem.Problem]],
+    mp: meta.Meta[Type[problem.Problem]],
     name: str,
     lines: problem.ProblemData,
     **kwargs,
-) -> '_MetaProblem':
-  result = _MetaProblem()
-  for value, weight in meta_problem.items():
+) -> meta_problem.MetaProblem:
+  result = meta_problem.MetaProblem()
+  for value, weight in mp.items():
     result[value(name, lines, **kwargs)] = weight
   return result
-
-
-class _MetaProblem(observable_meta.ObservableMeta):
-  # Sentinel value for 'no solution found'.
-  _NO_SOLUTION = object()
-
-  def __init__(self) -> None:
-    super(_MetaProblem, self).__init__()
-    self._solution = self._NO_SOLUTION
-
-  @property
-  def active(self) -> problem.Problem:
-    return self.peek()
-
-  @property
-  def solution(self) -> str:
-    if self._solution is self._NO_SOLUTION:
-      self._solution = self.active.solutions().peek()
-    return self._solution
-
-  @solution.setter
-  def solution(self, value: str):
-    if self._solution == value:
-      return
-    self._solution = value
-    self._changed()
