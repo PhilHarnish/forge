@@ -17,3 +17,6 @@ class ImageProblem(problem.Problem):
 
   def __str__(self) -> str:
     return '<image data>'
+
+  def _solve(self) -> dict:
+    return {}

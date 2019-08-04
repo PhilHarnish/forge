@@ -24,7 +24,7 @@ from puzzle.constraints import solution_constraints
 from puzzle.steps import generate_solutions, step
 
 _THRESHOLD = 0.01
-ProblemData = Collection[Union[str, np.integer]]
+ProblemData = Union[np.ndarray, Collection[Union[str, np.integer]]]
 
 
 class Problem(object):
