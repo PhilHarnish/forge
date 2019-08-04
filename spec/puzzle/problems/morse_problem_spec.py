@@ -77,6 +77,13 @@ with description('MorseProblem'):
             ('-', '.', None, None, set())
           ]))
 
+    with it('avoids interpreting . or - as character delimiter'):
+      expect([tuple(pair) for _, pair in self.fn('--- ... ---')]).to(
+          equal([
+            ('.', '-', ' ', None, set()),
+            ('-', '.', ' ', None, set())
+          ]))
+
     with it('attempts to identify delimiters'):
       expect([tuple(pair) for _, pair in self.fn(SAMPLE)]).to(
           equal([
@@ -117,6 +124,10 @@ with description('MorseProblem'):
           ]))
 
   with description('solutions'):
+    with it('solves SOS'):
+      solutions = morse_problem.MorseProblem('ex', ['... --- ...']).solutions()
+      expect(solutions).to(have_keys('sos'))
+
     with it('solves SAMPLE'):
       solutions = morse_problem.MorseProblem('ex', [SAMPLE]).solutions()
       expect(solutions).to(have_keys('this is morse code', 'thisismorsecode'))

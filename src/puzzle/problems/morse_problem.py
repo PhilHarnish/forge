@@ -116,7 +116,7 @@ class MorseProblem(problem.Problem):
       if buffer in morse.LOOKUP:
         result.append(morse.LOOKUP[buffer])
       else:
-        return
+        return  # TODO: Attempt inserting delimiters.
     solution = (''.join(result), 1.0)
     yield (
       solution, _interpretation_notes(interpretation),
@@ -195,6 +195,9 @@ def _generate_interpretations(
           continue
         character_delimiter = c
         break
+      # Ensure character_delimiter is never consecutive.
+      if character_delimiter * 2 in given:
+        continue  # Repeated delimiter appears in input.
       word_delimiter = None
       ignored = set()
       results.append(_scored_interpretation(
