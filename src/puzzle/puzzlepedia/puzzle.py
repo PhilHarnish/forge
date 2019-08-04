@@ -1,4 +1,4 @@
-from typing import List, Type, Union
+from typing import Iterable, List, Type, Union
 
 import numpy as np
 from rx import subjects
@@ -42,6 +42,9 @@ class Puzzle(subjects.Subject):
     self._observable = solution_stream.SolutionStream(
         name, observable_meta.ObservableMeta(), self._child_streams)
     self._observable.subscribe(self)
+
+  def meta_problems(self) -> Iterable[meta_problem.MetaProblem]:
+    yield from self._meta_problems
 
   def problem(self, index: int) -> meta_problem.MetaProblem:
     return self._meta_problems[index]
