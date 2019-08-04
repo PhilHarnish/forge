@@ -5,6 +5,7 @@ from spec.mamba import *
 display_patch = mock.patch('puzzle.puzzlepedia.puzzlepedia.display')
 prod_config_patch = mock.patch('puzzle.puzzlepedia.puzzlepedia.prod_config')
 
+
 with description('puzzlepedia'):
   with before.each:
     self.puzzle = puzzle.Puzzle('test', '')
