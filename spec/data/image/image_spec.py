@@ -17,6 +17,30 @@ with description('image'):
     i2 = i.invert().fork().fork()
     expect(i2.has_mutation('invert')).to(be_true)
 
+  with description('computation'):
+    with before.each:
+      self.img = image.Image(np.zeros((3, 3), dtype=np.uint8))
+      self.bincount_patch = mock.patch(
+          'data.image.image.np.bincount', return_value='patched')
+      self.mock_bincount = self.bincount_patch.start()
+
+    with after.each:
+      self.bincount_patch.stop()
+
+    with it('caches computations'):
+      expect(self.mock_bincount).not_to(have_been_called)
+      expect(self.img.bincount).to(equal('patched'))
+      expect(self.mock_bincount).to(have_been_called_once)
+      expect(self.img.bincount).to(equal('patched'))
+      expect(self.mock_bincount).to(have_been_called_once)
+
+    with it('invalidates computations'):
+      expect(self.img.bincount).to(equal('patched'))
+      expect(self.mock_bincount).to(have_been_called_once)
+      self.img.invert()
+      expect(self.img.bincount).to(equal('patched'))
+      expect(self.mock_bincount).to(have_been_called_times(2))
+
   with description('crop'):
     with it('requires normalize first'):
       i = image.Image(np.ones((3, 3), dtype=np.uint8))

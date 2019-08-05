@@ -1,4 +1,5 @@
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, \
+  TypeVar, Union
 
 import cv2
 import numpy as np
@@ -10,6 +11,7 @@ MutationDecorator = Callable[[Callable], Callable]
 MutationFn = Callable[..., 'Image']
 Mutation = Tuple[str, Tuple, Dict[str, Any]]
 MutationSpec = Union[str, Mutation]
+T = TypeVar('T')
 _EMPTY_ARGS = ()
 _EMPTY_KWARGS = {}
 
@@ -31,6 +33,21 @@ def mutation(
       return result
     return method_wrapper
   return decorator
+
+
+def computation(fn: Callable[[Any], T]) -> property:
+  attr_name = '__cached__' + fn.__name__
+
+  @property
+  def wrapped(self: Any) -> T:
+    revision, result = getattr(self, attr_name, (None, None))
+    next_revision = len(self._mutations)
+    if revision != next_revision:
+      result = fn(self)
+      setattr(self, attr_name, (next_revision, result))
+    return result
+
+  return wrapped
 
 
 class Image(object):
@@ -57,6 +74,10 @@ class Image(object):
             not self._parent.has_mutation(spec)):
         return False
     return True  # All mutations matched.
+
+  @computation
+  def bincount(self) -> np.ndarray:
+    return np.bincount(self._src.ravel())
 
   @mutation(deps=['normalize',])
   def crop(self, border_color: np.ndarray) -> 'Image':
