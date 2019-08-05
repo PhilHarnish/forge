@@ -1,6 +1,6 @@
 import numpy as np
 
-from puzzle.problems import image_problem
+from puzzle.problems.image import image_problem
 from spec.mamba import *
 
 with description('ImageProblem'):
