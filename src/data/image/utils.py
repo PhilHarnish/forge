@@ -36,26 +36,31 @@ def kernel_circle(size: int) -> np.ndarray:
 def kernel_cross(size: int) -> np.ndarray:
   array = np.zeros((size, size), np.uint8)
   for x in range(size):
-    middle = (size - 1) >> 1
+    middle = (size - 1) >> 1  # int(size / 2).
     array[middle][x] = 1
     array[x][middle] = 1
   return array
 
 
+def morph_open(src: np.ndarray) -> np.ndarray:
+  return cv2.morphologyEx(src, cv2.MORPH_OPEN, _OPEN_KERNEL)
+
+
 def preserve_stroke(
     src: np.ndarray, threshold: int, thickness: float) -> np.ndarray:
   """Maintains strokes >= `threshold` brightness and `thickness` width."""
-  min_pixels = int(threshold * _OPEN_KERNEL_SIZE * thickness)
+  min_pixels = int(threshold * _STROKE_KERNEL_SIZE * thickness)
   filtered = cv2.filter2D(
       src,
       cv2.CV_8UC1,
-      _OPEN_KERNEL,
+      _STROKE_KERNEL,
       delta=-min_pixels,
       borderType=cv2.BORDER_ISOLATED)
   return np.where(filtered > _THRESHOLD, src, 0)
 
 
 _ANTIALIAS_KERNEL = kernel_circle(3)
-_OPEN_KERNEL_SIZE = 5
-_OPEN_KERNEL = kernel_circle(_OPEN_KERNEL_SIZE)
+_OPEN_KERNEL = kernel_circle(3)
+_STROKE_KERNEL_SIZE = 5
+_STROKE_KERNEL = kernel_circle(_STROKE_KERNEL_SIZE)
 _THRESHOLD = 5
