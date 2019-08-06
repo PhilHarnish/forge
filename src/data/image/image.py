@@ -79,12 +79,12 @@ class Image(object):
   def bincount(self) -> np.ndarray:
     return np.bincount(self._src.ravel())
 
-  @mutation(deps=['normalize',])
+  @mutation(deps={'normalize'})
   def crop(self, border_color: np.ndarray) -> 'Image':
     utils.crop(self._src, border_color)
     return self
 
-  @mutation(deps=['normalize',])
+  @mutation(deps={'grayscale', 'invert', 'normalize'})
   def enhance(self) -> 'Image':
     coloring.enhance(self._src, out=self._src)
     return self
@@ -94,7 +94,9 @@ class Image(object):
 
   @mutation(deps=['normalize',])
   def grayscale(self) -> 'Image':
-    cv2.cvtColor(self._src, cv2.COLOR_BGR2GRAY, dst=self._src)
+    # NB: `dst=self._src` appears to be insufficient for in-place edit.
+    self._src = cv2.cvtColor(
+        self._src, cv2.COLOR_BGR2GRAY, dst=self._src, dstCn=1)
     return self
 
   @mutation()
