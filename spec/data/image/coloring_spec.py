@@ -21,6 +21,28 @@ with description('coloring'):
     with it('returns unique colors'):
       expect(self.tolist(coloring.colors(200))).to(be_unique)
 
+  with description('color_band'):
+    with it('returns nothing if not matched'):
+      src = np.zeros((3, 3), dtype=np.uint8)
+      expect(coloring.color_band(src, 1).tolist()).to(equal([
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+      ]))
+
+    with it('returns matches'):
+      src = np.zeros((3, 3), dtype=np.uint8)
+      expect(coloring.color_band(src, 0).tolist()).to(equal([
+        [255, 255, 255],
+        [255, 255, 255],
+        [255, 255, 255],
+      ]))
+
+    with it('matches range'):
+      src = np.arange(0, 10, dtype=np.uint8)
+      expect(coloring.color_band(src, 2, 5).tolist()).to(equal(
+          [0, 0, 255, 255, 255, 255, 0, 0, 0, 0]))
+
   with description('enhance'):
     with it('does not modify zeros'):
       given = np.zeros((3, 3), dtype=np.uint8)

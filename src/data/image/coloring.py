@@ -1,12 +1,15 @@
 import colorsys
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 import cv2
 import numpy as np
 
 from util import perf
 
+MIN = 0
 MAX = 255
+MIN_BROADCAST = np.array([MIN], dtype=np.uint8)
+MAX_BROADCAST = np.array([MAX], dtype=np.uint8)
 _MAX_ENHANCE_DISTANCE = 64
 _MAX_COLORS_PER_HLS_SLICE = 7
 _THRESHOLD = 5
@@ -42,6 +45,14 @@ def colors(n: int, with_black_and_white=False) -> Iterable[np.ndarray]:
           [int(r * 255), int(g * 255), int(b * 255)], dtype=np.uint8)
     n -= _MAX_COLORS_PER_HLS_SLICE
     lightness_scale *= -1
+
+
+def color_band(
+    src: np.ndarray, low: int, high: Optional[int] = None) -> np.ndarray:
+  if high is None or low == high:
+    return np.where(src == low, MAX_BROADCAST, MIN_BROADCAST)
+  return np.where(
+      ((low <= src) & (src <= high)), MAX_BROADCAST, MIN_BROADCAST)
 
 
 def enhance(src: np.ndarray, out: np.ndarray = None) -> np.ndarray:
