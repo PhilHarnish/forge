@@ -61,6 +61,19 @@ with description('coloring'):
       ], dtype=np.uint8)
       expect(coloring.enhance(given).max()).to(equal(coloring.MAX))
 
+  with description('normalize'):
+    with it('handles monochrome'):
+      expect(coloring.normalize(np.zeros((4, 5), dtype=np.uint8)).shape).to(
+          equal((4, 5, 3)))
+
+    with it('handles RGB'):
+      expect(coloring.normalize(np.zeros((4, 5, 3), dtype=np.uint8)).shape).to(
+          equal((4, 5, 3)))
+
+    with it('handles RGBA'):
+      expect(coloring.normalize(np.zeros((4, 5, 4), dtype=np.uint8)).shape).to(
+          equal((4, 5, 3)))
+
   with description('top_n_color_clusters'):
     with it('generates empty output for empty input'):
       expect(coloring.top_n_color_clusters(np.array([]), 10)).to(be_empty)

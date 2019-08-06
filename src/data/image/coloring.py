@@ -77,6 +77,26 @@ def enhance(src: np.ndarray, out: np.ndarray = None) -> np.ndarray:
   return cv2.addWeighted(src, factor, 0, 0, -int(lowest), dst=out)
 
 
+def normalize(src: np.ndarray) -> np.ndarray:
+  if len(src.shape) == 2:  # Monochrome.
+    height, width = src.shape
+    result = np.zeros((height, width, 3), dtype=np.uint8)
+    result[:, :, 0] = src
+    result[:, :, 1] = src
+    result[:, :, 2] = src
+    return result
+  elif len(src.shape) != 3:
+    raise ValueError('Unsupported shape %s' % src.shape)
+  n_channels = src.shape[-1]
+  if n_channels == 3:  # RGB.
+    return src
+  elif n_channels != 4:  # RGBA.
+    raise ValueError('Unsupported number of channels %s' % n_channels)
+  # Make any pixel with 0 alpha chanel white.
+  src[src[:,:,3] == 0] = 255
+  return cv2.cvtColor(src, cv2.COLOR_BGRA2BGR)
+
+
 def top_n_color_clusters(
     counts: np.ndarray, n: int, threshold: int = _THRESHOLD
 ) -> Iterable[List[int]]:
