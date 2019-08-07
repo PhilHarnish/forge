@@ -1,8 +1,9 @@
 import numpy as np
 
 from puzzle.heuristics import analyze
-from puzzle.problems import anagram_problem, image_problem, problem
+from puzzle.problems import anagram_problem, problem
 from puzzle.problems.crossword import crossword_problem, cryptic_problem
+from puzzle.problems.image import image_problem
 from spec.mamba import *
 
 
