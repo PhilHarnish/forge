@@ -78,22 +78,17 @@ with description('coloring'):
     with it('generates empty output for empty input'):
       expect(coloring.top_n_color_clusters(np.array([]), 10)).to(be_empty)
 
-    with it('ignores values near threshold'):
-      expect(list(coloring.top_n_color_clusters(np.array([
-        1000, 0, 1000,
-      ]), 2, threshold=1))).to(be_empty)
-
-    with it('yields values away from threshold'):
+    with it('yields significant values'):
       expect(list(coloring.top_n_color_clusters(np.array([
         1000, 0, 500, 0, 1000,
-      ]), 3, threshold=1))).to(equal([[2]]))
+      ]), 3, threshold=1))).to(equal([[0], [2], [4]]))
 
     with it('large values near each other are clustered'):
       expect(list(coloring.top_n_color_clusters(np.array([
         1000, 0, 700, 500, 600, 0, 1000,
-      ]), 6, threshold=1))).to(equal([[2, 3, 4]]))
+      ]), 6, threshold=1))).to(equal([[0], [2, 3, 4], [6]]))
 
     with it('clusters are split if there are gaps'):
       expect(list(coloring.top_n_color_clusters(np.array([
         1000, 0, 700, 0, 600, 0, 1000,
-      ]), 6, threshold=1))).to(equal([[2], [4]]))
+      ]), 6, threshold=1))).to(equal([[0], [2], [4], [6]]))

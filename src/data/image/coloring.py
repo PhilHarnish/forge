@@ -1,10 +1,11 @@
 import colorsys
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Optional, Tuple
 
 import cv2
 import numpy as np
 
-from util import perf
+ColorBand = Tuple[int, int]
+
 
 MIN = 0
 MAX = 255
@@ -15,9 +16,6 @@ _MAX_COLORS_PER_HLS_SLICE = 7
 _THRESHOLD = 5
 _BLACK = np.array([0, 0, 0], dtype=np.uint8)
 _WHITE = np.array([MAX, MAX, MAX], dtype=np.uint8)
-
-
-p = perf.Perf('enhance', ['cv2', 'oldschool'])
 
 
 def colors(n: int, with_black_and_white=False) -> Iterable[np.ndarray]:
@@ -63,8 +61,8 @@ def enhance(src: np.ndarray, out: np.ndarray = None) -> np.ndarray:
     return src
   lowest, highest = np.percentile(nonzero, (1, 90), interpolation='lower')
   # NB: np.percentile() returns ndarray which confuses addWeighted.
-  lowest = min(int(lowest), _MAX_ENHANCE_DISTANCE)
-  highest = max(int(highest), MAX - _MAX_ENHANCE_DISTANCE)
+  lowest = int(lowest)
+  highest = int(highest)
   current_range = highest - lowest
   if not current_range:
     return np.add(src, MAX - lowest, out=out, dtype=np.uint8)
@@ -108,12 +106,7 @@ def top_n_color_clusters(
   partitioned = np.argpartition(counts, top_n)
   batch = []
   last = None
-  positions = []
-  for i in top_n:
-    if (counts[partitioned[i]] and
-        threshold < partitioned[i] < (max_value - threshold)):
-      positions.append(partitioned[i])
-  # TODO: positions = [partitioned[i] for i in top_n]
+  positions = [partitioned[i] for i in top_n if counts[partitioned[i]]]
   for position in sorted(positions):
     if last is not None and abs(last - position) > threshold:
       yield batch
