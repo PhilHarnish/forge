@@ -53,8 +53,12 @@ class CustomFormatter(formatters.ProgressFormatter):
   def _format_traceback(self, ex: example.Example) -> str:
     tb = self._traceback(ex)
     messages = []
+    strip = False  # Do not strip when libraries are at top of error.
     for message in reversed(formatters.traceback.format_tb(tb)):
-      if '/expects/' not in message and '/spec/mamba.py' not in message:
+      if strip and '/expects/' in message or '/spec/mamba.py' in message:
+        continue  # Skip intermediate libraries in middle of stack.
+      else:
+        strip = True
         messages.append(message[2:])
     return ''.join(messages)
 
