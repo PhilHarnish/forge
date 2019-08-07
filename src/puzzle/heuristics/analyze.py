@@ -5,9 +5,10 @@ import numpy as np
 
 from data import meta
 from puzzle.problems import acrostic_problem, anagram_problem, \
-  cryptogram_problem, image_problem, logic_problem, morse_problem, \
+  cryptogram_problem, logic_problem, morse_problem, \
   number_problem, problem, solved_problem
 from puzzle.problems.crossword import crossword_problem, cryptic_problem
+from puzzle.problems.image import image_problem
 
 Hint = Optional[Union[str, type]]
 
