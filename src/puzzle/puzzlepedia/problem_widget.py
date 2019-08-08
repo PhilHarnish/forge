@@ -1,8 +1,8 @@
 from ipywidgets import widgets
 
 from puzzle.problems import problem
-from puzzle.puzzlepedia import _bind, annotation_widget, meta_problem, \
-  table_widget
+from puzzle.puzzlepedia import _bind, annotation_widget, debug_data_widget, \
+  meta_problem, table_widget
 from puzzle.puzzlepedia._bind import widget_observable
 from puzzle.puzzlepedia._common import format_label, format_solution_html
 
@@ -80,16 +80,22 @@ def _update_interactive_information_for_problem(
   accordion_children = []
   steps = list(p.steps())
   for step in steps:
-    child_constraint_groups = []
+    step_tabs_children = []
     for group in step.constraints():
       child_constraints = []
       for key, value, annotation in group:
         child_constraints.append(
             annotation_widget.AnnotationWidget(annotation, group, key, value))
-      child_constraint_groups.append(widgets.VBox(child_constraints))
-    step_tabs = widgets.Tab(child_constraint_groups)
+      step_tabs_children.append(widgets.VBox(child_constraints))
+    step_tabs = widgets.Tab(step_tabs_children)
     for i, group in enumerate(step.constraints()):
       step_tabs.set_title(i, format_label(group.__class__.__name__))
+    try:
+      # TODO: Diff.
+      debug_widget = debug_data_widget.DebugDataWidget(step)
+      step_tabs = widgets.VBox([step_tabs, debug_widget])
+    except NotImplementedError:
+      pass  # No debug data for this step.
     accordion_children.append(step_tabs)
   accordion = widgets.Accordion(children=accordion_children)
   for i, step in enumerate(steps):
