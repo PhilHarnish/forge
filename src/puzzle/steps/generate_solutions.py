@@ -52,6 +52,9 @@ class GenerateSolutions(step.Step):
       pass
     return self._filtered_solutions
 
+  def get_debug_data(self) -> Any:
+    return self._all_solutions
+
   def __iter__(self) -> Solutions:
     yield from self._filtered_solutions_iterator
 
