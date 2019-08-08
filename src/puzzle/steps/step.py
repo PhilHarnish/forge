@@ -2,7 +2,7 @@
 A step may have dependencies and constraints.
 """
 
-from typing import Iterable, Optional
+from typing import Any, Iterable, Optional
 
 from rx import subjects
 
@@ -40,6 +40,9 @@ class Step(object):
 
   def subscribe(self, observer: types.Observer):
     self._subject.subscribe(observer)
+
+  def get_debug_data(self) -> Any:
+    raise NotImplementedError('Debug data unavailable for %s' % self)
 
   def __len__(self) -> int:
     return sum(1 for _ in self.resolution_order())

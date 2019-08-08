@@ -30,3 +30,7 @@ with description('step'):
         right,
         root,
       ]))
+
+  with description('debug data'):
+    with it('does not return data by default'):
+      expect(calling(step.Step().get_debug_data)).to(raise_error)
