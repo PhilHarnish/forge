@@ -6,10 +6,10 @@ with description('_common_spec.format_label'):
     expect(_common.format_label('this is fine')).to(equal('this is fine'))
 
   with it('converts CamelCase'):
-    expect(_common.format_label('CamelCase')).to(equal('camel case'))
+    expect(_common.format_label('CamelCaseWord')).to(equal('camel case word'))
 
   with it('converts snake_case'):
-    expect(_common.format_label('snake_case')).to(equal('snake case'))
+    expect(_common.format_label('snake_case_word')).to(equal('snake case word'))
 
 with description('_common_spec.format_solution_html'):
   with it('wraps with pre tags'):

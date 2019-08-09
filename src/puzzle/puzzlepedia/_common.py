@@ -1,6 +1,6 @@
 import re
 
-_CAMEL_CASE_RE = re.compile(r'(.)([A-Z][a-z]+)')
+_CAMEL_CASE_RE = re.compile(r'([a-z])([A-Z])')
 
 
 def format_label(label: str) -> str:
