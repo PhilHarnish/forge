@@ -37,8 +37,10 @@ def grids(subdir: str = 'original') -> Iterable[Tuple[str, grid.Grid]]:
 def diff_property(prop: str) -> None:
   for name, grid in grids():
     os.makedirs(path.join(data.project_path('data/grid'), prop), exist_ok=True)
-    Image.fromarray(getattr(grid, prop)).save(
-        image_path(name, prop))
+    def getter(name, prop) -> None:
+      Image.fromarray(getattr(grid, prop)).save(
+          image_path(name, prop))
+    expect(calling(getter, name, prop)).not_to(raise_error)
     # TODO: Diff.
 
 
@@ -58,7 +60,3 @@ with description('grid', 'end2end') as self:
   with it('diffs grid'):
     with benchmark(2100):
       diff_property('grid')
-
-  with it('diffs threshold'):
-    with benchmark(2400):
-      diff_property('threshold')

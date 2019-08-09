@@ -5,63 +5,21 @@ import cv2
 import numpy as np
 
 from data import lazy
-from data.image import component, component_database, utils
+from data.image import coloring, component, component_database, utils
 
 _MAX = 255
 _WHITE = [_MAX, _MAX, _MAX]
 _THRESHOLD = 5
-_SIZES = []
-pos = 16
-for backwards in range(-1, -11, -1):
-  for _ in range(0, 8):
-    _SIZES.append(pos)
-    pos += 1
-  _SIZES.append(16 + backwards)
 
 
 class Grid(object):
   def __init__(self, cv_image: np.ndarray) -> None:
-    self._original = utils.crop(_normalize(cv_image), _WHITE)
-
-  @lazy.prop
-  def threshold(self) -> np.ndarray:
-    result = cv2.adaptiveThreshold(
-        self.grayscale, maxValue=255, adaptiveMethod=cv2.ADAPTIVE_THRESH_MEAN_C,
-        thresholdType=cv2.THRESH_BINARY_INV, blockSize=11, C=15)
-    return cv2.dilate(result, self._cross, iterations=1)
-
-  @lazy.prop
-  def _grayscale(self) -> np.ndarray:
-    return cv2.cvtColor(self._original, cv2.COLOR_BGR2GRAY)
-
-  @lazy.prop
-  def grayscale(self) -> np.ndarray:
-    scaled = self._grayscale
-    # Some images are dim.
-    # TODO: This normalization should happen even earlier.
-    counts = self._grayscale_bincount
-    interesting_threshold = int(counts.max() * .001)
-    darkest = 0
-    while counts[darkest] < interesting_threshold:
-      darkest += 1
-    brightest = len(counts) - 1
-    while counts[brightest] < interesting_threshold:
-      brightest -= 1
-    if darkest:
-      # If the first "darkest" color with nontrivial count is nonzero then shift
-      # down.
-      scaled -= darkest
-    current_range = brightest - darkest
-    if current_range < _MAX:
-      # If less than the entire spectrum is used (255), scale.
-      # E.g.: 3 / 4 -> 4 / 4 == 3 * x = 4 == x = 4 / 3.
-      factor = _MAX / current_range
-      scaled = np.multiply(scaled, factor, out=scaled, casting='unsafe')
-    return scaled
+    self._original = utils.crop(coloring.normalize(cv_image), _WHITE)
 
   @lazy.prop
   def grayscale_inv(self) -> np.ndarray:
-    return cv2.bitwise_not(self.grayscale)
+    inverted = cv2.bitwise_not(cv2.cvtColor(self._original, cv2.COLOR_BGR2GRAY))
+    return coloring.enhance(inverted, out=inverted)
 
   @lazy.prop
   def grid_with_components(self) -> np.ndarray:
@@ -72,44 +30,27 @@ class Grid(object):
         grayscale, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
 
   @lazy.prop
-  def grid_with_components_inv(self) -> np.ndarray:
-    grayscale = self.grayscale_inv
-    for mask, color in self._layer_masks():
-      grayscale = np.where(mask == 0, grayscale, color)
-    return cv2.threshold(
-        grayscale, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+  def grid_without_threshold(self) -> np.ndarray:
+    # TODO: Keep metadata on component positions.
+    grayscale = np.copy(self.grayscale_inv)
+    for mask, color in itertools.chain(
+        self._layer_masks(), self._component_masks(include_inverted=True)):
+      if color == 0:
+        weight = -1
+      else:
+        weight = 1
+      cv2.addWeighted(grayscale, 1, utils.antialias(mask), weight, 0, dst=grayscale)
+    return grayscale
 
   @lazy.prop
   def grid(self) -> np.ndarray:
-    # TODO: Keep metadata on component positions.
-    grayscale = self.grayscale_inv
-    for mask, color in itertools.chain(
-        self._layer_masks(), self._component_masks(include_inverted=True)):
-      grayscale = np.where(mask == 0, grayscale, color)
-    inv = cv2.bitwise_not(grayscale)
-    return cv2.adaptiveThreshold(
-        inv, maxValue=255, adaptiveMethod=cv2.ADAPTIVE_THRESH_MEAN_C,
-        thresholdType=cv2.THRESH_BINARY_INV, blockSize=11, C=15)
+    src = np.array(np.where(self.grid_without_threshold > _THRESHOLD, _MAX, 0), dtype=np.uint8)
+    return utils.preserve_stroke(src, _MAX, .9)
 
   @lazy.prop
   def components(self) -> Iterable[component.Component]:
     for c, _ in self._components_with_source(include_inverted=True):
       yield c
-
-  @lazy.prop
-  def _cross(self) -> np.ndarray:
-    src = self._original
-    size = int(max(src.shape) * .0025)
-    if size < 3:
-      size = 3
-    elif size % 2 == 0:
-      size += 1
-    cross = np.zeros((size, size), np.uint8)
-    for x in range(size):
-      middle = (size - 1) >> 1
-      cross[middle][x] = 1
-      cross[x][middle] = 1
-    return cross
 
   def _components_with_source(
       self,
@@ -119,7 +60,7 @@ class Grid(object):
         self.grid_with_components, inverted=False)
     if include_inverted:
       yield from _components_with_source_for_image(
-          cv2.bitwise_not(self.grid_with_components_inv), inverted=True)
+          cv2.bitwise_not(self.grid_with_components), inverted=True)
 
   def _component_masks(
       self, include_inverted: bool = False) -> Iterable[Tuple[np.ndarray, int]]:
@@ -133,54 +74,60 @@ class Grid(object):
           color = _MAX
         else:
           color = 0
-        yield cv2.dilate(src, self._cross, iterations=1), color
-
-  @lazy.prop
-  def _grayscale_bincount(self) -> np.ndarray:
-    return np.bincount(self._grayscale.ravel())
+        yield src, color
 
   @lazy.prop
   def _grayscale_inv_bincount(self) -> np.ndarray:
     return np.bincount(self.grayscale_inv.ravel())
 
-  def _layer_masks(self, n: int = 5) -> Iterable[Tuple[np.ndarray, int]]:
-    counts = self._grayscale_inv_bincount
-    top_n = list(range(-1, -n, -1))
-    partitioned = np.argpartition(counts, top_n)
-    grayscale = self.grayscale_inv
-    for i in top_n:
-      target = partitioned[i]
-      if target > (_MAX - _THRESHOLD) or target < _THRESHOLD:
-        continue
-      targeted = np.where(grayscale == target, grayscale, 0)
-      # Erode and then over-dilate to eliminate noise.
-      morphed = cv2.dilate(
-          cv2.erode(targeted, self._cross, iterations=1),
-          self._cross,
-          iterations=2)
-      if not morphed.any():
-        continue  # Nothing left after eroded.
-      reselected = np.where(targeted == morphed, targeted, 0)
-      yield reselected, 0
-
-
-def _normalize(src: np.ndarray) -> np.ndarray:
-  if len(src.shape) == 2:  # BW.
-    result = np.zeros((src.shape[0], src.shape[1], 3), dtype=src.dtype)
-    result[:, :, 0] = src
-    result[:, :, 1] = src
-    result[:, :, 2] = src
-    return result
-  elif len(src.shape) != 3:
-    raise ValueError('Unsupported shape %s' % src.shape)
-  n_channels = src.shape[-1]
-  if n_channels == 3:  # RGB.
-    return src
-  elif n_channels != 4:  # RGBA.
-    raise ValueError('Unsupported number of channels %s' % n_channels)
-  # Make any pixel with 0 alpha chanel white.
-  src[src[:,:,3] == 0] = 255
-  return cv2.cvtColor(src, cv2.COLOR_BGRA2BGR)
+  def _layer_masks(self, n: int = 6, show = lambda *x: None) -> Iterable[Tuple[np.ndarray, int]]:
+    src = self.grayscale_inv
+    show(src)
+    # DO NOT SUBMIT: "show" param.
+    batches = list(reversed(list(
+        coloring.top_n_color_clusters(self._grayscale_inv_bincount, n))))
+    print(batches)
+    kernel_size = 5
+    kernel = utils.kernel_circle(kernel_size)
+    # Normalized kernal used during blurring. Multiply 2x to intensify.
+    kernel_normalized = 2 * kernel / np.count_nonzero(kernel)
+    forbidden_zone = np.zeros_like(src)
+    blocked_next = forbidden_zone
+    for batch in batches:
+      low, high = batch[0] - _THRESHOLD, batch[-1] + _THRESHOLD
+      targeted = np.where(((low < src) & (src < high)), src, 0)
+      blocked_count = np.count_nonzero((targeted != 0) & (blocked_next != 0))
+      print('blocked count:', blocked_count, 100 * blocked_count / src.size)
+      if low > 0 and high < _MAX:
+        print('targeted batch %s [%s, %s] (%s)' % (batch, low, high, kernel_size))
+        show(targeted)
+        show('brighter', np.where(src > high, 255, 0))
+        # WARNING: 1.75 is very finely tuned. Any lower and grid lines are
+        # removed.
+        opened = utils.preserve_stroke(targeted, low, 1.75)
+        if not np.any(opened):
+          continue
+        #opened_percent = 100 * np.count_nonzero(targeted) / opened.size
+        #if opened_percent < 1: continue
+        #print('opened %.02f' % opened_percent)
+        show('opened', opened)
+        yield opened, 0
+        if show:
+          blurred = cv2.filter2D(
+              opened,
+              cv2.CV_8UC1,
+              kernel_normalized,
+              borderType=cv2.BORDER_ISOLATED)
+          print('blurred')
+          show(blurred)
+          subtracted = src - blurred
+          result = np.array(np.where(src < blurred, 0, subtracted), dtype=np.uint8)
+          show('result', result)
+          show('nonzero', np.array(np.where(result > 0, 255, 0), dtype=np.uint8))
+      # Mark more territory as forbidden.
+      np.maximum(forbidden_zone, targeted, out=forbidden_zone)
+      blocked_next = cv2.dilate(forbidden_zone, kernel, iterations=2)
+      show('blocked_next', blocked_next)
 
 
 def _components_with_source_for_image(
