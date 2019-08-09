@@ -142,7 +142,14 @@ with description('constraints.Constraints'):
       ex.str_with_default = 'foobar'
       expect(subscriber.on_next).to(have_been_called_once)
       expect(subscriber.on_next).to(have_been_called_with(
-          ('str_with_default', 'default', 'foobar')))
+          (ex, 'str_with_default', 'default', 'foobar')))
+
+    with it('no-op changes are not broadcast'):
+      ex = TestConstraints()
+      subscriber = mock.Mock()
+      ex.subscribe(subscriber)
+      ex.str_with_default = 'default'
+      expect(subscriber.on_next).not_to(have_been_called)
 
     with it('missed changes are not queued'):
       ex = TestConstraints()

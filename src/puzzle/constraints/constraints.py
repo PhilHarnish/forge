@@ -18,6 +18,7 @@ Constraint = Union[validator.Validator, type]
 
 
 class ConstraintChangeEvent(NamedTuple):
+  constraints: 'Constraints'
   key: str
   previous: Any
   current: Any
@@ -54,8 +55,9 @@ class Constraints(object):
           self.__class__.__name__, key, annotation, value,
       ))
     previous = object.__getattribute__(self, key)
-    object.__setattr__(self, key, value)
-    self._subject.on_next(ConstraintChangeEvent(key, previous, value))
+    if previous != value:
+      object.__setattr__(self, key, value)
+      self._subject.on_next(ConstraintChangeEvent(self, key, previous, value))
 
   def __str__(self) -> str:
     return '\n'.join('%s = %s' % (key, repr(value)) for key, value, _ in self)
