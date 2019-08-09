@@ -81,7 +81,8 @@ class Image(object):
 
   @mutation(deps={'normalize'})
   def crop(self, border_color: np.ndarray) -> 'Image':
-    utils.crop(self._src, border_color)
+    # crop() creates a view and so edits are not "in-place".
+    self._src = utils.crop(self._src, border_color)
     return self
 
   @mutation(deps={'grayscale', 'invert', 'normalize'})
