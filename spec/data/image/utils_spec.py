@@ -19,12 +19,14 @@ with description('utils'):
       given = np.array([
         [0, 0, 0],
         [0, 1, 0],
+        [0, 1, 0],
         [0, 0, 0],
       ])
       expected = np.array([
         [1],
+        [1],
       ])
-      expect(utils.crop(given, 0)).to(equal(expected))
+      expect(utils.crop(given, 0).tolist()).to(equal(expected.tolist()))
 
     with it('removes rgb pixels'):
       b = [0, 0, 0]
