@@ -8,6 +8,7 @@ class TestConstraints(constraints.Constraints):
   optional_with_collection: Optional[List[int]] = [1, 2]
   optional_tuple: Optional[Tuple[int, str, float]] = (1, 'two', 3.0)
 
+
 class InheritedConstraints(TestConstraints):
   int_with_default: int = 42
 
@@ -16,6 +17,10 @@ class ValidatedConstraints(constraints.Constraints):
   int_in_range: validator.NumberInRange(0, 100) = 42
   optional_int_in_range: Optional[validator.NumberInRange(0, 1)] = None
   float_in_range: validator.NumberInRange(0, 1) = 0.5
+  not_modifiable: bool = True
+
+  def is_modifiable(self, key: str) -> bool:
+    return key != 'not_modifiable'
 
 
 class T(object):
@@ -157,6 +162,20 @@ with description('constraints.Constraints'):
       ex.str_with_default = 'foobar'
       ex.subscribe(subscriber)
       expect(subscriber.on_next).not_to(have_been_called)
+
+  with description('is_modifiable'):
+    with it('returns True by default'):
+      ex = TestConstraints()
+      expect(ex.is_modifiable('str_with_default')).to(be_true)
+
+    with it('returns True by default'):
+      ex = ValidatedConstraints()
+      expect(ex.is_modifiable('not_modifiable')).to(be_false)
+
+    with it('assignment enforces is_modifiable'):
+      ex = ValidatedConstraints()
+      expect(calling(setattr, ex, 'not_modifiable', False)).to(
+          raise_error(AttributeError, 'not_modifiable is not modifiable'))
 
   with description('__iter__'):
     with it('yields information needed to reflectively constrain'):

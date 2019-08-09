@@ -37,6 +37,10 @@ class Constraints(object):
   def subscribe(self, observer: types.Observer):
     self._subject.subscribe(observer)
 
+  def is_modifiable(self, key: str) -> bool:
+    del key
+    return True
+
   def __iter__(self) -> Iterable[Tuple[str, Any, type]]:
     for key in sorted(dir(self)):
       annotation = _resolve_annotation(type(self), key)
@@ -54,6 +58,8 @@ class Constraints(object):
       raise ValueError('%s.%s must be %s (%s given)' % (
           self.__class__.__name__, key, annotation, value,
       ))
+    if not self.is_modifiable(key):
+      raise AttributeError('%s is not modifiable' % key)
     previous = object.__getattribute__(self, key)
     if previous != value:
       object.__setattr__(self, key, value)
