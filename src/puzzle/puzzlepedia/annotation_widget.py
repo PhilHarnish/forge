@@ -20,34 +20,45 @@ def AnnotationWidget(
   if annotation in {int, float}:
     widget = widgets.FloatText(
         value=value,
-        disabled=value is None,
         placeholder='None',
         readout_format=_FLOAT_FORMAT,
     )
     coerce = annotation
+  elif annotation == bool:
+    widget = widgets.Checkbox(
+        value=value,
+    )
+    coerce = annotation
   elif isinstance(annotation, validator.NumberInRange):
     if annotation.max_value < float('inf'):
-      widget = widgets.FloatSlider(
+      coerce = type(annotation.max_value)
+    else:
+      coerce = type(annotation.min_value)
+    if coerce is float:
+      slider_widget = widgets.FloatSlider
+      text_widget = widgets.BoundedFloatText
+      readout_format = _FLOAT_FORMAT
+      step = 0.01
+    else:
+      slider_widget = widgets.IntSlider
+      text_widget = widgets.BoundedIntText
+      readout_format = 'd'
+      step = 1
+    if annotation.max_value < float('inf'):
+      widget = slider_widget(
           value=value,
           min=annotation.min_value,
           max=annotation.max_value,
-          disabled=value is None,
           continuous_update=False,
-          placeholder='None',
-          readout=True,
-          readout_format=_FLOAT_FORMAT,
-          step=0.01,
+          readout_format=readout_format,
+          step=step,
       )
-      coerce = type(annotation.max_value)
     else:
-      widget = widgets.BoundedFloatText(
+      widget = text_widget(
           value=value,
           min=annotation.min_value,
-          disabled=value is None,
-          placeholder='None',
-          readout_format=_FLOAT_FORMAT,
+          readout_format=readout_format,
       )
-      coerce = type(annotation.min_value)
   elif isinstance(annotation, type(Iterable)):
     if hasattr(annotation, '__args__') and len(annotation.__args__) == 1:
       coerce = annotation.__args__[0]
@@ -63,7 +74,6 @@ def AnnotationWidget(
     widget = widgets.Text(
         value=label,
         placeholder=placeholder,
-        disabled=value is None,
     )
   else:
     raise NotImplementedError(
@@ -81,8 +91,18 @@ def AnnotationWidget(
     toggle_button = widgets.ToggleButton(
         value=value is not None,
         description=description,
-        button_style='',
     )
     row.append(toggle_button)
     _bind.clear_to_widget(group, key, coerce, widget, toggle_button)
+  _set_disabled(widget, group, key, value)
+  group.subscribe(
+      _bind.callback_without_event(_set_disabled, widget, group, key, value))
   return widgets.HBox(row)
+
+
+def _set_disabled(
+    widget: widgets.Widget,
+    group: constraints.Constraints,
+    key: str,
+    value: Any) -> None:
+  widget.disabled = not group.is_modifiable(key) or value is None

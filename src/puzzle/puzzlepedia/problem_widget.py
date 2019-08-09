@@ -1,10 +1,10 @@
 from ipywidgets import widgets
 
 from puzzle.problems import problem
-from puzzle.puzzlepedia import _bind, annotation_widget, debug_data_widget, \
-  meta_problem, table_widget
+from puzzle.puzzlepedia import _bind, _common, annotation_widget, \
+  debug_data_widget, meta_problem, table_widget
 from puzzle.puzzlepedia._bind import widget_observable
-from puzzle.puzzlepedia._common import format_label, format_solution_html
+from puzzle.steps import step
 
 _MAX_RESULTS = 30
 
@@ -69,7 +69,7 @@ def _update_solutions_for_problem(
       break
     data.append([
       round(score, 3),
-      format_solution_html(solution),
+      _common.preformat_html(solution),
       '<br />'.join(p.notes_for(solution))
     ])
   table.update_data(data, headers=headers)
@@ -79,25 +79,37 @@ def _update_interactive_information_for_problem(
     interactive_information: widgets.VBox, p: problem.Problem):
   accordion_children = []
   steps = list(p.steps())
-  for step in steps:
+  for s in steps:
     step_tabs_children = []
-    for group in step.constraints():
+    for group in s.constraints():
       child_constraints = []
       for key, value, annotation in group:
         child_constraints.append(
             annotation_widget.AnnotationWidget(annotation, group, key, value))
       step_tabs_children.append(widgets.VBox(child_constraints))
     step_tabs = widgets.Tab(step_tabs_children)
-    for i, group in enumerate(step.constraints()):
-      step_tabs.set_title(i, format_label(group.__class__.__name__))
-    try:
-      # TODO: Diff.
-      debug_widget = debug_data_widget.DebugDataWidget(step)
-      step_tabs = widgets.VBox([step_tabs, debug_widget])
-    except NotImplementedError:
-      pass  # No debug data for this step.
+    for i, group in enumerate(s.constraints()):
+      step_tabs.set_title(i, _common.format_label(group.__class__.__name__))
+    debug_data_container = widgets.VBox([])
+    debug_data_accordion = widgets.Accordion([debug_data_container])
+    debug_data_accordion.set_title(0, 'debug data')
+    debug_data_accordion.selected_index = -1
+    _update_debug_data_for_problem(debug_data_container, s)
+    p.subscribe(_bind.callback_without_event(
+        _update_debug_data_for_problem, debug_data_container, s))
+    s.subscribe(_bind.callback_without_event(
+        _update_debug_data_for_problem, debug_data_container, s))
+    step_tabs = widgets.VBox([step_tabs, debug_data_accordion])
     accordion_children.append(step_tabs)
   accordion = widgets.Accordion(children=accordion_children)
-  for i, step in enumerate(steps):
-    accordion.set_title(i, format_label(str(step)))
+  for i, s in enumerate(steps):
+    accordion.set_title(i, _common.format_label(str(s)))
   interactive_information.children = (accordion,)
+
+
+def _update_debug_data_for_problem(
+    debug_data_container: widgets.Accordion, s: step.Step
+):
+  # TODO: Diff.
+  debug_widget = debug_data_widget.DebugDataWidget(s)
+  debug_data_container.children = (debug_widget,)
