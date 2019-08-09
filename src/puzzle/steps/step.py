@@ -2,7 +2,7 @@
 A step may have dependencies and constraints.
 """
 
-from typing import Any, Iterable, Optional
+from typing import Any, Iterable, List, Optional
 
 from rx import subjects
 
@@ -10,7 +10,8 @@ from data import types
 from puzzle.constraints import constraints as constraints_module
 
 Constraints = Iterable[constraints_module.Constraints]
-Dependencies = Iterable['Step']
+Dependencies = List['Step']
+
 
 class Step(object):
   _constraints: Constraints
@@ -29,6 +30,9 @@ class Step(object):
     else:
       self._constraints = []
     self._subject = subjects.Subject()
+
+  def depends_on(self, step: 'Step') -> None:
+    self._dependencies.append(step)
 
   def constraints(self) -> Constraints:
     return self._constraints
