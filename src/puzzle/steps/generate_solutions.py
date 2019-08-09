@@ -15,6 +15,9 @@ class SolutionsChangeEvent(NamedTuple):
 
 class GenerateSolutions(step.Step):
   _solution_constraints: solution_constraints.SolutionConstraints
+  _source: Callable[[], Solutions]
+  _all_solutions: meta.Meta
+  _filtered_solutions: meta.Meta
 
   def __init__(
       self,
