@@ -124,6 +124,9 @@ class Image(object):
         result.append('')
     return 'Image()' + '\n  .fork()'.join(result)
 
+  def get_debug_data(self) -> np.ndarray:
+    return self._src  # NB: Does not return a copy.
+
 
 def _expand_mutation_spec(target: MutationSpec) -> Mutation:
   if isinstance(target, tuple):

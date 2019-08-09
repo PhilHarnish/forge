@@ -82,3 +82,7 @@ with description('image'):
           .fork()
           .fork()
       """))
+
+  with it('get_debug_data'):
+    data = np.ones((3, 3), dtype=np.uint8)
+    expect(image.Image(data).get_debug_data()).to(be(data))
