@@ -27,7 +27,7 @@ with description('_base_image_step') as self:
   with description('get_result'):
     with before.each:
       self.constraints = TestConstraints()
-      self.step = TestImageStep(self.source, [self.constraints])
+      self.step = TestImageStep(self.source, constraints=[self.constraints])
 
     with it('returns an image'):
       expect(self.step.get_result()).to(be_a(image.Image))

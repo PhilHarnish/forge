@@ -16,8 +16,11 @@ class BaseImageStep(step.Step):
 
   def __init__(self,
       source: image.Image,
+      dependencies: Optional[step.Dependencies] = None,
       constraints: Optional[step.Constraints] = None) -> None:
-    super(BaseImageStep, self).__init__(constraints=constraints)
+    super(BaseImageStep, self).__init__(
+        dependencies=dependencies,
+        constraints=constraints)
     if constraints:
       for constraint in constraints:
         constraint.subscribe(self._on_constraints_changed)
