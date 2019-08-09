@@ -1,19 +1,27 @@
-import html
+import io
 from typing import Any
 
+import numpy as np
+from PIL import Image
 from ipywidgets import widgets
 
+from puzzle.puzzlepedia import _common
 from puzzle.steps import step
 
 
 def DebugDataWidget(s: step.Step) -> widgets.Widget:
-  data = s.get_debug_data()
-  container = widgets.Accordion([_data_widget(data)])
-  container.set_title(0, 'debug data')
-  container.selected_index = -1
-  return container
+  # TODO: Make data fetching lazy?
+  try:
+    data = s.get_debug_data()
+  except NotImplementedError:
+    data = '[no data]'
+  return _data_widget(data)
 
 
-def _data_widget(data: Any) -> widgets.HTML:
-  # TODO: Handle non-text data.
-  return widgets.HTML(html.escape(str(data)).replace('\n', '<br />'))
+def _data_widget(data: Any) -> widgets.Widget:
+  if isinstance(data, np.ndarray) and data.dtype == np.uint8:
+    f = io.BytesIO()
+    Image.fromarray(data).save(f, 'png')
+    return widgets.Image(value=f.getvalue())
+  # Fallback assumes data is text.
+  return widgets.HTML(_common.preformat_html(str(data)))

@@ -13,9 +13,9 @@ with description('_common_spec.format_label'):
 
 with description('_common_spec.format_solution_html'):
   with it('wraps with pre tags'):
-    expect(_common.format_solution_html('foobar')).to(equal(
+    expect(_common.preformat_html('foobar')).to(equal(
         '<pre>foobar</pre>'))
 
   with it('replaces newlines'):
-    expect(_common.format_solution_html('a\nb\nc')).to(equal(
+    expect(_common.preformat_html('a\nb\nc')).to(equal(
         '<pre>a<br />b<br />c</pre>'))
