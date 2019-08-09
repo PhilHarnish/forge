@@ -11,7 +11,7 @@ from data import data
 from data.image import component, grid
 
 _CLASSIFIED_COMPONENTS = data.project_path('data/grid/classified_components')
-_CLASSIFIED_MAX_WIDTH = 480
+_CLASSIFIED_MAX_WIDTH = 720
 _COMPONENT_SCRATCH = data.project_path('data/grid/components.pkl')
 _COMPONENT_INDEX = data.project_path('data/grid/component_index.pkl')
 _GRID_FILE_PATTERN = data.project_path('data/grid/original/*.png')
@@ -158,7 +158,8 @@ def classify(all_components: AllComponents) -> None:
         i += 1
         manual_mode = True
         continue
-      elif code == 45:
+      elif code == 45:  # -?
+        print('ignoring')
         all_components[hash_id] = ClassifiedComponent('-', c)
         manual_mode = False
         shift = False
