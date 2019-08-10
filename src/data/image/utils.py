@@ -55,7 +55,7 @@ def outline_and_fill(
   return np.where(
       expanded_inner != expanded_outer,
       coloring.MAX_BROADCAST,
-      coloring.MIN_BROADCAST), expanded_outer
+      coloring.MIN_BROADCAST), expanded_inner
 
 
 def preserve_stroke(
