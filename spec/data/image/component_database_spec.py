@@ -31,7 +31,7 @@ with description('component_database'):
   with description('identify') as self:
     with before.all:
       self.full_box = np.ones((3, 3))
-      _add_to_index(self.full_box, {'symbol': 'FULL'})
+      _add_to_index(self.full_box, labels={'symbol': 'FULL'})
       self.empty_box = np.zeros((3, 3))
       _add_to_index(self.empty_box, {'symbol': 'EMPTY'})
       self.db = component_database.ComponentDatabase()

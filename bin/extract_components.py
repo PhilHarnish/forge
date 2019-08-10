@@ -113,7 +113,7 @@ def write_classified(all_components: AllComponents) -> None:
   for k, v in all_components.items():
     if v.classification == '-':
       continue
-    index[k] = component.Component(v.component.image, {
+    index[k] = component.Component(v.component.image, labels={
       'symbol': v.classification,
     })
   pickle.dump(

@@ -17,3 +17,36 @@ with description('component'):
     a = component.Component(np.zeros((3, 4)))
     b = component.Component(np.zeros((4, 3)))
     expect(hash(a)).not_to(equal(hash(b)))
+
+  with description('repr'):
+    with it('omits unspecified information'):
+      expect(repr(component.Component(np.zeros((3, 3))))).to(
+          equal('Component(<image>)'))
+
+    with it('includes specified labels'):
+      data = np.zeros((3, 3))
+      labels = {'key': 'value'}
+      expect(repr(component.Component(data, labels=labels))).to(
+          equal('''Component(<image>, labels={'key': 'value'})'''))
+
+    with it('includes specified origin'):
+      data = np.zeros((3, 3))
+      offset = component.Offset(4, 5)
+      expect(repr(component.Component(data, offset=offset))).to(
+          equal('Component(<image>, offset=Offset(top=4, left=5))'))
+
+  with description('str'):
+    with it('omits unspecified information'):
+      expect(str(component.Component(np.zeros((3, 3))))).to(equal('{}'))
+
+    with it('includes specified labels'):
+      data = np.zeros((3, 3))
+      labels = {'key': 'value'}
+      expect(str(component.Component(data, labels=labels))).to(
+          equal('''{'key': 'value'}'''))
+
+    with it('includes specified origin'):
+      data = np.zeros((3, 3))
+      offset = component.Offset(4, 5)
+      expect(str(component.Component(data, offset=offset))).to(
+          equal('{} @ (4, 5)'))
