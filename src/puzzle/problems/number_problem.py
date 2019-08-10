@@ -34,7 +34,7 @@ class NumberProblem(problem.Problem):
   def _solve(self) -> dict:
     # TODO: Much optimization needed here.
     result = {}
-    required_weight = self._threshold
+    required_weight = self._solution_constraints.weight_threshold
     if self._allow_offsets and len(self._digits) == 1:
       offsets = _get_offsets()
     else:
