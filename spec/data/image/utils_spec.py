@@ -56,7 +56,7 @@ with description('utils'):
         [0, 1, 1, 1, 0],
         [1, 1, 1, 1, 1],
         [0, 1, 1, 1, 0],
-        [0, 0, 1, 0, 0]
+        [0, 0, 1, 0, 0],
       ]))
 
   with description('kernel_cross'):
@@ -69,7 +69,44 @@ with description('utils'):
         [0, 0, 1, 0, 0],
         [1, 1, 1, 1, 1],
         [0, 0, 1, 0, 0],
-        [0, 0, 1, 0, 0]
+        [0, 0, 1, 0, 0],
+      ]))
+  with description('morph_open'):
+    with it('erases points'):
+      expect(utils.morph_open(np.array([
+        [1, 0, 0, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 1, 0, 0, 0],
+        [0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+      ], dtype=np.uint8)).max()).to(equal(0))
+
+    with it('preserves a circle'):
+      expect(utils.morph_open(utils.kernel_circle(5)).tolist()).to(
+          equal(utils.kernel_circle(5).tolist()))
+
+  with description('outline_and_fill'):
+    with it('expands a point'):
+      src = np.zeros((7, 7), dtype=np.uint8)
+      src[3][3] = 255
+      outline, fill = utils.outline_and_fill(src, 2, 1)
+      expect(outline.tolist()).to(equal([
+        [0, 0, 0, 255, 0, 0, 0],
+        [0, 0, 255, 0, 255, 0, 0],
+        [0, 255, 0, 0, 0, 255, 0],
+        [255, 0, 0, 0, 0, 0, 255],
+        [0, 255, 0, 0, 0, 255, 0],
+        [0, 0, 255, 0, 255, 0, 0],
+        [0, 0, 0, 255, 0, 0, 0]
+      ]))
+      expect(fill.tolist()).to(equal([
+        [0, 0, 0, 255, 0, 0, 0],
+        [0, 0, 255, 255, 255, 0, 0],
+        [0, 255, 255, 255, 255, 255, 0],
+        [255, 255, 255, 255, 255, 255, 255],
+        [0, 255, 255, 255, 255, 255, 0],
+        [0, 0, 255, 255, 255, 0, 0],
+        [0, 0, 0, 255, 0, 0, 0]
       ]))
 
   with description('preserve_stroke'):

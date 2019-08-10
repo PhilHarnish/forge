@@ -1,7 +1,9 @@
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import cv2
 import numpy as np
+
+from data.image import coloring
 
 
 def antialias(src: np.ndarray) -> np.ndarray:
@@ -42,6 +44,20 @@ def morph_open(src: np.ndarray) -> np.ndarray:
   return cv2.morphologyEx(src, cv2.MORPH_OPEN, _OPEN_KERNEL)
 
 
+def outline_and_fill(
+    src: np.ndarray, distance: int, size: int) -> Tuple[np.ndarray, np.ndarray]:
+  """Expand `src` `distance`; return outline which extends further by `size`."""
+  if distance:
+    expanded_inner = cv2.dilate(src, _SMALL_KERNEL, iterations=distance)
+  else:
+    expanded_inner = src
+  expanded_outer = cv2.dilate(expanded_inner, _SMALL_KERNEL, iterations=size)
+  return np.where(
+      expanded_inner != expanded_outer,
+      coloring.MAX_BROADCAST,
+      coloring.MIN_BROADCAST), expanded_outer
+
+
 def preserve_stroke(
     src: np.ndarray, threshold: int, thickness: float) -> np.ndarray:
   """Maintains strokes >= `threshold` brightness and `thickness` width."""
@@ -55,7 +71,8 @@ def preserve_stroke(
   return np.where(filtered > _THRESHOLD, src, 0)
 
 
-_ANTIALIAS_KERNEL = kernel_circle(3)
+_SMALL_KERNEL = kernel_circle(3)
+_ANTIALIAS_KERNEL = _SMALL_KERNEL
 _OPEN_KERNEL = kernel_circle(3)
 _STROKE_KERNEL_SIZE = 5
 _STROKE_KERNEL = kernel_circle(_STROKE_KERNEL_SIZE)
