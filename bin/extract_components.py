@@ -65,6 +65,8 @@ def verify_classified(all_components: AllComponents) -> None:
   print('Press any key to continue')
   for classification, components_list in sorted(
       classified_index.items(), key=lambda x: x[0]):
+    if classification == '-':
+      continue
     print('Classification:', classification)
     output, positions = illustrate_classified_components(components_list)
     positioned_components = [
@@ -131,12 +133,16 @@ def classify(all_components: AllComponents) -> None:
     while i < len(unclassified_components):
       c = unclassified_components[i]
       hash_id = hash(c)
-      if hash_id in all_components and not manual_mode:
-        print('component already identified:',
-            all_components[hash_id].classification)
-        i += 1
-        continue
-      print('hash id:', hash_id)
+      if hash_id in all_components:
+        if not manual_mode:
+          print('component already identified:',
+              all_components[hash_id].classification)
+          i += 1
+          continue
+        classification = all_components[hash_id].classification
+      else:
+        classification = None
+      print('hash id:', hash_id, classification)
 
       cv2.imshow(_IMSHOW_TITLE, c.image)
       code = cv2.waitKey(0)
