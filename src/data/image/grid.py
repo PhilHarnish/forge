@@ -67,8 +67,8 @@ class Grid(object):
     db = component_database.ComponentDatabase()
     for c, src in self._components_with_source(
         include_inverted=include_inverted):
-      identified = db.identify(c)
-      symbol = identified.labels.get('symbol')
+      db.identify(c)
+      symbol = c.labels.get('symbol')
       if symbol:
         if c.labels.get('inverted'):
           color = _MAX
