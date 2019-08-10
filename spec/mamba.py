@@ -1,4 +1,5 @@
 import builtins
+import contextlib
 import random
 import re
 import textwrap
@@ -141,6 +142,44 @@ class _Benchmark(object):
 
 
 benchmark = _Benchmark(5, 1)
+
+_CollectorContext = Generator[Any, Any, None]
+
+@contextlib.contextmanager
+def gather_exceptions() -> Generator[Callable[[], _CollectorContext], Any, Any]:
+  exceptions = []
+  @contextlib.contextmanager
+  def collector() -> _CollectorContext:
+    try:
+      yield
+    except Exception as e:
+      exceptions.append(e)
+  collector.exceptions = exceptions
+  def has_no_exceptions() -> None:
+    if not exceptions:
+      return
+    if len(exceptions) > 1:
+      plural = 's'
+    else:
+      plural = ''
+    result = ['%s exception%s caught:' % (len(exceptions), plural)]
+    for i, exception in enumerate(exceptions):
+      result.append('#%(pos)s %(name)s raised with:\n%(body)s' % {
+        'pos': i + 1,
+        'name': type(exception).__name__,
+        'body': textwrap.indent(str(exception.args[0]).strip(), '   '),
+      })
+    exceptions.clear()  # Allows unit tests to consume and assert exceptions.
+    raise AssertionError('\n'.join(result))
+  collector.has_no_exceptions = has_no_exceptions
+  try:
+    yield collector
+  except Exception as e:
+    exceptions.append(
+        AssertionError('Exception raised outside of collector (see next).'
+            ' Use `with collector()` to collect exceptions.'))
+    exceptions.append(e)
+  collector.has_no_exceptions()
 
 
 # Mamba.
@@ -380,9 +419,10 @@ class look_like(equal):
 
 
 def path_values(root: Any, path: Iterable) -> str:
+  """Traverse `root` following `path` and return repr result."""
   results = [repr(root)]
   cursor = root
   for c in path:
     cursor = cursor[c]
-    results.append('%s = %s' % (c, repr(cursor)))
+    results.append('%s = %r' % (c, cursor))
   return '\n'.join(results)

@@ -3,6 +3,11 @@ import sys
 
 from spec.mamba import *
 
+
+def bomb(e: Exception = NotImplementedError()) -> None:
+  raise e
+
+
 with description('mamba test helper'):
   with description('call'):
     with it('reprs empty fns'):
@@ -42,17 +47,12 @@ with description('mamba test helper'):
         expect(call(self.int_fn)).to(be_below(1.5))
 
   with description('calling'):
-    with before.all:
-      def bomb() -> None:
-        raise NotImplementedError()
-      self.bomb = bomb
-
     with it('should not execute function when instantiated'):
-      expect(self.bomb).to(raise_error)
-      expect(lambda: calling(self.bomb)).not_to(raise_error)
+      expect(bomb).to(raise_error)
+      expect(lambda: calling(bomb)).not_to(raise_error)
 
     with it('should execute function when matcher runs'):
-      expect(calling(self.bomb)).to(raise_error)
+      expect(calling(bomb)).to(raise_error)
 
   with description('be_between'):
     with it('should accept numbers between high and low'):
@@ -229,3 +229,61 @@ with description('traceback') as self:
     traceback()
     last_line = self._io.getvalue().splitlines()[-1].strip()
     expect(last_line).to(equal('traceback()'))
+
+
+with description('gather_exceptions'):
+  with it('no exceptions raised normally'):
+    with gather_exceptions() as collector:
+      with collector():
+        expect('no exceptions').to(equal('no exceptions'))
+      expect(calling(collector.has_no_exceptions)).not_to(raise_error)
+
+  with it('re-raises exceptions if needed'):
+    with gather_exceptions() as collector:
+      with collector():
+        expect('raise exception').to(equal('due to inequality'))
+      expect(collector.exceptions).to(have_len(1))
+      expect(calling(collector.has_no_exceptions)).to(
+          raise_error(AssertionError))
+
+  with it('formats exceptions helpfully'):
+    error = None
+    with gather_exceptions() as collector:
+      with collector():
+        expect('raise exception 1').to(equal('with inequality'))
+      with collector():
+        expect('raise exception 2').to(be_none)
+      with collector():
+        bomb(ValueError('error'))
+      try:
+        collector.has_no_exceptions()
+      except AssertionError as e:
+        error = e
+    expect(str(error)).to(look_like('''
+        3 exceptions caught:
+        #1 AssertionError raised with:
+           expected: 'raise exception 1' to equal 'with inequality'
+        #2 AssertionError raised with:
+           expected: 'raise exception 2' to be none
+        #3 ValueError raised with:
+           error
+    '''))
+
+  with it('helps user if they forget to use `with collector()`'):
+    error = None
+    try:
+      with gather_exceptions() as collector:
+        with collector():
+          expect('raise exception 1').to(equal('with inequality'))
+        expect('raise exception 2').to(be_none)
+    except AssertionError as e:
+      error = e
+    expect(str(error)).to(look_like('''
+        3 exceptions caught:
+        #1 AssertionError raised with:
+           expected: 'raise exception 1' to equal 'with inequality'
+        #2 AssertionError raised with:
+           Exception raised outside of collector (see next). Use `with collector()` to collect exceptions.
+        #3 AssertionError raised with:
+           expected: 'raise exception 2' to be none
+    '''))
