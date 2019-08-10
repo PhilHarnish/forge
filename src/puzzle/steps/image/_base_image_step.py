@@ -29,11 +29,14 @@ class BaseImageStep(step.Step):
 
   def get_result(self) -> image.Image:
     if self._result is None:
-      self._result = self._modify_result(self._source.fork())
+      self._result = self._modify_result(self._get_new_source())
     return self._result
 
   def get_debug_data(self) -> np.ndarray:
     return self.get_result().get_debug_data()
+
+  def _get_new_source(self) -> image.Image:
+    return self._source.fork()
 
   def _modify_result(self, result: image.Image) -> image.Image:
     raise NotImplementedError()
