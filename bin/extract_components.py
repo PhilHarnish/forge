@@ -8,7 +8,12 @@ import cv2
 import numpy as np
 
 from data import data
-from data.image import component, grid
+from data.image import component
+from puzzle.problems.image import image_problem
+from puzzle.puzzlepedia import prod_config
+
+prod_config.init()
+
 
 _CLASSIFIED_COMPONENTS = data.project_path('data/grid/classified_components')
 _CLASSIFIED_MAX_WIDTH = 720
@@ -38,7 +43,7 @@ def images() -> Iterator[np.ndarray]:
       cv2.imread(filename, flags=cv2.IMREAD_UNCHANGED))
 
 
-def grids() -> Iterator[grid.Grid]:
+def image_problems() -> Iterator[image_problem.ImageProblem]:
   for name, image in images():
     if _FOCUS and name not in _FOCUS:
       continue
@@ -46,7 +51,7 @@ def grids() -> Iterator[grid.Grid]:
       print('Skipping unsupported image:', name)
       continue
     print('Working on:', name)
-    yield grid.Grid(image)
+    yield image_problem.ImageProblem(name, image)
 
 
 def read_classified() -> AllComponents:
@@ -127,8 +132,8 @@ def write_classified(all_components: AllComponents) -> None:
 def classify(all_components: AllComponents) -> None:
   manual_mode = False
   shift = False
-  for g in grids():
-    unclassified_components = list(g.components)
+  for i in image_problems():
+    unclassified_components = list(i.get_components())
     i = 0
     while i < len(unclassified_components):
       c = unclassified_components[i]
