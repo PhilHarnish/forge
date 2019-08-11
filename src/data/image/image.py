@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 from data.convert import repr_format
-from data.image import coloring, utils
+from data.image import coloring, component, utils
 
 MutationDecorator = Callable[[Callable], Callable]
 MutationFn = Callable[..., 'Image']
@@ -88,6 +88,51 @@ class Image(object):
   @mutation(deps={'grayscale', 'invert', 'normalize'})
   def enhance(self) -> 'Image':
     coloring.enhance(self._src, out=self._src)
+    return self
+
+  @mutation()
+  def erase_component(
+      self,
+      c: component.Component,
+      border_percentile: int,
+      border_distance: int,
+      border_size: int) -> 'Image':
+    # Operate on the window component came from.
+    padding = border_distance + border_size
+    top, left = c.offset
+    top_padding = min(padding, top)  # Use 0 if top is zero.
+    left_padding = min(padding, left)
+    source_height, source_width = self._src.shape[:2]
+    height, width = c.image.shape[:2]
+    right_padding = min(padding, source_width - (left + width))
+    bottom_padding = min(padding, source_height - (top + height))
+    # Slice the window from src.
+    y1 = top - top_padding
+    y2 = top + height + bottom_padding
+    x1 = left - left_padding
+    x2 = left + width + right_padding
+    source_patch = self._src[y1:y2, x1:x2]
+    # Copy component to a new img.
+    expanded_height = y2 - y1
+    expanded_width = x2 - x1
+    expanded = np.zeros((expanded_height, expanded_width))
+    expanded[
+      top_padding:top_padding + height,
+      left_padding:left_padding + width,
+    ] = c.image
+    # Identify border and fill pixels.
+    border, fill = utils.outline_and_fill(
+        expanded, border_distance, border_size)
+    # Sample pixels.
+    border_points = source_patch[np.nonzero(border)]
+    p_low, p50 = np.percentile(
+        border_points, (border_percentile, 50), interpolation='lower')
+    if p_low == 0:
+      color = 0
+    else:
+      color = p50
+    # Assign the `fill` points the chosen `color`.
+    source_patch[np.nonzero(fill)] = color
     return self
 
   def fork(self) -> 'Image':
