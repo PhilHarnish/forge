@@ -30,7 +30,7 @@ def colors(n: int, with_black_and_white=False) -> Iterable[np.ndarray]:
   lightness_scale = 0.25  # 50% +/- 25%.
   for slice_n in range(n_slices):
     n_colors_in_slice = min(n, _MAX_COLORS_PER_HLS_SLICE)
-    if slice_n % 2:
+    if n and slice_n % 2:
       offset = 1 / (2 * n_colors_in_slice)
     else:
       offset = 0

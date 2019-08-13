@@ -18,6 +18,9 @@ with description('coloring'):
             [255, 255, 255]
           ]).tolist()))
 
+    with it('returns 7 colors when requested'):
+      expect(self.tolist(coloring.colors(7))).to(be_unique)
+
     with it('returns unique colors'):
       expect(self.tolist(coloring.colors(200))).to(be_unique)
 
