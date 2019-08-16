@@ -52,6 +52,62 @@ with description('perf'):
         1: 1.00/s, 1.00x (1 calls, 1000.00u)
     """))
 
+  with it('registers using original perf object'):
+    b = perf.Perf('test', 2)
+    called = []
+    @b.profile(1)
+    def fn() -> None:
+      called.append('1')
+    @b.profile(2)
+    def fn() -> None:
+      called.append('2')
+    b.run_implementation(2, [], {})
+    b.run_implementation(1, [], {})
+    expect(called).to(equal(['2', '1']))
+
+  with it('allows running all examples'):
+    b = perf.Perf('test', 2, run_all=True)
+    called = set()
+    @b.profile(1)
+    def fn() -> None:
+      called.add('1')
+    @b.profile(2)
+    def fn() -> None:
+      called.add('2')
+    fn()
+    expect(called).to(equal({'1', '2'}))
+    expect(str(b)).to(look_like('''
+      test
+      1: 1.00/s, 1.00x (1 calls, 1000.00u)
+      2: 1.00/s, 1.00x (1 calls, 1000.00u)
+    '''))
+
+  with it('validates return values match'):
+    b = perf.Perf('test', 2, run_all=True)
+    @b.profile(1)
+    def fn() -> int:
+      return 1
+    @b.profile(2)
+    def fn() -> int:
+      return 2
+    expect(calling(fn)).to(raise_error(
+        ValueError, match('Results inconsistent.*')))
+
+  with it('ignores mismatched answers if return value is specified'):
+    b = perf.Perf('test', 2, run_all=True, return_variant=2)
+    @b.profile(1)
+    def fn() -> int:
+      return 1
+    @b.profile(2)
+    def fn() -> int:
+      return 2
+    expect(calling(fn)).to(equal(2))
+    expect(str(b)).to(look_like('''
+      test
+      1: 1.00/s, 1.00x (1 calls, 1000.00u)
+      2: 1.00/s, 1.00x (1 calls, 1000.00u)
+    '''))
+
   with it('registers before and after functions'):
     b = perf.Perf('test', 1)
     called = []
