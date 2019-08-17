@@ -53,11 +53,12 @@ def segment_area(s1, s2):
 
 import itertools
 import math
-from typing import Iterable, Optional, Tuple
+from typing import Iterable, Optional, Tuple, Union
 
 import numpy as np
 
-Point = np.ndarray
+Point = Union[np.ndarray, Tuple[float, float]]
+PolarLine = Tuple[float, float]
 Segment = Tuple[Point, Point]
 Contour = np.ndarray
 
@@ -122,7 +123,10 @@ def overlap(
 
 
 def point_to_point_distance(point1: Point, point2: Point) -> float:
-  return np.hypot(*(point1 - point2))
+  # NB: This is faster than using np.hypot.
+  x1, y1 = point1
+  x2, y2 = point2
+  return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
 
 def point_to_segment_distance(point: Point, segment: Segment) -> float:
@@ -137,6 +141,18 @@ def point_to_segment_distance(point: Point, segment: Segment) -> float:
   else:  # `t * dx/dy` distance from s1.
     dx_dy = point - (s1 + t * dx_dy)
   return np.hypot(*dx_dy)
+
+
+def polar_line_intersect(line1: PolarLine, line2: PolarLine) -> Point:
+  rho1, theta1 = line1
+  rho2, theta2 = line2
+  a = np.array([
+    [math.cos(theta1), math.sin(theta1)],
+    [math.cos(theta2), math.sin(theta2)],
+  ])
+  b = np.array([[rho1], [rho2]])
+  x, y = np.linalg.solve(a, b)
+  return float(x), float(y)
 
 
 def slope(s: Segment) -> float:

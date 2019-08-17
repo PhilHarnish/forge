@@ -49,97 +49,104 @@ _OVERLAP_REGRESSION_TESTS = [
 ]
 
 
-with description('np2d'):
-  with description('iter_segments'):
-    with it('iterates list of coordinates'):
-      segments = np.array(list(np2d.iter_segments(np.array([
-        TL, TR, BR, BL,
-      ]))))
-      expect(segments.tolist()).to(equal(np.array([
-        (TL, TR), (TR, BR), (BR, BL), (BL, TL),
-      ]).tolist()))
+with description('iter_segments'):
+  with it('iterates list of coordinates'):
+    segments = np.array(list(np2d.iter_segments(np.array([
+      TL, TR, BR, BL,
+    ]))))
+    expect(segments.tolist()).to(equal(np.array([
+      (TL, TR), (TR, BR), (BR, BL), (BL, TL),
+    ]).tolist()))
 
-  with description('orientation'):
-    with it('identifies colinear'):
-      expect(np2d.orientation(L, M, R)).to(equal(0))
-      expect(np2d.orientation(BL, M, TR)).to(equal(0))
-      expect(np2d.orientation(BR, M, TL)).to(equal(0))
+with description('orientation'):
+  with it('identifies colinear'):
+    expect(np2d.orientation(L, M, R)).to(equal(0))
+    expect(np2d.orientation(BL, M, TR)).to(equal(0))
+    expect(np2d.orientation(BR, M, TL)).to(equal(0))
 
-    with it('distinguishes different directions'):
-      expect(np2d.orientation(L, R, B)).not_to(equal(
-          np2d.orientation(L, B, R)))
+  with it('distinguishes different directions'):
+    expect(np2d.orientation(L, R, B)).not_to(equal(
+        np2d.orientation(L, B, R)))
 
-  with description('overlap'):
-    with it('returns 0 for non-overlapping lines'):
-      expect(np2d.overlap((BL, B), (M, R))).to(equal(0))
+with description('overlap'):
+  with it('returns 0 for non-overlapping lines'):
+    expect(np2d.overlap((BL, B), (M, R))).to(equal(0))
 
-    with it('returns 0 for steep inclines'):
-      expect(np2d.overlap((BL, BR), (TL, BR))).to(equal(0))
+  with it('returns 0 for steep inclines'):
+    expect(np2d.overlap((BL, BR), (TL, BR))).to(equal(0))
 
-    with it('returns overlap'):
-      expect(np2d.overlap((BL, BR), (M, R))).to(equal(1 / ((2 + 1) / 2)))
+  with it('returns overlap'):
+    expect(np2d.overlap((BL, BR), (M, R))).to(equal(1 / ((2 + 1) / 2)))
 
-    with it('rejects gaps greater than specified'):
-      segment_length = np2d.point_to_point_distance(*_1U_APART[0])
-      expect(np2d.overlap(*_1U_APART, gap_threshold=segment_length * 0.9)).to(
-          equal(0))
+  with it('rejects gaps greater than specified'):
+    segment_length = np2d.point_to_point_distance(*_1U_APART[0])
+    expect(np2d.overlap(*_1U_APART, gap_threshold=segment_length * 0.9)).to(
+        equal(0))
 
-    with it('accepts gaps given sufficient threshold'):
-      segment_length = np2d.point_to_point_distance(*_1U_APART[0])
-      expect(np2d.overlap(*_1U_APART, gap_threshold=segment_length * 1.1)).to(
-          be_above(.5))
+  with it('accepts gaps given sufficient threshold'):
+    segment_length = np2d.point_to_point_distance(*_1U_APART[0])
+    expect(np2d.overlap(*_1U_APART, gap_threshold=segment_length * 1.1)).to(
+        be_above(.5))
 
-    with it('does not regress on earlier segments'):
-      for s1, s2 in _OVERLAP_REGRESSION_TESTS:
-        expect(calling(np2d.overlap, s1, s2)).to(be_above(.5))
+  with it('does not regress on earlier segments'):
+    for s1, s2 in _OVERLAP_REGRESSION_TESTS:
+      expect(calling(np2d.overlap, s1, s2)).to(be_above(.5))
 
-  with description('point_to_point_distance'):
-    with it('returns 0 for coincident points'):
-      expect(np2d.point_to_point_distance(M, M)).to(equal(0.0))
+with description('point_to_point_distance'):
+  with it('returns 0 for coincident points'):
+    expect(np2d.point_to_point_distance(M, M)).to(equal(0.0))
 
-    with it('returns distance between separated points'):
-      expect(np2d.point_to_point_distance(L, R)).to(equal(2.0))
+  with it('returns distance between separated points'):
+    expect(np2d.point_to_point_distance(L, R)).to(equal(2.0))
 
-  with description('point_to_segment_distance'):
-    with it('returns 0 for intersections'):
-      expect(np2d.point_to_segment_distance(M, (L, R))).to(equal(0.0))
+with description('point_to_segment_distance'):
+  with it('returns 0 for intersections'):
+    expect(np2d.point_to_segment_distance(M, (L, R))).to(equal(0.0))
 
-    with it('returns distance in the generial case'):
-      expect(np2d.point_to_segment_distance(T, (L, R))).to(equal(1.0))
+  with it('returns distance in the generial case'):
+    expect(np2d.point_to_segment_distance(T, (L, R))).to(equal(1.0))
 
-    with it('returns distance to left edge when off left side'):
-      expect(np2d.point_to_segment_distance(L, (M, R))).to(equal(1.0))
+  with it('returns distance to left edge when off left side'):
+    expect(np2d.point_to_segment_distance(L, (M, R))).to(equal(1.0))
 
-    with it('returns distance to left edge when off right side'):
-      expect(np2d.point_to_segment_distance(R, (M, L))).to(equal(1.0))
+  with it('returns distance to left edge when off right side'):
+    expect(np2d.point_to_segment_distance(R, (M, L))).to(equal(1.0))
 
-  with description('slope'):
-    with it('returns 0 for horizontal'):
-      expect(np2d.slope((L, R))).to(equal(0))
+with description('polar_line_intersect'):
+  with it('finds intersections'):
+    horizontal = (1, 0)
+    vertical = (1, math.pi / 2)
+    x, y = np2d.polar_line_intersect(horizontal, vertical)
+    expect(x).to(be_between(.99, 1.01))
+    expect(y).to(be_between(.99, 1.01))
 
-    with it('returns pi/2 for vertical'):
-      expect(np2d.slope((T, B))).to(equal(math.pi / 2))
+with description('slope'):
+  with it('returns 0 for horizontal'):
+    expect(np2d.slope((L, R))).to(equal(0))
 
-  with description('slopes'):
-    with it('returns slopes for horizontal segments'):
-      expect(np.degrees(np2d.slopes((L, M), (M, R))).tolist()).to(equal(
-          [0, 0, 0]))
+  with it('returns pi/2 for vertical'):
+    expect(np2d.slope((T, B))).to(equal(math.pi / 2))
 
-    with it('returns slopes for right angle segments'):
-      expect(np.degrees(np2d.slopes((T, M), (M, R))).tolist()).to(equal(
-          [90, 0, 90]))
+with description('slopes'):
+  with it('returns slopes for horizontal segments'):
+    expect(np.degrees(np2d.slopes((L, M), (M, R))).tolist()).to(equal(
+        [0, 0, 0]))
 
-    with it('returns small delta segments nearly pointing east'):
-      _, _, delta = np.degrees(np2d.slopes(*_EAST_MIRROR)).tolist()
-      expect(delta).to(be_between(0, 2))
+  with it('returns slopes for right angle segments'):
+    expect(np.degrees(np2d.slopes((T, M), (M, R))).tolist()).to(equal(
+        [90, 0, 90]))
 
-    with it('returns small delta for segments pointing SSE'):
-      _, _, delta = np.degrees(np2d.slopes(*_SSE)).tolist()
-      expect(delta).to(be_between(0, 2))
+  with it('returns small delta segments nearly pointing east'):
+    _, _, delta = np.degrees(np2d.slopes(*_EAST_MIRROR)).tolist()
+    expect(delta).to(be_between(0, 2))
 
-  with description('segments_intersect'):
-    with it('returns false for parallel lines'):
-      expect(np2d.segments_intersect((TL, TR), (BL, BR))).to(be_false)
+  with it('returns small delta for segments pointing SSE'):
+    _, _, delta = np.degrees(np2d.slopes(*_SSE)).tolist()
+    expect(delta).to(be_between(0, 2))
 
-    with it('returns true for intersecting lines'):
-      expect(np2d.segments_intersect((T, B), (L, R))).to(be_true)
+with description('segments_intersect'):
+  with it('returns false for parallel lines'):
+    expect(np2d.segments_intersect((TL, TR), (BL, BR))).to(be_false)
+
+  with it('returns true for intersecting lines'):
+    expect(np2d.segments_intersect((T, B), (L, R))).to(be_true)
