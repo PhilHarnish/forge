@@ -1,5 +1,6 @@
 import builtins
 import contextlib
+import math
 import random
 import re
 import textwrap
@@ -211,7 +212,7 @@ class be_between(matchers.Matcher):
     self._high = high
 
   def _match(self, subject: Any) -> tuple:
-    return subject > self._low and subject < self._high, []
+    return self._low < subject < self._high, []
 
   def _failure_message(self, subject: Any, *args: Iterable[Any]) -> str:
     return self._failure_message_negated(subject, *args).replace(' not ', ' ')
@@ -219,6 +220,17 @@ class be_between(matchers.Matcher):
   def _failure_message_negated(self, subject: Any, *args: Iterable[Any]) -> str:
     return 'expected: %s not to be between %s and %s' % (
       subject, self._low, self._high)
+
+
+class be_close_to(matchers.Matcher):
+  def __init__(self, other: float, *args, **kwargs) -> None:
+    self._other = other
+    self._args = args
+    self._kwargs = kwargs
+
+  def _match(self, subject: Any) -> tuple:
+    return math.isclose(subject, self._other, *self._args, **self._kwargs), [
+      str(self._other)]
 
 
 class be_one_of(matchers.Matcher):

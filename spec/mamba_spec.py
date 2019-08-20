@@ -62,6 +62,19 @@ with description('mamba test helper'):
       expect(0).not_to(be_between(0, 1))
       expect(1).not_to(be_between(0, 1))
 
+  with description('be_close_to'):
+    with it('should accept identical numbers'):
+      expect(1.0).to(be_close_to(1.0))
+
+    with it('should reject opposites'):
+      expect(-1.0).not_to(be_close_to(1.0))
+
+    with it('should accept approximate'):
+      expect(43.21739130434783).to(be_close_to(43.2173913))
+
+    with it('should allow additional specification'):
+      expect(43.21739130434783).not_to(be_close_to(43.2173913, rel_tol=1e-20))
+
   with description('be_one_of'):
     with it('should accept a single option'):
       expect(1).to(be_one_of(1))
