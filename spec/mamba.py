@@ -223,14 +223,23 @@ class be_between(matchers.Matcher):
 
 
 class be_close_to(matchers.Matcher):
-  def __init__(self, other: float, *args, **kwargs) -> None:
+  def __init__(
+      self, other: float, relative_tolerance: Optional[float] = None,
+      *args, **kwargs
+  ) -> None:
     self._other = other
     self._args = args
     self._kwargs = kwargs
+    if relative_tolerance is not None:
+      self._kwargs['rel_tol'] = relative_tolerance
 
   def _match(self, subject: Any) -> tuple:
+    min_value = min(subject, self._other)
+    max_value = max(subject, self._other)
+    required_tolerance = 1 - (min_value / max_value)
     return math.isclose(subject, self._other, *self._args, **self._kwargs), [
-      str(self._other)]
+      '%s requires relative_tolerance=%s' % (
+        str(self._other), required_tolerance)]
 
 
 class be_one_of(matchers.Matcher):
