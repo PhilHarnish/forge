@@ -1,5 +1,3 @@
-import math
-
 import numpy as np
 
 from spec.mamba import *
@@ -91,6 +89,35 @@ with description('overlap'):
   with it('does not regress on earlier segments'):
     for s1, s2 in _OVERLAP_REGRESSION_TESTS:
       expect(calling(np2d.overlap, s1, s2)).to(be_above(.5))
+
+with description('point_intersect_box'):
+  with it('accepts a point inside the box'):
+    expect(np2d.point_intersect_box(M, 0, 3, 3)).to(be_true)
+
+  with it('accepts line L -> R from outside'):
+    expect(np2d.point_intersect_box((-1, 1), 0, 3, 3)).to(be_true)
+
+  with it('accepts line T -> B from outside'):
+    expect(np2d.point_intersect_box((1, -1), math.pi / 2, 3, 3)).to(be_true)
+
+  with it('accepts line TL -> BR from outside'):
+    expect(np2d.point_intersect_box((-1, -1), math.pi / 4, 3, 3)).to(be_true)
+
+  with it('rejects line tangential to box from outside'):
+    expect(np2d.point_intersect_box((-1, -1), 3 * math.pi / 4, 3, 3)).to(
+        be_false)
+
+  with it('accepts regression tests'):
+    # These are from real images.
+    scenarios = [
+      ((301.0, 1825.5), math.pi / 2, 602, 602),
+      ((1825.5, 301.0), math.pi, 602, 602),
+      ((1825.5, 301.0), 0, 602, 602),
+      ((1825.5, 1825.5), math.pi / 4, 602, 602),
+      ((309.0, 532.0), 4.1889050520600115, 988, 850),
+    ]
+    for args in scenarios:
+      expect(calling(np2d.point_intersect_box, *args)).to(equal(True))
 
 with description('point_to_point_distance'):
   with it('returns 0 for coincident points'):

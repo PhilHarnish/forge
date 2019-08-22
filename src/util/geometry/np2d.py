@@ -122,6 +122,40 @@ def overlap(
   return (right1 - left2) / avg_width
 
 
+def point_intersect_box(point, theta: float, width: int, height: int) -> bool:
+  """Returns line extending from `point` with angle theta intersects box."""
+  pt_x, pt_y = point
+  if (0 < pt_x < width) and (0 < pt_y < height):
+    return True
+  x_edges = 0
+  x_distance = 0
+  y_edges = 0
+  y_distance = 0
+  tan_theta = math.tan(theta)
+  for x in (0, width):
+    # Solve for y.
+    dx = pt_x - x
+    # If tan_theta is bonkers big (straight up/down) then this fails.
+    dy = tan_theta * dx
+    y_distance += abs(dy)
+    if 0 <= pt_y - dy <= height:
+      y_edges += 1
+  for y in (0, height):
+    # Solve for x.
+    dy = pt_y - y
+    if tan_theta:
+      dx = dy / tan_theta
+    else:
+      dx = float('inf')
+    x_distance += abs(dx)
+    if 0 <= pt_x - dx <= width:
+      x_edges += 1
+  vertical = y_distance > 1 and x_edges == 2
+  horizontal = x_distance > 1 and y_edges == 2
+  diagonal = x_edges >= 1 and y_edges >= 1
+  return vertical or horizontal or diagonal
+
+
 def point_to_point_distance(point1: Point, point2: Point) -> float:
   # NB: This is faster than using np.hypot.
   x1, y1 = point1
