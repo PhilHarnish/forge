@@ -29,8 +29,8 @@ class Decompose(_base_image_step.BaseImageStep):
 
   def __init__(
       self,
-      constraints: decompose_constraints.DecomposeConstraints,
-      prepare_image_step: prepare_image.PrepareImage) -> None:
+      prepare_image_step: prepare_image.PrepareImage,
+      constraints: decompose_constraints.DecomposeConstraints) -> None:
     super(Decompose, self).__init__(
         prepare_image_step.get_result(),
         dependencies=[prepare_image_step],

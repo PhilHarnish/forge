@@ -10,8 +10,8 @@ class PrepareImage(_base_image_step.BaseImageStep):
 
   def __init__(
       self,
-      constraints: prepare_image_constraints.PrepareImageConstraints,
-      source: image.Image) -> None:
+      source: image.Image,
+      constraints: prepare_image_constraints.PrepareImageConstraints) -> None:
     super(PrepareImage, self).__init__(source, constraints=(constraints,))
     self._prepare_image_constraints = constraints
 

@@ -14,12 +14,12 @@ with description('prepare_image') as self:
   with description('constructor'):
     with it('constructs without error'):
       expect(
-          calling(prepare_image.PrepareImage, self.constraints, self.source)
+          calling(prepare_image.PrepareImage, self.source, self.constraints)
       ).not_to(raise_error)
 
   with description('get_result'):
     with before.each:
-      self.step = prepare_image.PrepareImage(self.constraints, self.source)
+      self.step = prepare_image.PrepareImage(self.source, self.constraints)
 
     with it('applies many mutations initially'):
       i = self.step.get_result()

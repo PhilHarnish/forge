@@ -23,10 +23,11 @@ class ImageProblem(problem.Problem):
     super(ImageProblem, self).__init__(name, data, *args, **kwargs)
     self._source_image = image.Image(data)
     self._prepare_image = prepare_image.PrepareImage(
-        prepare_image_constraints.PrepareImageConstraints(), self._source_image)
+        self._source_image,
+        prepare_image_constraints.PrepareImageConstraints())
     self._decompose = decompose.Decompose(
-        decompose_constraints.DecomposeConstraints(),
-        self._prepare_image)
+        self._prepare_image,
+        decompose_constraints.DecomposeConstraints())
     self._solutions_generator.depends_on(self._decompose)
 
   @staticmethod

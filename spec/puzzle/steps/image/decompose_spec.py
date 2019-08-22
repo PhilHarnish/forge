@@ -12,10 +12,10 @@ with description('decompose') as self:
     self.data = np.zeros((3, 3))
     self.source = image.Image(self.data)
     self.prepare = prepare_image.PrepareImage(
-        prepare_image_constraints.PrepareImageConstraints(), self.source)
+        self.source, prepare_image_constraints.PrepareImageConstraints())
 
   with description('constructor'):
     with it('constructs without error'):
       expect(
-          calling(decompose.Decompose, self.constraints, self.prepare)
+          calling(decompose.Decompose, self.prepare, self.constraints)
       ).not_to(raise_error)
