@@ -1,17 +1,39 @@
+import enum
+
 from puzzle.constraints import validator
 from spec.mamba import *
+
+
+class TestEnum(enum.Enum):
+  DEFAULT = enum.auto()
+  DEFINED = enum.auto()
+
 
 with description('validator'):
   with description('constructor'):
     with it('constructs without error'):
-      expect(calling(validator.Validator)).not_to(raise_error)
+      expect(calling(validator.Validator, object)).not_to(raise_error)
 
   with description('typing compatibility'):
     with it('is permitted for use with typing module'):
       def type_usage() -> None:
-        noop = Union[validator.Validator()]
+        noop = Union[validator.Validator(object)]
         del noop
       expect(calling(type_usage)).not_to(raise_error)
+
+
+with description('Enum'):
+  with description('constructor'):
+    with it('constructs without error'):
+      expect(calling(validator.Enum, enum.Enum)).not_to(raise_error)
+
+    with it('raises for incorrect types'):
+      expect(calling(validator.Enum, float)).to(raise_error(
+          TypeError, 'Validator.Enum requires an enum.Enum (float given)'))
+
+    with it('accepts sample values'):
+      v = validator.Enum(TestEnum)
+      expect(TestEnum.DEFAULT).to(be_a(v))
 
 
 with description('NumberInRange'):
