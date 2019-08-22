@@ -5,7 +5,7 @@ import numpy as np
 
 from data.image import coloring, component, component_database, image, utils
 from puzzle.constraints.image import decompose_constraints
-from puzzle.steps.image import _base_image_step, prepare_image
+from puzzle.steps.image import _base_image_step
 
 _IGNORED_SYMBOLS = {
   'FULL_CIRCLE',  # TODO: Detect and handle geometric shapes differently.
@@ -23,13 +23,13 @@ _SYMBOL_MAP = {
 
 class Decompose(_base_image_step.BaseImageStep):
   _decompose_constraints: decompose_constraints.DecomposeConstraints
-  _prepare_image_step: prepare_image.PrepareImage
+  _prepare_image_step: _base_image_step.BaseImageStep
   _components: List[component.Component]
   _database: component_database.ComponentDatabase
 
   def __init__(
       self,
-      prepare_image_step: prepare_image.PrepareImage,
+      prepare_image_step: _base_image_step.BaseImageStep,
       constraints: decompose_constraints.DecomposeConstraints) -> None:
     super(Decompose, self).__init__(
         prepare_image_step.get_result(),
