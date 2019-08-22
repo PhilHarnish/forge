@@ -1,9 +1,18 @@
+"""
+Steps:
+2. For each color band
+  1. Compute components
+  2. Identify components
+  3. Erase identified components from parent
+"""
+
 import numpy as np
 
 from data.image import image
-from puzzle.constraints.image import prepare_image_constraints
+from puzzle.constraints.image import decompose_constraints, \
+  prepare_image_constraints
 from puzzle.problems import problem
-from puzzle.steps.image import prepare_image
+from puzzle.steps.image import decompose, prepare_image
 
 
 class ImageProblem(problem.Problem):
@@ -15,7 +24,10 @@ class ImageProblem(problem.Problem):
     self._source_image = image.Image(data)
     self._prepare_image = prepare_image.PrepareImage(
         prepare_image_constraints.PrepareImageConstraints(), self._source_image)
-    self._solutions_generator.depends_on(self._prepare_image)
+    self._decompose = decompose.Decompose(
+        decompose_constraints.DecomposeConstraints(),
+        self._prepare_image)
+    self._solutions_generator.depends_on(self._decompose)
 
   @staticmethod
   def score(data: problem.ProblemData) -> float:
