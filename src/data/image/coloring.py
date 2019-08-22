@@ -4,6 +4,7 @@ from typing import Iterable, List, Optional, Tuple
 import cv2
 import numpy as np
 
+Color = Tuple[int, int, int]
 ColorBand = Tuple[int, int]
 
 
@@ -19,7 +20,7 @@ _WHITE = np.array([MAX, MAX, MAX], dtype=np.uint8)
 
 
 def colors(
-    n: int, with_black_and_white=False) -> Iterable[Tuple[int, int, int]]:
+    n: int, with_black_and_white=False) -> Iterable[Color]:
   """Returns n (or more) colors."""
   if with_black_and_white:
     n -= 2
