@@ -1,3 +1,4 @@
+import enum
 from typing import Any, Iterable
 
 from ipywidgets import widgets
@@ -26,6 +27,15 @@ def AnnotationWidget(
     coerce = annotation
   elif annotation == bool:
     widget = widgets.Checkbox(
+        value=value,
+    )
+    coerce = annotation
+  elif isinstance(annotation, type) and issubclass(annotation, enum.Enum):
+    options = [
+      (_common.format_label(option.name), option) for option in annotation
+    ]
+    widget = widgets.Dropdown(
+        options=options,
         value=value,
     )
     coerce = annotation
