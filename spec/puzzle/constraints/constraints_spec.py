@@ -9,6 +9,21 @@ class TestConstraints(constraints.Constraints):
   optional_tuple: Optional[Tuple[int, str, float]] = (1, 'two', 3.0)
 
 
+class DynamicConstraints(constraints.Constraints):
+  dynamic_constraint: validator.NumberInRange(min_value=0) = 0
+  _dynamic_annotation: validator.NumberInRange = None
+
+  def __init__(self, max_value: int) -> None:
+    self._dynamic_annotation = validator.NumberInRange(
+        min_value=0, max_value=max_value)
+    super().__init__()
+
+  def _resolve_annotation(self, k: str) -> Optional[type]:
+    if k == 'dynamic_constraint':
+      return self._dynamic_annotation
+    return super()._resolve_annotation(k)
+
+
 class InheritedConstraints(TestConstraints):
   int_with_default: int = 42
 
@@ -118,6 +133,23 @@ with description('constraints.Constraints'):
         expect(calling(setattr, self.ex, 'optional_str_with_default',
             None)).not_to(raise_error)
         expect(self.ex.optional_str_with_default).to(equal(None))
+
+  with description('dynamic constraints'):
+    with it('provides defaults'):
+      expect(DynamicConstraints(0).dynamic_constraint).to(equal(0))
+
+    with it('enforces dynamic constraint'):
+      ex = DynamicConstraints(10)
+      expect(calling(setattr, ex, 'dynamic_constraint', 11)).to(raise_error(
+          ValueError,
+          'DynamicConstraints.dynamic_constraint must be'
+          ' NumberInRange(min_value=0, max_value=10) (11 given)'
+      ))
+
+    with it('hides internal state'):
+      expect(str(DynamicConstraints(0))).to(look_like("""
+        dynamic_constraint = 0
+      """))
 
   with description('validated constraints') as self:
     with before.each:

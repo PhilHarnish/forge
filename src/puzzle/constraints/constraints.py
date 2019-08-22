@@ -29,7 +29,7 @@ _TYPING_BASES = (type(Union).mro()[-2], Generic)
 
 
 class Constraints(object):
-  __slots__ = ('_subject', )
+  _subject: subjects.Subject = None
 
   def __init__(self) -> None:
     self._subject = subjects.Subject()
@@ -41,17 +41,24 @@ class Constraints(object):
     del key
     return True
 
+  def _is_internal(self, key: str) -> bool:
+    if not hasattr(self, key):
+      raise AttributeError('%s not in %s' % (key, self.__class__.__name__))
+    return key.startswith('_')  # Hide private properties.
+
   def __iter__(self) -> Iterable[Tuple[str, Any, type]]:
     for key in sorted(dir(self)):
+      if self._is_internal(key):
+        continue
       annotation = _resolve_annotation(type(self), key)
       if annotation:
         yield key, getattr(self, key), annotation
 
   def __setattr__(self, key: str, value: Any) -> None:
-    if key in self.__slots__:
+    if self._is_internal(key):
       object.__setattr__(self, key, value)
       return
-    annotation = _resolve_annotation(self.__class__, key)
+    annotation = self._resolve_annotation(key)
     if not annotation:
       raise AttributeError('%s not in %s' % (key, self.__class__.__name__))
     if not _type_check(value, annotation):
@@ -67,6 +74,9 @@ class Constraints(object):
 
   def __str__(self) -> str:
     return '\n'.join('%s = %s' % (key, repr(value)) for key, value, _ in self)
+
+  def _resolve_annotation(self, k: str) -> Optional[type]:
+    return _resolve_annotation(self.__class__, k)
 
 
 def unwrap_optional(annotation: type) -> Optional[type]:
