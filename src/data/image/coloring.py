@@ -18,7 +18,8 @@ _BLACK = np.array([0, 0, 0], dtype=np.uint8)
 _WHITE = np.array([MAX, MAX, MAX], dtype=np.uint8)
 
 
-def colors(n: int, with_black_and_white=False) -> Iterable[np.ndarray]:
+def colors(
+    n: int, with_black_and_white=False) -> Iterable[Tuple[int, int, int]]:
   """Returns n (or more) colors."""
   if with_black_and_white:
     n -= 2
@@ -39,8 +40,7 @@ def colors(n: int, with_black_and_white=False) -> Iterable[np.ndarray]:
       lightness = .5 + lightness_scale * (slice_n / n_slices)
       saturation = 1.0
       r, g, b = colorsys.hls_to_rgb(hue, lightness, saturation)
-      yield np.array(
-          [int(r * 255), int(g * 255), int(b * 255)], dtype=np.uint8)
+      yield int(r * 255), int(g * 255), int(b * 255)
     n -= _MAX_COLORS_PER_HLS_SLICE
     lightness_scale *= -1
 
