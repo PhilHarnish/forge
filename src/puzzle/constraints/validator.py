@@ -1,6 +1,10 @@
 import enum
 import numbers
-from typing import Any, Optional
+import re
+from typing import Any, List, Optional, Union
+
+
+_COLOR_REGEX = re.compile('^(?:#)?([A-Fa-f0-9]{1,8})$')
 
 
 class Validator(object):
@@ -56,3 +60,68 @@ class NumberInRange(Validator):
 
   def _args(self) -> str:
     return 'min_value=%s, max_value=%s' % (self.min_value, self.max_value)
+
+
+ColorChannel = NumberInRange(min_value=0, max_value=255)
+
+
+class Color(Validator):
+  def __init__(self, n_channels: int = 1, flat: bool = True) -> None:
+    if flat and n_channels != 1:
+      raise NotImplementedError('Unable to flatten %d channels' % n_channels)
+    super().__init__(int)
+    self._n_channels = n_channels
+    self._flat = flat
+
+  def coerce(
+      self, value: Any, flat: Optional[bool] = None) -> Union[int, List[int]]:
+    if flat is None:
+      flat = self._flat
+    result = []
+    if isinstance(value, (tuple, list)):
+      result = value
+    elif isinstance(value, ColorChannel):
+      value = int(value)
+      result = [value] * self._n_channels
+    elif isinstance(value, str):
+      matched = _COLOR_REGEX.match(value)
+      if matched:
+        value = matched.group(1)
+      if not matched or not value:
+        pass  # Error handling below.
+      elif len(value) in (3, 4):  # Double before reading each channel.
+        result = [int(v * 2, 16) for v in value]
+      elif len(value) in (1, 2, 4, 6, 8):
+        result = [
+          int(value[start:start+2], 16) for start in range(0, len(value), 2)
+        ]
+    if not result:
+      pass
+    elif flat:
+      if len(result) == 1:
+        return result[0]
+      elif all(value == result[0] for value in result):  # Monochrome: #9f9f9f.
+        return result[0]
+    elif len(result) == 1:  # Monochrome.
+      return result * self._n_channels
+    elif len(result) == self._n_channels:
+      return result
+    elif self._n_channels == 1 and all(value == result[0] for value in result):
+      return [result[0]]
+    raise ValueError(
+        '"%s" is not a %d-channel color' % (value, self._n_channels))
+
+  def to_rgb_hex(self, value: Any) -> str:
+    coerced = self.coerce(value, flat=False)
+    if len(coerced) == 1:
+      return '#%0.2x%0.2x%0.2x' % (coerced[0], coerced[0], coerced[0])
+    elif len(coerced) in (3, 4):
+      return '#%0.2x%0.2x%0.2x' % coerced[:3]
+    raise ValueError('Cannot hex encode "%s"' % str(coerced))
+
+  def __instancecheck__(self, instance: Any) -> bool:
+    if isinstance(instance, (tuple, list)):
+      values = instance
+    else:
+      values = [instance]
+    return all(isinstance(value, int) for value in values)

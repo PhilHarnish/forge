@@ -22,6 +22,88 @@ with description('validator'):
       expect(calling(type_usage)).not_to(raise_error)
 
 
+with description('Color'):
+  with description('constructor'):
+    with it('constructs without error, no args'):
+      expect(calling(validator.Color)).not_to(raise_error)
+
+    with it('constructs without error, with args'):
+      expect(calling(validator.Color, n_channels=1, flat=True)).not_to(
+          raise_error)
+
+    with it('validates `flat` is possible'):
+      expect(calling(validator.Color, n_channels=4, flat=True)).to(raise_error)
+
+  with description('coerce') as self:
+    with before.each:
+      def expect_cases_match(
+          color: validator.Color, cases: List[Tuple[str, Union[int, type]]]
+      ) -> None:
+        for given, expected in cases:
+          if expected is ValueError:
+            expect(calling(color.coerce, given)).to(raise_error(expected))
+          else:
+            expect(calling(color.coerce, given)).to(equal(expected))
+
+
+      self.expect_cases_match = expect_cases_match
+
+    with it('coerces 1 channel (flat)'):
+      self.expect_cases_match(validator.Color(n_channels=1, flat=True), [
+        ('0', 0),
+        ('14', 0x14),
+        ('#ff', 0xff),
+        ('#fff', 0xff),
+        ('#ffff', 0xff),
+        ('#ffffff', 0xff),
+        ('garbage', ValueError),
+        ('#ff9966', ValueError),
+        ('#ff996600', ValueError),
+      ])
+
+    with it('coerces 1 channel (not flat)'):
+      self.expect_cases_match(validator.Color(n_channels=1, flat=False), [
+        ('0', [0]),
+        ('14', [0x14]),
+        ('#ff', [0xff]),
+        ('#fff', [0xff]),
+        ('#ffff', [0xff]),
+        ('#ffffff', [0xff]),
+        ('garbage', ValueError),
+        ('#ff9966', ValueError),
+        ('#ff996600', ValueError),
+      ])
+
+    with it('coerces 3 channels'):
+      self.expect_cases_match(validator.Color(n_channels=3, flat=False), [
+        ('0', [0, 0, 0]),
+        ('14', [0x14, 0x14, 0x14]),
+        ('#ff', [0xff, 0xff, 0xff]),
+        ('#fff', [0xff, 0xff, 0xff]),
+        ('#ffff', ValueError),
+        ('#ffffff', [0xff, 0xff, 0xff]),
+        ('garbage', ValueError),
+        ('#ff9966', [0xff, 0x99, 0x66]),
+        ('#ff996600', ValueError),
+      ])
+
+  with description('to_rgb_hex'):
+    with it('accepts an int'):
+      v = validator.Color(n_channels=1, flat=True)
+      expect(v.to_rgb_hex(255)).to(equal('#ffffff'))
+
+    with it('accepts 3 ints'):
+      v = validator.Color(n_channels=3, flat=False)
+      expect(calling(v.to_rgb_hex, (255, 128, 0))).to(equal('#ff8000'))
+
+    with it('rejects short input'):
+      v = validator.Color(n_channels=4, flat=False)
+      expect(calling(v.to_rgb_hex, (255, 128, 0))).to(raise_error(ValueError))
+
+    with it('rejects long input'):
+      v = validator.Color(n_channels=1, flat=False)
+      expect(calling(v.to_rgb_hex, (255, 128, 0))).to(raise_error(ValueError))
+
 with description('Enum'):
   with description('constructor'):
     with it('constructs without error'):
