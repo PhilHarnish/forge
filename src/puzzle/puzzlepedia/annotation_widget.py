@@ -39,6 +39,9 @@ def AnnotationWidget(
         value=value,
     )
     coerce = annotation
+  elif isinstance(annotation, validator.Color):
+    widget = widgets.ColorPicker(value=annotation.to_rgb_hex(value))
+    coerce = annotation.coerce
   elif isinstance(annotation, validator.NumberInRange):
     if annotation.max_value < float('inf'):
       coerce = type(annotation.max_value)
