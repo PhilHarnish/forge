@@ -8,9 +8,11 @@ _COLOR_REGEX = re.compile('^(?:#)?([A-Fa-f0-9]{1,8})$')
 
 class Validator(object):
   base_class: type
+  __name__: str
 
   def __init__(self, base_class: type):
     self.base_class = base_class
+    self.__name__ = self.__class__.__name__  # Emulate a `type`.
 
   def __call__(self, *args, **kwargs) -> None:
     return None  # Fool runtime checks in typing module.
@@ -113,3 +115,20 @@ class Color(Validator):
     else:
       values = [instance]
     return all(isinstance(value, int) for value in values)
+
+
+class RangeInRange(Validator):
+  min_value: numbers.Number
+  max_value: numbers.Number
+
+  def __init__(
+      self, min_value: numbers.Number, max_value: numbers.Number) -> None:
+    self.min_value = min_value
+    self.max_value = max_value
+    super().__init__(list)
+
+  def __instancecheck__(self, instance: Any) -> bool:
+    if not super().__instancecheck__(instance) or len(instance) != 2:
+      return False
+    min_value, max_value = instance
+    return self.min_value <= min_value <= max_value <= self.max_value

@@ -122,6 +122,32 @@ with description('NumberInRange'):
       v = validator.NumberInRange(1, 5)
       expect(4).to(be_a(v))
 
-    with it('accepts numbers within range (float'):
+    with it('accepts numbers within range (float)'):
       v = validator.NumberInRange(1.0, 5.0)
       expect(4.0).to(be_a(v))
+
+
+with description('RangeInRange'):
+  with description('constructor'):
+    with it('constructs without error'):
+      expect(calling(validator.RangeInRange, 1, 5)).not_to(raise_error)
+
+    with it('rejects missing arguments'):
+      expect(calling(validator.RangeInRange)).to(raise_error)
+
+  with description('instance checks'):
+    with it('accepts numbers within range (int)'):
+      v = validator.RangeInRange(1, 5)
+      expect([2, 3]).to(be_a(v))
+
+    with it('accepts numbers within range (float)'):
+      v = validator.RangeInRange(1.0, 5.0)
+      expect([2.0, 4.0]).to(be_a(v))
+
+    with it('rejects numbers outside range'):
+      v = validator.RangeInRange(1, 5)
+      expect([2, 30]).not_to(be_a(v))
+
+    with it('rejects numbers in wrong order'):
+      v = validator.RangeInRange(1, 5)
+      expect([3, 2]).not_to(be_a(v))
