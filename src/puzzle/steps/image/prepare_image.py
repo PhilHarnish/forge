@@ -22,7 +22,7 @@ class PrepareImage(_base_image_step.BaseImageStep):
     if constraints.invert:
       result.invert()
     if constraints.crop is not None:
-      color = np.array([constraints.crop, constraints.crop, constraints.crop])
+      color = np.array(constraints.crop)
       result.crop(color)
     if constraints.grayscale:
       result.grayscale()

@@ -12,7 +12,7 @@ _DEPS = {
 class PrepareImageConstraints(constraints.Constraints):
   normalize: bool = True
   invert: bool = True
-  crop: Optional[validator.NumberInRange(min_value=0, max_value=255)] = 0
+  crop: Optional[validator.Color(n_channels=3, flat=False)] = [0, 0, 0]
   grayscale: bool = True
   enhance: bool = True
 
