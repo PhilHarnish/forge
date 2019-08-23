@@ -116,7 +116,7 @@ class Color(Validator):
     if len(coerced) == 1:
       return '#%0.2x%0.2x%0.2x' % (coerced[0], coerced[0], coerced[0])
     elif len(coerced) in (3, 4):
-      return '#%0.2x%0.2x%0.2x' % coerced[:3]
+      return '#%0.2x%0.2x%0.2x' % tuple(coerced[:3])
     raise ValueError('Cannot hex encode "%s"' % str(coerced))
 
   def __instancecheck__(self, instance: Any) -> bool:

@@ -92,9 +92,13 @@ with description('Color'):
       v = validator.Color(n_channels=1, flat=True)
       expect(v.to_rgb_hex(255)).to(equal('#ffffff'))
 
-    with it('accepts 3 ints'):
+    with it('accepts 3 ints (tuple)'):
       v = validator.Color(n_channels=3, flat=False)
       expect(calling(v.to_rgb_hex, (255, 128, 0))).to(equal('#ff8000'))
+
+    with it('accepts 3 ints (list)'):
+      v = validator.Color(n_channels=3, flat=False)
+      expect(calling(v.to_rgb_hex, [255, 128, 0])).to(equal('#ff8000'))
 
     with it('rejects short input'):
       v = validator.Color(n_channels=4, flat=False)
