@@ -1,4 +1,3 @@
-import enum
 import numbers
 import re
 from typing import Any, List, Optional, Union
@@ -24,17 +23,6 @@ class Validator(object):
 
   def _args(self) -> str:
     return ''
-
-
-class Enum(Validator):
-  def __init__(self, base_class: type):
-    if not issubclass(base_class, enum.Enum):
-      raise TypeError('Validator.Enum requires an enum.Enum (%s given)' % (
-          base_class.__name__))
-    super().__init__(base_class)
-
-  def _args(self) -> str:
-    return 'base_class=%s()' % self.base_class.__name__
 
 
 class NumberInRange(Validator):

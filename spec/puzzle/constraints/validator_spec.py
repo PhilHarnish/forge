@@ -108,19 +108,6 @@ with description('Color'):
       v = validator.Color(n_channels=1, flat=False)
       expect(calling(v.to_rgb_hex, (255, 128, 0))).to(raise_error(ValueError))
 
-with description('Enum'):
-  with description('constructor'):
-    with it('constructs without error'):
-      expect(calling(validator.Enum, enum.Enum)).not_to(raise_error)
-
-    with it('raises for incorrect types'):
-      expect(calling(validator.Enum, float)).to(raise_error(
-          TypeError, 'Validator.Enum requires an enum.Enum (float given)'))
-
-    with it('accepts sample values'):
-      v = validator.Enum(TestEnum)
-      expect(TestEnum.DEFAULT).to(be_a(v))
-
 
 with description('NumberInRange'):
   with description('constructor'):
