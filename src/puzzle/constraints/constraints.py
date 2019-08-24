@@ -18,6 +18,7 @@ Constraint = Union[validator.Validator, type]
 
 
 class ConstraintChangeEvent(NamedTuple):
+  """Fired when `key` of `constraints` changes from `previous` to `current`."""
   constraints: 'Constraints'
   key: str
   previous: Any
@@ -71,7 +72,9 @@ class Constraints(object):
     previous = object.__getattribute__(self, key)
     if previous != value:
       object.__setattr__(self, key, value)
-      self._subject.on_next(ConstraintChangeEvent(self, key, previous, value))
+      event = ConstraintChangeEvent(self, key, previous, value)
+      self._before_change_event(event)
+      self._subject.on_next(event)
 
   def __str__(self) -> str:
     return '\n'.join('%s = %s' % (key, repr(value)) for key, value, _ in self)
@@ -83,6 +86,9 @@ class Constraints(object):
       superset.remove(key)
     for key in sorted(superset):
       yield key
+
+  def _before_change_event(self, event: ConstraintChangeEvent) -> None:
+    del event  # Unused.
 
   def _resolve_annotation(self, key: str) -> Optional[type]:
     return _resolve_annotation(self.__class__, key)

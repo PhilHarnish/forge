@@ -12,16 +12,25 @@ class TestConstraints(constraints.Constraints):
 class DynamicConstraints(constraints.Constraints):
   dynamic_constraint: validator.NumberInRange(min_value=0) = 0
   _dynamic_annotation: validator.NumberInRange = None
+  _last_change: Optional[constraints.ConstraintChangeEvent] = None
 
   def __init__(self, max_value: int) -> None:
     self._dynamic_annotation = validator.NumberInRange(
         min_value=0, max_value=max_value)
+    self._last_change = None
     super().__init__()
 
   def _resolve_annotation(self, k: str) -> Optional[type]:
     if k == 'dynamic_constraint':
       return self._dynamic_annotation
     return super()._resolve_annotation(k)
+
+  def _before_change_event(
+      self, event: constraints.ConstraintChangeEvent) -> None:
+    self._last_change = event
+
+  def get_last_change(self) -> Optional[constraints.ConstraintChangeEvent]:
+    return self._last_change
 
 
 class InheritedConstraints(TestConstraints):
@@ -152,6 +161,18 @@ with description('constraints.Constraints'):
           'DynamicConstraints.dynamic_constraint must be'
           ' NumberInRange(min_value=0, max_value=10) (11 given)'
       ))
+
+    with it('allows preparatory work before events fire'):
+      c = DynamicConstraints(5)
+      expect(c.get_last_change()).to(be_none)
+
+      @mock_wrap
+      def callback(change: constraints.ConstraintChangeEvent):
+        expect(c.get_last_change()).to(equal(change))
+
+      c.subscribe(callback)
+      c.dynamic_constraint = 1
+      expect(callback).to(have_been_called)
 
     with it('hides internal state'):
       expect(str(DynamicConstraints(0))).to(look_like("""
