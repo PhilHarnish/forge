@@ -63,6 +63,30 @@ Segment = Tuple[Point, Point]
 Contour = np.ndarray
 
 
+def distance_to_bounding_box(
+    width: int, height: int, x: int, y: int, theta: float) -> float:
+  """Returns distance from (x, y) to width x height box with angle theta."""
+  cos_theta = math.cos(theta)
+  if cos_theta > 0:  # Pointing right.
+    dx = width - x
+  else:  # Pointing left.
+    dx = -x
+  sin_theta = math.sin(theta)
+  if sin_theta > 0:  # Pointing up (down in an image).
+    dy = height - y
+  else:
+    dy = -y
+  if cos_theta:
+    hypotenuse_to_x = dx / cos_theta
+  else:
+    hypotenuse_to_x = float('inf')
+  if sin_theta:
+    hypotenuse_to_y = dy / sin_theta
+  else:
+    hypotenuse_to_y = float('inf')
+  return min(hypotenuse_to_x, hypotenuse_to_y)  # First intercept.
+
+
 def iter_segments(points: Contour) -> Iterable[Segment]:
   """Given points A, B, ...N returns (A, B), (B, ...), (..., N), (N, A)."""
   # "contour" frequently has shape (N, 1, 2); remove "1" middle layer.

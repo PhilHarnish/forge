@@ -46,6 +46,13 @@ _OVERLAP_REGRESSION_TESTS = [
   ),
 ]
 
+with description('distance_to_bounding_box'):
+  with it('handles a horizontal line from center'):
+    expect(np2d.distance_to_bounding_box(4, 4, 2, 2, 0)).to(equal(2.0))
+
+  with it('handles distance to top'):
+    expect(np2d.distance_to_bounding_box(4, 4, 2, 0, math.pi/2)).to(equal(4.0))
+
 
 with description('iter_segments'):
   with it('iterates list of coordinates'):
