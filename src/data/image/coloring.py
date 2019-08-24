@@ -12,11 +12,13 @@ MIN = 0
 MAX = 255
 MIN_BROADCAST = np.array([MIN], dtype=np.uint8)
 MAX_BROADCAST = np.array([MAX], dtype=np.uint8)
+BLACK = (MIN, MIN, MIN)
+WHITE = (MAX, MAX, MAX)
 _MAX_ENHANCE_DISTANCE = 64
 _MAX_COLORS_PER_HLS_SLICE = 7
 _THRESHOLD = 5
-_BLACK = np.array([0, 0, 0], dtype=np.uint8)
-_WHITE = np.array([MAX, MAX, MAX], dtype=np.uint8)
+_BLACK = np.array(BLACK, dtype=np.uint8)
+_WHITE = np.array(WHITE, dtype=np.uint8)
 
 
 def colors(
