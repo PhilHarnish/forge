@@ -1,5 +1,5 @@
 import enum
-from typing import Any, Iterable
+from typing import Any, ContextManager, Iterable
 
 from ipywidgets import widgets
 
@@ -12,7 +12,8 @@ _FLOAT_FORMAT = '0.2f'
 def AnnotationWidget(
     annotation: constraints.Constraint,
     group: constraints.Constraints,
-    key: str, value: Any) -> widgets.Widget:
+    key: str, value: Any,
+    capture: ContextManager) -> widgets.Widget:
   inner_optional = constraints.unwrap_optional(annotation)
   is_optional = bool(inner_optional)
   row = []
@@ -107,7 +108,7 @@ def AnnotationWidget(
   label_widget.width = '25%'
   row.append(label_widget)
   row.append(widget)
-  _bind.value_to_widget(group, key, coerce, widget)
+  _bind.value_to_widget(group, key, coerce, widget, capture)
   if is_optional:
     if value is None:
       description = 'set'

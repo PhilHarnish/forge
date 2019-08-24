@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional
+from typing import Any, Callable, ContextManager, Optional
 
 import rx
 from ipywidgets import widgets
@@ -17,14 +17,16 @@ def value_to_widget(
     group: constraints.Constraints,
     key: str,
     coerce: Optional[Callable[[Any], Any]],
-    widget: widgets.DOMWidget) -> None:
+    widget: widgets.DOMWidget,
+    capture: ContextManager) -> None:
   source = widget_observable(widget)
   def _on_widget_change(value: Any) -> None:
-    if not widget.disabled:
-      if coerce is None:
-        setattr(group, key, value)
-      else:
-        setattr(group, key, coerce(value))
+    with capture:
+      if not widget.disabled:
+        if coerce is None:
+          setattr(group, key, value)
+        else:
+          setattr(group, key, coerce(value))
 
   source.subscribe(_on_widget_change)
 

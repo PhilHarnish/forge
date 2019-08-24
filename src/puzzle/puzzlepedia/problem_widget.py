@@ -1,3 +1,5 @@
+from typing import ContextManager
+
 from ipywidgets import widgets
 
 from puzzle.problems import problem
@@ -11,6 +13,7 @@ _MAX_RESULTS = 30
 
 def ProblemWidget(mp: meta_problem.MetaProblem):
   """Factory for IPython widgets, pretending to be real widget."""
+  capture = widgets.Output()
   items = []
   options = {}
   for p in mp:
@@ -31,7 +34,7 @@ def ProblemWidget(mp: meta_problem.MetaProblem):
   def _on_problem_kind_change(p: problem.Problem) -> None:
     _update_solutions_for_problem(solutions_table, best_solution, p)
     _update_interactive_information_for_problem(
-        interactive_information, p)
+        interactive_information, p, capture)
 
   dropdown_source.subscribe(_on_problem_kind_change)
   best_solution_source = widget_observable(best_solution)
@@ -45,14 +48,14 @@ def ProblemWidget(mp: meta_problem.MetaProblem):
     _update_solutions_for_problem(
         solutions_table, best_solution, mp.peek())
     _update_interactive_information_for_problem(
-        interactive_information, mp.peek())
+        interactive_information, mp.peek(), capture)
 
   for p in mp:
     p.subscribe(_bind.callback_without_event(
         _update_solutions_for_problem, solutions_table, best_solution, p))
 
   return widgets.VBox(
-      [widgets.HBox(items), interactive_information, solutions_table])
+      [widgets.HBox(items), interactive_information, solutions_table, capture])
 
 
 def _update_solutions_for_problem(
@@ -76,7 +79,9 @@ def _update_solutions_for_problem(
 
 
 def _update_interactive_information_for_problem(
-    interactive_information: widgets.VBox, p: problem.Problem):
+    interactive_information: widgets.VBox,
+    p: problem.Problem,
+    capture: ContextManager):
   accordion_children = []
   steps = list(p.steps())
   for s in steps:
@@ -85,7 +90,8 @@ def _update_interactive_information_for_problem(
       child_constraints = []
       for key, value, annotation in group:
         child_constraints.append(
-            annotation_widget.AnnotationWidget(annotation, group, key, value))
+            annotation_widget.AnnotationWidget(
+                annotation, group, key, value, capture))
       step_tabs_children.append(widgets.VBox(child_constraints))
     step_tabs = widgets.Tab(step_tabs_children)
     for i, group in enumerate(s.constraints()):
@@ -93,7 +99,7 @@ def _update_interactive_information_for_problem(
     debug_data_container = widgets.VBox([])
     debug_data_accordion = widgets.Accordion([debug_data_container])
     debug_data_accordion.set_title(0, 'debug data')
-    debug_data_accordion.selected_index = -1
+    debug_data_accordion.selected_index = None
     _update_debug_data_for_problem(debug_data_container, s)
     p.subscribe(_bind.callback_without_event(
         _update_debug_data_for_problem, debug_data_container, s))
@@ -108,7 +114,7 @@ def _update_interactive_information_for_problem(
 
 
 def _update_debug_data_for_problem(
-    debug_data_container: widgets.Accordion, s: step.Step
+    debug_data_container: widgets.VBox, s: step.Step
 ):
   # TODO: Diff.
   debug_widget = debug_data_widget.DebugDataWidget(s)
