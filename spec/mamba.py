@@ -447,3 +447,7 @@ def path_values(root: Any, path: Iterable) -> str:
     cursor = cursor[c]
     results.append('%s = %r' % (c, cursor))
   return '\n'.join(results)
+
+
+def mock_wrap(fn: Callable) -> Callable:
+  return mock.Mock(wraps=fn)

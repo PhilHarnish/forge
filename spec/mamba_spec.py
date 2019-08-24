@@ -300,3 +300,14 @@ with description('gather_exceptions'):
         #3 AssertionError raised with:
            expected: 'raise exception 2' to be none
     '''))
+
+
+with description('mock_wrap'):
+  with it('decorates a function with mock.Mock attributes'):
+    @mock_wrap
+    def fn(a: int, b: int = 1) -> int:
+      return a + b
+
+    expect(calling(fn, 1, b=2)).to(equal(3))
+    expect(fn).to(have_been_called_once)
+    expect(fn).to(have_been_called_with(1, b=2))
