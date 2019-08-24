@@ -73,6 +73,11 @@ def AnnotationWidget(
           min=annotation.min_value,
           readout_format=readout_format,
       )
+  elif isinstance(annotation, validator.Point):
+    widget = widgets.Text(
+        value=repr(value),
+    )
+    coerce = annotation.from_str
   elif isinstance(annotation, validator.RangeInRange):
     if type(annotation.min_value) is int:
       range_slider = widgets.IntRangeSlider
