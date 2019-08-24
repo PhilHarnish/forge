@@ -125,13 +125,13 @@ def AnnotationWidget(
     )
     row.append(toggle_button)
     _bind.clear_to_widget(group, key, coerce, widget, toggle_button)
-    _set_disabled(toggle_button, group, key, value)
+    _set_disabled(toggle_button, group, key, False)
     group.subscribe(
         _bind.callback_without_event(
-            _set_disabled, toggle_button, group, key, value))
-  _set_disabled(widget, group, key, value)
+            _set_disabled, toggle_button, group, key, False))
+  _set_disabled(widget, group, key, True)
   group.subscribe(
-      _bind.callback_without_event(_set_disabled, widget, group, key, value))
+      _bind.callback_without_event(_set_disabled, widget, group, key, True))
   return widgets.HBox(row)
 
 
@@ -139,5 +139,6 @@ def _set_disabled(
     widget: widgets.Widget,
     group: constraints.Constraints,
     key: str,
-    value: Any) -> None:
-  widget.disabled = not group.is_modifiable(key) or value is None
+    consider_value: bool) -> None:
+  disabled_value = consider_value and getattr(group, key) is None
+  widget.disabled = not group.is_modifiable(key) or disabled_value
