@@ -72,6 +72,18 @@ def AnnotationWidget(
           min=annotation.min_value,
           readout_format=readout_format,
       )
+  elif isinstance(annotation, validator.RangeInRange):
+    if type(annotation.min_value) is int:
+      range_slider = widgets.IntRangeSlider
+    else:
+      range_slider = widgets.FloatRangeSlider
+    widget = range_slider(
+        value=value,
+        min=annotation.min_value,
+        max=annotation.max_value,
+        continuous_update=False,
+    )
+    coerce = list
   elif isinstance(annotation, type(Iterable)):
     if hasattr(annotation, '__args__') and len(annotation.__args__) == 1:
       coerce = annotation.__args__[0]
