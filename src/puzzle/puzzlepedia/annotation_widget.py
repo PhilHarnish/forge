@@ -110,7 +110,7 @@ def AnnotationWidget(
     raise NotImplementedError(
         '%s: %s %s (%s)' % (key, value, annotation, type(annotation)))
   label_widget = widgets.Label(value=_common.format_label(key))
-  label_widget.width = '25%'
+  label_widget.layout.width = '25%'
   row.append(label_widget)
   row.append(widget)
   _bind.value_to_widget(group, key, coerce, widget, capture)
