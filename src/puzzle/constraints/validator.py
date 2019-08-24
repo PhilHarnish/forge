@@ -1,7 +1,6 @@
 import numbers
 import re
-from typing import Any, List, Optional, Union
-
+from typing import Any, List, Optional, Tuple, Union
 
 _COLOR_REGEX = re.compile('^(?:#)?([A-Fa-f0-9]{1,8})$')
 
@@ -25,34 +24,6 @@ class Validator(object):
 
   def _args(self) -> str:
     return ''
-
-
-class NumberInRange(Validator):
-  min_value: numbers.Number = float('-inf')
-  max_value: numbers.Number = float('inf')
-
-  def __init__(
-      self,
-      min_value: Optional[numbers.Number] = None,
-      max_value: Optional[numbers.Number] = None):
-    if min_value is None and max_value is None:
-      raise ValueError('min_value and max_value are both None')
-    if min_value is not None:
-      self.min_value = min_value
-    if max_value is not None:
-      self.max_value = max_value
-    super().__init__(numbers.Number)
-
-  def __instancecheck__(self, instance: Any) -> bool:
-    if not super().__instancecheck__(instance):
-      return False
-    return self.min_value <= instance <= self.max_value
-
-  def _args(self) -> str:
-    return 'min_value=%s, max_value=%s' % (self.min_value, self.max_value)
-
-
-ColorChannel = NumberInRange(min_value=0, max_value=255)
 
 
 class Color(Validator):
@@ -115,6 +86,55 @@ class Color(Validator):
     else:
       values = [instance]
     return all(isinstance(value, int) for value in values)
+
+
+class NumberInRange(Validator):
+  min_value: numbers.Number = float('-inf')
+  max_value: numbers.Number = float('inf')
+
+  def __init__(
+      self,
+      min_value: Optional[numbers.Number] = None,
+      max_value: Optional[numbers.Number] = None):
+    if min_value is None and max_value is None:
+      raise ValueError('min_value and max_value are both None')
+    if min_value is not None:
+      self.min_value = min_value
+    if max_value is not None:
+      self.max_value = max_value
+    super().__init__(numbers.Number)
+
+  def __instancecheck__(self, instance: Any) -> bool:
+    if not super().__instancecheck__(instance):
+      return False
+    return self.min_value <= instance <= self.max_value
+
+  def _args(self) -> str:
+    return 'min_value=%s, max_value=%s' % (self.min_value, self.max_value)
+
+
+ColorChannel = NumberInRange(min_value=0, max_value=255)
+
+
+class Point(Validator):
+  _limits: Tuple[numbers.Number]
+
+  def __init__(self, *limits: numbers.Number) -> None:
+    if not limits:
+      raise ValueError('1+ limits are required for Point validation')
+    self._limits = limits
+    super().__init__(list)
+
+  def __instancecheck__(self, instance: Any) -> bool:
+    if (not super().__instancecheck__(instance) or
+        len(instance) != len(self._limits)):
+      return False
+    return all(0 <= v <= limit for v, limit in zip(instance, self._limits))
+
+  def from_str(self, value: str) -> List[numbers.Number]:
+    coerce = type(self._limits[0])
+    segments = value.strip('()[] ').split(',')
+    return [coerce(segment.strip()) for segment in segments]
 
 
 class RangeInRange(Validator):
