@@ -20,7 +20,7 @@ Constraint = Union[validator.Validator, type]
 class ConstraintChangeEvent(NamedTuple):
   """Fired when `key` of `constraints` changes from `previous` to `current`."""
   constraints: 'Constraints'
-  key: str
+  key: Optional[str]
   previous: Any
   current: Any
 
