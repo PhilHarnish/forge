@@ -30,6 +30,7 @@ _TYPING_BASES = (type(Union).mro()[-2], Generic)
 
 class Constraints(object):
   _subject: subjects.Subject = None
+  _ordered_keys: Iterable[str] = ()
 
   def __init__(self) -> None:
     self._subject = subjects.Subject()
@@ -47,10 +48,10 @@ class Constraints(object):
     return key.startswith('_')  # Hide private properties.
 
   def __iter__(self) -> Iterable[Tuple[str, Any, type]]:
-    for key in sorted(dir(self)):
+    for key in self.__dir__():  # NOTE: dir(...) returns sorted results.
       if self._is_internal(key):
         continue
-      annotation = _resolve_annotation(type(self), key)
+      annotation = self._resolve_annotation(key)
       if annotation:
         yield key, getattr(self, key), annotation
 
@@ -75,8 +76,16 @@ class Constraints(object):
   def __str__(self) -> str:
     return '\n'.join('%s = %s' % (key, repr(value)) for key, value, _ in self)
 
-  def _resolve_annotation(self, k: str) -> Optional[type]:
-    return _resolve_annotation(self.__class__, k)
+  def __dir__(self) -> Iterable[str]:
+    superset = set(super().__dir__())
+    for key in self._ordered_keys:
+      yield key
+      superset.remove(key)
+    for key in sorted(superset):
+      yield key
+
+  def _resolve_annotation(self, key: str) -> Optional[type]:
+    return _resolve_annotation(self.__class__, key)
 
 
 def unwrap_optional(annotation: type) -> Optional[type]:

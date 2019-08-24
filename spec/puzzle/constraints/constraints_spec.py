@@ -28,6 +28,13 @@ class InheritedConstraints(TestConstraints):
   int_with_default: int = 42
 
 
+class OrderedConstraints(constraints.Constraints):
+  _ordered_keys: List[str] = ['ordered_a', 'ordered_z', 'ordered_b']
+  ordered_a: bool = True
+  ordered_b: bool = True
+  ordered_z: bool = True
+
+
 class ValidatedConstraints(constraints.Constraints):
   int_in_range: validator.NumberInRange(0, 100) = 42
   optional_int_in_range: Optional[validator.NumberInRange(0, 1)] = None
@@ -238,6 +245,13 @@ with description('constraints.Constraints'):
         optional_tuple = (1, 'two', 3.0)
         optional_with_collection = [1, 2]
         str_with_default = 'default'
+      """))
+
+    with it('allows ordering keys'):
+      expect(str(OrderedConstraints())).to(look_like("""
+        ordered_a = True
+        ordered_z = True
+        ordered_b = True
       """))
 
 
