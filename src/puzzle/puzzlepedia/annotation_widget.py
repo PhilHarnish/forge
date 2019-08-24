@@ -125,6 +125,10 @@ def AnnotationWidget(
     )
     row.append(toggle_button)
     _bind.clear_to_widget(group, key, coerce, widget, toggle_button)
+    _set_disabled(toggle_button, group, key, value)
+    group.subscribe(
+        _bind.callback_without_event(
+            _set_disabled, toggle_button, group, key, value))
   _set_disabled(widget, group, key, value)
   group.subscribe(
       _bind.callback_without_event(_set_disabled, widget, group, key, value))
