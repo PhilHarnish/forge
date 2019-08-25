@@ -103,7 +103,7 @@ def _components_for_image(src: np.ndarray) -> Iterable[component.Component]:
   # TODO: This needs to be cleaned up. It should use constraints instead of
   # constants.
   n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(src)
-  width, height = labels.shape
+  height, width = labels.shape
   total_area = width * height
   max_allowed_area = int(total_area * 0.05)
   min_allowed_area = 8

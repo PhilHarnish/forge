@@ -20,7 +20,7 @@ def DebugDataWidget(s: step.Step) -> widgets.Widget:
 
 def _data_widget(data: Any) -> widgets.Widget:
   if isinstance(data, np.ndarray) and data.dtype == np.uint8:
-    width, height = data.shape[:2]
+    height, width = data.shape[:2]
     f = io.BytesIO()
     Image.fromarray(data).save(f, 'png')
     return widgets.Image(
