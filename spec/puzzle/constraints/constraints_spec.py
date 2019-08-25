@@ -200,7 +200,7 @@ with description('constraints.Constraints'):
       with c.pause_events(flush=True):
         c.dynamic_constraint = 3
         expect(subscriber.on_next).not_to(have_been_called)
-      expect(subscriber.on_next).not_to(have_been_called)
+      expect(subscriber.on_next).to(have_been_called)
 
     with it('queues broadcasts and remembers history'):
       c = DynamicConstraints(5)
