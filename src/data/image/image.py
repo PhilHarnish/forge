@@ -155,6 +155,10 @@ class Image(object):
     self._src = coloring.normalize(self._src)
     return self
 
+  @property
+  def shape(self) -> Tuple[int, int]:
+    return self._src.shape
+
   def __str__(self) -> str:
     stack = []
     node = self
