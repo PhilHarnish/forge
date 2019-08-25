@@ -2,8 +2,10 @@ from typing import ContextManager
 
 from ipywidgets import widgets
 
+from puzzle.constraints import constraints
 from puzzle.problems import problem
-from puzzle.puzzlepedia import _bind, _common, annotation_widget, \
+from puzzle.puzzlepedia import _bind, _common, _widget_util, \
+  annotation_widget, \
   debug_data_widget, meta_problem, table_widget
 from puzzle.puzzlepedia._bind import widget_observable
 from puzzle.steps import step
@@ -88,11 +90,11 @@ def _update_interactive_information_for_problem(
     step_tabs_children = []
     for group in s.constraints():
       child_constraints = []
-      for key, value, annotation in group:
-        child_constraints.append(
-            annotation_widget.AnnotationWidget(
-                annotation, group, key, value, capture))
-      step_tabs_children.append(widgets.VBox(child_constraints))
+      group_container = widgets.VBox(child_constraints)
+      _update_annotations_for_group(group_container, group, capture)
+      group.subscribe(_bind.callback_without_event(
+          _update_annotations_for_group, group_container, group, capture))
+      step_tabs_children.append(group_container)
     step_tabs = widgets.Tab(step_tabs_children)
     for i, group in enumerate(s.constraints()):
       step_tabs.set_title(i, _common.format_label(group.__class__.__name__))
@@ -111,6 +113,17 @@ def _update_interactive_information_for_problem(
   for i, s in enumerate(steps):
     accordion.set_title(i, _common.format_label(str(s)))
   interactive_information.children = (accordion,)
+
+
+def _update_annotations_for_group(
+    annotations_container: widgets.VBox,
+    group: constraints.Constraints,
+    capture: ContextManager) -> None:
+  children = []
+  for key, value, annotation in group:
+    children.append(annotation_widget.AnnotationWidget(
+        annotation, group, key, value, capture))
+  _widget_util.merge_assign_children(annotations_container, children)
 
 
 def _update_debug_data_for_problem(
