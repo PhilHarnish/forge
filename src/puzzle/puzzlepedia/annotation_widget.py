@@ -89,7 +89,7 @@ def AnnotationWidget(
         max=annotation.max_value,
         continuous_update=False,
     )
-    coerce = list
+    coerce = tuple
   elif isinstance(annotation, type(Iterable)):
     if hasattr(annotation, '__args__') and len(annotation.__args__) == 1:
       coerce = annotation.__args__[0]

@@ -123,7 +123,7 @@ class Point(Validator):
     if not limits:
       raise ValueError('1+ limits are required for Point validation')
     self._limits = limits
-    super().__init__(list)
+    super().__init__(tuple)
 
   def __instancecheck__(self, instance: Any) -> bool:
     if (not super().__instancecheck__(instance) or
@@ -131,10 +131,10 @@ class Point(Validator):
       return False
     return all(0 <= v <= limit for v, limit in zip(instance, self._limits))
 
-  def from_str(self, value: str) -> List[numbers.Number]:
+  def from_str(self, value: str) -> Tuple[numbers.Number]:
     coerce = type(self._limits[0])
     segments = value.strip('()[] ').split(',')
-    return [coerce(segment.strip()) for segment in segments]
+    return tuple(coerce(segment.strip()) for segment in segments)
 
 
 class RangeInRange(Validator):
@@ -145,10 +145,13 @@ class RangeInRange(Validator):
       self, min_value: numbers.Number, max_value: numbers.Number) -> None:
     self.min_value = min_value
     self.max_value = max_value
-    super().__init__(list)
+    super().__init__(tuple)
 
   def __instancecheck__(self, instance: Any) -> bool:
     if not super().__instancecheck__(instance) or len(instance) != 2:
       return False
     min_value, max_value = instance
     return self.min_value <= min_value <= max_value <= self.max_value
+
+  def _args(self) -> str:
+    return 'min_value=%s, max_value=%s' % (self.min_value, self.max_value)

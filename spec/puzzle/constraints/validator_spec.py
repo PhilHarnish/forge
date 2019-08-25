@@ -138,28 +138,28 @@ with description('Point'):
   with description('instance checks'):
     with it('accepts numbers within range (int)'):
       v = validator.Point(5, 5)
-      expect([2, 3]).to(be_a(v))
+      expect((2, 3)).to(be_a(v))
 
     with it('accepts numbers within range (float)'):
       v = validator.Point(5.0, 5.0)
-      expect([2.0, 4.0]).to(be_a(v))
+      expect((2.0, 4.0)).to(be_a(v))
 
     with it('rejects numbers outside range'):
       v = validator.Point(1, 5)
-      expect([2, 30]).not_to(be_a(v))
+      expect((2, 30)).not_to(be_a(v))
 
   with description('from_str'):
     with it('produces lists of ints'):
       v = validator.Point(5, 5)
-      expect(v.from_str('0, 4')).to(equal([0, 4]))
+      expect(v.from_str('0, 4')).to(equal((0, 4)))
 
     with it('produces lists of floats'):
       v = validator.Point(5.0, 5.0)
-      expect(v.from_str('[0.5, 4.5]')).to(equal([0.5, 4.5]))
+      expect(v.from_str('[0.5, 4.5]')).to(equal((0.5, 4.5)))
 
     with it('strips noise'):
       v = validator.Point(5, 5)
-      expect(v.from_str('   ([(0, 4)])   ')).to(equal([0, 4]))
+      expect(v.from_str('   ([(0, 4)])   ')).to(equal((0, 4)))
 
 with description('RangeInRange'):
   with description('constructor'):
@@ -172,16 +172,16 @@ with description('RangeInRange'):
   with description('instance checks'):
     with it('accepts numbers within range (int)'):
       v = validator.RangeInRange(1, 5)
-      expect([2, 3]).to(be_a(v))
+      expect((2, 3)).to(be_a(v))
 
     with it('accepts numbers within range (float)'):
       v = validator.RangeInRange(1.0, 5.0)
-      expect([2.0, 4.0]).to(be_a(v))
+      expect((2.0, 4.0)).to(be_a(v))
 
     with it('rejects numbers outside range'):
       v = validator.RangeInRange(1, 5)
-      expect([2, 30]).not_to(be_a(v))
+      expect((2, 30)).not_to(be_a(v))
 
     with it('rejects numbers in wrong order'):
       v = validator.RangeInRange(1, 5)
-      expect([3, 2]).not_to(be_a(v))
+      expect((3, 2)).not_to(be_a(v))

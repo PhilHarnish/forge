@@ -7,7 +7,7 @@ widget_patch = mock.patch('puzzle.puzzlepedia.annotation_widget.widgets')
 
 
 class TestConstraints(constraints.Constraints):
-  pass
+  test: str = 'value'
 
 
 with description('annotation_widget'):
