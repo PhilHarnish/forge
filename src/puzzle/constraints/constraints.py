@@ -106,8 +106,9 @@ class Constraints(object):
       self._flush()
 
   def _flush(self) -> None:
-    self._subject.on_next(self._queued)
-    self._queued = None
+    if self._queued:
+      self._subject.on_next(self._queued)
+      self._queued = None
 
   def _before_change_event(self, event: ConstraintChangeEvent) -> None:
     del event  # Unused.

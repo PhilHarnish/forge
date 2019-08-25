@@ -202,6 +202,14 @@ with description('constraints.Constraints'):
         expect(subscriber.on_next).not_to(have_been_called)
       expect(subscriber.on_next).to(have_been_called)
 
+    with it('does not broadcast None'):
+      c = DynamicConstraints(5)
+      subscriber = mock.Mock()
+      c.subscribe(subscriber)
+      with c.pause_events(flush=True):
+        expect(subscriber.on_next).not_to(have_been_called)
+      expect(subscriber.on_next).not_to(have_been_called)
+
     with it('queues broadcasts and remembers history'):
       c = DynamicConstraints(5)
       subscriber = mock.Mock()
