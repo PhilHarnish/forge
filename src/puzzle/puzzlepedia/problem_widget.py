@@ -56,8 +56,18 @@ def ProblemWidget(mp: meta_problem.MetaProblem):
     p.subscribe(_bind.callback_without_event(
         _update_solutions_for_problem, solutions_table, best_solution, p))
 
-  return widgets.VBox(
-      [widgets.HBox(items), interactive_information, solutions_table, capture])
+  clear_output_button = widgets.Button(description='clear output')
+  ouptuts_changed = _bind.widget_observable(capture, 'outputs')
+  ouptuts_changed.subscribe(_bind.callback_without_event(
+      _update_clear_button_visibility, clear_output_button, capture))
+  _update_clear_button_visibility(clear_output_button, capture)
+  clear_output_button.on_click(
+      _bind.callback_without_event(capture.clear_output))
+
+  return widgets.VBox([
+    widgets.HBox(items), interactive_information, solutions_table, capture,
+    clear_output_button,
+  ])
 
 
 def _update_solutions_for_problem(
@@ -132,3 +142,11 @@ def _update_debug_data_for_problem(
   # TODO: Diff.
   debug_widget = debug_data_widget.DebugDataWidget(s)
   debug_data_container.children = (debug_widget,)
+
+
+def _update_clear_button_visibility(
+    clear_button: widgets.Button, output: widgets.Output) -> None:
+  if output.outputs:
+    clear_button.layout.display = 'block'
+  else:
+    clear_button.layout.display = 'none'
