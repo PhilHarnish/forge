@@ -83,6 +83,9 @@ class Constraints(object):
       if not self._paused_broadcast:
         self._flush()
 
+  def __repr__(self) -> str:
+    return '%s()' % self.__class__.__name__
+
   def __str__(self) -> str:
     return '\n'.join('%s = %s' % (key, repr(value)) for key, value, _ in self)
 
