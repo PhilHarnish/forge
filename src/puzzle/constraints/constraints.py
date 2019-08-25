@@ -23,6 +23,7 @@ class ConstraintChangeEvent(NamedTuple):
   key: Optional[str]
   previous: Any
   current: Any
+  queued: Optional['ConstraintChangeEvent']  # Last unflushed event.
 
 
 # Find penultimate class from typing module. ("object" is final base class.)
@@ -33,10 +34,12 @@ class Constraints(object):
   _subject: subjects.Subject = None
   _ordered_keys: Iterable[str] = ()
   _paused_broadcast: int = 0
+  _queued: Optional[ConstraintChangeEvent] = None
 
   def __init__(self) -> None:
     self._subject = subjects.Subject()
     self._paused_broadcast = 0
+    self._queued = None
 
   def subscribe(self, observer: types.Observer):
     self._subject.subscribe(observer)
@@ -74,10 +77,11 @@ class Constraints(object):
     previous = object.__getattribute__(self, key)
     if previous != value:
       object.__setattr__(self, key, value)
-      event = ConstraintChangeEvent(self, key, previous, value)
-      self._before_change_event(event)
+      self._queued = ConstraintChangeEvent(
+          self, key, previous, value, self._queued)
+      self._before_change_event(self._queued)
       if not self._paused_broadcast:
-        self._subject.on_next(event)
+        self._flush()
 
   def __str__(self) -> str:
     return '\n'.join('%s = %s' % (key, repr(value)) for key, value, _ in self)
@@ -91,10 +95,16 @@ class Constraints(object):
       yield key
 
   @contextlib.contextmanager
-  def _pause_events(self) -> Iterator[None]:
+  def _pause_events(self, flush: bool = False) -> Iterator[None]:
     self._paused_broadcast += 1
     yield
     self._paused_broadcast -= 1
+    if flush:
+      self._flush()
+
+  def _flush(self) -> None:
+    self._subject.on_next(self._queued)
+    self._queued = None
 
   def _before_change_event(self, event: ConstraintChangeEvent) -> None:
     del event  # Unused.

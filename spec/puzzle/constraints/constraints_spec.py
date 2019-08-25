@@ -193,6 +193,28 @@ with description('constraints.Constraints'):
       c.dynamic_constraint = 2
       expect(subscriber.on_next).to(have_been_called)
 
+    with it('queues broadcasts and flushes at the end'):
+      c = DynamicConstraints(5)
+      subscriber = mock.Mock()
+      c.subscribe(subscriber)
+      with c.pause_events(flush=True):
+        c.dynamic_constraint = 3
+        expect(subscriber.on_next).not_to(have_been_called)
+      expect(subscriber.on_next).not_to(have_been_called)
+
+    with it('queues broadcasts and remembers history'):
+      c = DynamicConstraints(5)
+      subscriber = mock.Mock()
+      c.subscribe(subscriber)
+      with c.pause_events():
+        c.dynamic_constraint = 3
+      c.dynamic_constraint = 2
+      expect(subscriber.on_next).to(have_been_called_with(
+          (c, 'dynamic_constraint', 3, 2, (
+            (c, 'dynamic_constraint', 0, 3, None)
+          ))
+      ))
+
     with it('allows recursive pausing'):
       c = DynamicConstraints(5)
       subscriber = mock.Mock()
@@ -234,7 +256,7 @@ with description('constraints.Constraints'):
       ex.str_with_default = 'foobar'
       expect(subscriber.on_next).to(have_been_called_once)
       expect(subscriber.on_next).to(have_been_called_with(
-          (ex, 'str_with_default', 'default', 'foobar')))
+          (ex, 'str_with_default', 'default', 'foobar', None)))
 
     with it('no-op changes are not broadcast'):
       ex = TestConstraints()
