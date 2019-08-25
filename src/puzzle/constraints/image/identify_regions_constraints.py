@@ -20,7 +20,7 @@ class BaseRegionConstraints(constraints.Constraints):
   def update_active_for_method(self, method: Method) -> None:
     self._active = method == self._method
     self._subject.on_next(
-        constraints.ConstraintChangeEvent(self, None, None, None))
+        constraints.ConstraintChangeEvent(self, None, None, None, None))
 
   def is_modifiable(self, key: str) -> bool:
     del key
@@ -45,5 +45,6 @@ class IdentifyRegionsConstraints(constraints.Constraints):
       self, event: constraints.ConstraintChangeEvent) -> None:
     if event.key != 'method':
       return
-    for constraint in self._method_constraint_map.values():
-      constraint.update_active_for_method(event.current)
+    with self._pause_events():
+      for constraint in self._method_constraint_map.values():
+        constraint.update_active_for_method(event.current)
