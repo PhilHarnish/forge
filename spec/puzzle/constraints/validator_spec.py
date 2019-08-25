@@ -108,6 +108,10 @@ with description('Color'):
       v = validator.Color(n_channels=1, flat=False)
       expect(calling(v.to_rgb_hex, (255, 128, 0))).to(raise_error(ValueError))
 
+    with it('accepts none without crashing'):
+      v = validator.Color(n_channels=1, flat=False)
+      expect(calling(v.to_rgb_hex, None)).not_to(raise_error)
+
 
 with description('NumberInRange'):
   with description('constructor'):

@@ -72,7 +72,9 @@ class Color(Validator):
     raise ValueError(
         '"%s" is not a %d-channel color' % (value, self._n_channels))
 
-  def to_rgb_hex(self, value: Any) -> str:
+  def to_rgb_hex(self, value: Any) -> Optional[str]:
+    if value is None:
+      return '#000000'
     coerced = self.coerce(value, flat=False)
     if len(coerced) == 1:
       return '#%0.2x%0.2x%0.2x' % (coerced[0], coerced[0], coerced[0])
