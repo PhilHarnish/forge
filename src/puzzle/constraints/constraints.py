@@ -5,8 +5,8 @@ Constraints are:
 * Optional or required
 * May have one or more values
 """
-
-from typing import Any, Generic, Iterable, NamedTuple, Optional, \
+import contextlib
+from typing import Any, Generic, Iterable, Iterator, NamedTuple, Optional, \
   Tuple, Union
 
 from rx import subjects
@@ -32,9 +32,11 @@ _TYPING_BASES = (type(Union).mro()[-2], Generic)
 class Constraints(object):
   _subject: subjects.Subject = None
   _ordered_keys: Iterable[str] = ()
+  _paused_broadcast: int = 0
 
   def __init__(self) -> None:
     self._subject = subjects.Subject()
+    self._paused_broadcast = 0
 
   def subscribe(self, observer: types.Observer):
     self._subject.subscribe(observer)
@@ -74,7 +76,8 @@ class Constraints(object):
       object.__setattr__(self, key, value)
       event = ConstraintChangeEvent(self, key, previous, value)
       self._before_change_event(event)
-      self._subject.on_next(event)
+      if not self._paused_broadcast:
+        self._subject.on_next(event)
 
   def __str__(self) -> str:
     return '\n'.join('%s = %s' % (key, repr(value)) for key, value, _ in self)
@@ -86,6 +89,12 @@ class Constraints(object):
       superset.remove(key)
     for key in sorted(superset):
       yield key
+
+  @contextlib.contextmanager
+  def _pause_events(self) -> Iterator[None]:
+    self._paused_broadcast += 1
+    yield
+    self._paused_broadcast -= 1
 
   def _before_change_event(self, event: ConstraintChangeEvent) -> None:
     del event  # Unused.

@@ -32,6 +32,10 @@ class DynamicConstraints(constraints.Constraints):
   def get_last_change(self) -> Optional[constraints.ConstraintChangeEvent]:
     return self._last_change
 
+  # Exposed for testing.
+  pause_events = constraints.Constraints._pause_events
+
+
 
 class InheritedConstraints(TestConstraints):
   int_with_default: int = 42
@@ -178,6 +182,29 @@ with description('constraints.Constraints'):
       expect(str(DynamicConstraints(0))).to(look_like("""
         dynamic_constraint = 0
       """))
+
+    with it('allows broadcasts to be paused'):
+      c = DynamicConstraints(5)
+      subscriber = mock.Mock()
+      c.subscribe(subscriber)
+      with c.pause_events():
+        c.dynamic_constraint = 3
+      expect(subscriber.on_next).not_to(have_been_called)
+      c.dynamic_constraint = 2
+      expect(subscriber.on_next).to(have_been_called)
+
+    with it('allows recursive pausing'):
+      c = DynamicConstraints(5)
+      subscriber = mock.Mock()
+      c.subscribe(subscriber)
+      with c.pause_events():
+        with c.pause_events():
+          with c.pause_events():
+            c.dynamic_constraint = 4
+          c.dynamic_constraint = 3
+        c.dynamic_constraint = 2
+      c.dynamic_constraint = 1
+      expect(subscriber.on_next).to(have_been_called_times(1))
 
   with description('validated constraints') as self:
     with before.each:
