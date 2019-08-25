@@ -300,8 +300,9 @@ class _have_been_called(matchers.Matcher):
     return self._failure_message_negated(subject, *args).replace(' not ', ' ')
 
   def _failure_message_negated(self, subject, *args) -> str:
-    return 'expected: %s(%s) not to have been called' % (
-      _fn_name(subject), repr_format.as_args(*self._args, **self._kwargs))
+    return 'expected: %s(%s) not to have been called\nbut:\n%s' % (
+      _fn_name(subject), repr_format.as_args(*self._args, **self._kwargs),
+      '\n'.join('\n'.join(arg) for arg in args))
 
 
 have_been_called = _have_been_called()
