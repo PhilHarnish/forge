@@ -99,6 +99,11 @@ def iter_segments(points: Contour) -> Iterable[Segment]:
       itertools.chain(points[1:], points[:1]))
 
 
+def move_from(pt: Point, theta: float, hypotenuse: float) -> Point:
+  x, y = pt
+  return x + math.cos(theta) * hypotenuse, y + math.sin(theta) * hypotenuse
+
+
 def orientation(a: Point, b: Point, c: Point) -> int:
   """Returns 0 for colinear, and -1/1 for CW and CCW points."""
   return int(np.sign(np.cross(b-a, c-b)))

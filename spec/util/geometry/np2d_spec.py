@@ -63,6 +63,14 @@ with description('iter_segments'):
       (TL, TR), (TR, BR), (BR, BL), (BL, TL),
     ]).tolist()))
 
+
+with description('move_from'):
+  with it('can move zero distance'):
+    expect(np2d.move_from(M.tolist(), 0, 0)).to(equal(tuple(M.tolist())))
+
+  with it('can move right'):
+    expect(np2d.move_from(M.tolist(), 0, 1)).to(equal(tuple(R.tolist())))
+
 with description('orientation'):
   with it('identifies colinear'):
     expect(np2d.orientation(L, M, R)).to(equal(0))
