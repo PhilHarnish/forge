@@ -23,10 +23,10 @@ class HexagonalGridConstraints(
   first: validator.RangeInRange(min_value=0, max_value=0) = _UNDEFINED
   second: validator.RangeInRange(min_value=0, max_value=0) = _UNDEFINED
   third: validator.RangeInRange(min_value=0, max_value=0) = _UNDEFINED
-  n_divisions: Optional[validator.NumberInRange(min_value=1)] = 1
-  n_divisions_first: int = 1
-  n_divisions_second: int = 1
-  n_divisions_third: int = 1
+  n_divisions: Optional[validator.NumberInRange(min_value=1)] = 9
+  n_divisions_first: validator.NumberInRange(min_value=1) = 9
+  n_divisions_second: validator.NumberInRange(min_value=1) = 9
+  n_divisions_third: validator.NumberInRange(min_value=1) = 9
 
   _ordered_keys: Iterable[str] = (
       'center', 'degrees_offset', 'first', 'second', 'third')
