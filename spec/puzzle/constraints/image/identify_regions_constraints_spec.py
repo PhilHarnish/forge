@@ -3,7 +3,7 @@ from spec.mamba import *
 
 
 class MethodConstraints(identify_regions_constraints.BaseRegionConstraints):
-  _method = identify_regions_constraints.Method.HEXAGONAL_GRID
+  _method = identify_regions_constraints.Method.SLICED_GRID
   key: str = 'sample'
 
   allow_inactive_modifications = (
@@ -33,12 +33,12 @@ with description('identify_regions_constraints') as self:
 
     with it('initializes matching constraints (when changed beforehand)'):
       self.constraints.method = (
-          identify_regions_constraints.Method.HEXAGONAL_GRID)
+          identify_regions_constraints.Method.SLICED_GRID)
       self.constraints.register_method_constraint(self.method_constraints)
       expect(self.method_constraints.is_modifiable('key')).to(be_true)
 
     with it('notifies and activates matching constraints (when changed later'):
       self.constraints.register_method_constraint(self.method_constraints)
       self.constraints.method = (
-          identify_regions_constraints.Method.HEXAGONAL_GRID)
+          identify_regions_constraints.Method.SLICED_GRID)
       expect(self.method_constraints.is_modifiable('key')).to(be_true)

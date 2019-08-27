@@ -19,7 +19,7 @@ with description('sliced_grid_constraints') as self:
     self.constraints = sliced_grid_constraints.SlicedGridConstraints(
         _SOURCE)
     self.constraints.update_active_for_method(
-        identify_regions_constraints.Method.HEXAGONAL_GRID)
+        identify_regions_constraints.Method.SLICED_GRID)
 
   with description('is_modifiable'):
     with it('nothing is modifiable when inactive'):
@@ -30,7 +30,7 @@ with description('sliced_grid_constraints') as self:
 
     with it('some keys are modifiable when active'):
       self.constraints.update_active_for_method(
-          identify_regions_constraints.Method.HEXAGONAL_GRID)
+          identify_regions_constraints.Method.SLICED_GRID)
       some_modifiable = any(
           self.constraints.is_modifiable(key) for key in dir(self.constraints)
       )

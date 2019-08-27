@@ -7,8 +7,7 @@ from puzzle.constraints import constraints
 
 class Method(enum.Enum):
   LINES_CLASSIFIER = enum.auto()
-  RECTANGULAR_GRID = enum.auto()
-  HEXAGONAL_GRID = enum.auto()
+  SLICED_GRID = enum.auto()
 
 
 class BaseRegionConstraints(constraints.Constraints):

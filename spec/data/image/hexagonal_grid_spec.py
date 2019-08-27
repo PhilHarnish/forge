@@ -11,7 +11,7 @@ with description('hexagonal_grid') as self:
     self.constraints = sliced_grid_constraints.SlicedGridConstraints(
         self.image)
     self.constraints.update_active_for_method(
-        identify_regions_constraints.Method.HEXAGONAL_GRID)
+        identify_regions_constraints.Method.SLICED_GRID)
     self.constraints.slices = 3
     self.grid = hexagonal_grid.HexagonalGrid(self.image, self.constraints)
 

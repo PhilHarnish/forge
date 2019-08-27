@@ -40,7 +40,7 @@ class SlicedGridConstraints(
   _annotations: Dict[str, validator.RangeInRange] = None
 
   _method: identify_regions_constraints.Method = (
-      identify_regions_constraints.Method.HEXAGONAL_GRID)
+      identify_regions_constraints.Method.SLICED_GRID)
 
   def __init__(self, source: image.Image) -> None:
     super().__init__()
