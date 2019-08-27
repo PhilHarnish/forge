@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 
 from data.image import coloring, image
-from puzzle.constraints.image import hexagonal_grid_constraints
+from puzzle.constraints.image import sliced_grid_constraints
 from util.geometry import np2d
 from util.geometry.np2d import Point
 
@@ -14,12 +14,12 @@ Divisions = Iterable[Tuple[float, Point, Point, float]]
 
 class HexagonalGrid(object):
   _source: image.Image
-  _constraints: hexagonal_grid_constraints.HexagonalGridConstraints
+  _constraints: sliced_grid_constraints.SlicedGridConstraints
 
   def __init__(
       self,
       source: image.Image,
-      constraints: hexagonal_grid_constraints) -> None:
+      constraints: sliced_grid_constraints) -> None:
     self._source = source
     self._constraints = constraints
 
@@ -45,7 +45,10 @@ class HexagonalGrid(object):
         x, y = np2d.move_from(start, theta, division_distance * i)
         dx = round(math.cos(right_angle) * max_distance)
         dy = round(math.sin(right_angle) * max_distance)
-        yield theta, (x - dx, y - dy), (x + dx, y + dy), i / divisions
+        yield (
+          theta,
+          (round(x - dx), round(y - dy)), (round(x + dx), round(y + dy)),
+          i / divisions)
 
   def get_debug_data(self) -> Tuple[np.ndarray, np.ndarray, Divisions]:
     data = cv2.cvtColor(self._source.get_debug_data(), cv2.COLOR_GRAY2RGB)
@@ -54,8 +57,9 @@ class HexagonalGrid(object):
     cv2.circle(data, c, 3, coloring.WHITE, thickness=3)
     cv2.circle(mask, c, 3, coloring.WHITE, thickness=3)
     for (theta, distances, divisions), color in zip(
-        self._constraints.get_specs(), coloring.colors(3)):
+        self._constraints.get_specs(),
+        coloring.colors(self._constraints.slices)):
       for distance in distances:
-        moved = np2d.move_from(c, theta, distance)
-        cv2.circle(data, moved, 3, color, thickness=3)
+        x, y = np2d.move_from(c, theta, distance)
+        cv2.circle(data, (round(x), round(y)), 3, color, thickness=3)
     return data, mask, self.get_slope_divisions()

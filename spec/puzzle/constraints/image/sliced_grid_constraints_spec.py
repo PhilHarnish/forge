@@ -1,22 +1,22 @@
 import numpy as np
 
 from data.image import image
-from puzzle.constraints.image import hexagonal_grid_constraints, \
-  identify_regions_constraints
+from puzzle.constraints.image import identify_regions_constraints, \
+  sliced_grid_constraints
 from spec.mamba import *
 
 _SOURCE = image.Image(np.zeros((300, 200)))
 
 
-with description('hexagonal_grid_constraints.HexagonalGridConstraints'):
+with description('sliced_grid_constraints.SlicedGridConstraints'):
   with it('constructs without error'):
     expect(
-        calling(hexagonal_grid_constraints.HexagonalGridConstraints, _SOURCE)
+        calling(sliced_grid_constraints.SlicedGridConstraints, _SOURCE)
     ).not_to(raise_error)
 
-with description('hexagonal_grid_constraints') as self:
+with description('sliced_grid_constraints') as self:
   with before.each:
-    self.constraints = hexagonal_grid_constraints.HexagonalGridConstraints(
+    self.constraints = sliced_grid_constraints.SlicedGridConstraints(
         _SOURCE)
     self.constraints.update_active_for_method(
         identify_regions_constraints.Method.HEXAGONAL_GRID)

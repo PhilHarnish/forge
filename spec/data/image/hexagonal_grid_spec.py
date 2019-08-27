@@ -1,17 +1,18 @@
 import numpy as np
 
 from data.image import hexagonal_grid, image
-from puzzle.constraints.image import hexagonal_grid_constraints, \
-  identify_regions_constraints
+from puzzle.constraints.image import identify_regions_constraints, \
+  sliced_grid_constraints
 from spec.mamba import *
 
 with description('hexagonal_grid') as self:
   with before.each:
     self.image = image.Image(np.zeros((50, 50)))
-    self.constraints = hexagonal_grid_constraints.HexagonalGridConstraints(
+    self.constraints = sliced_grid_constraints.SlicedGridConstraints(
         self.image)
     self.constraints.update_active_for_method(
         identify_regions_constraints.Method.HEXAGONAL_GRID)
+    self.constraints.slices = 3
     self.grid = hexagonal_grid.HexagonalGrid(self.image, self.constraints)
 
   with it('returns divisions'):
