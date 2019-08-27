@@ -112,11 +112,19 @@ def _update_interactive_information_for_problem(
     debug_data_accordion = widgets.Accordion([debug_data_container])
     debug_data_accordion.set_title(0, 'debug data')
     debug_data_accordion.selected_index = None
-    _update_debug_data_for_problem(debug_data_container, s)
+    _update_debug_data_for_problem(
+        debug_data_container, debug_data_accordion, s, capture)
+    accordian_selected_index_changed = _bind.widget_observable(
+        debug_data_accordion, 'selected_index')
+    accordian_selected_index_changed.subscribe(_bind.callback_without_event(
+        _update_debug_data_for_problem, debug_data_container,
+        debug_data_accordion, s, capture))
     p.subscribe(_bind.callback_without_event(
-        _update_debug_data_for_problem, debug_data_container, s))
+        _update_debug_data_for_problem, debug_data_container,
+        debug_data_accordion, s, capture))
     s.subscribe(_bind.callback_without_event(
-        _update_debug_data_for_problem, debug_data_container, s))
+        _update_debug_data_for_problem, debug_data_container,
+        debug_data_accordion, s, capture))
     step_tabs = widgets.VBox([step_tabs, debug_data_accordion])
     accordion_children.append(step_tabs)
   accordion = widgets.Accordion(children=accordion_children)
@@ -137,11 +145,15 @@ def _update_annotations_for_group(
 
 
 def _update_debug_data_for_problem(
-    debug_data_container: widgets.VBox, s: step.Step
+    debug_data_container: widgets.VBox,
+    debug_data_accordion: widgets.Accordion,
+    s: step.Step,
+    capture: ContextManager,
 ):
   # TODO: Diff.
-  debug_widget = debug_data_widget.DebugDataWidget(s)
-  debug_data_container.children = (debug_widget,)
+  if debug_data_accordion.selected_index is not None:
+    debug_widget = debug_data_widget.DebugDataWidget(s, capture)
+    debug_data_container.children = (debug_widget,)
 
 
 def _update_clear_button_visibility(

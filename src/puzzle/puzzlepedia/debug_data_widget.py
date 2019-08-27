@@ -1,5 +1,5 @@
 import io
-from typing import Any
+from typing import Any, ContextManager
 
 import numpy as np
 from PIL import Image
@@ -9,13 +9,13 @@ from puzzle.puzzlepedia import _common
 from puzzle.steps import step
 
 
-def DebugDataWidget(s: step.Step) -> widgets.Widget:
-  # TODO: Make data fetching lazy?
-  try:
-    data = s.get_debug_data()
-  except NotImplementedError:
-    data = '[no data]'
-  return _data_widget(data)
+def DebugDataWidget(s: step.Step, capture: ContextManager) -> widgets.Widget:
+  with capture:
+    try:
+      data = s.get_debug_data()
+    except NotImplementedError:
+      data = '[no data]'
+    return _data_widget(data)
 
 
 def _data_widget(data: Any) -> widgets.Widget:

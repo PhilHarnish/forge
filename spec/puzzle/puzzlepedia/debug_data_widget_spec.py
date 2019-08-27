@@ -8,6 +8,11 @@ class TestStep(step.Step):
     return 'sample'
 
 
+@contextlib.contextmanager
+def capture_mock() -> ContextManager:
+  yield
+
+
 widget_patch = mock.patch('puzzle.puzzlepedia.debug_data_widget.widgets')
 
 
@@ -23,5 +28,5 @@ with description('debug_data_widget'):
         raise_error(NotImplementedError))
 
   with it('returns a widget when possible'):
-    debug_data_widget.DebugDataWidget(TestStep())
+    debug_data_widget.DebugDataWidget(TestStep(), capture_mock())
     expect(self.mock_widgets.HTML).to(have_been_called)
