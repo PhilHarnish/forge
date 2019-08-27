@@ -12,7 +12,7 @@ from util.geometry.np2d import Point
 Divisions = Iterable[Tuple[float, Point, Point, float]]
 
 
-class HexagonalGrid(object):
+class SlicedGrid(object):
   _source: image.Image
   _constraints: sliced_grid_constraints.SlicedGridConstraints
 
