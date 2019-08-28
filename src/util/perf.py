@@ -1,8 +1,8 @@
 import contextlib
 import random
 import time
-from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, \
-  Tuple, Union
+from typing import Any, Callable, ContextManager, Dict, Iterable, List, \
+  NamedTuple, Optional, Tuple, Union
 
 _STATES = []
 _ALL_PERFS = []
@@ -122,7 +122,8 @@ class Perf(object):
       self._after_hooks[name](*args, **kwargs)
 
   @contextlib.contextmanager
-  def benchmark(self, name: Variant):
+  def benchmark(self, name: Variant) -> ContextManager:
+    """ContextManager for measuring time spent in a `with` block."""
     start = time.perf_counter()
     yield
     end = time.perf_counter()
