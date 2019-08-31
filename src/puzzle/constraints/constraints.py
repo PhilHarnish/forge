@@ -8,6 +8,7 @@ Constraints are:
 import contextlib
 import re
 import textwrap
+from collections import OrderedDict
 from typing import Any, Dict, Generic, Iterable, Iterator, NamedTuple, \
   Optional, \
   Tuple, Union
@@ -106,6 +107,9 @@ class Constraints(object):
 
   def __dir__(self) -> Iterable[str]:
     superset = set(super().__dir__())
+    for key in self._docs:
+      yield key
+      superset.remove(key)
     for key in self._ordered_keys:
       yield key
       superset.remove(key)
@@ -184,7 +188,7 @@ def _resolve_annotation(cls: type, k: str) -> Optional[type]:
 
 def _parse_docs(docs: Optional[str]) -> Dict[str, str]:
   if not docs:
-    return {}
+    return OrderedDict()
   if docs.startswith(' '):
     first_line = ''
   else:
@@ -193,7 +197,7 @@ def _parse_docs(docs: Optional[str]) -> Dict[str, str]:
   docs = textwrap.dedent(docs)
   if first_line:
     docs = first_line + '\n' + docs
-  result = {}
+  result = OrderedDict()
   buffer = []
   name = None
   for line in docs.split('\n'):

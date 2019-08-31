@@ -13,11 +13,13 @@ class DocumentedConstraints(constraints.Constraints):
   """Documented constraints.
 
   a: Sample constraint.
+  z: A non-alphabetical constraint.
   b: Another constraint,
      this time with line wrapping.
   c: A final constraint.
   """
   a: str = 'a'
+  z: str = 'z'
   b: Optional[int] = None
   c: float = 1.5
 
@@ -348,6 +350,7 @@ with description('constraints.Constraints'):
     with it('includes docs'):
       expect(str(DocumentedConstraints())).to(look_like("""
         a = 'a'  # Sample constraint.
+        z = 'z'  # A non-alphabetical constraint.
         b = None  # Another constraint, this time with line wrapping.
         c = 1.5  # A final constraint.
       """))
