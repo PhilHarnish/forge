@@ -63,6 +63,7 @@ _EXPECTED_SYMBOLS = {
   'nurimaze.png': collections.Counter({'FULL_CIRCLE': 4}),
   # TODO: This entry is incomplete.
   'pentopia.png': collections.Counter({'UP_ARROW': 6, 'DOWN_ARROW': 3, 'T': 1}),
+  'rowsgarden.png': collections.Counter(),
   'skyscraper.png': collections.Counter(),
   'slitherlink.png': collections.Counter(),
   'spiral.png': collections.Counter(),
@@ -108,7 +109,7 @@ def prepare_images() -> Iterable[Tuple[str, prepare_image.PrepareImage]]:
     if _FOCUS and n not in _FOCUS:
       continue
     yield n, prepare_image.PrepareImage(
-        prepare_image_constraints.PrepareImageConstraints(), img)
+        img, prepare_image_constraints.PrepareImageConstraints())
 
 
 with description('decompose', 'end2end') as self:
@@ -127,14 +128,14 @@ with description('decompose', 'end2end') as self:
   with it('constructs without error'):
     for name, prepare in self.prepare_images:
       expect(
-          calling(decompose.Decompose, self.constraints, prepare)
+          calling(decompose.Decompose, prepare, self.constraints)
       ).not_to(raise_error)
 
   with it('finds expected symbols'):
     with benchmark(1300):
       with gather_exceptions() as collector:
         for name, prepare in self.prepare_images:
-          d = decompose.Decompose(self.constraints, prepare)
+          d = decompose.Decompose(prepare, self.constraints)
           found = []
           for c in d.get_components():
             symbol = c.labels.get('symbol')
