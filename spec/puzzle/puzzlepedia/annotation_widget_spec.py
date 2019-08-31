@@ -20,5 +20,6 @@ with description('annotation_widget'):
   with it('renders NumberInRange as a FloatSlider'):
     annotation_widget.AnnotationWidget(
         validator.NumberInRange(0.0, 2.0), TestConstraints(), 'test', 1.0,
+        None,
         mock.Mock())
     expect(self.mock_widgets.FloatSlider).to(have_been_called)

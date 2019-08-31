@@ -9,6 +9,19 @@ class TestConstraints(constraints.Constraints):
   optional_tuple: Optional[Tuple[int, str, float]] = (1, 'two', 3.0)
 
 
+class DocumentedConstraints(constraints.Constraints):
+  """Documented constraints.
+
+  a: Sample constraint.
+  b: Another constraint,
+     this time with line wrapping.
+  c: A final constraint.
+  """
+  a: str = 'a'
+  b: Optional[int] = None
+  c: float = 1.5
+
+
 class DynamicConstraints(constraints.Constraints):
   dynamic_constraint: validator.NumberInRange(min_value=0) = 0
   _dynamic_annotation: validator.NumberInRange = None
@@ -302,7 +315,7 @@ with description('constraints.Constraints'):
       expect(list(InheritedConstraints())).to(have_len(5))
 
     with it('includes type information'):
-      types = {k: t for k, _, t in TestConstraints()}
+      types = {k: t for k, _, t, _ in TestConstraints()}
       expect(types).to(have_key('str_with_default', str))
       expect(types).to(
           have_key('optional_with_collection', Optional[List[int]]))
@@ -330,6 +343,13 @@ with description('constraints.Constraints'):
         ordered_a = True
         ordered_z = True
         ordered_b = True
+      """))
+
+    with it('includes docs'):
+      expect(str(DocumentedConstraints())).to(look_like("""
+        a = 'a'  # Sample constraint.
+        b = None  # Another constraint, this time with line wrapping.
+        c = 1.5  # A final constraint.
       """))
 
 

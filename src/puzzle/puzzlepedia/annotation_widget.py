@@ -1,5 +1,6 @@
 import enum
-from typing import Any, ContextManager, Iterable
+import html
+from typing import Any, ContextManager, Iterable, Optional
 
 from ipywidgets import widgets
 
@@ -12,7 +13,7 @@ _FLOAT_FORMAT = '0.2f'
 def AnnotationWidget(
     annotation: constraints.Constraint,
     group: constraints.Constraints,
-    key: str, value: Any,
+    key: str, value: Any, docs: Optional[str],
     capture: ContextManager) -> widgets.Widget:
   inner_optional = constraints.unwrap_optional(annotation)
   is_optional = bool(inner_optional)
@@ -132,6 +133,9 @@ def AnnotationWidget(
   _set_disabled(widget, group, key, True)
   group.subscribe(
       _bind.callback_without_event(_set_disabled, widget, group, key, True))
+  if docs:
+    row.append(
+        widgets.HTML('<a title="%s">�</a>' % html.escape(docs, quote=True)))
   return widgets.HBox(row)
 
 

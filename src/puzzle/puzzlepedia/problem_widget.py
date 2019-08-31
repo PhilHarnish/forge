@@ -138,9 +138,9 @@ def _update_annotations_for_group(
     group: constraints.Constraints,
     capture: ContextManager) -> None:
   children = []
-  for key, value, annotation in group:
+  for key, value, annotation, docs in group:
     children.append(annotation_widget.AnnotationWidget(
-        annotation, group, key, value, capture))
+        annotation, group, key, value, docs, capture))
   _widget_util.merge_assign_children(annotations_container, children)
 
 

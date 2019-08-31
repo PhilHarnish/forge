@@ -6,7 +6,10 @@ Constraints are:
 * May have one or more values
 """
 import contextlib
-from typing import Any, Generic, Iterable, Iterator, NamedTuple, Optional, \
+import re
+import textwrap
+from typing import Any, Dict, Generic, Iterable, Iterator, NamedTuple, \
+  Optional, \
   Tuple, Union
 
 from rx import subjects
@@ -15,6 +18,13 @@ from data import types
 from puzzle.constraints import validator
 
 Constraint = Union[validator.Validator, type]
+
+
+class ConstraintSpec(NamedTuple):
+  name: str
+  value: Any
+  annotation: type
+  docs: Optional[str]
 
 
 class ConstraintChangeEvent(NamedTuple):
@@ -28,6 +38,8 @@ class ConstraintChangeEvent(NamedTuple):
 
 # Find penultimate class from typing module. ("object" is final base class.)
 _TYPING_BASES = (type(Union).mro()[-2], Generic)
+# Matches `constraint_name: ...` but not `Some text: the sequel`.
+_CONSTRAINT_RE = re.compile(r'^([a-z_]+):(.*)$')
 
 
 class Constraints(object):
@@ -35,11 +47,13 @@ class Constraints(object):
   _ordered_keys: Iterable[str] = ()
   _paused_broadcast: int = 0
   _queued: Optional[ConstraintChangeEvent] = None
+  _docs: Dict[str, str] = None
 
   def __init__(self) -> None:
     self._subject = subjects.Subject()
     self._paused_broadcast = 0
     self._queued = None
+    self._docs = _parse_docs(self.__class__.__doc__)
 
   def subscribe(self, observer: types.Observer):
     self._subject.subscribe(observer)
@@ -48,18 +62,13 @@ class Constraints(object):
     del key
     return True
 
-  def _is_internal(self, key: str) -> bool:
-    if not hasattr(self, key):
-      raise AttributeError('%s not in %s' % (key, self.__class__.__name__))
-    return key.startswith('_')  # Hide private properties.
-
-  def __iter__(self) -> Iterable[Tuple[str, Any, type]]:
+  def __iter__(self) -> Iterable[ConstraintSpec]:
     for key in self.__dir__():  # NOTE: dir(...) returns sorted results.
       if self._is_internal(key):
         continue
       annotation = self._resolve_annotation(key)
       if annotation:
-        yield key, getattr(self, key), annotation
+        yield key, getattr(self, key), annotation, self._resolve_docs(key)
 
   def __setattr__(self, key: str, value: Any) -> None:
     if self._is_internal(key):
@@ -87,7 +96,13 @@ class Constraints(object):
     return '%s()' % self.__class__.__name__
 
   def __str__(self) -> str:
-    return '\n'.join('%s = %s' % (key, repr(value)) for key, value, _ in self)
+    results = []
+    for key, value, _, docs in self:
+      if docs:
+        results.append('%s = %s  # %s' % (key, repr(value), docs))
+      else:
+        results.append('%s = %s' % (key, repr(value)))
+    return '\n'.join(results)
 
   def __dir__(self) -> Iterable[str]:
     superset = set(super().__dir__())
@@ -96,6 +111,11 @@ class Constraints(object):
       superset.remove(key)
     for key in sorted(superset):
       yield key
+
+  def _is_internal(self, key: str) -> bool:
+    if not hasattr(self, key):
+      raise AttributeError('%s not in %s' % (key, self.__class__.__name__))
+    return key.startswith('_')  # Hide private properties.
 
   @contextlib.contextmanager
   def _pause_events(self, flush: bool = False) -> Iterator[None]:
@@ -115,6 +135,9 @@ class Constraints(object):
 
   def _resolve_annotation(self, key: str) -> Optional[type]:
     return _resolve_annotation(self.__class__, key)
+
+  def _resolve_docs(self, key: str) -> Optional[str]:
+    return self._docs.get(key)
 
 
 def unwrap_optional(annotation: type) -> Optional[type]:
@@ -157,3 +180,32 @@ def _resolve_annotation(cls: type, k: str) -> Optional[type]:
       continue
     return klass.__annotations__[k]
   return None
+
+
+def _parse_docs(docs: Optional[str]) -> Dict[str, str]:
+  if not docs:
+    return {}
+  if docs.startswith(' '):
+    first_line = ''
+  else:
+    # Sometimes the class has 1 line of documentation to ignore.
+    first_line, docs = docs.split('\n', 1)
+  docs = textwrap.dedent(docs)
+  if first_line:
+    docs = first_line + '\n' + docs
+  result = {}
+  buffer = []
+  name = None
+  for line in docs.split('\n'):
+    has_name = _CONSTRAINT_RE.match(line)
+    if has_name:
+      if name:
+        result[name] = ' '.join(buffer)
+        buffer.clear()
+      name = has_name.group(1)
+      buffer.append(has_name.group(2).strip())
+    elif name:
+      buffer.append(line.strip())
+  if name:
+    result[name] = ' '.join(buffer)
+  return result
