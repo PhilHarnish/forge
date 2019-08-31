@@ -19,6 +19,21 @@ _Number = TypeVar('_Number', int, float)
 
 class SlicedGridConstraints(
     identify_regions_constraints.BaseRegionConstraints):
+  """Constraints for slicing an image into a grid.
+
+  slices: int. Number of slices around center. Rectangular: 2. Hexagonal: 3.
+  center: Point. Origin for slicing.
+  degrees_offset: Degrees of rotation, counter-clockwise from East.
+  first: Range. Beginning and end of the first dimension.
+  second: Range. Beginning and end of the second dimension.
+  third: Range. Beginning and end of the third dimension.
+  fourth: Range. Beginning and end of the fourth dimension.
+  n_divisions: int. Number of divisions across all dimensions.
+  n_divisions_first: int. Divisions in first dimension. Overrides n_divisions.
+  n_divisions_first: int. Divisions in second dimension. Overrides n_divisions.
+  n_divisions_first: int. Divisions in third dimension. Overrides n_divisions.
+  n_divisions_first: int. Divisions in fourth dimension. Overrides n_divisions.
+  """
   slices: validator.NumberInRange(min_value=2, max_value=4) = 2
   center: validator.Point(0, 0) = _UNDEFINED
   degrees_offset: validator.NumberInRange(min_value=0, max_value=30) = 0
@@ -31,10 +46,6 @@ class SlicedGridConstraints(
   n_divisions_second: validator.NumberInRange(min_value=1) = 9
   n_divisions_third: validator.NumberInRange(min_value=1) = 9
   n_divisions_fourth: validator.NumberInRange(min_value=1) = 9
-
-  _ordered_keys: Iterable[str] = (
-      'slices', 'center', 'degrees_offset',
-  ) + _DIMS + ('n_divisions',) + _DIVISION_DIMS
 
   _source: image.Image = None
   _annotations: Dict[str, validator.RangeInRange] = None
