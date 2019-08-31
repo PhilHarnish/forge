@@ -1,15 +1,12 @@
 import math
-from typing import Iterable, Tuple
+from typing import Tuple
 
 import cv2
 import numpy as np
 
-from data.image import coloring, image
+from data.image import coloring, image, model
 from puzzle.constraints.image import sliced_grid_constraints
 from util.geometry import np2d
-from util.geometry.np2d import Point
-
-Divisions = Iterable[Tuple[float, Point, Point, float]]
 
 
 class SlicedGrid(object):
@@ -27,7 +24,7 @@ class SlicedGrid(object):
     self._source = source
     self._constraints.set_source(source)
 
-  def get_slope_divisions(self) -> Divisions:
+  def get_slope_divisions(self) -> model.Divisions:
     c = self._constraints.center
     max_distance = sum(self._source.shape)
     for theta, distances, divisions in self._constraints.get_specs():
@@ -50,7 +47,7 @@ class SlicedGrid(object):
           (round(x - dx), round(y - dy)), (round(x + dx), round(y + dy)),
           i / divisions)
 
-  def get_debug_data(self) -> Tuple[np.ndarray, np.ndarray, Divisions]:
+  def get_debug_data(self) -> Tuple[np.ndarray, np.ndarray, model.Divisions]:
     data = cv2.cvtColor(self._source.get_debug_data(), cv2.COLOR_GRAY2RGB)
     mask = np.zeros_like(data)
     c = self._constraints.center
