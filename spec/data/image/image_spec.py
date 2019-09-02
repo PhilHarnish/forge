@@ -83,6 +83,14 @@ with description('image'):
           .fork()
       """))
 
+    with it('produces reasonable args for nparray'):
+      i = image.Image(np.ones((3, 3), dtype=np.uint8))
+      i.mask(np.ones((3, 3)))
+      expect(str(i)).to(look_like("""
+        Image()
+          .mask(np.ones((3, 3)))
+      """))
+
   with it('get_debug_data'):
     data = np.ones((3, 3), dtype=np.uint8)
     expect(image.Image(data).get_debug_data()).to(be(data))

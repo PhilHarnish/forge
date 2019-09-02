@@ -7,8 +7,8 @@ import numpy as np
 from data.convert import repr_format
 from data.image import coloring, component, utils
 
-MutationDecorator = Callable[[Callable], Callable]
 MutationFn = Callable[..., 'Image']
+MutationDecorator = Callable[[MutationFn], MutationFn]
 Mutation = Tuple[str, Tuple, Dict[str, Any]]
 MutationSpec = Union[str, Mutation]
 T = TypeVar('T')
@@ -151,6 +151,11 @@ class Image(object):
   @mutation()
   def invert(self) -> 'Image':
     np.bitwise_not(self._src, out=self._src)
+    return self
+
+  @mutation()
+  def mask(self, mask: np.ndarray) -> 'Image':
+    self._src[mask == 0] = 0
     return self
 
   @mutation()
