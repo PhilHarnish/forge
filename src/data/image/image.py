@@ -158,6 +158,10 @@ class Image(object):
     self._src[mask == 0] = 0
     return self
 
+  @computation
+  def nonzero(self) -> int:
+    return np.count_nonzero(self._src)
+
   @mutation()
   def normalize(self) -> 'Image':
     self._src = coloring.normalize(self._src)
