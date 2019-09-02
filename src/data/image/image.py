@@ -75,6 +75,9 @@ class Image(object):
         return False
     return True  # All mutations matched.
 
+  def color_band(self, low: int, high: Optional[int] = None) -> np.ndarray:
+    return coloring.color_band(self._src, low, high)
+
   @computation
   def bincount(self) -> np.ndarray:
     return np.bincount(self._src.ravel())
