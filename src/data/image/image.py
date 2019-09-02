@@ -158,6 +158,9 @@ class Image(object):
     self._src[mask == 0] = 0
     return self
 
+  def mask_nonzero(self, mask: np.ndarray) -> int:
+    return int(np.sum((self._src != 0) & (mask != 0)))
+
   @computation
   def nonzero(self) -> int:
     return np.count_nonzero(self._src)
