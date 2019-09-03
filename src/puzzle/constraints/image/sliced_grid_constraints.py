@@ -10,8 +10,7 @@ Spec = Tuple[float, Tuple[int, int], int]
 
 
 _UNDEFINED = (0, 0)
-_THETAS = (0, math.pi / 3, 2 * math.pi / 3)
-_DIMS = ('first', 'second', 'third', 'fourth')
+_DIMS = ('first', 'second', 'third', 'fourth', 'fifth', 'sixth')
 _DIVISION_DIMS = tuple('n_divisions_%s' % dim for dim in _DIMS)
 _ALL_DIM_FIELDS = set(_DIMS + _DIVISION_DIMS)
 _Number = TypeVar('_Number', int, float)
@@ -28,24 +27,32 @@ class SlicedGridConstraints(
   second: Range. Beginning and end of the second dimension.
   third: Range. Beginning and end of the third dimension.
   fourth: Range. Beginning and end of the fourth dimension.
+  fifth: Range. Beginning and end of the fourth dimension.
+  sixth: Range. Beginning and end of the fourth dimension.
   n_divisions: int. Number of divisions across all dimensions.
   n_divisions_first: int. Divisions in first dimension. Overrides n_divisions.
-  n_divisions_first: int. Divisions in second dimension. Overrides n_divisions.
-  n_divisions_first: int. Divisions in third dimension. Overrides n_divisions.
-  n_divisions_first: int. Divisions in fourth dimension. Overrides n_divisions.
+  n_divisions_second: int. Divisions in second dimension. Overrides n_divisions.
+  n_divisions_third: int. Divisions in third dimension. Overrides n_divisions.
+  n_divisions_fourth: int. Divisions in fourth dimension. Overrides n_divisions.
+  n_divisions_fifth: int. Divisions in fifth dimension. Overrides n_divisions.
+  n_divisions_sixth: int. Divisions in sixth dimension. Overrides n_divisions.
   """
-  slices: validator.NumberInRange(min_value=2, max_value=4) = 2
+  slices: validator.Option([2, 3, 4, 6]) = 2
   center: validator.Point(0, 0) = _UNDEFINED
   degrees_offset: validator.NumberInRange(min_value=0, max_value=30) = 0
   first: validator.RangeInRange(min_value=0, max_value=0) = _UNDEFINED
   second: validator.RangeInRange(min_value=0, max_value=0) = _UNDEFINED
   third: validator.RangeInRange(min_value=0, max_value=0) = _UNDEFINED
   fourth: validator.RangeInRange(min_value=0, max_value=0) = _UNDEFINED
+  fifth: validator.RangeInRange(min_value=0, max_value=0) = _UNDEFINED
+  sixth: validator.RangeInRange(min_value=0, max_value=0) = _UNDEFINED
   n_divisions: Optional[validator.NumberInRange(min_value=1)] = 9
   n_divisions_first: validator.NumberInRange(min_value=1) = 9
   n_divisions_second: validator.NumberInRange(min_value=1) = 9
   n_divisions_third: validator.NumberInRange(min_value=1) = 9
   n_divisions_fourth: validator.NumberInRange(min_value=1) = 9
+  n_divisions_fifth: validator.NumberInRange(min_value=1) = 9
+  n_divisions_sixth: validator.NumberInRange(min_value=1) = 9
 
   _source: image.Image = None
   _annotations: Dict[str, validator.RangeInRange] = None
@@ -91,7 +98,8 @@ class SlicedGridConstraints(
   def get_specs(self) -> Iterable[Spec]:
     # Invert given radians to reduce confusion (clockwise -> counter-clockwise).
     offset = math.radians(-self.degrees_offset)
-    for base_theta, dim, division_dim in zip(self._thetas(), self._dims(), self._division_dims()):
+    for base_theta, dim, division_dim in zip(
+        self._thetas(), self._dims(), self._division_dims()):
       if self.n_divisions is None:
         divisions = getattr(self, division_dim)
       else:
