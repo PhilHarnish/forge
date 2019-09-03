@@ -12,6 +12,10 @@ MutationDecorator = Callable[[MutationFn], MutationFn]
 Mutation = Tuple[str, Tuple, Dict[str, Any]]
 MutationSpec = Union[str, Mutation]
 T = TypeVar('T')
+Rho = float
+Theta = float
+PolarLine = Tuple[Rho, Theta]
+HoughLine = List[PolarLine]
 _EMPTY_ARGS = ()
 _EMPTY_KWARGS = {}
 
@@ -82,10 +86,20 @@ class Image(object):
   def bincount(self) -> np.ndarray:
     return np.bincount(self._src.ravel())
 
+  @mutation()
+  def canny(self, aperture_px: int) -> 'Image':
+    cv2.Canny(self._src, 255, 255, self._src, aperture_px)
+    return self
+
   @mutation(deps={'normalize'})
   def crop(self, border_color: np.ndarray) -> 'Image':
     # crop() creates a view and so edits are not "in-place".
     self._src = utils.crop(self._src, border_color)
+    return self
+
+  @mutation()
+  def dilate(self, kernel: np.ndarray, iterations=1) -> 'Image':
+    cv2.dilate(self._src, kernel, iterations=iterations, dst=self._src)
     return self
 
   @mutation(deps={'grayscale', 'invert', 'normalize'})
@@ -147,6 +161,10 @@ class Image(object):
     self._src = cv2.cvtColor(
         self._src, cv2.COLOR_BGR2GRAY, dst=self._src, dstCn=1)
     return self
+
+  def hough_lines(
+      self, angle_resolution: float, threshold: float) -> List[HoughLine]:
+    return cv2.HoughLines(self._src, 1, angle_resolution, threshold, None, 0, 0)
 
   @mutation()
   def invert(self) -> 'Image':
