@@ -8,6 +8,7 @@ from puzzle.constraints import constraints, validator
 from puzzle.puzzlepedia import _bind, _common
 
 _FLOAT_FORMAT = '0.2f'
+_IDENTITY_FN = lambda x: x
 
 
 def AnnotationWidget(
@@ -74,6 +75,12 @@ def AnnotationWidget(
           min=annotation.min_value,
           readout_format=readout_format,
       )
+  elif isinstance(annotation, validator.Option):
+    widget = widgets.Dropdown(
+        options=list(annotation),
+        value=value,
+    )
+    coerce = _IDENTITY_FN
   elif isinstance(annotation, validator.Point):
     widget = widgets.Text(
         value=repr(value),
