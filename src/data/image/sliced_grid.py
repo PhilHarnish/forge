@@ -38,16 +38,17 @@ class SlicedGrid(object):
       division_distance = math.copysign(
           total_distance / divisions, -distances[0])
       right_angle = theta + math.pi / 2
+      dx = round(math.cos(right_angle) * max_distance)
+      dy = round(math.sin(right_angle) * max_distance)
       for i in range(0, divisions + 1):  # n_divisions requires n+1 iterations.
         x, y = np2d.move_from(start, theta, division_distance * i)
-        dx = round(math.cos(right_angle) * max_distance)
-        dy = round(math.sin(right_angle) * max_distance)
         yield (
           theta,
           (round(x - dx), round(y - dy)), (round(x + dx), round(y + dy)),
           i / divisions)
 
-  def get_debug_data(self) -> Tuple[np.ndarray, np.ndarray, model.Divisions]:
+  def get_debug_data(
+      self) -> Tuple[np.ndarray, np.ndarray, int, model.Divisions]:
     data = cv2.cvtColor(self._source.get_debug_data(), cv2.COLOR_GRAY2RGB)
     mask = np.zeros_like(data)
     c = self._constraints.center
@@ -59,4 +60,4 @@ class SlicedGrid(object):
       for distance in distances:
         x, y = np2d.move_from(c, theta, distance)
         cv2.circle(data, (round(x), round(y)), 3, color, thickness=3)
-    return data, mask, self.get_slope_divisions()
+    return data, mask, self._constraints.slices, self.get_slope_divisions()
