@@ -2,7 +2,7 @@ import contextlib
 import enum
 from typing import Dict, Iterator
 
-from puzzle.constraints import constraints
+from puzzle.constraints import constraints, validator
 
 
 class Method(enum.Enum):
@@ -37,7 +37,13 @@ class BaseRegionConstraints(constraints.Constraints):
 
 
 class IdentifyRegionsConstraints(constraints.Constraints):
+  """Constraints for identifying regions in an image.
+
+  method: Method. Specific algorithm to use.
+  line_thickness: Thickness for detected lines. Thicker lines help hide errors.
+  """
   method: Method = Method.LINES_CLASSIFIER
+  line_thickness: validator.NumberInRange(min_value=1) = 3
 
   _method_constraint_map: Dict[Method, BaseRegionConstraints] = None
 
