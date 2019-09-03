@@ -131,6 +131,23 @@ with description('NumberInRange'):
       expect(4.0).to(be_a(v))
 
 
+with description('Option'):
+  with description('constructor'):
+    with it('constructs without error'):
+      expect(calling(validator.Option, [1, 2])).not_to(raise_error)
+
+    with it('rejects empty lists'):
+      expect(calling(validator.Option, [])).to(raise_error)
+
+  with description('instance checks'):
+    with it('accepts valid examples'):
+      v = validator.Option([1, 2])
+      expect(1).to(be_a(v))
+
+    with it('rejects invalid examples'):
+      v = validator.Option([1, 2])
+      expect(3).not_to(be_a(v))
+
 with description('Point'):
   with description('constructor'):
     with it('constructs without error'):

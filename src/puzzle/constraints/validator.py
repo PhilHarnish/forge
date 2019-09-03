@@ -1,8 +1,9 @@
 import numbers
 import re
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Tuple, TypeVar, Union
 
 _COLOR_REGEX = re.compile('^(?:#)?([A-Fa-f0-9]{1,8})$')
+T = TypeVar('T')
 
 
 class Validator(object):
@@ -116,6 +117,19 @@ class NumberInRange(Validator):
 
 
 ColorChannel = NumberInRange(min_value=0, max_value=255)
+
+
+class Option(Validator):
+  def __init__(self, options: List[T]) -> None:
+    if not options:
+      raise ValueError('No valid options')
+    self.options = options
+    super().__init__(type(options[0]))
+
+  def __instancecheck__(self, instance: Any) -> bool:
+    if not super().__instancecheck__(instance):
+      return False
+    return instance in self.options
 
 
 class Point(Validator):
