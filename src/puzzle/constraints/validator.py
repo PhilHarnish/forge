@@ -1,6 +1,6 @@
 import numbers
 import re
-from typing import Any, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Iterable, List, Optional, Tuple, TypeVar, Union
 
 _COLOR_REGEX = re.compile('^(?:#)?([A-Fa-f0-9]{1,8})$')
 T = TypeVar('T')
@@ -123,13 +123,16 @@ class Option(Validator):
   def __init__(self, options: List[T]) -> None:
     if not options:
       raise ValueError('No valid options')
-    self.options = options
+    self._options = options
     super().__init__(type(options[0]))
 
   def __instancecheck__(self, instance: Any) -> bool:
     if not super().__instancecheck__(instance):
       return False
-    return instance in self.options
+    return instance in self._options
+
+  def __iter__(self) -> Iterable[T]:
+    yield from self._options
 
 
 class Point(Validator):

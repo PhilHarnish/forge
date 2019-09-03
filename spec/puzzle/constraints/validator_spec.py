@@ -148,6 +148,11 @@ with description('Option'):
       v = validator.Option([1, 2])
       expect(3).not_to(be_a(v))
 
+  with it('is iterable'):
+    v = validator.Option([1, 2])
+    expect(list(v)).to(equal([1, 2]))
+
+
 with description('Point'):
   with description('constructor'):
     with it('constructs without error'):
