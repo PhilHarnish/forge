@@ -10,23 +10,29 @@ import numpy as np
 
 from data.image import image
 from puzzle.constraints.image import decompose_constraints, \
-  prepare_image_constraints
+  identify_regions_constraints, prepare_image_constraints
 from puzzle.problems import problem
-from puzzle.steps.image import decompose, prepare_image
+from puzzle.steps.image import decompose, identify_regions, prepare_image
 
 
 class ImageProblem(problem.Problem):
   _source_image: image.Image
   _prepare_image: prepare_image.PrepareImage
+  _identify_regions: identify_regions.IdentifyRegions
+  _decompose: decompose.Decompose
 
   def __init__(self, name: str, data: np.ndarray, *args, **kwargs) -> None:
     super(ImageProblem, self).__init__(name, data, *args, **kwargs)
-    self._source_image = image.Image(data)
+    # Fork to preserve a pristine original in "parent".
+    self._source_image = image.Image(data).fork()
     self._prepare_image = prepare_image.PrepareImage(
         self._source_image,
         prepare_image_constraints.PrepareImageConstraints())
-    self._decompose = decompose.Decompose(
+    self._identify_regions = identify_regions.IdentifyRegions(
         self._prepare_image,
+        identify_regions_constraints.IdentifyRegionsConstraints())
+    self._decompose = decompose.Decompose(
+        self._identify_regions,
         decompose_constraints.DecomposeConstraints())
     self._solutions_generator.depends_on(self._decompose)
 
