@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 import cv2
 import numpy as np
 
@@ -50,17 +52,19 @@ class IdentifyRegions(_base_image_step.BaseImageStep):
     self._sliced_grid = sliced_grid.SlicedGrid(
         source, self._sliced_grid_constraints)
 
-  def get_debug_data(self) -> np.ndarray:
+  def get_debug_data(self) -> List[Tuple[str, np.ndarray]]:
+    result = super().get_debug_data()
     method = self._identify_regions_constraints.method
     if method == identify_regions_constraints.Method.LINES_CLASSIFIER:
       src = self._lines_classifier
     elif method == identify_regions_constraints.Method.SLICED_GRID:
       src = self._sliced_grid
     else:
-      return cv2.cvtColor(
-          self.get_result().get_debug_data(), cv2.COLOR_GRAY2RGB)
+      raise NotImplementedError('Unsupported method %s' % method)
     data, mask, n_slices, divisions = src.get_debug_data()
-    return self._draw_debug_data(data, mask, n_slices, divisions)
+    result.append(
+        ('classified', self._draw_debug_data(data, mask, n_slices, divisions)))
+    return result
 
   def _modify_result(self, result: image.Image) -> image.Image:
     return result
