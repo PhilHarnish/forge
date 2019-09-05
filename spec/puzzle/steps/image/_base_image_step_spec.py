@@ -45,5 +45,7 @@ with description('_base_image_step') as self:
       expect(self.step.get_result()).not_to(be(first))
 
   with it('provides debug data'):
-    expect(TestImageStep(self.source).get_debug_data().tolist()).to(
-        equal(self.data.tolist()))
+    debug_data = TestImageStep(self.source).get_debug_data()
+    expect(debug_data).to(have_len(1))
+    label, img = debug_data[0]
+    expect(img.tolist()).to(equal(self.data.tolist()))

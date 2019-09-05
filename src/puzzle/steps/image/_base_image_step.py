@@ -1,4 +1,4 @@
-from typing import Any, NamedTuple, Optional
+from typing import Any, List, NamedTuple, Optional, Tuple
 
 import numpy as np
 
@@ -32,8 +32,8 @@ class BaseImageStep(step.Step):
       self._result = self._modify_result(self._get_new_source())
     return self._result
 
-  def get_debug_data(self) -> np.ndarray:
-    return self.get_result().get_debug_data()
+  def get_debug_data(self) -> List[Tuple[str, np.ndarray]]:
+    return self.get_result().get_debug_data(replay_mutations=True)
 
   def _get_new_source(self) -> image.Image:
     return self._source.fork()
