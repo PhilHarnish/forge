@@ -6,8 +6,7 @@ import numpy as np
 from data.image import coloring, image, lines_classifier, model, sliced_grid
 from puzzle.constraints import constraints
 from puzzle.constraints.image import identify_regions_constraints, \
-  lines_classifier_constraints, \
-  sliced_grid_constraints
+  lines_classifier_constraints, sliced_grid_constraints
 from puzzle.steps.image import _base_image_step, prepare_image
 
 
@@ -79,9 +78,12 @@ class IdentifyRegions(_base_image_step.BaseImageStep):
       self, change: constraints.ConstraintChangeEvent) -> None:
     if not change.key:
       return  # Ignore cosmetic changes.
+    self._lines_classifier = lines_classifier.LinesClassifier(
+        self._source, self._lines_classifier_constraints)
     super()._on_constraints_changed(change)
 
-  def _on_source_changed(self, change: _base_image_step.ImageChangeEvent) -> None:
+  def _on_source_changed(
+      self, change: _base_image_step.ImageChangeEvent) -> None:
     del change
     source = self._prepare_image_step.get_result()
     self._source = source
