@@ -91,6 +91,12 @@ with description('image'):
           .mask(np.ones((3, 3)))
       """))
 
-  with it('get_debug_data'):
-    data = np.ones((3, 3), dtype=np.uint8)
-    expect(image.Image(data).get_debug_data()).to(be(data))
+  with description('get_debug_data'):
+    with it('returns basic debug data'):
+      data = np.ones((3, 3), dtype=np.uint8)
+      expect(image.Image(data).get_debug_data()).to(be(data))
+
+    with it('returns a history of changes'):
+      data = np.ones((3, 3), dtype=np.uint8)
+      img = image.Image(data).fork().normalize().invert()
+      expect(img.get_debug_data(replay_mutations=True)).to(have_len(3))

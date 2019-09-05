@@ -207,8 +207,19 @@ class Image(object):
         result.append('')
     return 'Image()' + '\n  .fork()'.join(result)
 
-  def get_debug_data(self) -> np.ndarray:
-    return self._src  # NB: Does not return a copy.
+  def get_debug_data(
+      self, replay_mutations: bool = False
+  ) -> Union[np.ndarray, List[Tuple[str, np.ndarray]]]:
+    if not replay_mutations:
+      return self._src  # NB: Does not return a copy.
+    if not self._parent:
+      raise ValueError('Original image information lost.')
+    img = self._parent
+    result = [('source', img.get_debug_data(replay_mutations=False))]
+    for method, args, kwargs in self._mutations:
+      img = getattr(img.fork(), method)(*args, **kwargs)
+      result.append((method, img.get_debug_data(replay_mutations=False)))
+    return result
 
 
 def _expand_mutation_spec(target: MutationSpec) -> Mutation:
