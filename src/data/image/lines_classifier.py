@@ -246,6 +246,7 @@ class _GridLineSpecification(model.LineSpecification):
 
 class LinesClassifier(object):
   _source: image.Image
+  _canny: Optional[image.Image]
   _constraints: lines_classifier_constraints.LinesClassifierConstraints
   _line_groups: Optional[List[_LineGroup]]
 
@@ -257,6 +258,7 @@ class LinesClassifier(object):
     # TODO: Allow caller to specify n divisions, division width,
     #  start/end points.
     self._source = source
+    self._canny = None
     self._constraints = constraints
     self._line_groups = None
 
@@ -275,27 +277,30 @@ class LinesClassifier(object):
     while results:
       yield results.pop()
 
-  def get_debug_data(self) -> np.ndarray:
+  def get_debug_data(self) -> List[Tuple[str, np.ndarray]]:
+    result = []
     data = cv2.cvtColor(self._source.get_debug_data(), cv2.COLOR_GRAY2RGB)
     n_groups = len(self._processed_line_groups())
     for group, color in zip(
         self._processed_line_groups(), coloring.colors(n_groups)):
       group.draw_debug_data(data, color)
-    return data
+    result.extend(self._canny.get_debug_data(replay_mutations=True))
+    result.append(('lines', data))
+    return result
 
   def _processed_line_groups(self) -> List[_LineGroup]:
     if self._line_groups is not None:
       return self._line_groups
     kernel = np.ones(
         (self._constraints.image_dilate_px, self._constraints.image_dilate_px))
-    canny = self._source.fork().canny(
+    self._canny = self._source.fork().canny(
         self._constraints.canny_aperture_px).dilate(kernel)
     height, width = self._source.shape[:2]
     for i in self._constraints.hough_lines_threshold_fractions:
       threshold = int(min(width, height) * i)
       # NOTE: "1" is the resolution for rho.
       # NOTE: "0, 0" enables "classic" Hough lines.
-      hough_lines = canny.hough_lines(
+      hough_lines = self._canny.hough_lines(
           math.radians(self._constraints.angle_resolution_degrees), threshold)
       if (hough_lines is not None and
           len(hough_lines) > self._constraints.hough_lines_minimum_lines):
