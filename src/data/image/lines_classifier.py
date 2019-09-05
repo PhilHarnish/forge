@@ -189,7 +189,7 @@ class _LineGroup(object):
       yield scan_pos, scan_pt
 
 
-class _GridLineSpecification(object):
+class _GridLineSpecification(model.LineSpecification):
   _groups: List[_LineGroup]
   _constraints: lines_classifier_constraints.LinesClassifierConstraints
   _grid: Optional[np.ndarray]
@@ -236,9 +236,9 @@ class _GridLineSpecification(object):
   def get_debug_data(self) -> np.ndarray:
     return self._grid
 
-  def get_slope_divisions(self) -> model.Divisions:
+  def __iter__(self) -> Iterable[model.Divisions]:
     for group in self._groups:
-      yield from group.get_slope_divisions()
+      yield group.get_slope_divisions()
 
   def __len__(self) -> int:
     return len(self._groups)
@@ -275,19 +275,13 @@ class LinesClassifier(object):
     while results:
       yield results.pop()
 
-  def get_debug_data(
-      self) -> Tuple[np.ndarray, np.ndarray, int, model.Divisions]:
+  def get_debug_data(self) -> np.ndarray:
     data = cv2.cvtColor(self._source.get_debug_data(), cv2.COLOR_GRAY2RGB)
-    for spec in self.line_specs():
-      mask = np.zeros_like(data)  # Unused.
-      return data, mask, len(spec), spec.get_slope_divisions()
-    # No valid specs.
     n_groups = len(self._processed_line_groups())
     for group, color in zip(
         self._processed_line_groups(), coloring.colors(n_groups)):
       group.draw_debug_data(data, color)
-    mask = np.ones_like(data)  # Fully on.
-    return data, mask, 0, []
+    return data
 
   def _processed_line_groups(self) -> List[_LineGroup]:
     if self._line_groups is not None:

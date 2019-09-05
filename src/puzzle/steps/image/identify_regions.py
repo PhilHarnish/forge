@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 import cv2
 import numpy as np
@@ -52,18 +52,24 @@ class IdentifyRegions(_base_image_step.BaseImageStep):
     self._sliced_grid = sliced_grid.SlicedGrid(
         source, self._sliced_grid_constraints)
 
-  def get_debug_data(self) -> List[Tuple[str, np.ndarray]]:
+  def get_debug_data(self) -> List[Tuple[str, Any]]:
     result = super().get_debug_data()
     method = self._identify_regions_constraints.method
     if method == identify_regions_constraints.Method.LINES_CLASSIFIER:
-      src = self._lines_classifier
+      result.append(('lines', self._lines_classifier.get_debug_data()))
+      for spec in self._lines_classifier.line_specs():
+        break
+      else:
+        spec = None
     elif method == identify_regions_constraints.Method.SLICED_GRID:
-      src = self._sliced_grid
+      result.append(('sliced', self._sliced_grid.get_debug_data()))
+      spec = self._sliced_grid
     else:
       raise NotImplementedError('Unsupported method %s' % method)
-    data, mask, n_slices, divisions = src.get_debug_data()
-    result.append(
-        ('classified', self._draw_debug_data(data, mask, n_slices, divisions)))
+    if spec:
+      result.append(('classified', self._draw_debug_data(spec)))
+    else:
+      result.append(('classified', 'classification failed'))
     return result
 
   def _modify_result(self, result: image.Image) -> image.Image:
@@ -81,24 +87,17 @@ class IdentifyRegions(_base_image_step.BaseImageStep):
     self._source = source
     self._sliced_grid.set_source(source)
 
-  def _draw_debug_data(
-      self,
-      data: np.ndarray,
-      mask: np.ndarray,
-      slices: int,
-      divisions: model.Divisions) -> np.ndarray:
-    colors = iter(coloring.colors(slices))
-    last_theta = None
-    color = None
-    for theta, a, b, pos in divisions:
-      if theta != last_theta:
-        last_theta = theta
-        color = next(colors)
-      if pos == 0 or pos == 1:
-        cv2.line(data, a, b, color, thickness=3)
-      else:
-        cv2.line(data, a, b, color, thickness=1)
-      cv2.line(
-          mask, a, b, color,
-          thickness=self._identify_regions_constraints.line_thickness)
+  def _draw_debug_data(self, spec: model.LineSpecification) -> np.ndarray:
+    data = cv2.cvtColor(self._source.get_debug_data(), cv2.COLOR_GRAY2RGB)
+    mask = np.zeros_like(data)
+    colors = coloring.colors(len(spec))
+    for divisions, color in zip(spec, colors):
+      for theta, a, b, pos in divisions:
+        if pos == 0 or pos == 1:
+          cv2.line(data, a, b, color, thickness=3)
+        else:
+          cv2.line(data, a, b, color, thickness=1)
+        cv2.line(
+            mask, a, b, color,
+            thickness=self._identify_regions_constraints.line_thickness)
     return np.where(mask > 0, data, data // 2)

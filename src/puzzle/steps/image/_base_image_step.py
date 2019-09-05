@@ -1,7 +1,5 @@
 from typing import Any, List, NamedTuple, Optional, Tuple
 
-import numpy as np
-
 from data.image import image
 from puzzle.steps import step
 
@@ -32,7 +30,7 @@ class BaseImageStep(step.Step):
       self._result = self._modify_result(self._get_new_source())
     return self._result
 
-  def get_debug_data(self) -> List[Tuple[str, np.ndarray]]:
+  def get_debug_data(self) -> List[Tuple[str, Any]]:
     return self.get_result().get_debug_data(replay_mutations=True)
 
   def _get_new_source(self) -> image.Image:
