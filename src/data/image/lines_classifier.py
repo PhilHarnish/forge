@@ -223,12 +223,14 @@ class _GridLineSpecification(model.LineSpecification):
       group_theta = math.atan2(dy, dx) + math.pi / 2
       line_dx = math.cos(group_theta) * max_dim
       line_dy = math.sin(group_theta) * max_dim
+      thickness = (
+          self._constraints.image_dilate_px + line_group.line_width) or 1
       for pt_x, pt_y in line_group.points():
         # NOTE: line_width increases as confidence in line_group decreases.
         cv2.line(
             grid, (round(pt_x - line_dx), round(pt_y - line_dy)),
             (round(pt_x + line_dx), round(pt_y + line_dy)), 255,
-            thickness=self._constraints.image_dilate_px + line_group.line_width)
+            thickness=thickness)
     self._grid = grid
     self._score = source.mask_nonzero(grid) / np.count_nonzero(grid)
     return self._score
@@ -291,10 +293,11 @@ class LinesClassifier(object):
   def _processed_line_groups(self) -> List[_LineGroup]:
     if self._line_groups is not None:
       return self._line_groups
-    kernel = np.ones(
-        (self._constraints.image_dilate_px, self._constraints.image_dilate_px))
-    self._canny = self._source.fork().canny(
-        self._constraints.canny_aperture_px).dilate(kernel)
+    self._canny = self._source.fork().canny(self._constraints.canny_aperture_px)
+    if self._constraints.image_dilate_px:
+      kernel = np.ones((
+          self._constraints.image_dilate_px, self._constraints.image_dilate_px))
+      self._canny.dilate(kernel)
     height, width = self._source.shape[:2]
     for i in self._constraints.hough_lines_threshold_fractions:
       threshold = int(min(width, height) * i)
