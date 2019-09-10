@@ -10,23 +10,26 @@ class Offset(NamedTuple):
 
 
 class Component(object):
-  image: np.ndarray
+  source: np.ndarray
   labels: Labels
 
   def __init__(
       self,
-      image: np.ndarray,
+      source: np.ndarray,
       labels: Optional[Labels] = None) -> None:
-    self.image = image.copy()
-    self.image.setflags(write=False)
+    if source.flags.writeable:
+      self.source = source.copy()
+      self.source.setflags(write=False)
+    else:
+      self.source = source
     self.labels = {}
     if labels:
       self.labels.update(labels)
 
   def __hash__(self) -> int:
     return hash(tuple(itertools.chain(
-      self.image.shape,
-      self.image.flat,
+      self.source.shape,
+      self.source.flat,
     )))
 
   def __repr__(self) -> str:
@@ -45,10 +48,10 @@ class PositionedComponent(Component):
 
   def __init__(
       self,
-      image: np.ndarray,
+      source: np.ndarray,
       offset: Offset,
       labels: Optional[Labels] = None) -> None:
-    super().__init__(image, labels=labels)
+    super().__init__(source, labels=labels)
     self.offset = offset
 
   def __hash__(self) -> int:

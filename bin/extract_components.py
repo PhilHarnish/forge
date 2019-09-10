@@ -92,7 +92,7 @@ def interactive_click_to_remove(
     for (c_x, c_y), c in positioned_components:
       if x < c_x or y < c_y:
         continue
-      height, width = c.image.shape
+      height, width = c.source.shape
       if x > c_x + width or y > c_y + height:
         continue
       del all_components[hash(c)]
@@ -120,7 +120,7 @@ def write_classified(all_components: AllComponents) -> None:
   for k, v in all_components.items():
     if v.classification == '-':
       continue
-    index[k] = component.Component(v.component.image, labels={
+    index[k] = component.Component(v.component.source, labels={
       'symbol': v.classification,
     })
   pickle.dump(
@@ -149,7 +149,7 @@ def classify(all_components: AllComponents) -> None:
         classification = None
       print('hash id:', hash_id, classification)
 
-      cv2.imshow(_IMSHOW_TITLE, c.image)
+      cv2.imshow(_IMSHOW_TITLE, c.source)
       code = cv2.waitKey(0)
       key = chr(code & 0xFF)
       if code == 27:  # ESC
@@ -198,7 +198,7 @@ def illustrate_classified_components(
     all_components: List[component.Component]
 ) -> Tuple[np.ndarray, List[ComponentPosition]]:
   all_components = list(sorted(
-      all_components, key=lambda c: c.image.shape[0] * c.image.shape[1],
+      all_components, key=lambda i: i.source.shape[0] * i.source.shape[1],
       reverse=True))
   position_information = []
   total_width = 0
@@ -206,7 +206,7 @@ def illustrate_classified_components(
   cursor_x = 0
   cursor_y = 0
   for c in all_components:
-    height, width = c.image.shape
+    height, width = c.source.shape
     if cursor_x + width > _CLASSIFIED_MAX_WIDTH:
       total_width = max(total_width, cursor_x)
       cursor_x = 0
@@ -221,8 +221,8 @@ def illustrate_classified_components(
   shape = (total_height, total_width)
   output = np.zeros(shape, dtype=np.uint8)
   for c, (x, y) in zip(all_components, position_information):
-    height, width = c.image.shape
-    output[y:y + height, x:x + width] = c.image
+    height, width = c.source.shape
+    output[y:y + height, x:x + width] = c.source
   return output, position_information
 
 

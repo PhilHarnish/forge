@@ -24,7 +24,7 @@ _SYMBOL_MAP = {
 class Decompose(_base_image_step.BaseImageStep):
   _decompose_constraints: decompose_constraints.DecomposeConstraints
   _prepare_image_step: _base_image_step.BaseImageStep
-  _components: List[component.Component]
+  _components: List[component.PositionedComponent]
   _database: component_database.ComponentDatabase
 
   def __init__(
@@ -48,7 +48,7 @@ class Decompose(_base_image_step.BaseImageStep):
       top, left = c.offset
       if symbol and symbol not in _IGNORED_SYMBOLS:
         symbol = _SYMBOL_MAP.get(symbol, symbol)
-        height, width = c.image.shape[:2]
+        height, width = c.source.shape[:2]
         size = height / 18
         x, y = left - 5, top + height
         cv2.putText(
@@ -99,7 +99,8 @@ def _significant_color_bands(
     yield (low, high), targeted, opened
 
 
-def _components_for_image(src: np.ndarray) -> Iterable[component.Component]:
+def _components_for_image(
+    src: np.ndarray) -> Iterable[component.PositionedComponent]:
   # TODO: This needs to be cleaned up. It should use constraints instead of
   # constants.
   n_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(src)

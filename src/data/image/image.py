@@ -110,7 +110,7 @@ class Image(object):
   @mutation()
   def erase_component(
       self,
-      c: component.Component,
+      c: component.PositionedComponent,
       border_percentile: int,
       border_distance: int,
       border_size: int) -> 'Image':
@@ -120,7 +120,7 @@ class Image(object):
     top_padding = min(padding, top)  # Use 0 if top is zero.
     left_padding = min(padding, left)
     source_height, source_width = self._src.shape[:2]
-    height, width = c.image.shape[:2]
+    height, width = c.source.shape[:2]
     right_padding = min(padding, source_width - (left + width))
     bottom_padding = min(padding, source_height - (top + height))
     # Slice the window from src.
@@ -136,7 +136,7 @@ class Image(object):
     expanded[
       top_padding:top_padding + height,
       left_padding:left_padding + width,
-    ] = c.image
+    ] = c.source
     # Identify border and fill pixels.
     border, fill = utils.outline_and_fill(
         expanded, border_distance, border_size)
