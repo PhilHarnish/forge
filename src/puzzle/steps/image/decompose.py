@@ -128,4 +128,4 @@ def _components_for_image(src: np.ndarray) -> Iterable[component.Component]:
     selected = np.where(
         cropped == i, coloring.MAX_BROADCAST, coloring.MIN_BROADCAST)
     offset = component.Offset(top, left)
-    yield component.Component(selected, offset=offset)
+    yield component.PositionedComponent(selected, offset=offset)

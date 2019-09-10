@@ -9,24 +9,16 @@ class Offset(NamedTuple):
   left: int
 
 
-_ORIGIN = Offset(0, 0)
-
-
 class Component(object):
   image: np.ndarray
-  offset: Offset
   labels: Labels
 
   def __init__(
       self,
       image: np.ndarray,
-      offset: Optional[Offset] = None,
       labels: Optional[Labels] = None) -> None:
     self.image = image.copy()
     self.image.setflags(write=False)
-    if offset is None:
-      offset = _ORIGIN
-    self.offset = offset
     self.labels = {}
     if labels:
       self.labels.update(labels)
@@ -38,17 +30,33 @@ class Component(object):
     )))
 
   def __repr__(self) -> str:
-    if self.offset is _ORIGIN:
-      offset = ''
-    else:
-      offset = ', offset=%r' % (self.offset,)
     if self.labels:
       labels = ', labels=%r' % self.labels
     else:
       labels = ''
-    return 'Component(<image>%s%s)' % (offset, labels)
+    return '%s(<image>%s)' % (self.__class__.__name__, labels)
 
   def __str__(self) -> str:
-    if self.offset is _ORIGIN:
-      return str(self.labels)
-    return '%s @ %s' % (self.labels, tuple(self.offset))
+    return str(self.labels)
+
+
+class PositionedComponent(Component):
+  offset: Offset
+
+  def __init__(
+      self,
+      image: np.ndarray,
+      offset: Offset,
+      labels: Optional[Labels] = None) -> None:
+    super().__init__(image, labels=labels)
+    self.offset = offset
+
+  def __hash__(self) -> int:
+    return hash((*self.offset, super().__hash__()))
+
+  def __repr__(self) -> str:
+    offset_replacement = '<image>, offset=%r' % (self.offset,)
+    return super().__repr__().replace('<image>', offset_replacement)
+
+  def __str__(self) -> str:
+    return '%s @ %s' % (super().__str__(), tuple(self.offset))
