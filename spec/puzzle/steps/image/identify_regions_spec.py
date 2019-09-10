@@ -28,9 +28,9 @@ with description('identify_regions') as self:
     with it('returns ndarray for LINES_CLASSIFIER'):
       self.constraints.method = (
           identify_regions_constraints.Method.LINES_CLASSIFIER)
-      expect(self.step.get_debug_data()).to(be_a(np.ndarray))
+      expect(self.step.get_debug_data()[0][1]).to(be_a(np.ndarray))
 
     with it('returns ndarray for SLICED_GRID'):
       self.constraints.method = (
           identify_regions_constraints.Method.SLICED_GRID)
-      expect(self.step.get_debug_data()).to(be_a(np.ndarray))
+      expect(self.step.get_debug_data()[0][1]).to(be_a(np.ndarray))

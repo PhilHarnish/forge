@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np
 
 from data.image import image, sliced_grid
@@ -16,7 +18,7 @@ with description('sliced_grid') as self:
     self.grid = sliced_grid.SlicedGrid(self.image, self.constraints)
 
   with it('returns divisions'):
-    divisions = list(self.grid.get_slope_divisions())
+    divisions = list(itertools.chain(*self.grid))
     edges = self.constraints.n_divisions + 1
     expect(divisions).to(have_len((edges * 3)))
 
@@ -29,5 +31,5 @@ with description('sliced_grid') as self:
         self.constraints.n_divisions_first +
         self.constraints.n_divisions_second +
         self.constraints.n_divisions_third)
-    divisions = list(self.grid.get_slope_divisions())
+    divisions = list(itertools.chain(*self.grid))
     expect(divisions).to(have_len(edges))
