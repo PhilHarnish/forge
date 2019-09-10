@@ -5,10 +5,11 @@ Steps:
   2. Identify components
   3. Erase identified components from parent
 """
+from typing import Iterable
 
 import numpy as np
 
-from data.image import image
+from data.image import component, image
 from puzzle.constraints.image import decompose_constraints, \
   identify_regions_constraints, prepare_image_constraints
 from puzzle.problems import problem
@@ -43,6 +44,10 @@ class ImageProblem(problem.Problem):
     if data.dtype == np.uint8:
       return 1
     return .5
+
+  def get_components(self) -> Iterable[component.Component]:
+    # TODO: Remove this. Exposed for bin/extract_components.py.
+    return self._decompose.get_components()
 
   def __str__(self) -> str:
     return '<image data>'
