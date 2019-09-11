@@ -211,7 +211,9 @@ class Image(object):
       self, replay_mutations: bool = False
   ) -> Union[np.ndarray, List[Tuple[str, np.ndarray]]]:
     if not replay_mutations:
-      return self._src  # NB: Does not return a copy.
+      result = self._src.view()
+      result.setflags(write=False)
+      return result
     if not self._parent:
       raise ValueError('Original image information lost.')
     img = self._parent

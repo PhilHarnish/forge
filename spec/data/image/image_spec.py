@@ -94,7 +94,14 @@ with description('image'):
   with description('get_debug_data'):
     with it('returns basic debug data'):
       data = np.ones((3, 3), dtype=np.uint8)
-      expect(image.Image(data).get_debug_data()).to(be(data))
+      expect(image.Image(data).get_debug_data().tolist()).to(
+          equal(data.tolist()))
+
+    with it('is read only'):
+      result = image.Image(np.ones((3, 3), dtype=np.uint8)).get_debug_data()
+      def mutate() -> None:
+        result[0][0] = 1
+      expect(calling(mutate)).to(raise_error(ValueError))
 
     with it('returns a history of changes'):
       data = np.ones((3, 3), dtype=np.uint8)
