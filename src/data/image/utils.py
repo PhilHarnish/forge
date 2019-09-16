@@ -32,12 +32,7 @@ def kernel_circle(size: int) -> np.ndarray:
 
 
 def kernel_cross(size: int) -> np.ndarray:
-  array = np.zeros((size, size), np.uint8)
-  for x in range(size):
-    middle = (size - 1) >> 1  # int(size / 2).
-    array[middle][x] = 1
-    array[x][middle] = 1
-  return array
+  return cv2.getStructuringElement(cv2.MORPH_CROSS, (size, size))
 
 
 def morph_open(src: np.ndarray) -> np.ndarray:
