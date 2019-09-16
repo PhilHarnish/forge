@@ -99,6 +99,52 @@ def iter_contour_segments(points: Contour) -> Iterable[Segment]:
       itertools.chain(points[1:], points[:1]))
 
 
+def iter_segment_points(segment: Segment) -> Iterable[Point]:
+  # Source: https://stackoverflow.com/q/32328179.
+  p1, p2 = segment
+  x1, y1 = p1
+  x2, y2 = p2
+
+  steep = abs(y2 - y1) > abs(x2 - x1)
+  if steep:  # Iterate along 'faster' dimension.
+    x1, y1 = y1, x1
+    x2, y2 = y2, x2
+
+  is_rtl = x1 > x2
+  if is_rtl:  # Fake LTR, fix later.
+    x1, x2 = x2, x1
+    y1, y2 = y2, y1
+
+  if x2 == x1:
+    delta_error = 0
+  else:
+    dx = x2 - x1
+    dy = y2 - y1
+    delta_error = abs(dy / dx)
+
+  if y1 < y2:
+    y_step = 1
+  else:
+    y_step = -1
+
+  y = y1
+  result = []
+  error = 0.0
+  for x in range(x1, x2 + 1):  # Inclusive.
+    if steep:
+      p = (y, x)
+    else:
+      p = (x, y)
+    result.append(p)
+    error += delta_error
+    if error >= 0.5:
+      y += y_step
+      error -= 1
+  if is_rtl:  # RTL -> LTR.
+    return reversed(result)
+  return result
+
+
 def move_from(pt: Point, theta: float, hypotenuse: float) -> Point:
   x, y = pt
   return x + math.cos(theta) * hypotenuse, y + math.sin(theta) * hypotenuse

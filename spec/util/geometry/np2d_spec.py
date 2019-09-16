@@ -46,6 +46,7 @@ _OVERLAP_REGRESSION_TESTS = [
   ),
 ]
 
+
 with description('distance_to_bounding_box'):
   with it('handles a horizontal line from center'):
     expect(np2d.distance_to_bounding_box(4, 4, 2, 2, 0)).to(equal(2.0))
@@ -54,14 +55,23 @@ with description('distance_to_bounding_box'):
     expect(np2d.distance_to_bounding_box(4, 4, 2, 0, math.pi/2)).to(equal(4.0))
 
 
-with description('iter_segments'):
-  with it('iterates list of coordinates'):
+with description('iter_contour_segments'):
+  with it('iterates segments in contour'):
     segments = np.array(list(np2d.iter_contour_segments(np.array([
       TL, TR, BR, BL,
     ]))))
     expect(segments.tolist()).to(equal(np.array([
       (TL, TR), (TR, BR), (BR, BL), (BL, TL),
     ]).tolist()))
+
+
+with description('iter_segment_points'):
+  with it('returns 1 point for 0 length segment'):
+    expect(list(np2d.iter_segment_points((M, M)))).to(equal([tuple(M)]))
+
+  with it('iterates list of points along segment'):
+    expect(list(np2d.iter_segment_points((TL, BR)))).to(equal(
+        [tuple(TL), tuple(M), tuple(BR)]))
 
 
 with description('move_from'):
