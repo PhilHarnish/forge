@@ -47,6 +47,24 @@ with description('image'):
       expect(calling(i.crop, 0)).to(raise_error(
           ValueError, 'normalize() must occur before crop(0)'))
 
+  with description('extract_rect') as self:
+    with before.each:
+      self.image = image.Image(np.arange(16, dtype=np.uint8).reshape(4, 4))
+
+    with it('returns a slice'):
+      expect(self.image.extract_rect(0, 1, 2, 3).tolist()).to(equal([
+        # Skips [0, 1, 2, 3] because of y = 1.
+        [4, 5],  # 6, 7 (width = 2).
+        [8, 9],  # 8, 9.
+        [12, 13],  # 14, 15.
+      ]))
+
+    with it('prevents mutation'):
+      def mutate() -> None:
+        rect = self.image.extract_rect(0, 1, 2, 3)
+        rect[0][0] = 1
+      expect(calling(mutate)).to(raise_error(ValueError))
+
   with description('__str__'):
     with it('handles empty mutations'):
       i = image.Image(np.ones((3, 3), dtype=np.uint8))

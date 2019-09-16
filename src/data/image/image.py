@@ -152,6 +152,11 @@ class Image(object):
     source_patch[np.nonzero(fill)] = color
     return self
 
+  def extract_rect(self, x: int, y: int, width: int, height: int) -> np.ndarray:
+    sliced = self._src[y : y + height, x : x + width]
+    sliced.setflags(write=False)
+    return sliced
+
   def fork(self) -> 'Image':
     return Image(self._src.copy(), self)
 
