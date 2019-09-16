@@ -56,7 +56,7 @@ with description('distance_to_bounding_box'):
 
 with description('iter_segments'):
   with it('iterates list of coordinates'):
-    segments = np.array(list(np2d.iter_segments(np.array([
+    segments = np.array(list(np2d.iter_contour_segments(np.array([
       TL, TR, BR, BL,
     ]))))
     expect(segments.tolist()).to(equal(np.array([

@@ -87,7 +87,7 @@ def distance_to_bounding_box(
   return min(hypotenuse_to_x, hypotenuse_to_y)  # First intercept.
 
 
-def iter_segments(points: Contour) -> Iterable[Segment]:
+def iter_contour_segments(points: Contour) -> Iterable[Segment]:
   """Given points A, B, ...N returns (A, B), (B, ...), (..., N), (N, A)."""
   # "contour" frequently has shape (N, 1, 2); remove "1" middle layer.
   if len(points.shape) > 2:
@@ -151,7 +151,8 @@ def overlap(
   return (right1 - left2) / avg_width
 
 
-def point_intersect_box(point, theta: float, width: int, height: int) -> bool:
+def point_intersect_box(
+    point: Point, theta: float, width: int, height: int) -> bool:
   """Returns line extending from `point` with angle theta intersects box."""
   pt_x, pt_y = point
   if (0 < pt_x < width) and (0 < pt_y < height):
