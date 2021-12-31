@@ -8,6 +8,7 @@ from puzzle.constraints import constraints, validator
 class Method(enum.Enum):
   LINES_CLASSIFIER = enum.auto()
   SLICED_GRID = enum.auto()
+  THRESHOLD = enum.auto()
 
 
 class BaseRegionConstraints(constraints.Constraints):
