@@ -1,9 +1,12 @@
 package go_euler_test
 
 import (
-	. "euler/go_euler"
-	. "github.com/onsi/ginkgo"
+	"time"
+
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gmeasure"
+	. "github.com/philharnish/forge/src/euler/go_euler"
 )
 
 var _ = Describe("Problem14",
@@ -19,12 +22,14 @@ var _ = Describe("Problem14",
 				Expect(Problem14(1000000)).To(Equal(837799))
 			})
 
-		XMeasure("with backfill, all",
-			func(b Benchmarker) {
-				b.Time("runtime",
-					func() {
+		It("with backfill, all",
+			func() {
+				var experiment = NewExperiment("Problem14 benchmark")
+				AddReportEntry(experiment.Name, experiment)
+				experiment.Sample(
+					func(idx int) {
 						output := Problem14(1000000)
 						Expect(output).To(Equal(837799))
-					})
-			}, 50)
+					}, SamplingConfig{N: 100, Duration: time.Minute, NumParallel: 8})
+			})
 	})

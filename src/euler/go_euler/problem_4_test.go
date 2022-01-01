@@ -1,9 +1,9 @@
 package go_euler_test
 
 import (
-	. "euler/go_euler"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/philharnish/forge/src/euler/go_euler"
 )
 
 var _ = Describe("Problem4",

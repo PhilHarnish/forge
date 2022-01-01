@@ -1,9 +1,9 @@
 package go_euler_test
 
 import (
-	. "euler/go_euler"
+	. "github.com/philharnish/forge/src/euler/go_euler"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
@@ -39,18 +39,16 @@ var _ = Describe("GoEuler",
 		Describe("ChannelLength",
 			func() {
 				It("counts 0 items in an empty channel",
-					func(work Done) {
+					func() {
 						c := make(chan int)
 						close(c)
 						Expect(ChannelLength(c)).To(Equal(0))
-						close(work)
 					})
 
 				It("counts multiple items in a channel",
-					func(work Done) {
+					func() {
 						c := Range(0, 5)
 						Expect(ChannelLength(c)).To(Equal(5))
-						close(work)
 					})
 			})
 

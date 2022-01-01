@@ -2,10 +2,11 @@ package go_euler
 
 import (
 	"fmt"
-	"github.com/onsi/ginkgo"
 	"math"
 	"sort"
 	"sync"
+
+	"github.com/onsi/ginkgo/v2"
 )
 
 func ChainMultiply(in chan int, len int) chan int {

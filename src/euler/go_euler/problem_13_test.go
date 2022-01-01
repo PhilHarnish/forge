@@ -1,9 +1,9 @@
 package go_euler_test
 
 import (
-	. "euler/go_euler"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	. "github.com/philharnish/forge/src/euler/go_euler"
 )
 
 var p13Input = `
@@ -112,8 +112,7 @@ var p13Input = `
 var _ = Describe("Problem13",
 	func() {
 		It("should handle given example",
-			func(work Done) {
+			func() {
 				Expect(Problem13(p13Input, 100)).To(Equal(5537376230))
-				close(work)
 			})
 	})
