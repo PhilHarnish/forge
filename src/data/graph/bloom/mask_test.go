@@ -74,39 +74,3 @@ var _ = Describe("MaskAlphabet",
 				Expect(bloom.MaskAlphabet(acc, 0)).To(Equal(expected))
 			})
 	})
-
-/*
-
-
-with description('mask defaults') as self:
-  with before.each:
-    self.subject = bloom_mask.BitMatchAnything()
-
-  with it('is 0 initially'):
-    expect(self.subject).to(equal(0))
-
-  with it('bitwise ORs to itself'):
-    expect(self.subject | 0b101).to(be(0b101))
-
-  with it('bitwise ANDs to itself'):
-    expect(self.subject & 0b101).to(be(0b101))
-
-  with it('bitwise ANDs & assigns to itself'):
-    self.subject &= 0b101
-    expect(self.subject).to(be(0b101))
-
-  with it('bitwise rORs to other'):
-    expect(0b101 | self.subject).to(be(0b101))
-
-  with it('bitwise rANDs to other'):
-    expect(0b101 & self.subject).to(be(0b101))
-
-  with it('bitwise rANDs & assigns to other'):
-    x = 0b101
-    x &= self.subject
-    expect(x).to(be(0b101))
-
-  with it('claims equality'):
-    expect(0b101 & 0b0).to(equal(self.subject))
-
-*/
