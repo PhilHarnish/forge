@@ -13,6 +13,8 @@ const (
 	EXTRA     = "'"
 	ALPHABET  = LETTERS + SEPARATOR + EXTRA
 	SIZE      = len(ALPHABET)
+	ALL       = BitMask((1 << SIZE) - 1)
+	NONE      = BitMask(0b0)
 )
 
 /*

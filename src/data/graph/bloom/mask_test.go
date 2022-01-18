@@ -73,4 +73,28 @@ var _ = Describe("MaskAlphabet",
 				}
 				Expect(bloom.MaskAlphabet(acc, 0)).To(Equal(expected))
 			})
+
+		It("Converts ALL to ALPHABET",
+			func() {
+				Expect(bloom.MaskAlphabet(bloom.ALL, 0)).To(Equal(bloom.ALPHABET))
+			})
+	})
+
+var _ = Describe("Default masks",
+	func() {
+		It("NONE is matches none of ALPHABET",
+			func() {
+				for _, c := range bloom.ALPHABET {
+					mask, _ := bloom.AlphabetMask(c)
+					Expect(mask & bloom.NONE).To(Equal(bloom.BitMask(0)))
+				}
+			})
+
+		It("ALL is matches all of ALPHABET",
+			func() {
+				for _, c := range bloom.ALPHABET {
+					mask, _ := bloom.AlphabetMask(c)
+					Expect(mask & bloom.ALL).NotTo(Equal(bloom.BitMask(0)))
+				}
+			})
 	})
