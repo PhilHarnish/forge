@@ -8,6 +8,42 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom"
 )
 
+var _ = Describe("Position",
+	func() {
+		It("Accepts all characters from ALPHABET",
+			func() {
+				for _, c := range bloom.ALPHABET {
+					_, err := bloom.Position(c)
+					Expect(err).ShouldNot(HaveOccurred())
+				}
+			})
+
+		It("Rejects characters outside of ALPHABET",
+			func() {
+				invalidCharacters := 0
+				for i := 0; i < 200; i++ {
+					c := rune(i)
+					if strings.ContainsRune(bloom.ALPHABET, c) {
+						continue
+					}
+					invalidCharacters++
+					_, err := bloom.Position(c)
+					Expect(err).NotTo(BeNil())
+				}
+				Expect(invalidCharacters).To(BeNumerically(">", 0))
+			})
+
+		It("Returns increasing values for each character",
+			func() {
+				last := -1
+				for _, c := range bloom.ALPHABET {
+					position, _ := bloom.Position(c)
+					Expect(position).To(BeNumerically(">", last))
+					last = position
+				}
+			})
+	})
+
 var _ = Describe("AlphabetMask",
 	func() {
 		It("Accepts all characters from ALPHABET",

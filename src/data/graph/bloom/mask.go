@@ -18,19 +18,30 @@ const (
 )
 
 /*
+Returns the position for the given rune if supported, otherwise error.
+*/
+func Position(c rune) (int, error) {
+	if 'a' <= c && c <= 'z' {
+		return int(c - 'a'), nil
+	} else if c == ' ' {
+		return len(LETTERS), nil
+	} else if c == '-' {
+		return len(LETTERS) + 1, nil
+	} else if c == '\'' {
+		return len(LETTERS) + 2, nil
+	}
+	return 0, fmt.Errorf("%q not supported", c)
+}
+
+/*
 Returns a BitMask for the given rune if supported, otherwise error.
 */
 func AlphabetMask(c rune) (BitMask, error) {
-	if 'a' <= c && c <= 'z' {
-		return 1 << uint(c-'a'), nil
-	} else if c == ' ' {
-		return 1 << len(LETTERS), nil
-	} else if c == '-' {
-		return 1 << (len(LETTERS) + 1), nil
-	} else if c == '\'' {
-		return 1 << (len(LETTERS) + 2), nil
+	position, err := Position(c)
+	if err != nil {
+		return 0, err
 	}
-	return 0, fmt.Errorf("%q not supported", c)
+	return 1 << position, nil
 }
 
 /*
