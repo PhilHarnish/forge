@@ -51,9 +51,10 @@ func MaskAlphabet(provide BitMask, require BitMask) string {
 	acc := ""
 	for _, c := range ALPHABET {
 		mask, _ := AlphabetMask(c)
-		if mask&require > 0 {
+		provided := mask & provide
+		if require&provided > 0 {
 			acc += string(unicode.ToUpper(c))
-		} else if mask&provide > 0 {
+		} else if provided > 0 {
 			acc += string(c)
 		}
 	}
