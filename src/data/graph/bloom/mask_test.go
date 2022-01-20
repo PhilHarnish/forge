@@ -114,6 +114,11 @@ var _ = Describe("MaskAlphabet",
 			func() {
 				Expect(bloom.MaskAlphabet(bloom.ALL, 0)).To(Equal(bloom.ALPHABET))
 			})
+
+		It("Is not fooled by UNSET",
+			func() {
+				Expect(bloom.MaskAlphabet(bloom.ALL, bloom.UNSET)).To(Equal(bloom.ALPHABET))
+			})
 	})
 
 var _ = Describe("LengthAlphabet",

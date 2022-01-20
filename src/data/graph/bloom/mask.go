@@ -17,6 +17,7 @@ const (
 	SIZE      = len(ALPHABET)
 	ALL       = BitMask((1 << SIZE) - 1)
 	NONE      = BitMask(0b0)
+	UNSET     = BitMask(1<<SIZE | ALL)
 )
 
 /*
@@ -54,7 +55,7 @@ func MaskAlphabet(provide BitMask, require BitMask) string {
 	for _, c := range ALPHABET {
 		mask, _ := AlphabetMask(c)
 		provided := mask & provide
-		if require&provided > 0 {
+		if require != UNSET && require&provided > 0 {
 			acc += string(unicode.ToUpper(c))
 		} else if provided > 0 {
 			acc += string(c)
