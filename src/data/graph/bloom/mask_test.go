@@ -116,6 +116,19 @@ var _ = Describe("MaskAlphabet",
 			})
 	})
 
+var _ = Describe("LengthAlphabet",
+	func() {
+		It("Returns empty string for 0",
+			func() {
+				Expect(bloom.LengthAlphabet(0b0)).To(Equal(""))
+			})
+
+		It("Indicates matching lengths",
+			func() {
+				Expect(bloom.LengthAlphabet(0b1011)).To(Equal("## #"))
+			})
+	})
+
 var _ = Describe("Default masks",
 	func() {
 		It("NONE is matches none of ALPHABET",

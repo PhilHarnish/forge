@@ -2,6 +2,8 @@ package bloom
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"unicode"
 )
 
@@ -59,4 +61,23 @@ func MaskAlphabet(provide BitMask, require BitMask) string {
 		}
 	}
 	return acc
+}
+
+/*
+Converts lengths mask to a human-readable string.
+*/
+func LengthAlphabet(lengths BitMask) string {
+	if lengths == 0 {
+		return ""
+	}
+	binary := strconv.FormatUint(lengths, 2)
+	result := strings.Builder{}
+	for i := len(binary) - 1; i >= 0; i-- {
+		if binary[i] == '0' {
+			result.WriteByte(' ')
+		} else {
+			result.WriteByte('#')
+		}
+	}
+	return result.String()
 }
