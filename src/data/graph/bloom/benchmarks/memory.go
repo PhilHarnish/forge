@@ -94,7 +94,7 @@ func MapSizes() {
 	for p := 1; p < 8; p++ {
 		before = mapSize(maps)
 		for i := 0; i < n; i++ {
-			h := map[rune]byte{}
+			h := make(map[rune]byte, k)
 			for j := 0; j < k; j++ {
 				h[rune(j)] = byte(j)
 			}
