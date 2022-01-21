@@ -4,3 +4,4 @@ data/*
 node_modules/
 *.ipynb_checkpoints
 *.pyc
+.vscode/*
