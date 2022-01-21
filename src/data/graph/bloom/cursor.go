@@ -26,8 +26,8 @@ func NewCursor(root *Node) *Cursor {
 func (cursor *Cursor) Get(path string) (*Cursor, error) {
 	runes := []rune(path)
 	// Preprocess path to determine the requirements along path.
-	requirements := make([]BitMask, len(runes))
-	required := BitMask(0)
+	requirements := make([]Mask, len(runes))
+	required := Mask(0)
 	for i := len(runes) - 1; i >= 0; i-- {
 		mask, err := AlphabetMask(runes[i])
 		if err != nil {

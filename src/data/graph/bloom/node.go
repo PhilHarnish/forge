@@ -5,8 +5,6 @@ import (
 	"math"
 )
 
-type Weight = float64
-
 // Graph node with bloom-filter style optimizations.
 type Node struct {
 	// Non-zero when this node is a match.
@@ -14,11 +12,11 @@ type Node struct {
 	// Maximum weight for outgoing edges.
 	maxWeight Weight
 	// BitMask for outgoing edges.
-	provideMask BitMask
+	provideMask Mask
 	// BitMask for edges which lead to matching Nodes.
-	requireMask BitMask
+	requireMask Mask
 	// BitMask for distances matching Nodes.
-	lengthsMask BitMask
+	lengthsMask Mask
 	// Array of outgoing Nodes (index assigned by Position from mask.go).
 	links *[SIZE]*nodeLink
 }
@@ -58,7 +56,7 @@ func (node *Node) Link(path string, child *Node) error {
 	runes := []rune(path)
 	edge := runes[0]
 	prefix := string(runes[1:])
-	edgeMask := BitMask(0)
+	edgeMask := Mask(0)
 	for _, c := range runes {
 		mask, err := AlphabetMask(c)
 		if err != nil {
@@ -69,13 +67,13 @@ func (node *Node) Link(path string, child *Node) error {
 	// Inherit maxWeight.
 	node.Weight(child.maxWeight)
 	// Provide anything ANY children provides (including the edge itself).
-	node.provideMask |= edgeMask | BitMask(child.provideMask)
+	node.provideMask |= edgeMask | Mask(child.provideMask)
 	if child.requireMask == UNSET {
 		// Ignore the child's require mask if it is UNSET.
 		node.requireMask &= edgeMask
 	} else {
 		// Require anything ALL children requires (including the edge itself).
-		node.requireMask &= edgeMask | BitMask(child.requireMask)
+		node.requireMask &= edgeMask | Mask(child.requireMask)
 	}
 	// Inherit matching lengths.
 	node.lengthsMask |= child.lengthsMask << len(runes)

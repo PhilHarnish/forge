@@ -7,7 +7,7 @@ import (
 	"unicode"
 )
 
-type BitMask = uint64
+type Mask = uint64
 
 const (
 	LETTERS   = "abcdefghijklmnopqrstuvwxyz"
@@ -15,9 +15,9 @@ const (
 	EXTRA     = "'"
 	ALPHABET  = LETTERS + SEPARATOR + EXTRA
 	SIZE      = len(ALPHABET)
-	ALL       = BitMask((1 << SIZE) - 1)
-	NONE      = BitMask(0b0)
-	UNSET     = BitMask(1<<SIZE | ALL)
+	ALL       = Mask((1 << SIZE) - 1)
+	NONE      = Mask(0b0)
+	UNSET     = Mask(1<<SIZE | ALL)
 )
 
 /*
@@ -39,7 +39,7 @@ func Position(c rune) (int, error) {
 /*
 Returns a BitMask for the given rune if supported, otherwise error.
 */
-func AlphabetMask(c rune) (BitMask, error) {
+func AlphabetMask(c rune) (Mask, error) {
 	position, err := Position(c)
 	if err != nil {
 		return 0, err
@@ -50,7 +50,7 @@ func AlphabetMask(c rune) (BitMask, error) {
 /*
 Converts `provide` & `require` BitMasks to a human-readable string.
 */
-func MaskAlphabet(provide BitMask, require BitMask) string {
+func MaskAlphabet(provide Mask, require Mask) string {
 	acc := ""
 	for _, c := range ALPHABET {
 		mask, _ := AlphabetMask(c)
@@ -67,7 +67,7 @@ func MaskAlphabet(provide BitMask, require BitMask) string {
 /*
 Converts lengths mask to a human-readable string.
 */
-func LengthAlphabet(lengths BitMask) string {
+func LengthAlphabet(lengths Mask) string {
 	if lengths == 0 {
 		return ""
 	}

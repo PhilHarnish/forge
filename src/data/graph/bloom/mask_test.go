@@ -71,11 +71,11 @@ var _ = Describe("AlphabetMask",
 
 		It("Returns unique masks for each character",
 			func() {
-				acc := bloom.BitMask(0)
+				acc := bloom.Mask(0)
 				for _, c := range bloom.ALPHABET {
 					mask, _ := bloom.AlphabetMask(c)
 					Expect(mask).To(BeNumerically(">", 0))
-					Expect(acc & mask).To(Equal(bloom.BitMask(0)))
+					Expect(acc & mask).To(Equal(bloom.Mask(0)))
 					acc |= mask
 				}
 			})
@@ -102,7 +102,7 @@ var _ = Describe("MaskAlphabet",
 			func() {
 				given := "it's an example"
 				expected := "aeilmnpstx '"
-				acc := bloom.BitMask(0)
+				acc := bloom.Mask(0)
 				for _, c := range given {
 					mask, _ := bloom.AlphabetMask(c)
 					acc |= mask
@@ -140,7 +140,7 @@ var _ = Describe("Default masks",
 			func() {
 				for _, c := range bloom.ALPHABET {
 					mask, _ := bloom.AlphabetMask(c)
-					Expect(mask & bloom.NONE).To(Equal(bloom.BitMask(0)))
+					Expect(mask & bloom.NONE).To(Equal(bloom.Mask(0)))
 				}
 			})
 
@@ -148,7 +148,7 @@ var _ = Describe("Default masks",
 			func() {
 				for _, c := range bloom.ALPHABET {
 					mask, _ := bloom.AlphabetMask(c)
-					Expect(mask & bloom.ALL).NotTo(Equal(bloom.BitMask(0)))
+					Expect(mask & bloom.ALL).NotTo(Equal(bloom.Mask(0)))
 				}
 			})
 	})
