@@ -66,6 +66,13 @@ var _ = Describe("Link",
 				Expect(err).Should(MatchError("link 'c' already exists"))
 			})
 
+		It("Accepts multi-rune links",
+			func() {
+				err := node.Link("abc", bloom.NewNode(1.0))
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(node.String()).To(Equal("Node('ABC', '   #', 0)"))
+			})
+
 		It("Multiple links eliminate requirement for parent",
 			func() {
 				for _, c := range "abc" {

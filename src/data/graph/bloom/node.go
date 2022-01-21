@@ -51,20 +51,20 @@ func (node *Node) Weight(weight Weight) {
 	node.maxWeight = math.Max(node.maxWeight, weight)
 }
 
-func (node *Node) Link(edge string, child *Node) error {
-	if len(edge) == 0 {
+func (node *Node) Link(path string, child *Node) error {
+	if len(path) == 0 {
 		return fmt.Errorf("attempted to link empty key")
 	}
-	runes := []rune(edge)
-	c := runes[0]
+	runes := []rune(path)
+	edge := runes[0]
 	prefix := string(runes[1:])
-	position, err := Position(rune(c))
-	if err != nil {
-		return fmt.Errorf("error while linking: %w", err)
-	}
-	edgeMask := BitMask(1 << position)
-	if len(runes) > 1 {
-		return fmt.Errorf("multi-byte keys are currently unsupported")
+	edgeMask := BitMask(0)
+	for _, c := range runes {
+		mask, err := AlphabetMask(c)
+		if err != nil {
+			return fmt.Errorf("error while linking: %w", err)
+		}
+		edgeMask |= mask
 	}
 	// Inherit maxWeight.
 	node.Weight(child.maxWeight)
@@ -82,6 +82,8 @@ func (node *Node) Link(edge string, child *Node) error {
 	if node.links == nil {
 		node.links = &[SIZE]*nodeLink{}
 	}
+	// NB: Here we assume no error since AlphabetMask succeeds above.
+	position, _ := Position(rune(edge))
 	if node.links[position] == nil {
 		// New link.
 		node.links[position] = &nodeLink{
@@ -91,7 +93,7 @@ func (node *Node) Link(edge string, child *Node) error {
 		return nil
 	} else if node.links[position].prefix == prefix {
 		// Proposed link already exists.
-		return fmt.Errorf("link '%s' already exists", edge)
+		return fmt.Errorf("link '%s' already exists", path)
 	}
 	// Attempt to reuse link
 	return fmt.Errorf("splitting an existing link is currently unsupported")
