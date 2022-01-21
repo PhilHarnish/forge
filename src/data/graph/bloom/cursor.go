@@ -38,7 +38,8 @@ func (cursor *Cursor) Get(path string) (*Cursor, error) {
 		requirements[i] = required
 	}
 	node := cursor.node
-	for i, c := range path {
+	for i := 0; i < len(runes); i++ {
+		c := runes[i]
 		// Ensure requirements are met at this layer.
 		required := requirements[i]
 		if node.provideMask&required != required {
@@ -57,14 +58,26 @@ func (cursor *Cursor) Get(path string) (*Cursor, error) {
 				"%s traversal error for '%s': '%c' not linked",
 				cursor, path, c)
 		}
-		if link.prefix != "" {
-			return cursor, fmt.Errorf(
-				"%s traversal error for '%s': '%s' has unsupported prefix '%s'",
-				cursor, path, link.node, link.prefix)
+		prefixStart := i
+		for _, p := range link.prefix {
+			i++
+			if i >= len(runes) {
+				return cursor, fmt.Errorf(
+					"%s traversal error for '%s': exhausted input traversing prefix '%s' on %s[%c]",
+					cursor, path, link.prefix, node, c)
+			} else if p != runes[i] {
+				return cursor, fmt.Errorf(
+					"%s traversal error for '%s': prefix mismatch '%c%s' is not a prefix of '%s'",
+					cursor, path, c, link.prefix, path[prefixStart:])
+			}
 		}
 		// Traversal successful, descend into `node` and continue looping.
 		node = link.node
+		if cursor.subpath != "" {
+			cursor.path = append(cursor.path, cursor.subpath...)
+		}
 		cursor.path = append(cursor.path, string(c)...)
+		cursor.subpath = link.prefix
 		cursor.node = node
 	}
 	return cursor, nil

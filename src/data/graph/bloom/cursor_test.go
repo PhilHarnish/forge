@@ -8,11 +8,11 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom"
 )
 
-func extend(node *bloom.Node, path string) *bloom.Node {
-	runes := []rune(path)
-	for i := len(runes) - 1; i >= 0; i-- {
+func extend(node *bloom.Node, paths ...string) *bloom.Node {
+	for i := len(paths) - 1; i >= 0; i-- {
 		parent := bloom.NewNode()
-		parent.Link(string(runes[i]), node)
+		err := parent.Link(paths[i], node)
+		Expect(err).ShouldNot(HaveOccurred())
 		node = parent
 	}
 	return node
@@ -21,7 +21,7 @@ func extend(node *bloom.Node, path string) *bloom.Node {
 var _ = Describe("Cursor.NewNode",
 	func() {
 		It("Initially empty", func() {
-			node := extend(bloom.NewNode(1.0), "abc")
+			node := extend(bloom.NewNode(1.0), "a", "b", "c")
 			cursor := bloom.NewCursor(node)
 			Expect(cursor.String()).To(Equal("Cursor('', Node('ABC', '   #', 0))"))
 		})
@@ -30,7 +30,7 @@ var _ = Describe("Cursor.NewNode",
 var _ = Describe("Cursor.Get",
 	func() {
 		It("Moves to children", func() {
-			node := extend(bloom.NewNode(1.0), "abc")
+			node := extend(bloom.NewNode(1.0), "a", "b", "c")
 			cursor := bloom.NewCursor(node)
 			_, err := cursor.Get("abc")
 			Expect(err).ShouldNot(HaveOccurred())
@@ -38,13 +38,46 @@ var _ = Describe("Cursor.Get",
 		})
 
 		It("Moves to children iteratively", func() {
-			node := extend(bloom.NewNode(1.0), "abc")
+			node := extend(bloom.NewNode(1.0), "a", "b", "c")
 			cursor := bloom.NewCursor(node)
 			for _, c := range "abc" {
 				_, err := cursor.Get(string(c))
 				Expect(err).ShouldNot(HaveOccurred())
 			}
 			Expect(cursor.String()).To(Equal("Cursor('abc', Node('', '#', 1))"))
+		})
+
+		It("Moves to virtual child with prefix", func() {
+			node := bloom.NewNode()
+			Expect(node.Link("abc", bloom.NewNode(1.0))).ShouldNot(HaveOccurred())
+			cursor := bloom.NewCursor(node)
+			_, err := cursor.Get("abc")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(cursor.String()).To(Equal("Cursor('abc', Node('', '#', 1))"))
+		})
+
+		It("Moves across bridge", func() {
+			node := extend(bloom.NewNode(1.0), "a", "bridge", "z")
+			cursor := bloom.NewCursor(node)
+			_, err := cursor.Get("abridgez")
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(cursor.String()).To(Equal("Cursor('abridgez', Node('', '#', 1))"))
+		})
+
+		It("Errors when exhausting path while on bridge", func() {
+			node := extend(bloom.NewNode(1.0), "a", "bridge", "z")
+			cursor := bloom.NewCursor(node)
+			_, err := cursor.Get("abri")
+			Expect(err).Should(MatchError(
+				"Cursor('a', Node('BDEGIRZ', '       #', 0)) traversal error for 'abri': exhausted input traversing prefix 'ridge' on Node('BDEGIRZ', '       #', 0)[b]"))
+		})
+
+		It("Errors when leaving bridge early", func() {
+			node := extend(bloom.NewNode(1.0), "a", "bridge", "z")
+			cursor := bloom.NewCursor(node)
+			_, err := cursor.Get("abriz")
+			Expect(err).Should(MatchError(
+				"Cursor('a', Node('BDEGIRZ', '       #', 0)) traversal error for 'abriz': prefix mismatch 'bridge' is not a prefix of 'briz'"))
 		})
 
 		It("Raises error attempting to traverse illegal character", func() {
