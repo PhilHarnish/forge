@@ -20,6 +20,14 @@ var _ = Describe("Match",
 			node.Match(0.5)
 			Expect(node.String()).To(Equal("Node('', '#', 0.5)"))
 		})
+
+		It("Rejects duplicate attempts", func() {
+			node := bloom.NewNode()
+			node.Match(0.5)
+			Expect(func() {
+				node.Match(0.5)
+			}).To(Panic())
+		})
 	})
 
 var _ = Describe("Link",
@@ -35,6 +43,19 @@ var _ = Describe("Link",
 				err := node.Link("c", bloom.NewNode(1.0))
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(node.String()).To(Equal("Node('C', ' #', 0)"))
+			})
+
+		It("Rejects empty links",
+			func() {
+				err := node.Link("", bloom.NewNode(1.0))
+				Expect(err).Should(HaveOccurred())
+			})
+
+		It("Rejects illegal links",
+			func() {
+				err := node.Link("🚫", bloom.NewNode(1.0))
+				Expect(err).Should(MatchError(
+					"error while linking: '🚫' not supported"))
 			})
 
 		It("Rejects duplicate links",
@@ -76,7 +97,7 @@ var _ = Describe("Satisfies",
 	func() {
 		It("Empty nodes do not satisfy by default (no exits)",
 			func() {
-				node := bloom.NewNode()
+				node := bloom.NewNode(1.0)
 				Expect(node.Satisfies(node)).To(BeFalse())
 			})
 

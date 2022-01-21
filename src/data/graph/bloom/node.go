@@ -55,17 +55,15 @@ func (node *Node) Link(edge string, child *Node) error {
 	if len(edge) == 0 {
 		return fmt.Errorf("attempted to link empty key")
 	}
-	if node.links == nil {
-		node.links = &[SIZE]*nodeLink{}
-	}
-	c := edge[0]
-	prefix := edge[1:]
+	runes := []rune(edge)
+	c := runes[0]
+	prefix := string(runes[1:])
 	position, err := Position(rune(c))
 	if err != nil {
 		return fmt.Errorf("error while linking: %w", err)
 	}
 	edgeMask := BitMask(1 << position)
-	if len(edge) > 1 {
+	if len(runes) > 1 {
 		return fmt.Errorf("multi-byte keys are currently unsupported")
 	}
 	// Inherit maxWeight.
@@ -80,7 +78,10 @@ func (node *Node) Link(edge string, child *Node) error {
 		node.requireMask &= edgeMask | BitMask(child.requireMask)
 	}
 	// Inherit matching lengths.
-	node.lengthsMask |= child.lengthsMask << len(edge)
+	node.lengthsMask |= child.lengthsMask << len(runes)
+	if node.links == nil {
+		node.links = &[SIZE]*nodeLink{}
+	}
 	if node.links[position] == nil {
 		// New link.
 		node.links[position] = &nodeLink{
