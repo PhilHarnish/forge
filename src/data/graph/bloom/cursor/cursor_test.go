@@ -10,9 +10,9 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
-func TestMask(t *testing.T) {
+func TestCursor(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Mask tests")
+	RunSpecs(t, "Cursor tests")
 }
 
 func extend(item *node.Node, paths ...string) *node.Node {
