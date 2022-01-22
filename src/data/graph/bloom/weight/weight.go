@@ -1,3 +1,3 @@
-package bloom
+package weight
 
 type Weight = float64

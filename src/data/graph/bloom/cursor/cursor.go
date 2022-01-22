@@ -1,35 +1,38 @@
-package bloom
+package cursor
 
 import (
 	"fmt"
 	"unsafe"
+
+	"github.com/philharnish/forge/src/data/graph/bloom/mask"
+	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
 // Graph node with bloom-filter style optimizations.
 type Cursor struct {
 	// Current position.
-	node *Node
+	Node *node.Node
 	// Accumulated characters.
-	path []byte
+	Path []byte
 	// Subpath into the current node
-	subpath string
+	Subpath string
 }
 
-func NewCursor(root *Node) *Cursor {
+func NewCursor(root *node.Node) *Cursor {
 	return &Cursor{
-		node:    root,
-		path:    []byte{},
-		subpath: "",
+		Node:    root,
+		Path:    []byte{},
+		Subpath: "",
 	}
 }
 
 func (cursor *Cursor) Get(path string) (*Cursor, error) {
 	runes := []rune(path)
 	// Preprocess path to determine the requirements along path.
-	requirements := make([]Mask, len(runes))
-	required := Mask(0)
+	requirements := make([]mask.Mask, len(runes))
+	required := mask.Mask(0)
 	for i := len(runes) - 1; i >= 0; i-- {
-		mask, err := AlphabetMask(runes[i])
+		mask, err := mask.AlphabetMask(runes[i])
 		if err != nil {
 			return cursor, fmt.Errorf(
 				"%s traversal error for '%s': %w", cursor, path, err)
@@ -37,48 +40,48 @@ func (cursor *Cursor) Get(path string) (*Cursor, error) {
 		required |= mask
 		requirements[i] = required
 	}
-	node := cursor.node
+	cursorNode := cursor.Node
 	for i := 0; i < len(runes); i++ {
 		c := runes[i]
 		// Ensure requirements are met at this layer.
 		required := requirements[i]
-		if node.provideMask&required != required {
+		if cursorNode.ProvideMask&required != required {
 			// Eventually one of our requested letters will be missing.
-			missing := required ^ cursor.node.provideMask&required
+			missing := required ^ cursor.Node.ProvideMask&required
 			return cursor, fmt.Errorf(
 				"%s traversal error for '%s': '%s' not provided",
-				cursor, path, MaskAlphabet(missing, missing))
+				cursor, path, mask.MaskAlphabet(missing, missing))
 		}
-		position, _ := Position(c)
+		position, _ := mask.Position(c)
 		// NB: Here we assume `links` is defined, `position` is valid,
 		// because the `provide` check has passed.
-		link := node.links[position]
+		link := cursorNode.Links[position]
 		if link == nil {
 			return cursor, fmt.Errorf(
 				"%s traversal error for '%s': '%c' not linked",
 				cursor, path, c)
 		}
 		prefixStart := i
-		for _, p := range link.prefix {
+		for _, p := range link.Prefix {
 			i++
 			if i >= len(runes) {
 				return cursor, fmt.Errorf(
 					"%s traversal error for '%s': exhausted input traversing prefix '%s' on %s[%c]",
-					cursor, path, link.prefix, node, c)
+					cursor, path, link.Prefix, cursorNode, c)
 			} else if p != runes[i] {
 				return cursor, fmt.Errorf(
 					"%s traversal error for '%s': prefix mismatch '%c%s' is not a prefix of '%s'",
-					cursor, path, c, link.prefix, path[prefixStart:])
+					cursor, path, c, link.Prefix, path[prefixStart:])
 			}
 		}
 		// Traversal successful, descend into `node` and continue looping.
-		node = link.node
-		if cursor.subpath != "" {
-			cursor.path = append(cursor.path, cursor.subpath...)
+		cursorNode = link.Node
+		if cursor.Subpath != "" {
+			cursor.Path = append(cursor.Path, cursor.Subpath...)
 		}
-		cursor.path = append(cursor.path, string(c)...)
-		cursor.subpath = link.prefix
-		cursor.node = node
+		cursor.Path = append(cursor.Path, string(c)...)
+		cursor.Subpath = link.Prefix
+		cursor.Node = cursorNode
 	}
 	return cursor, nil
 }
@@ -86,7 +89,7 @@ func (cursor *Cursor) Get(path string) (*Cursor, error) {
 func (cursor *Cursor) Select(path string) *Cursor {
 	result, err := cursor.Get(path)
 	if err != nil {
-		panic(fmt.Errorf("path %s not found on %s", path, cursor.node))
+		panic(fmt.Errorf("path %s not found on %s", path, cursor.Node))
 	}
 	return result
 }
@@ -94,8 +97,8 @@ func (cursor *Cursor) Select(path string) *Cursor {
 func (cursor *Cursor) String() string {
 	return fmt.Sprintf("Cursor('%s%s', %s)",
 		// Ref strings/builder.go in Go standard library.
-		*(*string)(unsafe.Pointer(&cursor.path)),
-		cursor.subpath,
-		cursor.node,
+		*(*string)(unsafe.Pointer(&cursor.Path)),
+		cursor.Subpath,
+		cursor.Node,
 	)
 }

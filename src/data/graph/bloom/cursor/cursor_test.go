@@ -1,28 +1,35 @@
-package bloom_test
+package cursor_test
 
 import (
 	"errors"
+	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/philharnish/forge/src/data/graph/bloom"
+	"github.com/philharnish/forge/src/data/graph/bloom/cursor"
+	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
-func extend(node *bloom.Node, paths ...string) *bloom.Node {
+func TestMask(t *testing.T) {
+	RegisterFailHandler(Fail)
+	RunSpecs(t, "Mask tests")
+}
+
+func extend(item *node.Node, paths ...string) *node.Node {
 	for i := len(paths) - 1; i >= 0; i-- {
-		parent := bloom.NewNode()
-		err := parent.Link(paths[i], node)
+		parent := node.NewNode()
+		err := parent.Link(paths[i], item)
 		Expect(err).ShouldNot(HaveOccurred())
-		node = parent
+		item = parent
 	}
-	return node
+	return item
 }
 
 var _ = Describe("Cursor.NewNode",
 	func() {
 		It("Initially empty", func() {
-			node := extend(bloom.NewNode(1.0), "a", "b", "c")
-			cursor := bloom.NewCursor(node)
+			root := extend(node.NewNode(1.0), "a", "b", "c")
+			cursor := cursor.NewCursor(root)
 			Expect(cursor.String()).To(Equal("Cursor('', Node('ABC', '   #', 0))"))
 		})
 	})
@@ -30,78 +37,78 @@ var _ = Describe("Cursor.NewNode",
 var _ = Describe("Cursor.Get",
 	func() {
 		It("Moves to children", func() {
-			node := extend(bloom.NewNode(1.0), "a", "b", "c")
-			cursor := bloom.NewCursor(node)
+			root := extend(node.NewNode(1.0), "a", "b", "c")
+			cursor := cursor.NewCursor(root)
 			_, err := cursor.Get("abc")
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(cursor.String()).To(Equal("Cursor('abc', Node('', '#', 1))"))
 		})
 
 		It("Moves to children iteratively", func() {
-			node := extend(bloom.NewNode(1.0), "a", "b", "c")
-			cursor := bloom.NewCursor(node)
-			for _, c := range "abc" {
-				_, err := cursor.Get(string(c))
+			n := extend(node.NewNode(1.0), "a", "b", "c")
+			c := cursor.NewCursor(n)
+			for _, path := range "abc" {
+				_, err := c.Get(string(path))
 				Expect(err).ShouldNot(HaveOccurred())
 			}
-			Expect(cursor.String()).To(Equal("Cursor('abc', Node('', '#', 1))"))
+			Expect(c.String()).To(Equal("Cursor('abc', Node('', '#', 1))"))
 		})
 
 		It("Moves to virtual child with prefix", func() {
-			node := bloom.NewNode()
-			Expect(node.Link("abc", bloom.NewNode(1.0))).ShouldNot(HaveOccurred())
-			cursor := bloom.NewCursor(node)
-			_, err := cursor.Get("abc")
+			n := node.NewNode()
+			Expect(n.Link("abc", node.NewNode(1.0))).ShouldNot(HaveOccurred())
+			c := cursor.NewCursor(n)
+			_, err := c.Get("abc")
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(cursor.String()).To(Equal("Cursor('abc', Node('', '#', 1))"))
+			Expect(c.String()).To(Equal("Cursor('abc', Node('', '#', 1))"))
 		})
 
 		It("Moves across bridge", func() {
-			node := extend(bloom.NewNode(1.0), "a", "bridge", "z")
-			cursor := bloom.NewCursor(node)
-			_, err := cursor.Get("abridgez")
+			n := extend(node.NewNode(1.0), "a", "bridge", "z")
+			c := cursor.NewCursor(n)
+			_, err := c.Get("abridgez")
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(cursor.String()).To(Equal("Cursor('abridgez', Node('', '#', 1))"))
+			Expect(c.String()).To(Equal("Cursor('abridgez', Node('', '#', 1))"))
 		})
 
 		It("Errors when exhausting path while on bridge", func() {
-			node := extend(bloom.NewNode(1.0), "a", "bridge", "z")
-			cursor := bloom.NewCursor(node)
-			_, err := cursor.Get("abri")
+			n := extend(node.NewNode(1.0), "a", "bridge", "z")
+			c := cursor.NewCursor(n)
+			_, err := c.Get("abri")
 			Expect(err).Should(MatchError(
 				"Cursor('a', Node('BDEGIRZ', '       #', 0)) traversal error for 'abri': exhausted input traversing prefix 'ridge' on Node('BDEGIRZ', '       #', 0)[b]"))
 		})
 
 		It("Errors when leaving bridge early", func() {
-			node := extend(bloom.NewNode(1.0), "a", "bridge", "z")
-			cursor := bloom.NewCursor(node)
-			_, err := cursor.Get("abriz")
+			n := extend(node.NewNode(1.0), "a", "bridge", "z")
+			c := cursor.NewCursor(n)
+			_, err := c.Get("abriz")
 			Expect(err).Should(MatchError(
 				"Cursor('a', Node('BDEGIRZ', '       #', 0)) traversal error for 'abriz': prefix mismatch 'bridge' is not a prefix of 'briz'"))
 		})
 
 		It("Raises error attempting to traverse illegal character", func() {
-			node := extend(bloom.NewNode(1.0), "abc")
-			cursor := bloom.NewCursor(node)
-			_, err := cursor.Get("🚫")
+			n := extend(node.NewNode(1.0), "abc")
+			c := cursor.NewCursor(n)
+			_, err := c.Get("🚫")
 			Expect(err).Should(MatchError(
 				"Cursor('', Node('ABC', '   #', 0)) traversal error for '🚫': '🚫' not supported",
 			))
 		})
 
 		It("Raises error attempting to traverse missing character", func() {
-			node := extend(bloom.NewNode(1.0), "abc")
-			cursor := bloom.NewCursor(node)
-			_, err := cursor.Get("xyz")
+			n := extend(node.NewNode(1.0), "abc")
+			c := cursor.NewCursor(n)
+			_, err := c.Get("xyz")
 			Expect(err).Should(MatchError(
 				"Cursor('', Node('ABC', '   #', 0)) traversal error for 'xyz': 'XYZ' not provided",
 			))
 		})
 
 		It("Raises error attempting to traverse out of order", func() {
-			node := extend(bloom.NewNode(1.0), "abc")
-			cursor := bloom.NewCursor(node)
-			_, err := cursor.Get("cba")
+			n := extend(node.NewNode(1.0), "abc")
+			c := cursor.NewCursor(n)
+			_, err := c.Get("cba")
 			Expect(err).Should(MatchError(
 				"Cursor('', Node('ABC', '   #', 0)) traversal error for 'cba': 'c' not linked",
 			))
@@ -111,17 +118,17 @@ var _ = Describe("Cursor.Get",
 var _ = Describe("Cursor.Select",
 	func() {
 		It("Moves to children", func() {
-			node := extend(bloom.NewNode(1.0), "abc")
-			cursor := bloom.NewCursor(node)
-			cursor.Select("abc")
-			Expect(cursor.String()).To(Equal("Cursor('abc', Node('', '#', 1))"))
+			n := extend(node.NewNode(1.0), "abc")
+			c := cursor.NewCursor(n)
+			c.Select("abc")
+			Expect(c.String()).To(Equal("Cursor('abc', Node('', '#', 1))"))
 		})
 
 		It("Panics when performing an illegal selection", func() {
-			node := extend(bloom.NewNode(1.0), "abc")
-			cursor := bloom.NewCursor(node)
+			n := extend(node.NewNode(1.0), "abc")
+			c := cursor.NewCursor(n)
 			Expect(func() {
-				cursor.Select("xyz")
+				c.Select("xyz")
 			}).To(PanicWith(errors.New("path xyz not found on Node('ABC', '   #', 0)")))
 		})
 	})
