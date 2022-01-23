@@ -13,6 +13,18 @@ import (
 const LAST_POS = mask.SIZE
 const MAX_SIZE = 1 << LAST_POS
 
+type MaskIterable uint64
+
+func (m *MaskIterable) NextBit() mask.Mask {
+	value := *m
+	if value == 0 {
+		return 0
+	}
+	next := value & (value - 1)
+	*m = next
+	return mask.Mask(value - next)
+}
+
 func getLowestSetBit(n int) int {
 	mask := 1
 	for i := 1; i <= 32; i++ {
@@ -57,7 +69,7 @@ func BenchmarkOverhead(b *testing.B) {
 func BenchmarkLookupTable(b *testing.B) {
 	positions := 0 // Ensure compiler does not eliminate no-op.
 	runner(b, func(i mask.Mask) {
-		iterator := mask.MaskIterable(i)
+		iterator := MaskIterable(i)
 		for x := iterator.NextBit(); x > 0; x = iterator.NextBit() {
 			b := make([]byte, 4)
 			binary.LittleEndian.PutUint32(b, uint32(x))
@@ -77,7 +89,7 @@ func BenchmarkLookupTable(b *testing.B) {
 func BenchmarkShiftLookupTable(b *testing.B) {
 	positions := 0 // Ensure compiler does not eliminate no-op.
 	runner(b, func(i mask.Mask) {
-		iterator := mask.MaskIterable(i)
+		iterator := MaskIterable(i)
 		for x := iterator.NextBit(); x > 0; x = iterator.NextBit() {
 			if x <= 0x000000ff {
 				positions += lowestBitTable[x&0xff]
@@ -100,7 +112,7 @@ var deBruijnBitPosition = [32]byte{
 func BenchmarkDeBruijn(b *testing.B) {
 	positions := 0 // Ensure compiler does not eliminate no-op.
 	runner(b, func(i mask.Mask) {
-		iterator := mask.MaskIterable(i)
+		iterator := MaskIterable(i)
 		for i := iterator.NextBit(); i > 0; i = iterator.NextBit() {
 			positions += int(deBruijnBitPosition[(uint32)(i*0x077CB531)>>27])
 		}
@@ -138,7 +150,7 @@ func BenchmarkIterateWithEarlyExit(b *testing.B) {
 func BenchmarkC(b *testing.B) {
 	positions := 0 // Ensure compiler does not eliminate no-op.
 	runner(b, func(i mask.Mask) {
-		iterator := mask.MaskIterable(i)
+		iterator := MaskIterable(i)
 		for x := iterator.NextBit(); x > 0; x = iterator.NextBit() {
 			result, err := bits.FindFirstSet(uint32(i))
 			if err != nil {
