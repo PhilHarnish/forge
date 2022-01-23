@@ -1,4 +1,4 @@
-package benchmarks
+package benchmarks_test
 
 // go test -benchmem -run=^$ -bench . github.com/philharnish/forge/src/data/graph/bloom/benchmarks
 
