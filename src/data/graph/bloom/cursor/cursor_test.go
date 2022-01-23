@@ -76,7 +76,7 @@ var _ = Describe("Cursor.Get",
 			c := cursor.NewCursor(n)
 			_, err := c.Get("abri")
 			Expect(err).Should(MatchError(
-				"Cursor('a', Node('BDEGIRZ', '       #', 0)) traversal error for 'abri': exhausted input traversing prefix 'ridge' on Node('BDEGIRZ', '       #', 0)[b]"))
+				"Cursor('a', Node('BDEGIRZ', '       #', 0)) traversal error for 'abri': exhausted input traversing prefix 'bridge' on Node('BDEGIRZ', '       #', 0)[b]"))
 		})
 
 		It("Errors when leaving bridge early", func() {

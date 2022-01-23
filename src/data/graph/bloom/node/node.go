@@ -21,10 +21,10 @@ type Node struct {
 	// BitMask for distances matching Nodes.
 	LengthsMask mask.Mask
 	// Array of outgoing Nodes (index assigned by Position from mask.go).
-	Links *[mask.SIZE]*nodeLink
+	Links []NodeLink
 }
 
-type nodeLink struct {
+type NodeLink struct {
 	Prefix string
 	Node   *Node
 }
@@ -57,8 +57,6 @@ func (node *Node) Link(path string, child *Node) error {
 		return fmt.Errorf("attempted to link empty key")
 	}
 	runes := []rune(path)
-	edge := runes[0]
-	prefix := string(runes[1:])
 	edgeMask := mask.Mask(0)
 	for _, c := range runes {
 		mask, err := mask.AlphabetMask(c)
@@ -80,24 +78,37 @@ func (node *Node) Link(path string, child *Node) error {
 	}
 	// Inherit matching lengths.
 	node.LengthsMask |= child.LengthsMask << len(runes)
-	if node.Links == nil {
-		node.Links = &[mask.SIZE]*nodeLink{}
+	link := NodeLink{
+		path,
+		child,
 	}
-	// NB: Here we assume no error since AlphabetMask succeeds above.
-	position, _ := mask.Position(rune(edge))
-	if node.Links[position] == nil {
-		// New link.
-		node.Links[position] = &nodeLink{
-			prefix,
-			child,
+	// Optimized path for first link.
+	if node.Links == nil {
+		node.Links = []NodeLink{
+			link,
 		}
 		return nil
-	} else if node.Links[position].Prefix == prefix {
-		// Proposed link already exists.
-		return fmt.Errorf("link '%s' already exists", path)
 	}
-	// Attempt to reuse link
-	return fmt.Errorf("splitting an existing link is currently unsupported")
+	// append(...) will ensure there is room for all (old+new) links.
+	node.Links = append(node.Links, link)
+	// Scan links to validate they are in sorted order and there are no duplicates.
+	links := node.Links
+	for second := len(links) - 1; second > 0; second-- {
+		first := second - 1
+		if links[first].Prefix[0] == links[second].Prefix[0] {
+			if node.Links[first].Prefix == links[second].Prefix {
+				// Proposed link already exists.
+				return fmt.Errorf("link '%s' already exists", path)
+			}
+			// Attempt to reuse link.
+			return fmt.Errorf("splitting an existing link is currently unsupported")
+		}
+		if links[second].Node.MaxWeight > links[first].Node.MaxWeight {
+			// The second node is better than first; swap.
+			links[first], links[second] = links[second], links[first]
+		}
+	}
+	return nil
 }
 
 func (node *Node) Satisfies(other *Node) bool {

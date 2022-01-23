@@ -2,7 +2,7 @@ package cursor
 
 import (
 	"fmt"
-	"unsafe"
+	"strings"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
@@ -14,15 +14,12 @@ type Cursor struct {
 	Node *node.Node
 	// Accumulated characters.
 	Path []byte
-	// Subpath into the current node
-	Subpath string
 }
 
 func NewCursor(root *node.Node) *Cursor {
 	return &Cursor{
-		Node:    root,
-		Path:    []byte{},
-		Subpath: "",
+		Node: root,
+		Path: []byte{},
 	}
 }
 
@@ -52,17 +49,21 @@ func (cursor *Cursor) Get(path string) (*Cursor, error) {
 				"%s traversal error for '%s': '%s' not provided",
 				cursor, path, mask.MaskAlphabet(missing, missing))
 		}
-		position, _ := mask.Position(c)
-		// NB: Here we assume `links` is defined, `position` is valid,
-		// because the `provide` check has passed.
-		link := cursorNode.Links[position]
-		if link == nil {
+		position := 0
+		for ; position < len(cursorNode.Links); position++ {
+			if strings.HasPrefix(cursorNode.Links[position].Prefix, string(c)) {
+				break
+			}
+		}
+		if position == len(cursorNode.Links) {
 			return cursor, fmt.Errorf(
 				"%s traversal error for '%s': '%c' not linked",
 				cursor, path, c)
 		}
+		link := cursorNode.Links[position]
 		prefixStart := i
-		for _, p := range link.Prefix {
+		// NB: Start Prefix scan from 1; 0 checked above.
+		for _, p := range link.Prefix[1:] {
 			i++
 			if i >= len(runes) {
 				return cursor, fmt.Errorf(
@@ -71,16 +72,12 @@ func (cursor *Cursor) Get(path string) (*Cursor, error) {
 			} else if p != runes[i] {
 				return cursor, fmt.Errorf(
 					"%s traversal error for '%s': prefix mismatch '%c%s' is not a prefix of '%s'",
-					cursor, path, c, link.Prefix, path[prefixStart:])
+					cursor, path, c, link.Prefix[1:], path[prefixStart:])
 			}
 		}
 		// Traversal successful, descend into `node` and continue looping.
 		cursorNode = link.Node
-		if cursor.Subpath != "" {
-			cursor.Path = append(cursor.Path, cursor.Subpath...)
-		}
-		cursor.Path = append(cursor.Path, string(c)...)
-		cursor.Subpath = link.Prefix
+		cursor.Path = append(cursor.Path, []byte(link.Prefix)...)
 		cursor.Node = cursorNode
 	}
 	return cursor, nil
@@ -95,10 +92,9 @@ func (cursor *Cursor) Select(path string) *Cursor {
 }
 
 func (cursor *Cursor) String() string {
-	return fmt.Sprintf("Cursor('%s%s', %s)",
+	return fmt.Sprintf("Cursor('%s', %s)",
 		// Ref strings/builder.go in Go standard library.
-		*(*string)(unsafe.Pointer(&cursor.Path)),
-		cursor.Subpath,
+		cursor.Path,
 		cursor.Node,
 	)
 }
