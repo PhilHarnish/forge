@@ -28,8 +28,6 @@ func mapSize(maps []*map[rune]byte) uint64 {
 	return stats.Alloc - uint64(unsafe.Sizeof(maps[0]))*uint64(cap(maps))
 }
 
-const TESTS = 1000
-
 func ArraySizes() {
 	arrays := []*[]byte{}
 	n := TESTS

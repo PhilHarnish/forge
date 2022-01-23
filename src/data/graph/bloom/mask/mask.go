@@ -9,6 +9,8 @@ import (
 
 type Mask = uint64
 
+type MaskIterable uint64
+
 const (
 	LETTERS   = "abcdefghijklmnopqrstuvwxyz"
 	SEPARATOR = " -"
@@ -19,6 +21,16 @@ const (
 	NONE      = Mask(0b0)
 	UNSET     = Mask(1<<SIZE | ALL)
 )
+
+func (mask *MaskIterable) NextBit() Mask {
+	value := *mask
+	if value == 0 {
+		return 0
+	}
+	next := value & (value - 1)
+	*mask = next
+	return Mask(value - next)
+}
 
 /*
 Returns the position for the given rune if supported, otherwise error.

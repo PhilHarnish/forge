@@ -14,6 +14,40 @@ func TestMask(t *testing.T) {
 	RunSpecs(t, "Mask tests")
 }
 
+var _ = Describe("NextBit",
+	func() {
+		It("Returns 0 for 0",
+			func() {
+				i := mask.MaskIterable(0)
+				Expect(i.NextBit()).To(Equal(mask.Mask(0)))
+			})
+
+		It("Returns lowest set bit for 0b110",
+			func() {
+				i := mask.MaskIterable(0b110)
+				Expect(i.NextBit()).To(Equal(mask.Mask(0b10)))
+			})
+
+		It("Returns successive bits for 0b110",
+			func() {
+				i := mask.MaskIterable(0b110)
+				Expect(i.NextBit()).To(Equal(mask.Mask(0b10)))
+				Expect(i.NextBit()).To(Equal(mask.Mask(0b100)))
+				Expect(i.NextBit()).To(Equal(mask.Mask(0b0)))
+				Expect(i.NextBit()).To(Equal(mask.Mask(0b0)))
+			})
+
+		It("Works in a for loop",
+			func() {
+				iter := mask.MaskIterable(0b10110)
+				results := []mask.Mask{}
+				for i := iter.NextBit(); i > 0; i = iter.NextBit() {
+					results = append(results, i)
+				}
+				Expect(results).To(Equal([]mask.Mask{0b10, 0b100, 0b10000}))
+			})
+	})
+
 var _ = Describe("Position",
 	func() {
 		It("Accepts all characters from ALPHABET",
