@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"testing"
 
-	"github.com/philharnish/forge/src/data/bits"
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 )
 
@@ -143,20 +142,6 @@ func BenchmarkIterateWithEarlyExit(b *testing.B) {
 					break
 				}
 			}
-		}
-	})
-}
-
-func BenchmarkC(b *testing.B) {
-	positions := 0 // Ensure compiler does not eliminate no-op.
-	runner(b, func(i mask.Mask) {
-		iterator := MaskIterable(i)
-		for x := iterator.NextBit(); x > 0; x = iterator.NextBit() {
-			result, err := bits.FindFirstSet(uint32(i))
-			if err != nil {
-				panic(err)
-			}
-			positions += result
 		}
 	})
 }
