@@ -5,18 +5,18 @@ import (
 	"strings"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
-	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 )
 
 // Graph node with bloom-filter style optimizations.
 type Cursor struct {
 	// Current position.
-	Node *node.Node
+	Node *trie.Trie
 	// Accumulated characters.
 	Path []byte
 }
 
-func NewCursor(root *node.Node) *Cursor {
+func NewCursor(root *trie.Trie) *Cursor {
 	return &Cursor{
 		Node: root,
 		Path: []byte{},

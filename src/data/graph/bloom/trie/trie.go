@@ -1,4 +1,4 @@
-package node
+package trie
 
 import (
 	"fmt"
@@ -8,29 +8,29 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
-// Graph node with bloom-filter style optimizations.
-type Node struct {
+// Trie with bloom-filter style optimizations.
+type Trie struct {
 	// Non-zero when this node is a match.
 	MatchWeight weight.Weight
 	// Maximum weight for outgoing edges.
 	MaxWeight weight.Weight
 	// BitMask for outgoing edges.
 	ProvideMask mask.Mask
-	// BitMask for edges which lead to matching Nodes.
+	// BitMask for edges which lead to matching Tries.
 	RequireMask mask.Mask
-	// BitMask for distances matching Nodes.
+	// BitMask for distances matching Tries.
 	LengthsMask mask.Mask
-	// Array of outgoing Nodes (index assigned by Position from mask.go).
-	Links []NodeLink
+	// Array of outgoing Tries (sorted by MaxWeight).
+	Links []TrieLink
 }
 
-type NodeLink struct {
+type TrieLink struct {
 	Prefix string
-	Node   *Node
+	Node   *Trie
 }
 
-func NewNode(matchWeight ...weight.Weight) *Node {
-	result := Node{}
+func NewTrie(matchWeight ...weight.Weight) *Trie {
+	result := Trie{}
 	result.RequireMask = mask.UNSET
 	if len(matchWeight) == 1 {
 		result.Match(matchWeight[0])
@@ -38,21 +38,21 @@ func NewNode(matchWeight ...weight.Weight) *Node {
 	return &result
 }
 
-func (node *Node) Match(weight weight.Weight) {
-	if node.MatchWeight != 0.0 {
+func (trie *Trie) Match(weight weight.Weight) {
+	if trie.MatchWeight != 0.0 {
 		panic(fmt.Errorf("duplicate attempts to set match weight (%f and %f)",
-			node.MatchWeight, weight))
+			trie.MatchWeight, weight))
 	}
-	node.MatchWeight = weight
-	node.LengthsMask |= 0b1 // Match at current position
-	node.Weight(weight)
+	trie.MatchWeight = weight
+	trie.LengthsMask |= 0b1 // Match at current position
+	trie.Weight(weight)
 }
 
-func (node *Node) Weight(weight weight.Weight) {
-	node.MaxWeight = math.Max(node.MaxWeight, weight)
+func (trie *Trie) Weight(weight weight.Weight) {
+	trie.MaxWeight = math.Max(trie.MaxWeight, weight)
 }
 
-func (node *Node) Link(path string, child *Node) error {
+func (trie *Trie) Link(path string, child *Trie) error {
 	if len(path) == 0 {
 		return fmt.Errorf("attempted to link empty key")
 	}
@@ -66,37 +66,37 @@ func (node *Node) Link(path string, child *Node) error {
 		edgeMask |= mask
 	}
 	// Inherit maxWeight.
-	node.Weight(child.MaxWeight)
+	trie.Weight(child.MaxWeight)
 	// Provide anything ANY children provides (including the edge itself).
-	node.ProvideMask |= edgeMask | mask.Mask(child.ProvideMask)
+	trie.ProvideMask |= edgeMask | mask.Mask(child.ProvideMask)
 	if child.RequireMask == mask.UNSET {
 		// Ignore the child's require mask if it is UNSET.
-		node.RequireMask &= edgeMask
+		trie.RequireMask &= edgeMask
 	} else {
 		// Require anything ALL children requires (including the edge itself).
-		node.RequireMask &= edgeMask | mask.Mask(child.RequireMask)
+		trie.RequireMask &= edgeMask | mask.Mask(child.RequireMask)
 	}
 	// Inherit matching lengths.
-	node.LengthsMask |= child.LengthsMask << len(runes)
-	link := NodeLink{
+	trie.LengthsMask |= child.LengthsMask << len(runes)
+	link := TrieLink{
 		path,
 		child,
 	}
 	// Optimized path for first link.
-	if node.Links == nil {
-		node.Links = []NodeLink{
+	if trie.Links == nil {
+		trie.Links = []TrieLink{
 			link,
 		}
 		return nil
 	}
 	// append(...) will ensure there is room for all (old+new) links.
-	node.Links = append(node.Links, link)
+	trie.Links = append(trie.Links, link)
 	// Scan links to validate they are in sorted order and there are no duplicates.
-	links := node.Links
+	links := trie.Links
 	for second := len(links) - 1; second > 0; second-- {
 		first := second - 1
 		if links[first].Prefix[0] == links[second].Prefix[0] {
-			if node.Links[first].Prefix == links[second].Prefix {
+			if trie.Links[first].Prefix == links[second].Prefix {
 				// Proposed link already exists.
 				return fmt.Errorf("link '%s' already exists", path)
 			}
@@ -111,16 +111,16 @@ func (node *Node) Link(path string, child *Node) error {
 	return nil
 }
 
-func (node *Node) Satisfies(other *Node) bool {
-	return other.RequireMask&node.ProvideMask == other.RequireMask &&
-		node.LengthsMask&other.LengthsMask > 0
+func (trie *Trie) Satisfies(other *Trie) bool {
+	return other.RequireMask&trie.ProvideMask == other.RequireMask &&
+		trie.LengthsMask&other.LengthsMask > 0
 }
 
-func (node *Node) String() string {
+func (trie *Trie) String() string {
 	return fmt.Sprintf(
-		"Node('%s', '%s', %.2g)",
-		mask.MaskAlphabet(node.ProvideMask, node.RequireMask),
-		mask.LengthAlphabet(node.LengthsMask),
-		node.MatchWeight,
+		"Trie('%s', '%s', %.2g)",
+		mask.MaskAlphabet(trie.ProvideMask, trie.RequireMask),
+		mask.LengthAlphabet(trie.LengthsMask),
+		trie.MatchWeight,
 	)
 }
