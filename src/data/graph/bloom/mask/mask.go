@@ -48,6 +48,25 @@ func AlphabetMask(c rune) (Mask, error) {
 }
 
 /*
+Returns a slice of BitMasks which match required runes.
+Earlier BitMasks assume all later BitMasks also apply.
+*/
+func AlphabetMasks(runes []rune) ([]Mask, error) {
+	// Preprocess path to determine the requirements along path.
+	requirements := make([]Mask, len(runes))
+	required := Mask(0)
+	for i := len(runes) - 1; i >= 0; i-- {
+		mask, err := AlphabetMask(runes[i])
+		if err != nil {
+			return nil, err
+		}
+		required |= mask
+		requirements[i] = required
+	}
+	return requirements, nil
+}
+
+/*
 Converts `provide` & `require` BitMasks to a human-readable string.
 */
 func MaskAlphabet(provide Mask, require Mask) string {

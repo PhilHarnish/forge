@@ -25,17 +25,10 @@ func NewCursor(root *trie.Trie) *Cursor {
 
 func (cursor *Cursor) Get(path string) (*Cursor, error) {
 	runes := []rune(path)
-	// Preprocess path to determine the requirements along path.
-	requirements := make([]mask.Mask, len(runes))
-	required := mask.Mask(0)
-	for i := len(runes) - 1; i >= 0; i-- {
-		mask, err := mask.AlphabetMask(runes[i])
-		if err != nil {
-			return cursor, fmt.Errorf(
-				"%s traversal error for '%s': %w", cursor, path, err)
-		}
-		required |= mask
-		requirements[i] = required
+	requirements, err := mask.AlphabetMasks(runes)
+	if err != nil {
+		return cursor, fmt.Errorf(
+			"%s traversal error for '%s': %w", cursor, path, err)
 	}
 	cursorNode := cursor.Node
 	for i := 0; i < len(runes); i++ {
