@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/philharnish/forge/src/data/graph/bloom/iterator"
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
@@ -12,11 +13,10 @@ import (
 // Trie with bloom-filter style optimizations.
 type Trie struct {
 	node.Node
-	// Array of outgoing Tries (sorted by MaxWeight).
-	Links []TrieLink
+	links []trieLink
 }
 
-type TrieLink struct {
+type trieLink struct {
 	Prefix string
 	Node   *Trie
 }
@@ -28,6 +28,10 @@ func NewTrie(matchWeight ...weight.Weight) *Trie {
 		result.Match(matchWeight[0])
 	}
 	return &result
+}
+
+func (trie *Trie) Items() iterator.IteratorItems {
+	return newIteratorItems(trie)
 }
 
 func (trie *Trie) Match(weight weight.Weight) {
@@ -70,25 +74,25 @@ func (trie *Trie) Link(path string, child *Trie) error {
 	}
 	// Inherit matching lengths.
 	trie.LengthsMask |= child.LengthsMask << len(runes)
-	link := TrieLink{
+	link := trieLink{
 		path,
 		child,
 	}
 	// Optimized path for first link.
-	if trie.Links == nil {
-		trie.Links = []TrieLink{
+	if trie.links == nil {
+		trie.links = []trieLink{
 			link,
 		}
 		return nil
 	}
 	// append(...) will ensure there is room for all (old+new) links.
-	trie.Links = append(trie.Links, link)
+	trie.links = append(trie.links, link)
 	// Scan links to validate they are in sorted order and there are no duplicates.
-	links := trie.Links
+	links := trie.links
 	for second := len(links) - 1; second > 0; second-- {
 		first := second - 1
 		if links[first].Prefix[0] == links[second].Prefix[0] {
-			if trie.Links[first].Prefix == links[second].Prefix {
+			if trie.links[first].Prefix == links[second].Prefix {
 				// Proposed link already exists.
 				return fmt.Errorf("link '%s' already exists", path)
 			}
