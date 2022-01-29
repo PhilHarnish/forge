@@ -23,6 +23,7 @@ type Node struct {
 
 type NodeIterator interface {
 	iterator.Iterator
+	Root() *Node
 }
 
 func (node *Node) Root() *Node {
