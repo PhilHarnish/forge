@@ -8,16 +8,16 @@ import (
 
 // Graph node with bloom-filter style optimizations.
 type Cursor struct {
-	// Current position.
-	NodeIterator node.NodeIterator
 	// Accumulated characters.
 	Path []byte
+	// Current position.
+	NodeIterator node.NodeIterator
 }
 
 func NewCursor(root node.NodeIterator) *Cursor {
 	return &Cursor{
-		NodeIterator: root,
 		Path:         []byte{},
+		NodeIterator: root,
 	}
 }
 
