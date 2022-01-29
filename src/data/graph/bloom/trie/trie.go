@@ -5,21 +5,13 @@ import (
 	"math"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
+	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 // Trie with bloom-filter style optimizations.
 type Trie struct {
-	// Non-zero when this node is a match.
-	MatchWeight weight.Weight
-	// Maximum weight for outgoing edges.
-	MaxWeight weight.Weight
-	// BitMask for outgoing edges.
-	ProvideMask mask.Mask
-	// BitMask for edges which lead to matching Tries.
-	RequireMask mask.Mask
-	// BitMask for distances matching Tries.
-	LengthsMask mask.Mask
+	node.Node
 	// Array of outgoing Tries (sorted by MaxWeight).
 	Links []TrieLink
 }
@@ -117,10 +109,5 @@ func (trie *Trie) Satisfies(other *Trie) bool {
 }
 
 func (trie *Trie) String() string {
-	return fmt.Sprintf(
-		"Trie('%s', '%s', %.2g)",
-		mask.MaskAlphabet(trie.ProvideMask, trie.RequireMask),
-		mask.LengthAlphabet(trie.LengthsMask),
-		trie.MatchWeight,
-	)
+	return node.Format("Trie", &trie.Node)
 }
