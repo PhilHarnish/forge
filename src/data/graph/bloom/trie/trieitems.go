@@ -4,25 +4,25 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
-type iteratorItems struct {
+type trieItems struct {
 	acceptor node.NodeAcceptor
 	root     *Trie
 	index    int
 }
 
-func newIteratorItems(acceptor node.NodeAcceptor, trie *Trie) *iteratorItems {
-	return &iteratorItems{
+func newTrieItems(acceptor node.NodeAcceptor, trie *Trie) *trieItems {
+	return &trieItems{
 		acceptor: acceptor,
 		root:     trie,
 		index:    0,
 	}
 }
 
-func (items *iteratorItems) HasNext() bool {
+func (items *trieItems) HasNext() bool {
 	return items.index < len(items.root.links)
 }
 
-func (items *iteratorItems) Next() (string, node.NodeIterator) {
+func (items *trieItems) Next() (string, node.NodeIterator) {
 	for items.HasNext() {
 		link := items.root.links[items.index]
 		items.index++

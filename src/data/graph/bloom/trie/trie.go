@@ -34,7 +34,7 @@ func (trie *Trie) Root() *node.Node {
 }
 
 func (trie *Trie) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	return newIteratorItems(acceptor, trie)
+	return newTrieItems(acceptor, trie)
 }
 
 func (trie *Trie) Match(weight weight.Weight) {
