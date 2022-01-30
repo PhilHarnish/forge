@@ -33,6 +33,14 @@ type NodeItems interface {
 // return Cursor{node, path}
 type NodeAcceptor = func(path string, node *Node) weight.Weight
 
+func NodeAcceptAll(path string, node *Node) weight.Weight {
+	return 1.0
+}
+
+func NodeAcceptNone(path string, node *Node) weight.Weight {
+	return 0.0
+}
+
 func (node *Node) String() string {
 	return Format("Node", node)
 }

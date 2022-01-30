@@ -7,7 +7,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
-	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 func Test(t *testing.T) {
@@ -44,12 +43,8 @@ func (items *TestItems) Next() (string, *node.Node) {
 	return "", nil
 }
 
-func testNodeAcceptor(path string, n *node.Node) weight.Weight {
-	return 0
-}
-
 func getFirstItem(i node.NodeIterator) (string, *node.Node) {
-	items := i.Items(testNodeAcceptor)
+	items := i.Items(node.NodeAcceptAll)
 	return items.Next()
 }
 
