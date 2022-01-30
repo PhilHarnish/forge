@@ -19,10 +19,12 @@ func newIteratorItems(acceptor node.NodeAcceptor, trie *Trie) *iteratorItems {
 }
 
 func (items *iteratorItems) Next() (string, node.NodeIterator) {
-	if items.index >= len(items.root.links) {
-		return "", nil
+	for items.index < len(items.root.links) {
+		link := items.root.links[items.index]
+		items.index++
+		if items.acceptor(link.prefix, &link.node.Node) > 0 {
+			return link.prefix, link.node
+		}
 	}
-	link := items.root.links[items.index]
-	items.index++
-	return link.prefix, link.node
+	return "", nil
 }

@@ -44,6 +44,13 @@ var _ = Describe("Items", func() {
 		expectNext(items, "", 0)
 	})
 
+	It("Returns nothing if no nodes are accepted", func() {
+		t := trie.NewTrie()
+		t.Link("a", trie.NewTrie(1.0))
+		items := t.Items(node.NodeAcceptNone)
+		expectNext(items, "", 0.0)
+	})
+
 	It("Iterates immediate children, best to worst", func() {
 		t := trie.NewTrie()
 		t.Link("c", trie.NewTrie(0.5))
