@@ -41,6 +41,10 @@ func (iterator *TestIterator) Items(acceptor node.NodeAcceptor) node.NodeItems {
 	return &TestItems{}
 }
 
+func (iterator *TestIterator) String() string {
+	return "Test"
+}
+
 type TestItems struct{}
 
 func (items *TestItems) HasNext() bool {
