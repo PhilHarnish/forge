@@ -18,8 +18,12 @@ func newIteratorItems(acceptor node.NodeAcceptor, trie *Trie) *iteratorItems {
 	}
 }
 
+func (items *iteratorItems) HasNext() bool {
+	return items.index < len(items.root.links)
+}
+
 func (items *iteratorItems) Next() (string, node.NodeIterator) {
-	for items.index < len(items.root.links) {
+	for items.HasNext() {
 		link := items.root.links[items.index]
 		items.index++
 		if items.acceptor(link.prefix, &link.node.Node) > 0 {

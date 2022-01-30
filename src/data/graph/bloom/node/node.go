@@ -26,6 +26,7 @@ type NodeIterator interface {
 }
 
 type NodeItems interface {
+	HasNext() bool
 	Next() (string, NodeIterator)
 }
 
