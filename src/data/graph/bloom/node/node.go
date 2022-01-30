@@ -2,6 +2,7 @@ package node
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
@@ -56,4 +57,16 @@ func Format(name string, node *Node) string {
 		mask.LengthAlphabet(node.LengthsMask),
 		node.MatchWeight,
 	)
+}
+
+func StringChildren(iterator NodeIterator) string {
+	results := []string{
+		iterator.String(),
+	}
+	items := iterator.Items(NodeAcceptAll)
+	for items.HasNext() {
+		path, item := items.Next()
+		results = append(results, fmt.Sprintf("%s = %s", path, item.String()))
+	}
+	return strings.Join(results, "\n")
 }
