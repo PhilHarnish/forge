@@ -6,17 +6,27 @@ import (
 )
 
 type Operator interface {
-	String() string
+	String(operands []string) string
 }
 
-var And = operator{
+var And = &operator{
 	template: "(%s)",
 	infix:    " && ",
 }
 
-var Or = operator{
+var Or = &operator{
 	template: "(%s)",
 	infix:    " || ",
+}
+
+var Concat = &operator{
+	template: "(%s)",
+	infix:    " + ",
+}
+
+var JoinWithSpace = &operator{
+	template: "JOIN(' ', %s)",
+	infix:    ", ",
 }
 
 type operator struct {
@@ -24,11 +34,7 @@ type operator struct {
 	infix    string
 }
 
-func (operator *operator) String(operands ...interface{}) string {
-	formatted := make([]string, len(operands))
-	for i, operand := range operands {
-		formatted[i] = fmt.Sprint(operand)
-	}
-	body := strings.Join(formatted, operator.infix)
+func (operator *operator) String(operands []string) string {
+	body := strings.Join(operands, operator.infix)
 	return fmt.Sprintf(operator.template, body)
 }
