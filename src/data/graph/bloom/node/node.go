@@ -22,10 +22,11 @@ type Node struct {
 
 type NodeIterator interface {
 	Items(acceptor NodeAcceptor) NodeItems
+	Root() *Node
 }
 
 type NodeItems interface {
-	Next() (string, *Node)
+	Next() (string, NodeIterator)
 }
 
 // Evaluate the `Weight` for a `node` at `path`.

@@ -10,7 +10,7 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 )
 
-func Test(t *testing.T) {
+func TestNode(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Tests")
 }

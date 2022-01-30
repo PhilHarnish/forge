@@ -33,17 +33,21 @@ var _ = Describe("String", func() {
 
 type TestIterator struct{}
 
+func (iterator *TestIterator) Root() *node.Node {
+	return nil
+}
+
 func (iterator *TestIterator) Items(acceptor node.NodeAcceptor) node.NodeItems {
 	return &TestItems{}
 }
 
 type TestItems struct{}
 
-func (items *TestItems) Next() (string, *node.Node) {
+func (items *TestItems) Next() (string, node.NodeIterator) {
 	return "", nil
 }
 
-func getFirstItem(i node.NodeIterator) (string, *node.Node) {
+func getFirstItem(i node.NodeIterator) (string, node.NodeIterator) {
 	items := i.Items(node.NodeAcceptAll)
 	return items.Next()
 }

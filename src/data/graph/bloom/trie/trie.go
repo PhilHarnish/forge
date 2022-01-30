@@ -16,8 +16,8 @@ type Trie struct {
 }
 
 type trieLink struct {
-	Prefix string
-	Node   *Trie
+	prefix string
+	node   *Trie
 }
 
 func NewTrie(matchWeight ...weight.Weight) *Trie {
@@ -27,6 +27,10 @@ func NewTrie(matchWeight ...weight.Weight) *Trie {
 		result.Match(matchWeight[0])
 	}
 	return &result
+}
+
+func (trie *Trie) Root() *node.Node {
+	return &trie.Node
 }
 
 func (trie *Trie) Items(acceptor node.NodeAcceptor) node.NodeItems {
@@ -90,15 +94,15 @@ func (trie *Trie) Link(path string, child *Trie) error {
 	links := trie.links
 	for second := len(links) - 1; second > 0; second-- {
 		first := second - 1
-		if links[first].Prefix[0] == links[second].Prefix[0] {
-			if trie.links[first].Prefix == links[second].Prefix {
+		if links[first].prefix[0] == links[second].prefix[0] {
+			if trie.links[first].prefix == links[second].prefix {
 				// Proposed link already exists.
 				return fmt.Errorf("link '%s' already exists", path)
 			}
 			// Attempt to reuse link.
 			return fmt.Errorf("splitting an existing link is currently unsupported")
 		}
-		if links[second].Node.MaxWeight > links[first].Node.MaxWeight {
+		if links[second].node.MaxWeight > links[first].node.MaxWeight {
 			// The second node is better than first; swap.
 			links[first], links[second] = links[second], links[first]
 		}
