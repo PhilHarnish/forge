@@ -16,13 +16,13 @@ func Test(t *testing.T) {
 var _ = Describe("And", func() {
 	It("Implements String", func() {
 		o := operator.And
-		Expect(o.String([]string{"a", "b"})).To(Equal("(a && b)"))
+		Expect(o.String([]string{"a", "b"})).To(Equal("AND(a, b)"))
 	})
 })
 
 var _ = Describe("Or", func() {
 	It("Implements String", func() {
 		o := operator.Or
-		Expect(o.String([]string{"a", "b"})).To(Equal("(a || b)"))
+		Expect(o.String([]string{"a", "b"})).To(Equal("OR(a, b)"))
 	})
 })

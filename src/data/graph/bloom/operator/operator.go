@@ -10,31 +10,26 @@ type Operator interface {
 }
 
 var And = &operator{
-	template: "(%s)",
-	infix:    " && ",
+	template: "AND(%s)",
 }
 
 var Or = &operator{
-	template: "(%s)",
-	infix:    " || ",
+	template: "OR(%s)",
 }
 
 var Concat = &operator{
-	template: "(%s)",
-	infix:    " + ",
+	template: "CONCAT(%s)",
 }
 
 var JoinWithSpace = &operator{
 	template: "JOIN(' ', %s)",
-	infix:    ", ",
 }
 
 type operator struct {
 	template string
-	infix    string
 }
 
 func (operator *operator) String(operands []string) string {
-	body := strings.Join(operands, operator.infix)
+	body := strings.Join(operands, ", ")
 	return fmt.Sprintf(operator.template, body)
 }
