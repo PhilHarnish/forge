@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/philharnish/forge/src/data/graph/bloom/iterator"
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
@@ -30,8 +29,8 @@ func NewTrie(matchWeight ...weight.Weight) *Trie {
 	return &result
 }
 
-func (trie *Trie) Items() iterator.IteratorItems {
-	return newIteratorItems(trie)
+func (trie *Trie) Items(acceptor node.NodeAcceptor) node.NodeItems {
+	return newIteratorItems(acceptor, trie)
 }
 
 func (trie *Trie) Match(weight weight.Weight) {

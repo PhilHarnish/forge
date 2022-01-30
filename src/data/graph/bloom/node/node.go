@@ -3,7 +3,6 @@ package node
 import (
 	"fmt"
 
-	"github.com/philharnish/forge/src/data/graph/bloom/iterator"
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
@@ -22,13 +21,17 @@ type Node struct {
 }
 
 type NodeIterator interface {
-	iterator.Iterator
-	Root() *Node
+	Items(acceptor NodeAcceptor) NodeItems
 }
 
-func (node *Node) Root() *Node {
-	return node
+type NodeItems interface {
+	Next() (string, *Node)
 }
+
+// Evaluate the `Weight` for a `node` at `path`.
+// Typically, when the result is non-zero the caller should immediately
+// return Cursor{node, path}
+type NodeAcceptor = func(path string, node *Node) weight.Weight
 
 func (node *Node) String() string {
 	return Format("Node", node)

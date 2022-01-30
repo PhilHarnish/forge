@@ -1,22 +1,21 @@
 package trie
 
 import (
-	"github.com/philharnish/forge/src/data/graph/bloom/cursor"
-	"github.com/philharnish/forge/src/data/graph/bloom/iterator"
+	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
 type iteratorItems struct {
-	heap []*cursor.Cursor
+	acceptor node.NodeAcceptor
+	root     *Trie
 }
 
-func newIteratorItems(trie *Trie) *iteratorItems {
+func newIteratorItems(acceptor node.NodeAcceptor, trie *Trie) *iteratorItems {
 	return &iteratorItems{
-		heap: []*cursor.Cursor{
-			cursor.NewCursor(trie),
-		},
+		acceptor: acceptor,
+		root:     trie,
 	}
 }
 
-func (items *iteratorItems) Next() *iterator.IteratorItem {
-	return nil
+func (items *iteratorItems) Next() (string, *node.Node) {
+	return "", nil
 }
