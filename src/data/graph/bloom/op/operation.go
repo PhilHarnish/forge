@@ -72,22 +72,22 @@ type join struct {
 	separator string
 }
 
-func (operator *operation) Root() *node.Node {
+func (op *operation) Root() *node.Node {
 	panic("operator.Root() not implemented")
 }
 
-func (operator *operation) Items(acceptor node.NodeAcceptor) node.NodeItems {
+func (op *operation) Items(acceptor node.NodeAcceptor) node.NodeItems {
 	return &operatorItems{
 		acceptor: acceptor,
-		operator: operator,
+		operator: op,
 	}
 }
 
-func (operator *operation) String() string {
-	formatted := make([]string, len(operator.operands))
-	for i, operand := range operator.operands {
+func (op *operation) String() string {
+	formatted := make([]string, len(op.operands))
+	for i, operand := range op.operands {
 		formatted[i] = fmt.Sprint(operand)
 	}
 	body := strings.Join(formatted, ", ")
-	return fmt.Sprintf(operator.template, body)
+	return fmt.Sprintf(op.template, body)
 }
