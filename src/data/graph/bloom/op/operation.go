@@ -14,36 +14,36 @@ type Operation interface {
 }
 
 func And(operands ...node.NodeIterator) Operation {
-	return &and{
+	return &andOperation{
 		operation: operation{
-			template: "AND(%s)",
+			operator: andOperator,
 			operands: operands,
 		},
 	}
 }
 
 func Or(operands ...node.NodeIterator) Operation {
-	return &or{
+	return &orOperation{
 		operation: operation{
-			template: "OR(%s)",
+			operator: orOperator,
 			operands: operands,
 		},
 	}
 }
 
 func Concat(operands ...node.NodeIterator) Operation {
-	return &concat{
+	return &concatOperation{
 		operation: operation{
-			template: "CONCAT(%s)",
+			operator: concatOperator,
 			operands: operands,
 		},
 	}
 }
 
 func Join(separator string, operands ...node.NodeIterator) Operation {
-	return &join{
+	return &joinOperation{
 		operation: operation{
-			template: fmt.Sprintf("JOIN('%s', %s)", separator, "%s"),
+			operator: joinOperator,
 			operands: operands,
 		},
 		separator: separator,
@@ -51,23 +51,23 @@ func Join(separator string, operands ...node.NodeIterator) Operation {
 }
 
 type operation struct {
-	template string
+	operator *operator
 	operands []node.NodeIterator
 }
 
-type and struct {
+type andOperation struct {
 	operation
 }
 
-type or struct {
+type orOperation struct {
 	operation
 }
 
-type concat struct {
+type concatOperation struct {
 	operation
 }
 
-type join struct {
+type joinOperation struct {
 	operation
 	separator string
 }
@@ -84,10 +84,17 @@ func (op *operation) Items(acceptor node.NodeAcceptor) node.NodeItems {
 }
 
 func (op *operation) String() string {
-	formatted := make([]string, len(op.operands))
-	for i, operand := range op.operands {
+	return fmt.Sprintf(op.operator.template, formatOperands(op.operands))
+}
+
+func (op *joinOperation) String() string {
+	return fmt.Sprintf(op.operator.template, op.separator, formatOperands(op.operands))
+}
+
+func formatOperands(operands []node.NodeIterator) string {
+	formatted := make([]string, len(operands))
+	for i, operand := range operands {
 		formatted[i] = fmt.Sprint(operand)
 	}
-	body := strings.Join(formatted, ", ")
-	return fmt.Sprintf(op.template, body)
+	return strings.Join(formatted, ", ")
 }

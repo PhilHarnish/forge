@@ -1,10 +1,12 @@
 package op
 
-import "github.com/philharnish/forge/src/data/graph/bloom/node"
+import (
+	"github.com/philharnish/forge/src/data/graph/bloom/node"
+)
 
 type operatorItems struct {
 	acceptor node.NodeAcceptor
-	operator *operation
+	operator Operation
 }
 
 func (items *operatorItems) HasNext() bool {
