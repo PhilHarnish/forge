@@ -12,7 +12,7 @@ import (
 
 // Trie with bloom-filter style optimizations.
 type Trie struct {
-	node.Node
+	*node.Node
 	links []trieLink
 }
 
@@ -23,7 +23,7 @@ type trieLink struct {
 
 func NewTrie(matchWeight ...weight.Weight) *Trie {
 	result := &Trie{
-		Node:  *node.NewNode(),
+		Node:  node.NewNode(),
 		links: nil,
 	}
 	if len(matchWeight) == 1 {
@@ -33,7 +33,7 @@ func NewTrie(matchWeight ...weight.Weight) *Trie {
 }
 
 func (trie *Trie) Root() *node.Node {
-	return &trie.Node
+	return trie.Node
 }
 
 func (trie *Trie) Items(acceptor node.NodeAcceptor) node.NodeItems {
@@ -157,5 +157,5 @@ func (trie *Trie) Satisfies(other *Trie) bool {
 }
 
 func (trie *Trie) String() string {
-	return node.Format("Trie", &trie.Node)
+	return node.Format("Trie", trie.Node)
 }

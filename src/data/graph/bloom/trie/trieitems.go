@@ -26,7 +26,7 @@ func (items *trieItems) Next() (string, node.NodeIterator) {
 	for items.HasNext() {
 		link := items.root.links[items.index]
 		items.index++
-		if items.acceptor(link.prefix, &link.node.Node) > 0 {
+		if items.acceptor(link.prefix, link.node.Node) > 0 {
 			return link.prefix, link.node
 		}
 	}
