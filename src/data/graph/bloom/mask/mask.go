@@ -76,25 +76,6 @@ func EdgeMaskAndLength(edge string) (Mask, int, error) {
 }
 
 /*
-Returns a slice of BitMasks which match required paths.
-Earlier BitMasks assume all later BitMasks also apply.
-*/
-func EdgeMasks(edges []string) ([]Mask, error) {
-	// Preprocess path to determine the requirements along path.
-	requirements := make([]Mask, len(edges))
-	required := Mask(0)
-	for i := len(edges) - 1; i >= 0; i-- {
-		mask, err := EdgeMask(edges[i])
-		if err != nil {
-			return nil, err
-		}
-		required |= mask
-		requirements[i] = required
-	}
-	return requirements, nil
-}
-
-/*
 Converts `provide` & `require` BitMasks to a human-readable string.
 */
 func MaskString(provide Mask, require Mask) string {
