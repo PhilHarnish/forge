@@ -3,6 +3,7 @@ package trie
 import (
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
@@ -103,6 +104,49 @@ func (trie *Trie) Link(path string, child *Trie) error {
 		}
 	}
 	return nil
+}
+
+func (trie *Trie) Get(path string) *Trie {
+	child, remaining := trie.seek(path, nil)
+	if remaining == "" {
+		return child
+	}
+	return nil
+}
+
+func (trie *Trie) Add(path string, matchWeight weight.Weight) error {
+	runes := []rune(path)
+	edgeMasks, err := mask.AlphabetMasks(runes)
+	if err != nil {
+		return err
+	}
+	if len(edgeMasks) != len(path) {
+		return fmt.Errorf("unicode paths are unsupported")
+	}
+	parent, remaining := trie.seek(path, edgeMasks)
+	if remaining == "" {
+		return fmt.Errorf("node %s already exists at '%s'", parent.String(), path)
+	}
+	return parent.Link(remaining, NewTrie(matchWeight))
+}
+
+func (trie *Trie) seek(path string, provideMasks []mask.Mask) (child *Trie, remaining string) {
+	for _, link := range trie.links {
+		if path == link.prefix {
+			return link.node, ""
+		} else if strings.HasPrefix(path, link.prefix) {
+			remainingPath := path[len(link.prefix):]
+			if provideMasks != nil {
+				trie.Node.LengthsMask |= mask.Mask(1 << len(provideMasks))
+				for i, _ := range link.prefix {
+					trie.Node.ProvideMask |= provideMasks[i]
+				}
+				provideMasks = provideMasks[len(link.prefix):]
+			}
+			return link.node.seek(remainingPath, provideMasks)
+		}
+	}
+	return trie, path
 }
 
 func (trie *Trie) Satisfies(other *Trie) bool {
