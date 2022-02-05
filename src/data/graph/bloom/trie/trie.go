@@ -55,14 +55,9 @@ func (trie *Trie) Link(path string, child *Trie) error {
 	if len(path) == 0 {
 		return fmt.Errorf("attempted to link empty key")
 	}
-	runes := []rune(path)
-	edgeMask := mask.Mask(0)
-	for _, c := range runes {
-		mask, err := mask.AlphabetMask(c)
-		if err != nil {
-			return fmt.Errorf("error while linking: %w", err)
-		}
-		edgeMask |= mask
+	edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
+	if err != nil {
+		return fmt.Errorf("error while linking: %w", err)
 	}
 	// Inherit maxWeight.
 	trie.Weight(child.MaxWeight)
@@ -76,7 +71,7 @@ func (trie *Trie) Link(path string, child *Trie) error {
 		trie.RequireMask &= edgeMask | mask.Mask(child.RequireMask)
 	}
 	// Inherit matching lengths.
-	trie.LengthsMask |= child.LengthsMask << len(runes)
+	trie.LengthsMask |= child.LengthsMask << runeLength
 	link := trieLink{
 		path,
 		child,
