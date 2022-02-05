@@ -21,6 +21,16 @@ type Node struct {
 	LengthsMask mask.Mask
 }
 
+func NewNode() *Node {
+	return &Node{
+		MatchWeight: weight.Weight(0),
+		MaxWeight:   weight.Weight(0),
+		ProvideMask: mask.Mask(0b0),
+		RequireMask: mask.UNSET,
+		LengthsMask: mask.Mask(0b0),
+	}
+}
+
 type NodeIterator interface {
 	Items(acceptor NodeAcceptor) NodeItems
 	Root() *Node

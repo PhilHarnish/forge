@@ -17,7 +17,7 @@ func Test(t *testing.T) {
 
 var _ = Describe("String", func() {
 	It("Formats empty Nodes", func() {
-		n := node.Node{}
+		n := node.NewNode()
 		Expect(n.String()).To(Equal("Node('', '', 0)"))
 	})
 
