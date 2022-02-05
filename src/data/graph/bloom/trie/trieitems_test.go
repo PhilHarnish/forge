@@ -1,19 +1,12 @@
 package trie_test
 
 import (
-	"testing"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
-
-func TestIteratorItems(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Tests")
-}
 
 func extend(item *trie.Trie, paths ...string) node.NodeIterator {
 	for i := len(paths) - 1; i >= 0; i-- {
