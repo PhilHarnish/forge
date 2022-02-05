@@ -90,4 +90,22 @@ var _ = Describe("TestIterator", func() {
 				c = TestIterator('', '', 0)
 		`))
 	})
+
+	It("Produces deeper string results", func() {
+		Expect(node.StringChildren(iterator, 2)).To(matchers.LookLike(`
+		TestIterator('', '', 0)
+		a = TestIterator('', '', 0)
+		    a = TestIterator('', '', 0)
+		    b = TestIterator('', '', 0)
+		    c = TestIterator('', '', 0)
+		b = TestIterator('', '', 0)
+		    a = TestIterator('', '', 0)
+		    b = TestIterator('', '', 0)
+		    c = TestIterator('', '', 0)
+		c = TestIterator('', '', 0)
+		    a = TestIterator('', '', 0)
+		    b = TestIterator('', '', 0)
+		    c = TestIterator('', '', 0)
+		`))
+	})
 })

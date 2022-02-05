@@ -59,14 +59,26 @@ func Format(name string, node *Node) string {
 	)
 }
 
-func StringChildren(iterator NodeIterator) string {
+func StringChildren(iterator NodeIterator, depth ...int) string {
+	if len(depth) > 0 {
+		return stringChildrenWithPrefix(iterator, "", depth[0])
+	}
+	return stringChildrenWithPrefix(iterator, "", 1)
+}
+
+func stringChildrenWithPrefix(iterator NodeIterator, prefix string, remaining int) string {
+	if remaining == 0 {
+		return iterator.String()
+	}
 	results := []string{
 		iterator.String(),
 	}
 	items := iterator.Items(NodeAcceptAll)
 	for items.HasNext() {
 		path, item := items.Next()
-		results = append(results, fmt.Sprintf("%s = %s", path, item.String()))
+		results = append(results, fmt.Sprintf("%s%s = %s",
+			prefix, path, stringChildrenWithPrefix(item, "    ", remaining-1)))
+
 	}
 	return strings.Join(results, "\n")
 }
