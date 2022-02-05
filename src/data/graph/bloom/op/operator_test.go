@@ -22,7 +22,7 @@ var _ = Describe("Process", func() {
 			operation := op.And(t)
 			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
 					AND(Trie('A', ' #', 0))
-					a = Trie('', '#', 1)
+					└─a = Trie('', '#', 1)
 			`))
 		})
 
@@ -43,7 +43,7 @@ var _ = Describe("Process", func() {
 			operation := op.Or(t)
 			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
 					OR(Trie('A', ' #', 0))
-					a = Trie('', '#', 1)
+					└─a = Trie('', '#', 1)
 			`))
 		})
 
@@ -53,10 +53,10 @@ var _ = Describe("Process", func() {
 			c := extend(trie.NewTrie(.1), "c")
 			operation := op.Or(c, a, b)
 			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
-				OR(Trie('C', ' #', 0), Trie('A', ' #', 0), Trie('B', ' #', 0))
-				a = Trie('', '#', 1)
-				b = Trie('', '#', 0.5)
-				c = Trie('', '#', 0.1)
+					OR(Trie('C', ' #', 0), Trie('A', ' #', 0), Trie('B', ' #', 0))
+					├─a = Trie('', '#', 1)
+					├─b = Trie('', '#', 0.5)
+					└─c = Trie('', '#', 0.1)
 			`))
 		})
 	})
