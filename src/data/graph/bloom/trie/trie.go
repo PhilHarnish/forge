@@ -121,7 +121,7 @@ func (trie *Trie) seek(path string, provideMasks []mask.Mask) (child *Trie, rema
 			remainingPath := path[len(link.prefix):]
 			if provideMasks != nil {
 				trie.Node.LengthsMask |= mask.Mask(1 << len(provideMasks))
-				for i, _ := range link.prefix {
+				for i := range link.prefix {
 					trie.Node.ProvideMask |= provideMasks[i]
 				}
 				provideMasks = provideMasks[len(link.prefix):]
