@@ -68,9 +68,9 @@ var _ = Describe("Operations", func() {
 	})
 
 	Describe("Join", func() {
-		XIt("Creates operation", func() {
+		It("Creates operation", func() {
 			o := op.Join(" ", a, b)
-			Expect(o.String()).To(Equal("JOIN(' ', Trie('', '', 0), Trie('', '', 0))"))
+			Expect(o.String()).To(Equal("CONCAT(Trie('', '', 0), Span(' ', 0), Trie('', '', 0))"))
 		})
 	})
 })

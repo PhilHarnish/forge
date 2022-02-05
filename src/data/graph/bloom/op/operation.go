@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/null"
+	"github.com/philharnish/forge/src/data/graph/bloom/span"
 )
 
 type Operation interface {
@@ -35,7 +37,19 @@ func Concat(operands ...node.NodeIterator) Operation {
 }
 
 func Join(separator string, operands ...node.NodeIterator) Operation {
-	panic("Join operation currently unsupported")
+	if len(operands) == 0 {
+		return null.Null
+	} else if len(operands) == 1 {
+		return operands[0]
+	}
+	sep := span.NewSpan(separator)
+	concatOperands := make([]node.NodeIterator, len(operands)*2-1)
+	concatOperands[0] = operands[0]
+	for i, operand := range operands[1:] {
+		concatOperands[(i*2)+1] = sep
+		concatOperands[(i*2)+2] = operand
+	}
+	return Concat(concatOperands...)
 }
 
 type operation struct {
