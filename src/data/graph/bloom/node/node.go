@@ -2,6 +2,7 @@ package node
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
@@ -21,14 +22,32 @@ type Node struct {
 	LengthsMask mask.Mask
 }
 
-func NewNode() *Node {
-	return &Node{
+func NewNode(matchWeight ...weight.Weight) *Node {
+	result := &Node{
 		MatchWeight: weight.Weight(0),
 		MaxWeight:   weight.Weight(0),
 		ProvideMask: mask.Mask(0b0),
 		RequireMask: mask.UNSET,
 		LengthsMask: mask.Mask(0b0),
 	}
+	if len(matchWeight) == 1 {
+		result.Match(matchWeight[0])
+	}
+	return result
+}
+
+func (node *Node) Match(weight weight.Weight) {
+	if node.MatchWeight != 0.0 {
+		panic(fmt.Errorf("duplicate attempts to set match weight (%f and %f)",
+			node.MatchWeight, weight))
+	}
+	node.MatchWeight = weight
+	node.LengthsMask |= 0b1 // Match at current position
+	node.Weight(weight)
+}
+
+func (node *Node) Weight(weight weight.Weight) {
+	node.MaxWeight = math.Max(node.MaxWeight, weight)
 }
 
 type NodeIterator interface {

@@ -2,7 +2,6 @@ package trie
 
 import (
 	"fmt"
-	"math"
 	"strings"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
@@ -38,20 +37,6 @@ func (trie *Trie) Root() *node.Node {
 
 func (trie *Trie) Items(acceptor node.NodeAcceptor) node.NodeItems {
 	return newTrieItems(acceptor, trie)
-}
-
-func (trie *Trie) Match(weight weight.Weight) {
-	if trie.MatchWeight != 0.0 {
-		panic(fmt.Errorf("duplicate attempts to set match weight (%f and %f)",
-			trie.MatchWeight, weight))
-	}
-	trie.MatchWeight = weight
-	trie.LengthsMask |= 0b1 // Match at current position
-	trie.Weight(weight)
-}
-
-func (trie *Trie) Weight(weight weight.Weight) {
-	trie.MaxWeight = math.Max(trie.MaxWeight, weight)
 }
 
 func (trie *Trie) Link(path string, child *Trie) error {

@@ -17,27 +17,6 @@ func TestNode(t *testing.T) {
 	RunSpecs(t, "Tests")
 }
 
-var _ = Describe("Match", func() {
-	It("Initially does not match", func() {
-		node := trie.NewTrie()
-		Expect(node.String()).To(Equal("Trie('', '', 0)"))
-	})
-
-	It("Match indicated in String output", func() {
-		node := trie.NewTrie()
-		node.Match(0.5)
-		Expect(node.String()).To(Equal("Trie('', '#', 0.5)"))
-	})
-
-	It("Rejects duplicate attempts", func() {
-		node := trie.NewTrie()
-		node.Match(0.5)
-		Expect(func() {
-			node.Match(0.5)
-		}).To(Panic())
-	})
-})
-
 var _ = Describe("Link", func() {
 	var root *trie.Trie
 
