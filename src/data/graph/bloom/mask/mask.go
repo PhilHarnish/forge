@@ -48,15 +48,30 @@ func AlphabetMask(c rune) (Mask, error) {
 }
 
 /*
-Returns a slice of BitMasks which match required runes.
+Returns a BitMask for the given edge if supported, otherwise error.
+*/
+func EdgeMask(edge string) (Mask, error) {
+	edgeMask := Mask(0)
+	for _, c := range edge {
+		mask, err := AlphabetMask(c)
+		if err != nil {
+			return Mask(0), err
+		}
+		edgeMask |= mask
+	}
+	return edgeMask, nil
+}
+
+/*
+Returns a slice of BitMasks which match required paths.
 Earlier BitMasks assume all later BitMasks also apply.
 */
-func AlphabetMasks(runes []rune) ([]Mask, error) {
+func EdgeMasks(edges []string) ([]Mask, error) {
 	// Preprocess path to determine the requirements along path.
-	requirements := make([]Mask, len(runes))
+	requirements := make([]Mask, len(edges))
 	required := Mask(0)
-	for i := len(runes) - 1; i >= 0; i-- {
-		mask, err := AlphabetMask(runes[i])
+	for i := len(edges) - 1; i >= 0; i-- {
+		mask, err := EdgeMask(edges[i])
 		if err != nil {
 			return nil, err
 		}
