@@ -22,12 +22,14 @@ type trieLink struct {
 }
 
 func NewTrie(matchWeight ...weight.Weight) *Trie {
-	result := Trie{}
-	result.RequireMask = mask.UNSET
+	result := &Trie{
+		Node:  *node.NewNode(),
+		links: nil,
+	}
 	if len(matchWeight) == 1 {
 		result.Match(matchWeight[0])
 	}
-	return &result
+	return result
 }
 
 func (trie *Trie) Root() *node.Node {
