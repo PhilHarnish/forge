@@ -69,7 +69,7 @@ func AlphabetMasks(runes []rune) ([]Mask, error) {
 /*
 Converts `provide` & `require` BitMasks to a human-readable string.
 */
-func MaskAlphabet(provide Mask, require Mask) string {
+func MaskString(provide Mask, require Mask) string {
 	acc := ""
 	for _, c := range ALPHABET {
 		mask, _ := AlphabetMask(c)
@@ -86,7 +86,7 @@ func MaskAlphabet(provide Mask, require Mask) string {
 /*
 Converts lengths mask to a human-readable string.
 */
-func LengthAlphabet(lengths Mask) string {
+func LengthString(lengths Mask) string {
 	if lengths == 0 {
 		return ""
 	}

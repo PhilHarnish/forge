@@ -105,15 +105,15 @@ var _ = Describe("AlphabetMasks", func() {
 
 var _ = Describe("MaskAlphabet", func() {
 	It("Returns empty string for 0", func() {
-		Expect(mask.MaskAlphabet(0b0, 0b0)).To(Equal(""))
+		Expect(mask.MaskString(0b0, 0b0)).To(Equal(""))
 	})
 
 	It("Indicates provided characters", func() {
-		Expect(mask.MaskAlphabet(0b111, 0)).To(Equal("abc"))
+		Expect(mask.MaskString(0b111, 0)).To(Equal("abc"))
 	})
 
 	It("Indicates required characters differently", func() {
-		Expect(mask.MaskAlphabet(0b111, 0b111)).To(Equal("ABC"))
+		Expect(mask.MaskString(0b111, 0b111)).To(Equal("ABC"))
 	})
 
 	It("Converts round-trip", func() {
@@ -124,25 +124,25 @@ var _ = Describe("MaskAlphabet", func() {
 			mask, _ := mask.AlphabetMask(c)
 			acc |= mask
 		}
-		Expect(mask.MaskAlphabet(acc, 0)).To(Equal(expected))
+		Expect(mask.MaskString(acc, 0)).To(Equal(expected))
 	})
 
 	It("Converts ALL to ALPHABET", func() {
-		Expect(mask.MaskAlphabet(mask.ALL, 0)).To(Equal(mask.ALPHABET))
+		Expect(mask.MaskString(mask.ALL, 0)).To(Equal(mask.ALPHABET))
 	})
 
 	It("Is not fooled by UNSET", func() {
-		Expect(mask.MaskAlphabet(mask.ALL, mask.UNSET)).To(Equal(mask.ALPHABET))
+		Expect(mask.MaskString(mask.ALL, mask.UNSET)).To(Equal(mask.ALPHABET))
 	})
 })
 
 var _ = Describe("LengthAlphabet", func() {
 	It("Returns empty string for 0", func() {
-		Expect(mask.LengthAlphabet(0b0)).To(Equal(""))
+		Expect(mask.LengthString(0b0)).To(Equal(""))
 	})
 
 	It("Indicates matching lengths", func() {
-		Expect(mask.LengthAlphabet(0b1011)).To(Equal("## #"))
+		Expect(mask.LengthString(0b1011)).To(Equal("## #"))
 	})
 })
 

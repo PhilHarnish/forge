@@ -53,8 +53,8 @@ func Format(name string, node *Node) string {
 	return fmt.Sprintf(
 		"%s('%s', '%s', %.2g)",
 		name,
-		mask.MaskAlphabet(node.ProvideMask, node.RequireMask),
-		mask.LengthAlphabet(node.LengthsMask),
+		mask.MaskString(node.ProvideMask, node.RequireMask),
+		mask.LengthString(node.LengthsMask),
 		node.MatchWeight,
 	)
 }
