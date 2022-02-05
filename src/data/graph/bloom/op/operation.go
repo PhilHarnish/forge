@@ -14,40 +14,28 @@ type Operation interface {
 }
 
 func And(operands ...node.NodeIterator) Operation {
-	return &andOperation{
-		operation: operation{
-			operator: andOperator,
-			operands: operands,
-		},
+	return &operation{
+		operator: andOperator,
+		operands: operands,
 	}
 }
 
 func Or(operands ...node.NodeIterator) Operation {
-	return &orOperation{
-		operation: operation{
-			operator: orOperator,
-			operands: operands,
-		},
+	return &operation{
+		operator: orOperator,
+		operands: operands,
 	}
 }
 
 func Concat(operands ...node.NodeIterator) Operation {
-	return &concatOperation{
-		operation: operation{
-			operator: concatOperator,
-			operands: operands,
-		},
+	return &operation{
+		operator: concatOperator,
+		operands: operands,
 	}
 }
 
 func Join(separator string, operands ...node.NodeIterator) Operation {
-	return &joinOperation{
-		operation: operation{
-			operator: joinOperator,
-			operands: operands,
-		},
-		separator: separator,
-	}
+	panic("Join operation currently unsupported")
 }
 
 type operation struct {
@@ -55,40 +43,16 @@ type operation struct {
 	operands []node.NodeIterator
 }
 
-type andOperation struct {
-	operation
-}
-
-type orOperation struct {
-	operation
-}
-
-type concatOperation struct {
-	operation
-}
-
-type joinOperation struct {
-	operation
-	separator string
-}
-
 func (op *operation) Root() *node.Node {
 	panic("operator.Root() not implemented")
 }
 
 func (op *operation) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	return &operatorItems{
-		acceptor: acceptor,
-		operator: op,
-	}
+	return newOperatorItems(acceptor, op)
 }
 
 func (op *operation) String() string {
 	return fmt.Sprintf(op.operator.template, formatOperands(op.operands))
-}
-
-func (op *joinOperation) String() string {
-	return fmt.Sprintf(op.operator.template, op.separator, formatOperands(op.operands))
 }
 
 func formatOperands(operands []node.NodeIterator) string {

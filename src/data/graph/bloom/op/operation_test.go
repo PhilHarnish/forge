@@ -1,8 +1,6 @@
 package op_test
 
 import (
-	"testing"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
@@ -10,11 +8,6 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/op"
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 )
-
-func Test(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Tests")
-}
 
 func extend(item *trie.Trie, paths ...string) *trie.Trie {
 	for i := len(paths) - 1; i >= 0; i-- {
@@ -75,7 +68,7 @@ var _ = Describe("Operations", func() {
 	})
 
 	Describe("Join", func() {
-		It("Creates operation", func() {
+		XIt("Creates operation", func() {
 			o := op.Join(" ", a, b)
 			Expect(o.String()).To(Equal("JOIN(' ', Trie('', '', 0), Trie('', '', 0))"))
 		})
