@@ -97,6 +97,11 @@ var _ = Describe("EdgeMask", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(edge).To(Equal(mask.Mask(0b111)))
 	})
+
+	It("Detects invalid characters", func() {
+		_, err := mask.EdgeMask("abc🚫")
+		Expect(err).To(HaveOccurred())
+	})
 })
 
 var _ = Describe("EdgeMasks", func() {
@@ -120,6 +125,11 @@ var _ = Describe("EdgeMasks", func() {
 		Expect(masks[0]).To(Equal(mask.Mask(0b111)))
 		Expect(masks[1]).To(Equal(mask.Mask(0b110)))
 		Expect(masks[2]).To(Equal(mask.Mask(0b100)))
+	})
+
+	It("Detects invalid characters", func() {
+		_, err := mask.EdgeMasks([]string{"a", "b", "c", "🚫"})
+		Expect(err).To(HaveOccurred())
 	})
 })
 
