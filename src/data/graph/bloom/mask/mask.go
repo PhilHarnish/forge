@@ -51,15 +51,28 @@ func AlphabetMask(c rune) (Mask, error) {
 Returns a BitMask for the given edge if supported, otherwise error.
 */
 func EdgeMask(edge string) (Mask, error) {
+	edgeMask, _, err := EdgeMaskAndLength(edge)
+	return edgeMask, err
+}
+
+/*
+Returns a BitMask for the given edge if supported, otherwise error.
+*/
+func EdgeMaskAndLength(edge string) (Mask, int, error) {
 	edgeMask := Mask(0)
-	for _, c := range edge {
+	if len(edge) == 0 {
+		return edgeMask, 0, nil
+	}
+	var c rune
+	var length int
+	for length, c = range edge {
 		mask, err := AlphabetMask(c)
 		if err != nil {
-			return Mask(0), err
+			return Mask(0), 0, err
 		}
 		edgeMask |= mask
 	}
-	return edgeMask, nil
+	return edgeMask, length + 1, nil
 }
 
 /*

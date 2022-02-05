@@ -104,6 +104,33 @@ var _ = Describe("EdgeMask", func() {
 	})
 })
 
+var _ = Describe("EdgeMaskAndLength", func() {
+	It("Starts empty, initially", func() {
+		edge, length, err := mask.EdgeMaskAndLength("")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(edge).To(Equal(mask.Mask(0b0)))
+		Expect(length).To(Equal(0))
+	})
+
+	It("Handles one character", func() {
+		edge, length, err := mask.EdgeMaskAndLength("a")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(edge).To(Equal(mask.Mask(0b1)))
+		Expect(length).To(Equal(1))
+	})
+
+	It("Handles many characters", func() {
+		edge, length, err := mask.EdgeMaskAndLength("abc")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(edge).To(Equal(mask.Mask(0b111)))
+		Expect(length).To(Equal(3))
+	})
+
+	It("Detects invalid characters", func() {
+		_, _, err := mask.EdgeMaskAndLength("abc🚫")
+		Expect(err).To(HaveOccurred())
+	})
+})
 var _ = Describe("EdgeMasks", func() {
 	It("Starts empty, initially", func() {
 		masks, err := mask.EdgeMasks(nil)
