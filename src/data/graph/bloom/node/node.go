@@ -66,7 +66,7 @@ func StringChildren(iterator NodeIterator, depth ...int) string {
 	return stringChildrenWithPrefix(iterator, "", 1)
 }
 
-func stringChildrenWithPrefix(iterator NodeIterator, prefix string, remaining int) string {
+func stringChildrenWithPrefix(iterator NodeIterator, base string, remaining int) string {
 	if remaining == 0 {
 		return iterator.String()
 	}
@@ -76,8 +76,14 @@ func stringChildrenWithPrefix(iterator NodeIterator, prefix string, remaining in
 	items := iterator.Items(NodeAcceptAll)
 	for items.HasNext() {
 		path, item := items.Next()
+		line := "├─"
+		prefix := "│ "
+		if !items.HasNext() {
+			line = "└─"
+			prefix = "• "
+		}
 		results = append(results, fmt.Sprintf("%s%s = %s",
-			prefix, path, stringChildrenWithPrefix(item, "    ", remaining-1)))
+			base+line, path, stringChildrenWithPrefix(item, base+prefix, remaining-1)))
 
 	}
 	return strings.Join(results, "\n")

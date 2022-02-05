@@ -39,7 +39,7 @@ func (iterator *TestIterator) Root() *node.Node {
 }
 
 func (iterator *TestIterator) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	return &TestItems{"a", "b", "c"}
+	return &TestItems{"a", "b"}
 }
 
 func (iterator *TestIterator) String() string {
@@ -85,27 +85,20 @@ var _ = Describe("TestIterator", func() {
 	It("Produces shallow string results", func() {
 		Expect(node.StringChildren(iterator)).To(matchers.LookLike(`
 				TestIterator('', '', 0)
-				a = TestIterator('', '', 0)
-				b = TestIterator('', '', 0)
-				c = TestIterator('', '', 0)
+				├─a = TestIterator('', '', 0)
+				└─b = TestIterator('', '', 0)
 		`))
 	})
 
 	It("Produces deeper string results", func() {
 		Expect(node.StringChildren(iterator, 2)).To(matchers.LookLike(`
-		TestIterator('', '', 0)
-		a = TestIterator('', '', 0)
-		    a = TestIterator('', '', 0)
-		    b = TestIterator('', '', 0)
-		    c = TestIterator('', '', 0)
-		b = TestIterator('', '', 0)
-		    a = TestIterator('', '', 0)
-		    b = TestIterator('', '', 0)
-		    c = TestIterator('', '', 0)
-		c = TestIterator('', '', 0)
-		    a = TestIterator('', '', 0)
-		    b = TestIterator('', '', 0)
-		    c = TestIterator('', '', 0)
+				TestIterator('', '', 0)
+				├─a = TestIterator('', '', 0)
+				│ ├─a = TestIterator('', '', 0)
+				│ └─b = TestIterator('', '', 0)
+				└─b = TestIterator('', '', 0)
+				• ├─a = TestIterator('', '', 0)
+				• └─b = TestIterator('', '', 0)
 		`))
 	})
 })
