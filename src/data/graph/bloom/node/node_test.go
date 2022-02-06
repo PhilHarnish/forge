@@ -36,6 +36,34 @@ var _ = Describe("Match", func() {
 	})
 })
 
+var _ = Describe("MaskPath", func() {
+	It("Root inherits requirements from child", func() {
+		root := node.NewNode()
+		root.MaskPath("a")
+		Expect(root.String()).To(Equal("Node('A', ' #', 0)"))
+	})
+
+	It("Root inherits complex requirements from child", func() {
+		root := node.NewNode()
+		root.MaskPath("abc")
+		Expect(root.String()).To(Equal("Node('ABC', '   #', 0)"))
+	})
+})
+
+var _ = Describe("MaskPathToChild", func() {
+	It("Root inherits simple requirements from child", func() {
+		root := node.NewNode()
+		root.MaskPathToChild("a", node.NewNode(1.0))
+		Expect(root.String()).To(Equal("Node('A', ' #', 0)"))
+	})
+
+	It("Root inherits complex requirements from child", func() {
+		root := node.NewNode()
+		root.MaskPathToChild("abc", node.NewNode(1.0))
+		Expect(root.String()).To(Equal("Node('ABC', '   #', 0)"))
+	})
+})
+
 var _ = Describe("Satisfies", func() {
 	It("Empty nodes do not satisfy by default (no exits)", func() {
 		a := node.NewNode()
@@ -43,10 +71,8 @@ var _ = Describe("Satisfies", func() {
 	})
 
 	It("Node with exits satisfies itself", func() {
-		child := node.NewNode(1.0)
 		root := node.NewNode()
-		root.MaskPathToChild("a", child)
-		Expect(root.String()).To(Equal("Node('A', ' #', 0)"))
+		root.MaskPathToChild("a", node.NewNode(1.0))
 		Expect(root.Satisfies(root)).To(BeTrue())
 	})
 

@@ -46,6 +46,20 @@ func (node *Node) Match(weight weight.Weight) {
 	node.Weight(weight)
 }
 
+func (node *Node) MaskPath(path string) error {
+	edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
+	if err != nil {
+		return err
+	}
+	// Provide anything the edge provides.
+	node.ProvideMask |= edgeMask
+	// Require anything the edge provides.
+	node.RequireMask &= edgeMask
+	// Set match at the end of path.
+	node.LengthsMask |= 1 << runeLength
+	return nil
+}
+
 func (node *Node) MaskPathToChild(path string, child *Node) error {
 	edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
 	if err != nil {
