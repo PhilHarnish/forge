@@ -2,7 +2,7 @@ package null
 
 import "github.com/philharnish/forge/src/data/graph/bloom/node"
 
-var nullNode = node.NewNode()
+var nullNode = node.NewNode(0.0)
 
 type null struct{}
 
