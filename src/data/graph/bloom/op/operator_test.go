@@ -139,4 +139,32 @@ var _ = Describe("Process", func() {
 			`))
 		})
 	})
+
+	Describe("Concat", func() {
+		It("Returns all edges for 2+ item", func() {
+			a := trie.NewTrie()
+			a.Add("a", 1.0)
+			b := trie.NewTrie()
+			b.Add("b", 0.5)
+			operation := op.Concat(a, b)
+			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
+					CONCAT(Trie('A', ' #', 0), Trie('B', ' #', 0))
+					└─a = Trie('', '#', 1)
+			`))
+		})
+	})
+
+	Describe("Join", func() {
+		It("Returns all edges for 2+ item", func() {
+			a := trie.NewTrie()
+			a.Add("a", 1.0)
+			b := trie.NewTrie()
+			b.Add("b", 0.5)
+			operation := op.Join(" ", a, b)
+			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
+					CONCAT(Trie('A', ' #', 0), Span(' ', 0), Trie('B', ' #', 0))
+					└─a = Trie('', '#', 1)
+			`))
+		})
+	})
 })

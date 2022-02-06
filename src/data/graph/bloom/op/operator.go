@@ -2,7 +2,6 @@ package op
 
 import (
 	"container/heap"
-	"fmt"
 	"unicode/utf8"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
@@ -14,7 +13,7 @@ func (op *operator) Process(acceptor node.NodeAcceptor, operands []node.NodeIter
 	if op.processMethod == parallel {
 		return processParallel(acceptor, operands, op.maxWeightPolicy == useSmallest, op.edgePolicy)
 	} else {
-		panic(fmt.Sprintf("Unsupported process method: %v", op.processMethod))
+		return processSequential(acceptor, operands, op.maxWeightPolicy == useSmallest, op.edgePolicy)
 	}
 }
 
@@ -62,13 +61,6 @@ var orOperator = &operator{
 
 var concatOperator = &operator{
 	template:        "CONCAT(%s)",
-	processMethod:   sequential,
-	maxWeightPolicy: useLargest,
-	edgePolicy:      anyEdges,
-}
-
-var joinOperator = &operator{
-	template:        "JOIN('%s', %s)",
 	processMethod:   sequential,
 	maxWeightPolicy: useLargest,
 	edgePolicy:      anyEdges,
@@ -142,6 +134,21 @@ func edgePolicyIsValid(edgePolicy edgePolicy, operands []node.NodeIterator, nOpe
 		allMatch = allMatch && root.MatchWeight > 0 // Only valid when all have MatchWeight.
 	}
 	return allMatch || (lengthsMask > 1 && (requiredMask&provideMask == requiredMask))
+}
+
+func processSequential(acceptor node.NodeAcceptor, operands []node.NodeIterator,
+	minWeight bool, edgePolicy edgePolicy) operatorEdgeHeap {
+	availableOutgoingEdges := operatorEdgeHeap{}
+	operand := operands[0]
+	items := operand.Items(acceptor)
+	for items.HasNext() {
+		path, item := items.Next()
+		outgoingEdge := &operatorEdge{}
+		outgoingEdge.path = path
+		outgoingEdge.operands = append(outgoingEdge.operands, item)
+		availableOutgoingEdges = append(availableOutgoingEdges, outgoingEdge)
+	}
+	return availableOutgoingEdges
 }
 
 func (h operatorEdgeHeap) Len() int {
