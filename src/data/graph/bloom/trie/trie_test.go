@@ -7,7 +7,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
-	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 )
@@ -130,24 +129,5 @@ var _ = Describe("Add", func() {
 			└─a = Trie('B', '##', 1)
 			• └─b = Trie('', '#', 0.5)
 		`))
-	})
-})
-
-var _ = Describe("Satisfies", func() {
-	It("Empty nodes do not satisfy by default (no exits)", func() {
-		node := trie.NewTrie(1.0)
-		Expect(node.Satisfies(node.Node)).To(BeFalse())
-	})
-
-	It("Fully populated node satisfies anything", func() {
-		populated := trie.NewTrie()
-		for _, c := range mask.ALPHABET {
-			populated.Link(string(c), trie.NewTrie(1.0))
-		}
-		for _, c := range mask.ALPHABET {
-			seeker := trie.NewTrie()
-			seeker.Link(string(c), trie.NewTrie(1.0))
-			Expect(populated.Satisfies(seeker.Node)).To(BeTrue())
-		}
 	})
 })

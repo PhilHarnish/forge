@@ -116,11 +116,6 @@ func (node *Node) Weight(weight weight.Weight) {
 	node.MaxWeight = math.Max(node.MaxWeight, weight)
 }
 
-func (node *Node) Satisfies(other *Node) bool {
-	return other.RequireMask&node.ProvideMask == other.RequireMask &&
-		node.LengthsMask&other.LengthsMask > 1
-}
-
 /*
 Returns true if this node is a valid point to exit.
 */
