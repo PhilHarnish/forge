@@ -72,10 +72,14 @@ func Join(separator string, operands ...node.NodeIterator) Operation {
 type operation struct {
 	operator *operator
 	operands []node.NodeIterator
+	node     *node.Node
 }
 
 func (op *operation) Root() *node.Node {
-	panic("operator.Root() not implemented")
+	if op.node == nil {
+		op.node = op.operator.synthesizeNode(op.operands)
+	}
+	return op.node
 }
 
 func (op *operation) Items(acceptor node.NodeAcceptor) node.NodeItems {

@@ -2,6 +2,7 @@ package op
 
 import (
 	"container/heap"
+	"fmt"
 	"unicode/utf8"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
@@ -9,12 +10,32 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
-func (op *operator) Process(acceptor node.NodeAcceptor, operands []node.NodeIterator) operatorEdgeHeap {
+func (op *operator) process(operation *operation, acceptor node.NodeAcceptor) operatorEdgeHeap {
 	if op.processMethod == parallel {
-		return processParallel(acceptor, operands, op.maxWeightPolicy == useSmallest, op.edgePolicy)
+		return processParallel(operation, acceptor)
 	} else {
-		return processSequential(acceptor, operands, op.maxWeightPolicy == useSmallest, op.edgePolicy)
+		return processSequential(operation, acceptor)
 	}
+}
+
+func (op *operator) synthesizeNode(operands []node.NodeIterator) *node.Node {
+	result := node.NewNode()
+	result.Union(operands[0].Root())
+	switch op.edgePolicy {
+	case firstOperand:
+		return result
+	case anyOperands:
+		for _, operand := range operands[1:] {
+			result.Union(operand.Root())
+		}
+		return result
+	case allOperands:
+		for _, operand := range operands[1:] {
+			result.Intersection(operand.Root())
+		}
+		return result
+	}
+	panic(fmt.Sprintf("Unable to synthesize node for %v", op))
 }
 
 type operator struct {
@@ -41,41 +62,45 @@ const (
 type edgePolicy int
 
 const (
-	allEdges edgePolicy = iota
-	anyEdges
+	firstOperand edgePolicy = iota
+	allOperands
+	anyOperands
 )
 
 var andOperator = &operator{
 	template:        "AND(%s)",
 	processMethod:   parallel,
 	maxWeightPolicy: useSmallest,
-	edgePolicy:      allEdges,
+	edgePolicy:      allOperands,
 }
 
 var orOperator = &operator{
 	template:        "OR(%s)",
 	processMethod:   parallel,
 	maxWeightPolicy: useLargest,
-	edgePolicy:      anyEdges,
+	edgePolicy:      anyOperands,
 }
 
 var concatOperator = &operator{
 	template:        "CONCAT(%s)",
 	processMethod:   sequential,
 	maxWeightPolicy: useLargest,
-	edgePolicy:      anyEdges,
+	edgePolicy:      firstOperand,
 }
 
 type operatorEdge struct {
 	path     string
 	operands []node.NodeIterator
 	weight   weight.Weight
+	node     *node.Node
 }
 
 type operatorEdgeHeap []*operatorEdge
 
-func processParallel(acceptor node.NodeAcceptor, operands []node.NodeIterator,
-	minWeight bool, edgePolicy edgePolicy) operatorEdgeHeap {
+func processParallel(operation *operation, acceptor node.NodeAcceptor) operatorEdgeHeap {
+	operator := operation.operator
+	operands := operation.operands
+	minWeight := operator.maxWeightPolicy == useSmallest
 	nOperands := len(operands)
 	// Create max.SIZE number of buckets for the edges we find.
 	// This enables O(1) lookup later.
@@ -104,9 +129,10 @@ func processParallel(acceptor node.NodeAcceptor, operands []node.NodeIterator,
 				outgoingEdge.weight = itemWeight
 			}
 			outgoingEdge.operands = append(outgoingEdge.operands, item)
-			if edgePolicyIsValid(edgePolicy, outgoingEdge.operands, nOperands) {
+			availableEdge := filterEdge(outgoingEdge, operator, nOperands)
+			if availableEdge != nil {
 				// If append is allowed, add to availableOutgoingEdges.
-				availableOutgoingEdges = append(availableOutgoingEdges, outgoingEdge)
+				availableOutgoingEdges = append(availableOutgoingEdges, availableEdge)
 			}
 		}
 	}
@@ -114,38 +140,54 @@ func processParallel(acceptor node.NodeAcceptor, operands []node.NodeIterator,
 	return availableOutgoingEdges
 }
 
-func edgePolicyIsValid(edgePolicy edgePolicy, operands []node.NodeIterator, nOperands int) bool {
-	if edgePolicy == anyEdges {
+func filterEdge(edge *operatorEdge, operator *operator, nOperands int) *operatorEdge {
+	operands := edge.operands
+	edgePolicy := operator.edgePolicy
+	if edgePolicy == anyOperands {
 		// Simply confirm this is the first time the edge was seen.
-		return len(operands) == 1
+		if len(operands) == 1 {
+			return edge
+		}
+		return nil
+	} else if edgePolicy != allOperands {
+		panic(fmt.Sprintf("Unable to validate edge policy: %v", edgePolicy))
 	} else if len(operands) != nOperands {
-		return false // "allEdges" requires an edge for every operand.
+		return nil // "allEdges" requires an edge for every operand.
 	}
-	root := operands[0].Root()
-	lengthsMask := root.LengthsMask
-	requiredMask := root.RequireMask & mask.ALL // Ignore the UNSET bit.
-	provideMask := root.ProvideMask
-	allMatch := root.MatchWeight > 0
-	for _, operand := range operands[1:] {
-		root = operand.Root()
-		lengthsMask &= root.LengthsMask             // Only consider aligned matches.
-		requiredMask |= root.RequireMask            // Require whatever anyone requires.
-		provideMask &= root.ProvideMask             // Only provide what everyone can.
-		allMatch = allMatch && root.MatchWeight > 0 // Only valid when all have MatchWeight.
+	// Allow synthesized Node to be reused.
+	edge.node = operator.synthesizeNode(operands)
+	if edge.node.LengthsMask > 0 {
+		return edge
 	}
-	return allMatch || (lengthsMask > 1 && (requiredMask&provideMask == requiredMask))
+	return nil
 }
 
-func processSequential(acceptor node.NodeAcceptor, operands []node.NodeIterator,
-	minWeight bool, edgePolicy edgePolicy) operatorEdgeHeap {
+func processSequential(operation *operation, acceptor node.NodeAcceptor) operatorEdgeHeap {
+	operands := operation.operands
 	availableOutgoingEdges := operatorEdgeHeap{}
 	operand := operands[0]
+	hasMoreOperands := len(operands) > 1
 	items := operand.Items(acceptor)
 	for items.HasNext() {
 		path, item := items.Next()
-		outgoingEdge := &operatorEdge{}
-		outgoingEdge.path = path
-		outgoingEdge.operands = append(outgoingEdge.operands, item)
+		if hasMoreOperands && item.Root().LengthsMask&0b1 == 0b1 {
+			// This item is a valid location to exit.
+			canKeepGoing := item.Root().LengthsMask > 1
+			if canKeepGoing {
+				// This path branches (keep going vs continue) so use OR.
+				keepGoing := make([]node.NodeIterator, len(operands))
+				copy(keepGoing, operands)
+				keepGoing[0] = item
+				item = Or(Concat(keepGoing...), Concat(operands[1:]...))
+			} else {
+				// Otherwise, the path continues sequentially.
+				item = Concat(operands[1:]...)
+			}
+		}
+		outgoingEdge := &operatorEdge{
+			path:     path,
+			operands: []node.NodeIterator{item},
+		}
 		availableOutgoingEdges = append(availableOutgoingEdges, outgoingEdge)
 	}
 	return availableOutgoingEdges

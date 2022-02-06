@@ -9,7 +9,7 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 )
 
-var _ = Describe("Process", func() {
+var _ = Describe("process", func() {
 	It("Does nothing for empty input", func() {
 		operation := op.And()
 		items := operation.Items(node.NodeAcceptAll)
@@ -29,8 +29,6 @@ var _ = Describe("Process", func() {
 		It("Returns matching edges for 2+ items", func() {
 			a := extend(trie.NewTrie(1.0), "a")
 			b := extend(trie.NewTrie(.5), "a")
-			Expect("a: " + a.String()).To(Equal("a: Trie('A', ' #', 0)"))
-			Expect("b: " + b.String()).To(Equal("b: Trie('A', ' #', 0)"))
 			operation := op.And(a, b)
 			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
 					AND(Trie('A', ' #', 0), Trie('A', ' #', 0))
@@ -147,9 +145,26 @@ var _ = Describe("Process", func() {
 			b := trie.NewTrie()
 			b.Add("b", 0.5)
 			operation := op.Concat(a, b)
-			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
+			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
 					CONCAT(Trie('A', ' #', 0), Trie('B', ' #', 0))
-					└─a = Trie('', '#', 1)
+					└─a = Trie('B', ' #', 0)
+					• └─b = Trie('', '#', 0.5)
+			`))
+		})
+
+		It("Traverses multiple paths if needed", func() {
+			a := trie.NewTrie()
+			a.Add("a", 1.0)
+			a.Add("aa", .5)
+			b := trie.NewTrie()
+			b.Add("b", 0.5)
+			operation := op.Concat(a, b)
+			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
+					CONCAT(Trie('A', ' ##', 0), Trie('B', ' #', 0))
+					└─a = OR(CONCAT(Trie('A', '##', 1), Trie('B', ' #', 0)), Trie('B', ' #', 0))
+					• ├─a = Trie('B', ' #', 0)
+					• │ └─b = Trie('', '#', 0.5)
+					• └─b = Trie('', '#', 0.5)
 			`))
 		})
 	})
@@ -160,10 +175,12 @@ var _ = Describe("Process", func() {
 			a.Add("a", 1.0)
 			b := trie.NewTrie()
 			b.Add("b", 0.5)
-			operation := op.Join(" ", a, b)
-			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
-					CONCAT(Trie('A', ' #', 0), Span(' ', 0), Trie('B', ' #', 0))
-					└─a = Trie('', '#', 1)
+			operation := op.Join("z", a, b)
+			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
+					CONCAT(Trie('A', ' #', 0), Span('z', 0), Trie('B', ' #', 0))
+					└─a = CONCAT(Span('z', 0), Trie('B', ' #', 0))
+					• └─z = Trie('B', ' #', 0)
+					• • └─b = Trie('', '#', 0.5)
 			`))
 		})
 	})

@@ -14,7 +14,6 @@ func newOperatorItems(acceptor node.NodeAcceptor, operation *operation) *operato
 	return &operatorItems{
 		acceptor:  acceptor,
 		operation: operation,
-		edges:     nil,
 	}
 }
 
@@ -32,14 +31,15 @@ func (items *operatorItems) Next() (string, node.NodeIterator) {
 	nextOperation := &operation{
 		operator: items.operation.operator,
 		operands: next.operands,
+		node:     next.node, // May be `nil`.
 	}
 	return next.path, nextOperation
 }
 
 func (items *operatorItems) getHeap() operatorEdgeHeap {
 	if items.edges == nil {
-		items.edges = items.operation.operator.Process(
-			items.acceptor, items.operation.operands)
+		items.edges = items.operation.operator.process(
+			items.operation, items.acceptor)
 	}
 	return items.edges
 }
