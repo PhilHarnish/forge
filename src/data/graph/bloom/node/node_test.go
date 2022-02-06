@@ -36,6 +36,48 @@ var _ = Describe("Match", func() {
 	})
 })
 
+var _ = Describe("Satisfies", func() {
+	It("Empty nodes do not satisfy by default (no exits)", func() {
+		a := node.NewNode()
+		Expect(a.Satisfies(a)).To(BeFalse())
+	})
+
+	It("Node with exits satisfies itself", func() {
+		child := node.NewNode(1.0)
+		root := node.NewNode()
+		root.MaskPathToChild("a", child)
+		Expect(root.String()).To(Equal("Node('A', ' #', 0)"))
+		Expect(root.Satisfies(root)).To(BeTrue())
+	})
+
+	It("Node with multiple exits satisfies node with one exit, and vice-versa", func() {
+		child := node.NewNode(1.0)
+		a := node.NewNode()
+		a.MaskPathToChild("a", child)
+		a.MaskPathToChild("b", child)
+		a.MaskPathToChild("c", child)
+		b := node.NewNode()
+		b.MaskPathToChild("a", child)
+		Expect(a.String()).To(Equal("Node('abc', ' #', 0)"))
+		Expect(a.Satisfies(b)).To(BeTrue())
+		By("b satisfies a")
+		Expect(b.Satisfies(a)).To(BeTrue())
+	})
+
+	It("Node many edges satisfies subset, but not the reverse", func() {
+		child := node.NewNode(1.0)
+		a := node.NewNode()
+		a.MaskPathToChild("abc", child)
+		b := node.NewNode()
+		b.MaskPathToChild("aaa", child)
+		Expect("a: " + a.String()).To(Equal("a: Node('ABC', '   #', 0)"))
+		Expect("b: " + b.String()).To(Equal("b: Node('A', '   #', 0)"))
+		Expect(a.Satisfies(b)).To(BeTrue())
+		By("b satisfies a")
+		Expect(b.Satisfies(a)).To(BeFalse())
+	})
+})
+
 var _ = Describe("String", func() {
 	It("Formats empty Nodes", func() {
 		n := node.NewNode()

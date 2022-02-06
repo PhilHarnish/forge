@@ -46,8 +46,34 @@ func (node *Node) Match(weight weight.Weight) {
 	node.Weight(weight)
 }
 
+func (node *Node) MaskPathToChild(path string, child *Node) error {
+	edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
+	if err != nil {
+		return err
+	}
+	// Inherit maxWeight.
+	node.Weight(child.MaxWeight)
+	// Provide anything ANY children provides (including the edge itself).
+	node.ProvideMask |= edgeMask | mask.Mask(child.ProvideMask)
+	if child.RequireMask == mask.UNSET {
+		// Ignore the child's require mask if it is UNSET.
+		node.RequireMask &= edgeMask
+	} else {
+		// Require anything ALL children requires (including the edge itself).
+		node.RequireMask &= edgeMask | mask.Mask(child.RequireMask)
+	}
+	// Inherit matching lengths.
+	node.LengthsMask |= child.LengthsMask << runeLength
+	return nil
+}
+
 func (node *Node) Weight(weight weight.Weight) {
 	node.MaxWeight = math.Max(node.MaxWeight, weight)
+}
+
+func (node *Node) Satisfies(other *Node) bool {
+	return other.RequireMask&node.ProvideMask == other.RequireMask &&
+		node.LengthsMask&other.LengthsMask > 1
 }
 
 type NodeIterator interface {

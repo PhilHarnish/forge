@@ -39,23 +39,10 @@ func (trie *Trie) Link(path string, child *Trie) error {
 	if len(path) == 0 {
 		return fmt.Errorf("attempted to link empty key")
 	}
-	edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
+	err := trie.Node.MaskPathToChild(path, child.Node)
 	if err != nil {
 		return fmt.Errorf("error while linking: %w", err)
 	}
-	// Inherit maxWeight.
-	trie.Weight(child.MaxWeight)
-	// Provide anything ANY children provides (including the edge itself).
-	trie.ProvideMask |= edgeMask | mask.Mask(child.ProvideMask)
-	if child.RequireMask == mask.UNSET {
-		// Ignore the child's require mask if it is UNSET.
-		trie.RequireMask &= edgeMask
-	} else {
-		// Require anything ALL children requires (including the edge itself).
-		trie.RequireMask &= edgeMask | mask.Mask(child.RequireMask)
-	}
-	// Inherit matching lengths.
-	trie.LengthsMask |= child.LengthsMask << runeLength
 	link := trieLink{
 		path,
 		child,
@@ -130,11 +117,6 @@ func (trie *Trie) seek(path string, provideMasks []mask.Mask) (child *Trie, rema
 		}
 	}
 	return trie, path
-}
-
-func (trie *Trie) Satisfies(other *Trie) bool {
-	return other.RequireMask&trie.ProvideMask == other.RequireMask &&
-		trie.LengthsMask&other.LengthsMask > 0
 }
 
 func (trie *Trie) String() string {

@@ -134,11 +134,10 @@ var _ = Describe("Add", func() {
 })
 
 var _ = Describe("Satisfies", func() {
-	It("Empty nodes do not satisfy by default (no exits)",
-		func() {
-			node := trie.NewTrie(1.0)
-			Expect(node.Satisfies(node)).To(BeFalse())
-		})
+	It("Empty nodes do not satisfy by default (no exits)", func() {
+		node := trie.NewTrie(1.0)
+		Expect(node.Satisfies(node.Node)).To(BeFalse())
+	})
 
 	It("Fully populated node satisfies anything", func() {
 		populated := trie.NewTrie()
@@ -148,7 +147,7 @@ var _ = Describe("Satisfies", func() {
 		for _, c := range mask.ALPHABET {
 			seeker := trie.NewTrie()
 			seeker.Link(string(c), trie.NewTrie(1.0))
-			Expect(populated.Satisfies(seeker)).To(BeTrue())
+			Expect(populated.Satisfies(seeker.Node)).To(BeTrue())
 		}
 	})
 })
