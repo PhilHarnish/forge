@@ -9,16 +9,6 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 )
 
-func extend(item *trie.Trie, paths ...string) *trie.Trie {
-	for i := len(paths) - 1; i >= 0; i-- {
-		parent := trie.NewTrie()
-		err := parent.Link(paths[i], item)
-		Expect(err).ShouldNot(HaveOccurred())
-		item = parent
-	}
-	return item
-}
-
 var _ = Describe("Operations", func() {
 	var a *trie.Trie
 	var b *trie.Trie

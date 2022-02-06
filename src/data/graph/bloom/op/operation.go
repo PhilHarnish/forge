@@ -16,6 +16,11 @@ type Operation interface {
 }
 
 func And(operands ...node.NodeIterator) Operation {
+	if len(operands) == 0 {
+		return null.Null
+	} else if len(operands) == 1 {
+		return operands[0]
+	}
 	return &operation{
 		operator: andOperator,
 		operands: operands,
@@ -23,6 +28,11 @@ func And(operands ...node.NodeIterator) Operation {
 }
 
 func Or(operands ...node.NodeIterator) Operation {
+	if len(operands) == 0 {
+		return null.Null
+	} else if len(operands) == 1 {
+		return operands[0]
+	}
 	return &operation{
 		operator: orOperator,
 		operands: operands,
@@ -30,6 +40,11 @@ func Or(operands ...node.NodeIterator) Operation {
 }
 
 func Concat(operands ...node.NodeIterator) Operation {
+	if len(operands) == 0 {
+		return null.Null
+	} else if len(operands) == 1 {
+		return operands[0]
+	}
 	return &operation{
 		operator: concatOperator,
 		operands: operands,

@@ -12,11 +12,7 @@ import (
 
 func (op *operator) Process(acceptor node.NodeAcceptor, operands []node.NodeIterator) operatorEdgeHeap {
 	if op.processMethod == parallel {
-		edgeThreshold := 0
-		if op.edgeThreshold == allEdges {
-			edgeThreshold = len(operands)
-		}
-		return processParallel(acceptor, operands, op.maxWeightPolicy == useSmallest, edgeThreshold)
+		return processParallel(acceptor, operands, op.maxWeightPolicy == useSmallest, op.edgePolicy)
 	} else {
 		panic(fmt.Sprintf("Unsupported process method: %v", op.processMethod))
 	}
@@ -26,7 +22,7 @@ type operator struct {
 	template        string
 	processMethod   processMethod
 	maxWeightPolicy maxWeightPolicy
-	edgeThreshold   edgeThreshold
+	edgePolicy      edgePolicy
 }
 
 type processMethod int
@@ -43,10 +39,10 @@ const (
 	useSmallest
 )
 
-type edgeThreshold int
+type edgePolicy int
 
 const (
-	allEdges edgeThreshold = iota
+	allEdges edgePolicy = iota
 	anyEdges
 )
 
@@ -54,28 +50,28 @@ var andOperator = &operator{
 	template:        "AND(%s)",
 	processMethod:   parallel,
 	maxWeightPolicy: useSmallest,
-	edgeThreshold:   allEdges,
+	edgePolicy:      allEdges,
 }
 
 var orOperator = &operator{
 	template:        "OR(%s)",
 	processMethod:   parallel,
 	maxWeightPolicy: useLargest,
-	edgeThreshold:   anyEdges,
+	edgePolicy:      anyEdges,
 }
 
 var concatOperator = &operator{
 	template:        "CONCAT(%s)",
 	processMethod:   sequential,
 	maxWeightPolicy: useLargest,
-	edgeThreshold:   anyEdges,
+	edgePolicy:      anyEdges,
 }
 
 var joinOperator = &operator{
 	template:        "JOIN('%s', %s)",
 	processMethod:   sequential,
 	maxWeightPolicy: useLargest,
-	edgeThreshold:   anyEdges,
+	edgePolicy:      anyEdges,
 }
 
 type operatorEdge struct {
@@ -87,7 +83,8 @@ type operatorEdge struct {
 type operatorEdgeHeap []*operatorEdge
 
 func processParallel(acceptor node.NodeAcceptor, operands []node.NodeIterator,
-	minWeight bool, edgeThreshold int) operatorEdgeHeap {
+	minWeight bool, edgePolicy edgePolicy) operatorEdgeHeap {
+	nOperands := len(operands)
 	// Create max.SIZE number of buckets for the edges we find.
 	// This enables O(1) lookup later.
 	outgoingEdgeList := [mask.SIZE]operatorEdge{}
@@ -103,7 +100,7 @@ func processParallel(acceptor node.NodeAcceptor, operands []node.NodeIterator,
 			}
 			// NB: We assume `err` is nil here.
 			position, _ := mask.Position(edge)
-			outgoingEdge := outgoingEdgeList[position]
+			outgoingEdge := &outgoingEdgeList[position]
 			itemWeight := item.Root().MaxWeight
 			if len(outgoingEdge.operands) == 0 {
 				// First operator to use this edge.
@@ -111,18 +108,40 @@ func processParallel(acceptor node.NodeAcceptor, operands []node.NodeIterator,
 				outgoingEdge.weight = itemWeight
 			} else if (minWeight && itemWeight < outgoingEdge.weight) ||
 				(!minWeight && itemWeight > outgoingEdge.weight) {
-				// Duplicate operator with this edge.
+				// Duplicate operator with this edge; update weight.
 				outgoingEdge.weight = itemWeight
 			}
-			outgoingEdge.operands = append(outgoingEdgeList[position].operands, item)
-			if len(outgoingEdge.operands) >= edgeThreshold {
-				// Once enough operands share the edge, add to availableOutgoingEdges.
-				availableOutgoingEdges = append(availableOutgoingEdges, &outgoingEdge)
+			outgoingEdge.operands = append(outgoingEdge.operands, item)
+			if edgePolicyIsValid(edgePolicy, outgoingEdge.operands, nOperands) {
+				// If append is allowed, add to availableOutgoingEdges.
+				availableOutgoingEdges = append(availableOutgoingEdges, outgoingEdge)
 			}
 		}
 	}
 	heap.Init(&availableOutgoingEdges)
 	return availableOutgoingEdges
+}
+
+func edgePolicyIsValid(edgePolicy edgePolicy, operands []node.NodeIterator, nOperands int) bool {
+	if edgePolicy == anyEdges {
+		// Simply confirm this is the first time the edge was seen.
+		return len(operands) == 1
+	} else if len(operands) != nOperands {
+		return false // "allEdges" requires an edge for every operand.
+	}
+	root := operands[0].Root()
+	lengthsMask := root.LengthsMask
+	requiredMask := root.RequireMask & mask.ALL // Ignore the UNSET bit.
+	provideMask := root.ProvideMask
+	allMatch := root.MatchWeight > 0
+	for _, operand := range operands[1:] {
+		root = operand.Root()
+		lengthsMask &= root.LengthsMask             // Only consider aligned matches.
+		requiredMask |= root.RequireMask            // Require whatever anyone requires.
+		provideMask &= root.ProvideMask             // Only provide what everyone can.
+		allMatch = allMatch && root.MatchWeight > 0 // Only valid when all have MatchWeight.
+	}
+	return allMatch || (lengthsMask > 1 && (requiredMask&provideMask == requiredMask))
 }
 
 func (h operatorEdgeHeap) Len() int {
