@@ -72,6 +72,68 @@ var _ = Describe("MaskPathToChild", func() {
 	})
 })
 
+var _ = Describe("Union", func() {
+	It("Empty nodes are a no-op", func() {
+		source := node.NewNode()
+		result := node.NewNode().Union(source)
+		Expect(result.String()).To(Equal("Node('', '', 0)"))
+	})
+
+	It("Inherits from source", func() {
+		source := node.NewNode()
+		source.MaskPath("abc")
+		result := node.NewNode().Union(source)
+		Expect(result.String()).To(Equal("Node('ABC', '   #', 0)"))
+	})
+
+	It("Inherits max weight", func() {
+		source := node.NewNode(1)
+		result := node.NewNode(.5).Union(source)
+		Expect(result.String()).To(Equal("Node('', '#', 1)"))
+	})
+})
+
+var _ = Describe("Intersection", func() {
+	It("Empty nodes are a no-op", func() {
+		source := node.NewNode()
+		result := node.NewNode().Intersection(source)
+		Expect(result.String()).To(Equal("Node('', '', 0)"))
+	})
+
+	It("Intersects with source", func() {
+		source := node.NewNode()
+		source.MaskPath("abb")
+		result := node.NewNode()
+		result.MaskPath("aab")
+		result.Intersection(source)
+		Expect(result.String()).To(Equal("Node('AB', '   #', 0)"))
+	})
+
+	It("Detects impossible combinations", func() {
+		source := node.NewNode()
+		source.MaskPath("bcd")
+		result := node.NewNode()
+		result.MaskPath("abc")
+		result.Intersection(source)
+		Expect(result.String()).To(Equal("Node('ⒶBCⒹ', '', 0)"))
+	})
+
+	It("Inherits max (min) weight", func() {
+		source := node.NewNode(.5)
+		result := node.NewNode(1).Intersection(source)
+		Expect(result.String()).To(Equal("Node('', '#', 0.5)"))
+	})
+
+	It("Blocks exits if other node has none", func() {
+		source := node.NewNode(.5)
+		result := node.NewNode(1)
+		result.MaskPath("abc")
+		Expect(result.String()).To(Equal("Node('ABC', '#  #', 1)"))
+		result.Intersection(source)
+		Expect(result.String()).To(Equal("Node('', '#', 0.5)"))
+	})
+})
+
 var _ = Describe("Satisfies", func() {
 	It("Empty nodes do not satisfy by default (no exits)", func() {
 		a := node.NewNode()

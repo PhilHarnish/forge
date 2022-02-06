@@ -24,11 +24,7 @@ type Node struct {
 
 func NewNode(matchWeight ...weight.Weight) *Node {
 	result := &Node{
-		MatchWeight: weight.Weight(0),
-		MaxWeight:   weight.Weight(0),
-		ProvideMask: mask.Mask(0b0),
 		RequireMask: mask.UNSET,
-		LengthsMask: mask.Mask(0b0),
 	}
 	if len(matchWeight) == 1 {
 		result.Match(matchWeight[0])
@@ -65,13 +61,7 @@ func (node *Node) MaskPathToChild(path string, child *Node) error {
 	node.Weight(child.MaxWeight)
 	if path == "" {
 		// Optimized path for zero-length paths.
-		node.ProvideMask |= mask.Mask(child.ProvideMask)
-		if child.RequireMask != mask.UNSET {
-			// Require anything ALL children requires (including the edge itself).
-			node.RequireMask &= mask.Mask(child.RequireMask)
-		}
-		// Inherit matching lengths.
-		node.LengthsMask |= child.LengthsMask
+		node.Union(child)
 	} else {
 		edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
 		if err != nil {
@@ -90,6 +80,36 @@ func (node *Node) MaskPathToChild(path string, child *Node) error {
 		node.LengthsMask |= child.LengthsMask << runeLength
 	}
 	return nil
+}
+
+func (node *Node) Intersection(other *Node) *Node {
+	// Copy weights using MIN operation.
+	node.MatchWeight = math.Min(node.MatchWeight, other.MatchWeight)
+	node.MaxWeight = math.Min(node.MaxWeight, other.MaxWeight)
+	node.ProvideMask &= other.ProvideMask // Only provide what everyone can.
+	// Require whatever anyone requires.
+	node.RequireMask |= other.RequireMask
+	if node.RequireMask == mask.UNSET {
+		// Exit blocked; only keep lowest bit on LengthsMask.
+		node.LengthsMask &= other.LengthsMask & mask.Mask(0b1)
+	} else if node.RequireMask == node.RequireMask&node.ProvideMask {
+		// Only consider aligned matches.
+		node.LengthsMask &= other.LengthsMask
+	} else {
+		// Unsatisfiable requirements
+		node.LengthsMask = mask.Mask(0)
+	}
+	return node
+}
+
+func (node *Node) Union(other *Node) *Node {
+	// Copy weights using MAX operation.
+	node.MatchWeight = math.Max(node.MatchWeight, other.MatchWeight)
+	node.MaxWeight = math.Max(node.MaxWeight, other.MaxWeight)
+	node.ProvideMask |= other.ProvideMask // Provide anything anyone can.
+	node.RequireMask &= other.RequireMask // Only require whatever everyone requires.
+	node.LengthsMask |= other.LengthsMask // Consider either matches.
+	return node
 }
 
 func (node *Node) Weight(weight weight.Weight) {
