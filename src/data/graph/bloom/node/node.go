@@ -61,23 +61,34 @@ func (node *Node) MaskPath(path string) error {
 }
 
 func (node *Node) MaskPathToChild(path string, child *Node) error {
-	edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
-	if err != nil {
-		return err
-	}
 	// Inherit maxWeight.
 	node.Weight(child.MaxWeight)
-	// Provide anything ANY children provides (including the edge itself).
-	node.ProvideMask |= edgeMask | mask.Mask(child.ProvideMask)
-	if child.RequireMask == mask.UNSET {
-		// Ignore the child's require mask if it is UNSET.
-		node.RequireMask &= edgeMask
+	if path == "" {
+		// Optimized path for zero-length paths.
+		node.ProvideMask |= mask.Mask(child.ProvideMask)
+		if child.RequireMask != mask.UNSET {
+			// Require anything ALL children requires (including the edge itself).
+			node.RequireMask &= mask.Mask(child.RequireMask)
+		}
+		// Inherit matching lengths.
+		node.LengthsMask |= child.LengthsMask
 	} else {
-		// Require anything ALL children requires (including the edge itself).
-		node.RequireMask &= edgeMask | mask.Mask(child.RequireMask)
+		edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
+		if err != nil {
+			return err
+		}
+		// Provide anything ANY children provides (including the edge itself).
+		node.ProvideMask |= edgeMask | mask.Mask(child.ProvideMask)
+		if child.RequireMask == mask.UNSET {
+			// Ignore the child's require mask if it is UNSET.
+			node.RequireMask &= edgeMask
+		} else {
+			// Require anything ALL children requires (including the edge itself).
+			node.RequireMask &= edgeMask | mask.Mask(child.RequireMask)
+		}
+		// Inherit matching lengths.
+		node.LengthsMask |= child.LengthsMask << runeLength
 	}
-	// Inherit matching lengths.
-	node.LengthsMask |= child.LengthsMask << runeLength
 	return nil
 }
 
@@ -88,6 +99,17 @@ func (node *Node) Weight(weight weight.Weight) {
 func (node *Node) Satisfies(other *Node) bool {
 	return other.RequireMask&node.ProvideMask == other.RequireMask &&
 		node.LengthsMask&other.LengthsMask > 1
+}
+
+/*
+Returns true if this node is a valid point to exit.
+*/
+func (node *Node) Exitable() bool {
+	return node.LengthsMask&0b1 == 1
+}
+
+func (node *Node) String() string {
+	return Format("Node", node)
 }
 
 type NodeIterator interface {
@@ -112,10 +134,6 @@ func NodeAcceptAll(path string, node *Node) weight.Weight {
 
 func NodeAcceptNone(path string, node *Node) weight.Weight {
 	return 0.0
-}
-
-func (node *Node) String() string {
-	return Format("Node", node)
 }
 
 func Format(name string, node *Node) string {

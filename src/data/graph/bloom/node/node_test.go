@@ -62,6 +62,14 @@ var _ = Describe("MaskPathToChild", func() {
 		root.MaskPathToChild("abc", node.NewNode(1.0))
 		Expect(root.String()).To(Equal("Node('ABC', '   #', 0)"))
 	})
+
+	It("Root merges requirements from reference zero distance away", func() {
+		reference := node.NewNode()
+		reference.MaskPath("abc")
+		root := node.NewNode()
+		root.MaskPathToChild("", reference)
+		Expect(root.String()).To(Equal("Node('ABC', '   #', 0)"))
+	})
 })
 
 var _ = Describe("Satisfies", func() {
