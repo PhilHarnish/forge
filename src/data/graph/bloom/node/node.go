@@ -116,13 +116,6 @@ func (node *Node) Weight(weight weight.Weight) {
 	node.MaxWeight = math.Max(node.MaxWeight, weight)
 }
 
-/*
-Returns true if this node is a valid point to exit.
-*/
-func (node *Node) Exitable() bool {
-	return node.LengthsMask&0b1 == 1
-}
-
 func (node *Node) String() string {
 	return Format("Node", node)
 }

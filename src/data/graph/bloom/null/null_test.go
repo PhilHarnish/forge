@@ -33,8 +33,4 @@ var _ = Describe("Node interfaces", func() {
 	It("includes Root func", func() {
 		Expect(null.Null.Root().String()).To(Equal("Node('', '#', 0)"))
 	})
-
-	It("Null is exitable", func() {
-		Expect(null.Null.Root().Exitable()).To(BeTrue())
-	})
 })
