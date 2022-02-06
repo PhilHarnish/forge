@@ -169,6 +169,11 @@ var _ = Describe("MaskString", func() {
 		Expect(mask.MaskString(0b111, 0b111)).To(Equal("ABC"))
 	})
 
+	It("Indicates unsatisfied characters differently", func() {
+		Expect(mask.MaskString(0b000, mask.ALL)).To(Equal(
+			"ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ( )(-)(')"))
+	})
+
 	It("Converts round-trip", func() {
 		given := "it's an example"
 		expected := "aeilmnpstx '"

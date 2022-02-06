@@ -17,8 +17,14 @@ const (
 	SIZE      = len(ALPHABET)
 	ALL       = Mask((1 << SIZE) - 1)
 	NONE      = Mask(0b0)
-	UNSET     = Mask(1<<SIZE | ALL)
+	// NB: Unset is all 1s so that require is iteratively less over time.
+	UNSET = Mask(1<<SIZE) | ALL
 )
+
+var missingRequirementMap = [...]rune{
+	'Ⓐ', 'Ⓑ', 'Ⓒ', 'Ⓓ', 'Ⓔ', 'Ⓕ', 'Ⓖ', 'Ⓗ', 'Ⓘ', 'Ⓙ', 'Ⓚ', 'Ⓛ', 'Ⓜ',
+	'Ⓝ', 'Ⓞ', 'Ⓟ', 'Ⓠ', 'Ⓡ', 'Ⓢ', 'Ⓣ', 'Ⓤ', 'Ⓥ', 'Ⓦ', 'Ⓧ', 'Ⓨ', 'Ⓩ',
+}
 
 /*
 Returns the position for the given rune if supported, otherwise error.
@@ -98,17 +104,26 @@ func EdgeMaskAndLength(edge string) (Mask, int, error) {
 Converts `provide` & `require` BitMasks to a human-readable string.
 */
 func MaskString(provide Mask, require Mask) string {
-	acc := ""
+	acc := strings.Builder{}
 	for _, c := range ALPHABET {
 		mask, _ := AlphabetMask(c)
-		provided := mask & provide
-		if require != UNSET && require&provided > 0 {
-			acc += string(unicode.ToUpper(c))
-		} else if provided > 0 {
-			acc += string(c)
+		masked := mask & provide
+		required := require & masked
+		missing := (require & mask) - required
+		if require != UNSET && required > 0 {
+			acc.WriteRune(unicode.ToUpper(c))
+		} else if require != UNSET && missing > 0 {
+			position, _ := Position(c)
+			if position < len(missingRequirementMap) {
+				acc.WriteRune(missingRequirementMap[position])
+			} else {
+				acc.WriteString(fmt.Sprintf("(%c)", c))
+			}
+		} else if masked > 0 {
+			acc.WriteRune(c)
 		}
 	}
-	return acc
+	return acc.String()
 }
 
 /*
