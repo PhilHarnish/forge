@@ -18,10 +18,12 @@ type spanItems struct {
 }
 
 func NewSpan(path string, matchWeight ...weight.Weight) *span {
-	return &span{
+	result := &span{
 		Node: node.NewNode(matchWeight...),
 		path: path,
 	}
+	result.MaskPath(path)
+	return result
 }
 
 func (root *span) Root() *node.Node {

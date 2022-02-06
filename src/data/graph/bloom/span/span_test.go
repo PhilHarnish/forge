@@ -21,7 +21,7 @@ var _ = Describe("Node interfaces", func() {
 	})
 
 	It("Root", func() {
-		Expect(span.NewSpan("test").Root().String()).To(Equal("Node('', '', 0)"))
+		Expect(span.NewSpan("test").Root().String()).To(Equal("Node('EST', '    #', 0)"))
 	})
 
 	It("Items", func() {
