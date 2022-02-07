@@ -2,7 +2,6 @@ package query
 
 import (
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
-	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 type queryNodeResultsSource struct {
@@ -28,6 +27,6 @@ func (results *queryNodeResults) HasNext() bool {
 	return false
 }
 
-func (results *queryNodeResults) Next() *weight.WeightedString {
+func (results *queryNodeResults) Next() QueryResult {
 	return nil
 }

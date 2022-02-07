@@ -94,9 +94,9 @@ func (query *Query) String() string {
 		resultsTable := table.NewTable()
 		row := table.R()
 		resultsTable.AppendRow(row)
+		row.AppendCell(table.C("Score"))
 		for position, source := range query.sources {
 			namedPosition, exists := query.sourceNames[position]
-			row.AppendCell(table.C("Score"))
 			if exists {
 				row.AppendCell(table.C(namedPosition))
 			} else {
@@ -106,9 +106,11 @@ func (query *Query) String() string {
 		for results.HasNext() {
 			row = table.R()
 			resultsTable.AppendRow(row)
-			result := *results.Next()
-			row.AppendCell(table.C(fmt.Sprintf("%.2f", result.Weight)))
-			row.AppendCell(table.C(result.String))
+			resultRow := results.Next()
+			row.AppendCell(table.C(fmt.Sprintf("%.2f", resultRow.Weight)))
+			for _, result := range resultRow.Strings {
+				row.AppendCell(table.C(result))
+			}
 		}
 		lines = append(lines, resultsTable.Render())
 	}

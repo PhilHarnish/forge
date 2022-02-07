@@ -27,7 +27,7 @@ var _ = Describe("Select", func() {
 
 type testSource struct {
 	name    string
-	results []weight.WeightedString
+	results []weight.WeightedStrings
 }
 
 func (source *testSource) Results() query.QueryResults {

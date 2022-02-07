@@ -12,10 +12,10 @@ var _ = Describe("QueryResults", func() {
 	It("Reads from 1 source", func() {
 		src := &testSource{
 			name: "example",
-			results: []weight.WeightedString{
+			results: []weight.WeightedStrings{
 				{
-					Weight: 0.0,
-					String: "result",
+					Weight:  0.0,
+					Strings: []string{"result"},
 				},
 			},
 		}

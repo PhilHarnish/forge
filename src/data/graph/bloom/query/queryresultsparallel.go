@@ -4,7 +4,7 @@ import "container/heap"
 
 type queryResultsParallel struct {
 	query    *Query
-	returned []string
+	returned []QueryResult
 	heap     queryResultHeap
 }
 
@@ -21,6 +21,7 @@ func (results *queryResultsParallel) Next() QueryResult {
 
 func (results *queryResultsParallel) getHeap() queryResultHeap {
 	if results.heap == nil {
+		results.returned = []QueryResult{}
 		results.heap = queryResultHeap{}
 		for _, source := range results.query.sources {
 			sourceResults := source.Results()
@@ -38,6 +39,7 @@ func (h queryResultHeap) Len() int {
 }
 
 func (h queryResultHeap) Less(i int, j int) bool {
+	// This should be comparing the
 	return h[i].Weight > h[j].Weight
 }
 

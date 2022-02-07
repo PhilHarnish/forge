@@ -14,7 +14,7 @@ type QueryResults interface {
 	Next() QueryResult
 }
 
-type QueryResult = *weight.WeightedString
+type QueryResult = *weight.WeightedStrings
 
 func newQueryResults(query *Query) QueryResults {
 	if len(query.sources) == 0 {
