@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/onsi/gomega/gmeasure/table"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
@@ -84,6 +85,32 @@ func (query *Query) String() string {
 	}
 	if query.limit > 0 {
 		lines = append(lines, fmt.Sprintf("LIMIT %d", query.limit))
+	}
+	lines[len(lines)-1] = lines[len(lines)-1] + ";"
+	results := query.Results()
+	if !results.HasNext() {
+		lines = append(lines, "∅")
+	} else {
+		resultsTable := table.NewTable()
+		row := table.R()
+		resultsTable.AppendRow(row)
+		for position, source := range query.sources {
+			namedPosition, exists := query.sourceNames[position]
+			row.AppendCell(table.C("Score"))
+			if exists {
+				row.AppendCell(table.C(namedPosition))
+			} else {
+				row.AppendCell(table.C(source.String()))
+			}
+		}
+		for results.HasNext() {
+			row = table.R()
+			resultsTable.AppendRow(row)
+			result := *results.Next()
+			row.AppendCell(table.C(fmt.Sprintf("%.2f", result.Weight)))
+			row.AppendCell(table.C(result.String))
+		}
+		lines = append(lines, resultsTable.Render())
 	}
 	return strings.Join(lines, "\n")
 }

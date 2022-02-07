@@ -5,7 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	. "github.com/philharnish/forge/spec/matchers"
+	"github.com/philharnish/forge/spec/matchers"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
@@ -18,15 +18,16 @@ func Test(t *testing.T) {
 var _ = Describe("Select", func() {
 	It("Instantiates a Query", func() {
 		q := query.Select()
-		Expect(q.String()).To(Equal(
-			"SELECT *",
-		))
+		Expect(q.String()).To(matchers.LookLike(`
+		SELECT *;
+		∅
+		`))
 	})
 })
 
 type testSource struct {
-	name      string
-	exhausted bool
+	name    string
+	results []weight.WeightedString
 }
 
 func (source *testSource) Results() query.QueryResults {
@@ -34,12 +35,13 @@ func (source *testSource) Results() query.QueryResults {
 }
 
 func (source *testSource) HasNext() bool {
-	return !source.exhausted
+	return len(source.results) > 0
 }
 
-func (source *testSource) Next() *weight.WeightedStringsSet {
-	source.exhausted = true
-	return &weight.WeightedStringsSet{}
+func (source *testSource) Next() query.QueryResult {
+	next := source.results[0]
+	source.results = source.results[1:]
+	return &next
 }
 
 func (source *testSource) String() string {
@@ -50,9 +52,10 @@ var _ = Describe("From", func() {
 	It("Adds 1 source", func() {
 		src := &testSource{name: "example"}
 		q := query.Select().From(src)
-		Expect(q.String()).To(LookLike(`
-			SELECT *
-			FROM example
+		Expect(q.String()).To(matchers.LookLike(`
+				SELECT *
+				FROM example;
+				∅
 		`))
 	})
 
@@ -61,11 +64,12 @@ var _ = Describe("From", func() {
 			&testSource{name: "example1"},
 			&testSource{name: "example2"},
 		)
-		Expect(q.String()).To(LookLike(`
-			SELECT *
-			FROM
-				example1,
-				example2
+		Expect(q.String()).To(matchers.LookLike(`
+				SELECT *
+				FROM
+					example1,
+					example2;
+				∅
 		`))
 	})
 
@@ -75,11 +79,12 @@ var _ = Describe("From", func() {
 		).As("A").From(
 			&testSource{name: "example2"},
 		).As("B")
-		Expect(q.String()).To(LookLike(`
-			SELECT *
-			FROM
-				example1 AS A,
-				example2 AS B
+		Expect(q.String()).To(matchers.LookLike(`
+				SELECT *
+				FROM
+					example1 AS A,
+					example2 AS B;
+				∅
 		`))
 	})
 
@@ -103,9 +108,10 @@ var _ = Describe("From", func() {
 var _ = Describe("Limits", func() {
 	It("Sets a count limit", func() {
 		q := query.Select().Limit(30)
-		Expect(q.String()).To(LookLike(`
-			SELECT *
-			LIMIT 30
+		Expect(q.String()).To(matchers.LookLike(`
+				SELECT *
+				LIMIT 30;
+				∅
 		`))
 	})
 })

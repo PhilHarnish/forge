@@ -13,15 +13,23 @@ type QueryResultsSource interface {
 
 type QueryResults interface {
 	HasNext() bool
-	Next() *weight.WeightedStringsSet
+	Next() QueryResult
+}
+
+type QueryResult = *weight.WeightedString
+
+func QueryResultsString(results QueryResults) string {
+
+	return ""
 }
 
 type queryResults struct {
-	query *Query
-	heap  queryResultHeap
+	query    *Query
+	returned int
+	heap     queryResultHeap
 }
 
-type queryResultHeap []*weight.WeightedStringsSet
+type queryResultHeap []QueryResult
 
 func newQueryResults(query *Query) *queryResults {
 	return &queryResults{
@@ -30,11 +38,12 @@ func newQueryResults(query *Query) *queryResults {
 }
 
 func (results *queryResults) HasNext() bool {
-	return len(results.getHeap()) > 0
+	return (results.query.limit == 0 || results.returned < results.query.limit) && len(results.getHeap()) > 0
 }
 
-func (results *queryResults) Next() *weight.WeightedStringsSet {
-	return results.heap.Pop().(*weight.WeightedStringsSet)
+func (results *queryResults) Next() QueryResult {
+	results.returned++
+	return results.heap.Next()
 }
 
 func (results *queryResults) getHeap() queryResultHeap {
@@ -56,23 +65,7 @@ func (h queryResultHeap) Len() int {
 }
 
 func (h queryResultHeap) Less(i int, j int) bool {
-	index := 0
-	iResults := *h[i]
-	jResults := *h[j]
-	iLen := len(iResults)
-	jLen := len(jResults)
-	maxIndex := iLen - 1
-	if jLen < iLen {
-		maxIndex = jLen - 1
-	}
-	for index < maxIndex {
-		if iResults[index].Weight > jResults[index].Weight {
-			return true
-		}
-		index++
-	}
-	// NB: "Less" is inverted to implement a max-heap.
-	return iResults[index].Weight > jResults[index].Weight
+	return h[i].Weight > h[j].Weight
 }
 
 func (h queryResultHeap) Swap(i int, j int) {
@@ -80,7 +73,7 @@ func (h queryResultHeap) Swap(i int, j int) {
 }
 
 func (h *queryResultHeap) Push(item interface{}) {
-	*h = append(*h, item.(*weight.WeightedStringsSet))
+	*h = append(*h, item.(QueryResult))
 }
 
 func (h *queryResultHeap) Pop() interface{} {
@@ -91,6 +84,6 @@ func (h *queryResultHeap) Pop() interface{} {
 	return result
 }
 
-func (h *queryResultHeap) Next() *weight.WeightedStringsSet {
-	return heap.Pop(h).(*weight.WeightedStringsSet)
+func (h *queryResultHeap) Next() QueryResult {
+	return heap.Pop(h).(QueryResult)
 }
