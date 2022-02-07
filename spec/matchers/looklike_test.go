@@ -44,4 +44,20 @@ var _ = Describe("LookLike", func() {
 		  indentation
 		`).NotTo(matchers.LookLike("Example\nwith\nindentation"))
 	})
+
+	It("Ignores trailing whitespace in expect", func() {
+		Expect(`
+			Normal line
+			There is whitespace after this:  
+			Normal line
+		`).To(matchers.LookLike("Normal line\nThere is whitespace after this:\nNormal line"))
+	})
+
+	It("Ignores trailing whitespace in LooksLike", func() {
+		Expect(`
+			Normal line
+			There is whitespace after this:
+			Normal line
+		`).To(matchers.LookLike("Normal line\nThere is whitespace after this:   \nNormal line"))
+	})
 })
