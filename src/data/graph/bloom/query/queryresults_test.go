@@ -8,24 +8,38 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
+var emptySource = &testSource{
+	name:    "example",
+	results: []weight.WeightedString{},
+}
+
 var _ = Describe("QueryResults", func() {
-	FIt("Reads from 1 source", func() {
-		src := &testSource{
-			name: "example",
-			results: []weight.WeightedString{
-				{
-					Weight: 0.0,
-					String: "result",
-				},
-			},
-		}
-		q := query.Select().From(src)
+	It("Can read from zero source", func() {
+		q := query.Select().From(emptySource)
 		Expect(q.String()).To(matchers.LookLike(`
-		SELECT *
-		FROM example;
-		Score | example
-		---------------
-		0.00  | result
+				SELECT *
+				FROM example;
+				∅
+		`))
+	})
+
+	It("Can read from 1 source", func() {
+		q := query.Select().From(emptySource)
+		Expect(q.String()).To(matchers.LookLike(`
+				SELECT *
+				FROM example;
+				∅
+		`))
+	})
+
+	It("Can read from 2+ sources", func() {
+		q := query.Select().From(emptySource).From(emptySource)
+		Expect(q.String()).To(matchers.LookLike(`
+			SELECT *
+			FROM
+				example,
+				example;
+			∅
 		`))
 	})
 })
