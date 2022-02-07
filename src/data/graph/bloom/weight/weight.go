@@ -7,6 +7,11 @@ import (
 
 type Weight = float64
 
+type WeightedString struct {
+	Weight Weight
+	String string
+}
+
 type WeightedStrings struct {
 	Weight  Weight
 	Strings []string
