@@ -24,9 +24,10 @@ func QueryResultsString(results QueryResults) string {
 }
 
 type queryResults struct {
-	query    *Query
-	returned int
-	heap     queryResultHeap
+	query     *Query
+	returned  int
+	remaining []queryResults
+	heap      queryResultHeap
 }
 
 type queryResultHeap []QueryResult
