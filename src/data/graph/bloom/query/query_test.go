@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/philharnish/forge/spec/matchers"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
+	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 func Test(t *testing.T) {
@@ -21,10 +22,6 @@ var _ = Describe("Select", func() {
 			"SELECT *",
 		))
 	})
-
-	It("Produces nil results by default", func() {
-		Expect(query.Select().Next()).To(BeNil())
-	})
 })
 
 type testSource struct {
@@ -32,9 +29,17 @@ type testSource struct {
 	exhausted bool
 }
 
-func (source *testSource) Next() *query.QueryResult {
+func (source *testSource) Results() query.QueryResults {
+	return source
+}
+
+func (source *testSource) HasNext() bool {
+	return !source.exhausted
+}
+
+func (source *testSource) Next() *weight.WeightedStringsSet {
 	source.exhausted = true
-	return nil
+	return &weight.WeightedStringsSet{}
 }
 
 func (source *testSource) String() string {
@@ -92,13 +97,6 @@ var _ = Describe("From", func() {
 		Expect(func() {
 			q.As("B")
 		}).Should(Panic())
-	})
-
-	It("Reads from 1 source", func() {
-		src := &testSource{name: "example"}
-		q := query.Select().From(src)
-		q.Next()
-		Expect(src.exhausted).To(BeTrue())
 	})
 })
 

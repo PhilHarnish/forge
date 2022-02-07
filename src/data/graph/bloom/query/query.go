@@ -3,51 +3,51 @@ package query
 import (
 	"fmt"
 	"strings"
+
+	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
 type Query struct {
 	limit        int
-	namedSources map[string]QuerySource
-	sources      []*querySource
-	iterator     func() *QueryResult
+	namedSources map[string]int
+	sourceNames  map[int]string
+	sources      []QueryResultsSource
 }
-
-type querySource struct {
-	name   string
-	source QuerySource
-}
-
-type QuerySource interface {
-	Next() *QueryResult
-	String() string
-}
-
-type QueryResult = struct{}
 
 func Select() *Query {
 	return &Query{
-		namedSources: map[string]QuerySource{},
+		namedSources: map[string]int{},
+		sourceNames:  map[int]string{},
 	}
 }
 
 func (query *Query) As(name string) *Query {
-	if len(query.sources) == 0 {
+	position := len(query.sources) - 1
+	if position < 0 {
 		panic("no sources available")
 	}
-	lastSource := query.sources[len(query.sources)-1]
-	if lastSource.name != "" {
+	existingName, exists := query.sourceNames[position]
+	lastSource := query.sources[position]
+	if exists {
 		panic(fmt.Sprintf(
 			"cannot name source %s '%s', already assigned name '%s'",
-			lastSource.source.String(), name, lastSource.name))
+			lastSource.String(), name, existingName))
 	}
-	lastSource.name = name
-	query.namedSources[name] = lastSource.source
+	query.namedSources[name] = position
+	query.sourceNames[position] = name
 	return query
 }
 
-func (query *Query) From(sources ...QuerySource) *Query {
+func (query *Query) From(sources ...interface{}) *Query {
 	for _, source := range sources {
-		query.sources = append(query.sources, &querySource{source: source})
+		var sourceAsQuerySource QueryResultsSource
+		switch x := source.(type) {
+		case QueryResultsSource:
+			sourceAsQuerySource = x
+		case node.NodeIterator:
+			sourceAsQuerySource = queryNodeIterator(x)
+		}
+		query.sources = append(query.sources, sourceAsQuerySource)
 	}
 	return query
 }
@@ -57,20 +57,8 @@ func (query *Query) Limit(count int) *Query {
 	return query
 }
 
-func (query *Query) Next() *QueryResult {
-	if query.iterator == nil {
-		query.iterator = func() *QueryResult {
-			for _, source := range query.sources {
-				result := source.source.Next()
-				if result != nil {
-					return result
-				}
-			}
-			return nil
-		}
-	}
-
-	return query.iterator()
+func (query *Query) Results() QueryResults {
+	return newQueryResults(query)
 }
 
 func (query *Query) String() string {
@@ -80,14 +68,15 @@ func (query *Query) String() string {
 	if len(query.sources) == 1 && len(query.namedSources) == 0 {
 		// Special case for one unnamed source.
 		lines = append(lines,
-			fmt.Sprintf("FROM %s", query.sources[0].source.String()))
+			fmt.Sprintf("FROM %s", query.sources[0].String()))
 	} else if len(query.namedSources)+len(query.sources) > 0 {
 		sources := []string{}
-		for _, source := range query.sources {
-			if source.name == "" {
-				sources = append(sources, fmt.Sprintf("\t%s", source.source.String()))
+		for position, source := range query.sources {
+			alias, exists := query.sourceNames[position]
+			if exists {
+				sources = append(sources, fmt.Sprintf("\t%s AS %s", source.String(), alias))
 			} else {
-				sources = append(sources, fmt.Sprintf("\t%s AS %s", source.source.String(), source.name))
+				sources = append(sources, fmt.Sprintf("\t%s", source.String()))
 			}
 		}
 		lines = append(lines, "FROM")
