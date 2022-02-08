@@ -92,7 +92,7 @@ func (query *Query) String() string {
 		lines = append(lines, "∅")
 	} else {
 		resultsTable := table.NewTable()
-		row := table.R()
+		row := table.R(table.Divider("="))
 		resultsTable.AppendRow(row)
 		row.AppendCell(table.C("Score"))
 		for position, source := range query.sources {

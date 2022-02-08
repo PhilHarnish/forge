@@ -23,7 +23,7 @@ var _ = Describe("QueryResults", func() {
 		SELECT *
 		FROM example;
 		Score | example
-		---------------
+		===============
 		0.00  | result
 		`))
 	})
