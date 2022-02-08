@@ -5,14 +5,13 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
-	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 var _ = Describe("QueryResults", func() {
 	It("Reads from 1 source", func() {
 		src := &testSource{
 			name: "example",
-			results: []weight.WeightedStrings{
+			results: []query.QueryResult{
 				{
 					Weight:  0.0,
 					Strings: []string{"result"},

@@ -7,7 +7,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
-	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 func Test(t *testing.T) {
@@ -27,11 +26,16 @@ var _ = Describe("Select", func() {
 
 type testSource struct {
 	name    string
-	results []weight.WeightedStrings
+	results []query.QueryResult
 }
 
 func (source *testSource) Results() query.QueryResults {
-	return source
+	sourceCopy := &testSource{
+		name:    source.name,
+		results: make([]query.QueryResult, len(source.results)),
+	}
+	copy(sourceCopy.results, source.results)
+	return sourceCopy
 }
 
 func (source *testSource) HasNext() bool {
@@ -41,7 +45,7 @@ func (source *testSource) HasNext() bool {
 func (source *testSource) Next() query.QueryResult {
 	next := source.results[0]
 	source.results = source.results[1:]
-	return &next
+	return next
 }
 
 func (source *testSource) String() string {

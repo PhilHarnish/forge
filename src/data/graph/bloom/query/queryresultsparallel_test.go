@@ -5,27 +5,42 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
-	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 var _ = Describe("QueryResults", func() {
-	It("Reads from 1 source", func() {
+	It("Reads from 2+ empty source", func() {
 		src := &testSource{
 			name: "example",
-			results: []weight.WeightedStrings{
+		}
+		q := query.Select().From(src).As("a").From(src).As("b")
+		Expect(q.String()).To(matchers.LookLike(`
+		SELECT *
+		FROM
+			example AS a,
+			example AS b;
+		∅
+		`))
+	})
+
+	It("Reads from 2+ populated sources", func() {
+		src := &testSource{
+			name: "example",
+			results: []query.QueryResult{
 				{
-					Weight:  0.0,
+					Weight:  0.5,
 					Strings: []string{"result"},
 				},
 			},
 		}
-		q := query.Select().From(src)
+		q := query.Select().From(src).As("a").From(src).As("b")
 		Expect(q.String()).To(matchers.LookLike(`
-		SELECT *
-		FROM example;
-		Score | example
-		---------------
-		0.00  | result
+			SELECT *
+			FROM
+				example AS a,
+				example AS b;
+			Score | a      | b
+			-----------------------
+			0.25  | result | result
 		`))
 	})
 })
