@@ -1,12 +1,14 @@
 package query_test
 
 import (
+	"sort"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
+	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 func Test(t *testing.T) {
@@ -24,15 +26,56 @@ var _ = Describe("Select", func() {
 	})
 })
 
+type queryRowForTests struct {
+	weight weight.Weight
+	cells  []weight.WeightedString
+}
+
+func newResults(results ...interface{}) []query.QueryRow {
+	result := []query.QueryRow{}
+	x := 0
+	for x < len(results) {
+		result = append(result, newRow([]weight.WeightedString{
+			{
+				Weight: results[x].(weight.Weight),
+				String: results[x+1].(string),
+			},
+		}))
+		x += 2
+	}
+	return result
+}
+
+func newRow(cells []weight.WeightedString) *queryRowForTests {
+	return &queryRowForTests{
+		weight: weight.CumulativeWeight(cells),
+		cells:  cells,
+	}
+}
+
+func (row *queryRowForTests) Weight() weight.Weight {
+	return row.weight
+}
+
+func (row *queryRowForTests) Cells() []query.QueryRowCell {
+	return row.cells
+}
+
+type sortableResults []query.QueryRow
+
 type testSource struct {
 	name    string
-	results []query.QueryResult
+	results sortableResults
+}
+
+func (source *testSource) Header() query.QueryRowHeader {
+	return source
 }
 
 func (source *testSource) Results() query.QueryResults {
 	sourceCopy := &testSource{
 		name:    source.name,
-		results: make([]query.QueryResult, len(source.results)),
+		results: make([]query.QueryRow, len(source.results)),
 	}
 	copy(sourceCopy.results, source.results)
 	return sourceCopy
@@ -42,7 +85,11 @@ func (source *testSource) HasNext() bool {
 	return len(source.results) > 0
 }
 
-func (source *testSource) Next() query.QueryResult {
+func (source *testSource) Labels() []string {
+	return []string{source.String()}
+}
+
+func (source *testSource) Next() query.QueryRow {
 	next := source.results[0]
 	source.results = source.results[1:]
 	return next
@@ -51,6 +98,30 @@ func (source *testSource) Next() query.QueryResult {
 func (source *testSource) String() string {
 	return source.name
 }
+
+func (source *testSource) SortResults() {
+	sort.Sort(source.results)
+}
+
+func (results sortableResults) Len() int {
+	return len(results)
+}
+
+func (results sortableResults) Less(i int, j int) bool {
+	// NB: return greater than to ensure decreasing values
+	return results[i].Weight() >= results[j].Weight()
+}
+
+func (results sortableResults) Swap(i int, j int) {
+	results[i], results[j] = results[j], results[i]
+}
+
+var _ = Describe("testSource", func() {
+	It("implements the QueryResultsSource interface", func() {
+		var src query.QueryResultsSource = &testSource{name: "example"}
+		Expect(src).NotTo(Equal(nil))
+	})
+})
 
 var _ = Describe("From", func() {
 	It("Adds 1 source", func() {

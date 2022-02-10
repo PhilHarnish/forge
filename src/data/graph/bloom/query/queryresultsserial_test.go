@@ -10,13 +10,8 @@ import (
 var _ = Describe("QueryResults", func() {
 	It("Reads from 1 source", func() {
 		src := &testSource{
-			name: "example",
-			results: []query.QueryResult{
-				{
-					Weight:  0.0,
-					Strings: []string{"result"},
-				},
-			},
+			name:    "example",
+			results: newResults(0.0, "result"),
 		}
 		q := query.Select().From(src)
 		Expect(q.String()).To(matchers.LookLike(`

@@ -23,10 +23,14 @@ func (source *queryNodeResultsSource) String() string {
 	return source.iterator.String()
 }
 
+func (source *queryNodeResultsSource) Header() QueryRowHeader {
+	return nil
+}
+
 func (results *queryNodeResults) HasNext() bool {
 	return false
 }
 
-func (results *queryNodeResults) Next() QueryResult {
+func (results *queryNodeResults) Next() QueryRow {
 	return nil
 }

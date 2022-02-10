@@ -11,7 +11,7 @@ func (results *queryResultsSerial) HasNext() bool {
 		results.getResults().HasNext()
 }
 
-func (results *queryResultsSerial) Next() QueryResult {
+func (results *queryResultsSerial) Next() QueryRow {
 	results.returned++
 	return results.results.Next()
 }

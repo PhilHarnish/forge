@@ -1,20 +1,15 @@
 package query
 
-import (
-	"github.com/philharnish/forge/src/data/graph/bloom/weight"
-)
-
 type QueryResultsSource interface {
 	Results() QueryResults
+	Header() QueryRowHeader
 	String() string
 }
 
 type QueryResults interface {
 	HasNext() bool
-	Next() QueryResult
+	Next() QueryRow
 }
-
-type QueryResult = *weight.WeightedStrings
 
 func newQueryResults(query *Query) QueryResults {
 	if len(query.sources) == 0 {

@@ -13,6 +13,7 @@ type Query struct {
 	namedSources map[string]int
 	sourceNames  map[int]string
 	sources      []QueryResultsSource
+	header       *queryRowHeader
 }
 
 func Select() *Query {
@@ -48,7 +49,11 @@ func (query *Query) From(sources ...interface{}) *Query {
 		case node.NodeIterator:
 			sourceAsQuerySource = queryNodeIterator(x)
 		}
-		query.sources = append(query.sources, sourceAsQuerySource)
+		if sourceAsQuerySource != nil {
+			query.sources = append(query.sources, sourceAsQuerySource)
+		} else {
+			panic(fmt.Sprintf("Source is invalid type: %v", source))
+		}
 	}
 	return query
 }
@@ -92,27 +97,29 @@ func (query *Query) String() string {
 		lines = append(lines, "∅")
 	} else {
 		resultsTable := table.NewTable()
-		row := table.R(table.Divider("="))
-		resultsTable.AppendRow(row)
-		row.AppendCell(table.C("Score"))
-		for position, source := range query.sources {
-			namedPosition, exists := query.sourceNames[position]
-			if exists {
-				row.AppendCell(table.C(namedPosition))
-			} else {
-				row.AppendCell(table.C(source.String()))
-			}
+		tableRow := table.R(table.Divider("="))
+		resultsTable.AppendRow(tableRow)
+		tableRow.AppendCell(table.C("Score"))
+		for _, label := range query.getColumnHeader().labels {
+			tableRow.AppendCell(table.C(label))
 		}
 		for results.HasNext() {
-			row = table.R()
-			resultsTable.AppendRow(row)
+			tableRow = table.R()
+			resultsTable.AppendRow(tableRow)
 			resultRow := results.Next()
-			row.AppendCell(table.C(fmt.Sprintf("%.2f", resultRow.Weight)))
-			for _, result := range resultRow.Strings {
-				row.AppendCell(table.C(result))
+			tableRow.AppendCell(table.C(fmt.Sprintf("%.2f", resultRow.Weight())))
+			for _, result := range resultRow.Cells() {
+				tableRow.AppendCell(table.C(result.String))
 			}
 		}
 		lines = append(lines, resultsTable.Render())
 	}
 	return strings.Join(lines, "\n")
+}
+
+func (query *Query) getColumnHeader() *queryRowHeader {
+	if query.header == nil {
+		query.header = newQueryRowHeaderForSources(query.sources, query.sourceNames)
+	}
+	return query.header
 }
