@@ -9,12 +9,12 @@ import (
 var _ = Describe("QueryRow", func() {
 	It("initially has zero weight", func() {
 		q := query.Select()
-		queryRow := query.NewQueryRowFromSources(q, nil)
+		queryRow := query.NewQueryRowFromCells(q, nil)
 		Expect(queryRow.Weight()).To(Equal(0.0))
 	})
 
 	It("expects the number of inputs to match the number of sources", func() {
 		q := query.Select().From(emptySource)
-		Expect(func() { query.NewQueryRowFromSources(q, nil) }).To(Panic())
+		Expect(func() { query.NewQueryRowFromCells(q, nil) }).To(Panic())
 	})
 })
