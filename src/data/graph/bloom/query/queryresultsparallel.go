@@ -1,28 +1,38 @@
 package query
 
+/*
+Implements:
+```
+	SELECT
+		a, b, c, ..., n
+	FROM a, b, c, ..., n
+	ORDER BY a * b * c * ... * n DESC
+```
+...where `a`, `b`, `c`, ... `n` provide monotonically decreasing values.
+*/
+
 import (
 	"container/heap"
-)
 
-// TODO: Compare the performance of...
-// 1. Store the results returned from each stream and prepare cross-product on demand.
-// 2. Store the final results returned overall and iterate those directly.
+	"github.com/philharnish/forge/src/data/graph/bloom/weight"
+)
 
 type queryResultsParallel struct {
 	query       *Query
 	sources     []QueryResults
-	output      queryResultsParallelHeap
-	sourceHeap  queryResultsParallelHeap
-	resultsHeap queryResultsParallelHeap
+	sourceRows  [][]QueryRow
+	maxResult   weight.Weight
+	sourceHeap  queryRowResultsRowHeap
+	resultsHeap queryRowResultsRowHeap
 }
 
-type queryRowGeneration struct {
-	row        QueryRow
-	generation int
-	index      int
+type queryRowResultsRow struct {
+	row   QueryRow
+	value float64
+	index int
 }
 
-type queryResultsParallelHeap []*queryRowGeneration
+type queryRowResultsRowHeap []*queryRowResultsRow
 
 func (results *queryResultsParallel) HasNext() bool {
 	results.init()
@@ -34,81 +44,85 @@ func (results *queryResultsParallel) Next() QueryRow {
 	for {
 		potentialRow := results.maybeReturnRow()
 		if potentialRow != nil {
-			results.output = append(results.output, potentialRow)
 			return potentialRow.row
 		}
 		nextBestResult := results.takeFromSource()
 		if nextBestResult != nil {
-			newResults := queryResultsParallelHeap{}
-			for _, oldResult := range results.output {
-				if oldResult.index == nextBestResult.index {
-					continue
-				}
-				newResult := &queryRowGeneration{
-					row:        oldResult.row.Copy(),
-					generation: nextBestResult.generation,
-					index:      nextBestResult.index,
-				}
-				newResult.row.ReplaceSource(nextBestResult.index, nextBestResult.row.Cells())
-				newResults = append(newResults, newResult)
-			}
-			for _, oldResult := range results.resultsHeap {
-				if oldResult.index == nextBestResult.index {
-					continue
-				}
-				newResult := &queryRowGeneration{
-					row:        oldResult.row.Copy(),
-					generation: nextBestResult.generation,
-					index:      nextBestResult.index,
-				}
-				newResult.row.ReplaceSource(nextBestResult.index, nextBestResult.row.Cells())
-				newResults = append(newResults, newResult)
-			}
-			for _, newResult := range newResults {
-				heap.Push(&results.resultsHeap, newResult)
-			}
-			if len(results.resultsHeap) == 0 && len(results.sourceHeap) == 0 {
-				panic("results exhausted")
-			}
+			reference := NewQueryRowForQuery(results.query)
+			reference.AssignCells(nextBestResult.index, 1.0, nextBestResult.row.Cells())
+			results.accumulateQueryRow(reference, nextBestResult.index, 0)
 		}
+	}
+}
+
+func (results *queryResultsParallel) accumulateQueryRow(
+	reference QueryRow, skipRow int, index int) {
+	if skipRow == index {
+		// Skip the bestResult row.
+		index++
+	}
+	if index >= len(results.sourceRows) {
+		// End of recursion reached.
+		heap.Push(&results.resultsHeap, &queryRowResultsRow{
+			row:   reference.Copy(),
+			value: reference.Weight(),
+		})
+		return
+	}
+	initialWeight := reference.Weight()
+	for _, sourceRow := range results.sourceRows[index] {
+		reference.AssignCells(index, initialWeight, sourceRow.Cells())
+		results.accumulateQueryRow(reference, skipRow, index+1)
 	}
 }
 
 func (results *queryResultsParallel) init() {
-	if results.sources != nil {
+	if results.query == nil || results.sources != nil {
 		return
 	}
 	// 0. Initialize sources.
-	results.sources = make([]QueryResults, len(results.query.sources))
+	nSources := len(results.query.sources)
+	results.sources = make([]QueryResults, nSources)
 	for index, source := range results.query.sources {
 		sourceResults := source.Results()
 		results.sources[index] = sourceResults
 		if !sourceResults.HasNext() {
-			return // Unsatisfiable.
+			// Unsatisfiable.
+			results.query = nil
+			results.sources = nil
+			return
 		}
 	}
+	results.sourceRows = make([][]QueryRow, nSources)
 	// 1. Enqueue the first result.
-	results.resultsHeap = []*queryRowGeneration{
+	firstResultRow := NewQueryRowForQuery(results.query)
+	for index, source := range results.sources {
+		// Initialize source rows.
+		result := source.Next()
+		results.sourceRows[index] = []QueryRow{result}
+		firstResultRow.AssignCells(index, firstResultRow.weight, result.Cells())
+	}
+	results.maxResult = firstResultRow.weight
+	results.resultsHeap = []*queryRowResultsRow{
 		{
-			row:        NewQueryRowFromQueryResults(results.query, results.sources),
-			generation: 0,
-			index:      -1,
+			row:   firstResultRow,
+			value: firstResultRow.weight,
 		},
 	}
 	// 2. Prime the heap with more.
-	results.sourceHeap = []*queryRowGeneration{}
+	results.sourceHeap = []*queryRowResultsRow{}
 	for index := range results.sources {
-		results.pushFromSource(index, 1) // These are the 2nd (`1`) values returned.
+		results.pushFromSource(index)
 	}
 }
 
-func (results *queryResultsParallel) maybeReturnRow() *queryRowGeneration {
+func (results *queryResultsParallel) maybeReturnRow() *queryRowResultsRow {
 	nextResultIsValid := len(results.resultsHeap) > 0
 	// Determine the newest "valid" result from the best source.
 	if nextResultIsValid && len(results.sourceHeap) > 0 {
-		// We can only ensure results are optimal when the results are older
-		// than the next-best source.
-		nextResultIsValid = results.resultsHeap[0].generation < results.sourceHeap[0].generation
+		// We can only ensure results are optimal when the next best source
+		// is guaranteed to generate an inferior result.
+		nextResultIsValid = results.resultsHeap[0].value > (results.maxResult * results.sourceHeap[0].value)
 	}
 	if nextResultIsValid {
 		return results.resultsHeap.Next()
@@ -116,50 +130,47 @@ func (results *queryResultsParallel) maybeReturnRow() *queryRowGeneration {
 	return nil
 }
 
-func (results *queryResultsParallel) takeFromSource() *queryRowGeneration {
+func (results *queryResultsParallel) takeFromSource() *queryRowResultsRow {
 	if len(results.sourceHeap) == 0 {
 		return nil
 	}
 	result := results.sourceHeap.Next()
-	source := results.sources[result.index]
-	if source.HasNext() {
-		heap.Push(&results.sourceHeap, &queryRowGeneration{
-			row:        source.Next(),
-			generation: result.generation + 1,
-			index:      result.index,
-		})
-	}
+	index := result.index
+	results.sourceRows[index] = append(results.sourceRows[index], result.row)
+	results.pushFromSource(index)
 	return result
 }
 
-func (results *queryResultsParallel) pushFromSource(index int, generation int) {
+func (results *queryResultsParallel) pushFromSource(index int) {
 	source := results.sources[index]
 	if source.HasNext() {
-		heap.Push(&results.sourceHeap, &queryRowGeneration{
-			row:        source.Next(),
-			generation: generation,
-			index:      index,
+		maxSourceWeight := results.sourceRows[index][0].Weight()
+		sourceNext := source.Next()
+		heap.Push(&results.sourceHeap, &queryRowResultsRow{
+			row:   sourceNext,
+			value: sourceNext.Weight() / maxSourceWeight,
+			index: index,
 		})
 	}
 }
 
-func (h queryResultsParallelHeap) Len() int {
+func (h queryRowResultsRowHeap) Len() int {
 	return len(h)
 }
 
-func (h queryResultsParallelHeap) Less(i int, j int) bool {
-	return h[i].row.Weight() > h[j].row.Weight()
+func (h queryRowResultsRowHeap) Less(i int, j int) bool {
+	return h[i].value > h[j].value
 }
 
-func (h queryResultsParallelHeap) Swap(i int, j int) {
+func (h queryRowResultsRowHeap) Swap(i int, j int) {
 	h[i], h[j] = h[j], h[i]
 }
 
-func (h *queryResultsParallelHeap) Push(item interface{}) {
-	*h = append(*h, item.(*queryRowGeneration))
+func (h *queryRowResultsRowHeap) Push(item interface{}) {
+	*h = append(*h, item.(*queryRowResultsRow))
 }
 
-func (h *queryResultsParallelHeap) Pop() interface{} {
+func (h *queryRowResultsRowHeap) Pop() interface{} {
 	original := *h
 	end := len(original) - 1
 	result := original[end]
@@ -167,6 +178,6 @@ func (h *queryResultsParallelHeap) Pop() interface{} {
 	return result
 }
 
-func (h *queryResultsParallelHeap) Next() *queryRowGeneration {
-	return heap.Pop(h).(*queryRowGeneration)
+func (h *queryRowResultsRowHeap) Next() *queryRowResultsRow {
+	return heap.Pop(h).(*queryRowResultsRow)
 }

@@ -8,6 +8,8 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
+const QUERY_MAX_ROWS = 1000
+
 type Query struct {
 	limit        int
 	namedSources map[string]int
@@ -75,6 +77,11 @@ func (query *Query) String() string {
 		// Special case for one unnamed source.
 		lines = append(lines,
 			fmt.Sprintf("FROM %s", query.sources[0].String()))
+	} else if len(query.sources) == 1 && len(query.namedSources) == 1 {
+		// Special case for one named source.
+		alias := query.sourceNames[0]
+		lines = append(lines,
+			fmt.Sprintf("FROM %s AS %s", query.sources[0].String(), alias))
 	} else if len(query.namedSources)+len(query.sources) > 0 {
 		sources := []string{}
 		for position, source := range query.sources {
@@ -100,11 +107,16 @@ func (query *Query) String() string {
 		tableRow := table.R(table.Divider("="))
 		resultsTable.AppendRow(tableRow)
 		tableRow.AppendCell(table.C("Score"))
-		for _, label := range query.getColumnHeader().labels {
+		for _, label := range query.Header().Labels() {
 			tableRow.AppendCell(table.C(label))
 		}
+		i := 0
 		for results.HasNext() {
+			i++
 			tableRow = table.R()
+			if (query.limit != 0 && i > query.limit) || i > QUERY_MAX_ROWS {
+				break
+			}
 			resultsTable.AppendRow(tableRow)
 			resultRow := results.Next()
 			tableRow.AppendCell(table.C(fmt.Sprintf("%.2f", resultRow.Weight())))
@@ -117,9 +129,9 @@ func (query *Query) String() string {
 	return strings.Join(lines, "\n")
 }
 
-func (query *Query) getColumnHeader() *queryRowHeader {
+func (query *Query) Header() QueryRowHeader {
 	if query.header == nil {
-		query.header = newQueryRowHeaderForSources(query.sources, query.sourceNames)
+		query.header = newQueryRowHeaderForQuery(query)
 	}
 	return query.header
 }

@@ -2,6 +2,7 @@ package query_test
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -52,12 +53,12 @@ var _ = Describe("QueryResults parallel", func() {
 			name:    "b",
 			results: newResults(0.5, "ba", 0.25, "bb"),
 		}
-		q := query.Select().From(a, b)
+		q := query.Select().From(a).As("a").From(b).As("b")
 		Expect(q.String()).To(matchers.LookLike(`
 				SELECT *
 				FROM
-					a,
-					b;
+					a AS a,
+					b AS b;
 				Score | a  | b
 				===============
 				0.50  | aa | ba
@@ -72,7 +73,7 @@ var _ = Describe("QueryResults parallel", func() {
 
 	It("Iterates streams returns results with decreasing value", func() {
 		rand.Seed(GinkgoRandomSeed())
-		size := 3
+		size := 5
 		a := &testSource{
 			name:    "a",
 			results: make([]query.QueryRow, size),
@@ -85,32 +86,44 @@ var _ = Describe("QueryResults parallel", func() {
 			name:    "c",
 			results: make([]query.QueryRow, size),
 		}
-		for size > 0 {
-			size--
-			score := rand.Float64()
-			a.results[size] = newRow([]weight.WeightedString{
+		i := 0
+		score := rand.Float64()
+		for i < size {
+			a.results[i] = newRow([]weight.WeightedString{
 				{
 					Weight: score,
 					String: fmt.Sprintf("a%.02f", score),
 				},
 			})
-			b.results[size] = newRow([]weight.WeightedString{
+			score = rand.Float64()
+			b.results[i] = newRow([]weight.WeightedString{
 				{
 					Weight: score,
 					String: fmt.Sprintf("b%.02f", score),
 				},
 			})
-			c.results[size] = newRow([]weight.WeightedString{
+			score = rand.Float64()
+			c.results[i] = newRow([]weight.WeightedString{
 				{
 					Weight: score,
 					String: fmt.Sprintf("c%.02f", score),
 				},
 			})
+			i++
 		}
 		a.SortResults()
 		b.SortResults()
 		c.SortResults()
 		q := query.Select().From(a, b, c)
-		Expect(q.String()).To(matchers.LookLike(""))
+		results := q.Results()
+		last := math.Inf(1)
+		count := 0
+		for results.HasNext() {
+			next := results.Next()
+			Expect(next.Weight()).To(BeNumerically("<=", last, 0.01))
+			last = next.Weight()
+			count++
+		}
+		Expect(count).To(Equal(len(a.results) * len(b.results) * len(c.results)))
 	})
 })
