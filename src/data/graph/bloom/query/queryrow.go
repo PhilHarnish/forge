@@ -137,3 +137,7 @@ func (h *QueryRows) Pop() interface{} {
 func (h *QueryRows) Next() QueryRow {
 	return heap.Pop(h).(QueryRow)
 }
+
+func (h *QueryRows) Insert(item QueryRow) {
+	heap.Push(h, item)
+}
