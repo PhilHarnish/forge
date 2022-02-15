@@ -41,10 +41,6 @@ func newResults(results ...interface{}) []query.QueryRow {
 	return result
 }
 
-func newRow(cells []weight.WeightedString) query.QueryRow {
-	return query.NewQueryRow(cells)
-}
-
 type sortableResults []query.QueryRow
 
 type testSource struct {
