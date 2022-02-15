@@ -96,9 +96,9 @@ var _ = Describe("QueryRows", func() {
 
 	It("inserts items", func() {
 		var h query.QueryRows = newResults()
-		h.Insert(newRow([]weight.WeightedString{{Weight: 1.0, String: "first"}}))
-		h.Insert(newRow([]weight.WeightedString{{Weight: 0.5, String: "middle"}}))
-		h.Insert(newRow([]weight.WeightedString{{Weight: 0.1, String: "last"}}))
+		h.Insert(query.NewQueryRow([]weight.WeightedString{{Weight: 1.0, String: "first"}}))
+		h.Insert(query.NewQueryRow([]weight.WeightedString{{Weight: 0.5, String: "middle"}}))
+		h.Insert(query.NewQueryRow([]weight.WeightedString{{Weight: 0.1, String: "last"}}))
 		row := h.Next()
 		Expect(row.Weight()).To(Equal(1.0))
 		Expect(row.Cells()[0].String).To(Equal("first"))

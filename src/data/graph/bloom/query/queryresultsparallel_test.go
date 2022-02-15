@@ -89,21 +89,21 @@ var _ = Describe("QueryResults parallel", func() {
 		i := 0
 		score := rand.Float64()
 		for i < size {
-			a.results[i] = newRow([]weight.WeightedString{
+			a.results[i] = query.NewQueryRow([]weight.WeightedString{
 				{
 					Weight: score,
 					String: fmt.Sprintf("a%.02f", score),
 				},
 			})
 			score = rand.Float64()
-			b.results[i] = newRow([]weight.WeightedString{
+			b.results[i] = query.NewQueryRow([]weight.WeightedString{
 				{
 					Weight: score,
 					String: fmt.Sprintf("b%.02f", score),
 				},
 			})
 			score = rand.Float64()
-			c.results[i] = newRow([]weight.WeightedString{
+			c.results[i] = query.NewQueryRow([]weight.WeightedString{
 				{
 					Weight: score,
 					String: fmt.Sprintf("c%.02f", score),

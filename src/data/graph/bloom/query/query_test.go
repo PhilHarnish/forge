@@ -26,16 +26,11 @@ var _ = Describe("Select", func() {
 	})
 })
 
-type queryRowForTests struct {
-	weight weight.Weight
-	cells  []weight.WeightedString
-}
-
 func newResults(results ...interface{}) []query.QueryRow {
 	result := []query.QueryRow{}
 	x := 0
 	for x < len(results) {
-		result = append(result, newRow([]weight.WeightedString{
+		result = append(result, query.NewQueryRow([]weight.WeightedString{
 			{
 				Weight: results[x].(weight.Weight),
 				String: results[x+1].(string),
@@ -46,33 +41,8 @@ func newResults(results ...interface{}) []query.QueryRow {
 	return result
 }
 
-func newRow(cells []weight.WeightedString) *queryRowForTests {
-	return &queryRowForTests{
-		weight: weight.CumulativeWeight(cells),
-		cells:  cells,
-	}
-}
-
-func (row *queryRowForTests) Weight() weight.Weight {
-	return row.weight
-}
-
-func (row *queryRowForTests) Cells() []query.QueryRowCell {
-	return row.cells
-}
-
-func (row *queryRowForTests) AssignCells(index int, baseWeight weight.Weight, cells []query.QueryRowCell) {
-	copy(row.cells[index:index], cells)
-	row.weight = weight.CumulativeWeight(row.cells)
-}
-
-func (row *queryRowForTests) Copy() query.QueryRow {
-	result := &queryRowForTests{
-		weight: row.weight,
-		cells:  make([]weight.WeightedString, len(row.cells)),
-	}
-	copy(result.cells, row.cells)
-	return result
+func newRow(cells []weight.WeightedString) query.QueryRow {
+	return query.NewQueryRow(cells)
 }
 
 type sortableResults []query.QueryRow

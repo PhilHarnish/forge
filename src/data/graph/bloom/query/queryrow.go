@@ -7,6 +7,8 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
+type QueryRowCell = weight.WeightedString
+
 type QueryRow interface {
 	Weight() weight.Weight
 	Cells() []QueryRowCell
@@ -14,7 +16,39 @@ type QueryRow interface {
 	AssignCells(index int, baseWeight weight.Weight, cells []QueryRowCell)
 }
 
-type QueryRowCell = weight.WeightedString
+type queryRow struct {
+	weight weight.Weight
+	cells  []QueryRowCell
+}
+
+func NewQueryRow(cells []QueryRowCell) QueryRow {
+	return &queryRow{
+		weight: weight.CumulativeWeight(cells),
+		cells:  cells,
+	}
+}
+
+func (row *queryRow) Weight() weight.Weight {
+	return row.weight
+}
+
+func (row *queryRow) Cells() []QueryRowCell {
+	return row.cells
+}
+
+func (row *queryRow) Copy() QueryRow {
+	result := &queryRow{
+		weight: row.weight,
+		cells:  make([]weight.WeightedString, len(row.cells)),
+	}
+	copy(result.cells, row.cells)
+	return result
+}
+
+func (row *queryRow) AssignCells(index int, baseWeight weight.Weight, cells []QueryRowCell) {
+	row.weight = baseWeight * weight.CumulativeWeight(cells)
+	copy(row.cells[index:index+len(cells)], cells)
+}
 
 type QueryRows []QueryRow
 
