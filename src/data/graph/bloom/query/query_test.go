@@ -41,11 +41,9 @@ func newResults(results ...interface{}) []query.QueryRow {
 	return result
 }
 
-type sortableResults []query.QueryRow
-
 type testSource struct {
 	name    string
-	results sortableResults
+	results query.QueryRows
 }
 
 func (source *testSource) Header() query.QueryRowHeader {
@@ -81,19 +79,6 @@ func (source *testSource) String() string {
 
 func (source *testSource) SortResults() {
 	sort.Sort(source.results)
-}
-
-func (results sortableResults) Len() int {
-	return len(results)
-}
-
-func (results sortableResults) Less(i int, j int) bool {
-	// NB: return greater than to ensure decreasing values
-	return results[i].Weight() >= results[j].Weight()
-}
-
-func (results sortableResults) Swap(i int, j int) {
-	results[i], results[j] = results[j], results[i]
 }
 
 var _ = Describe("testSource", func() {
