@@ -1,10 +1,22 @@
 package query
 
 import (
+	"container/heap"
 	"fmt"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
+
+type QueryRow interface {
+	Weight() weight.Weight
+	Cells() []QueryRowCell
+	Copy() QueryRow
+	AssignCells(index int, baseWeight weight.Weight, cells []QueryRowCell)
+}
+
+type QueryRowCell = weight.WeightedString
+
+type QueryRows []QueryRow
 
 type QueryRowHeader interface {
 	Labels() []string
@@ -48,15 +60,6 @@ func newQueryRowHeaderForQuery(query *Query) *queryRowHeader {
 	result.offsets[nSources] = len(result.labels)
 	return result
 }
-
-type QueryRow interface {
-	Weight() weight.Weight
-	Cells() []QueryRowCell
-	Copy() QueryRow
-	AssignCells(index int, baseWeight weight.Weight, cells []QueryRowCell)
-}
-
-type QueryRowCell = weight.WeightedString
 
 type queryRowForQuery struct {
 	query  *Query
@@ -105,4 +108,32 @@ func (row *queryRowForQuery) AssignCells(index int, baseWeight weight.Weight, ce
 		copy(row.cells[columnStart:columnEnd], cells)
 		row.weight = baseWeight * weight.CumulativeWeight(cells)
 	}
+}
+
+func (h QueryRows) Len() int {
+	return len(h)
+}
+
+func (h QueryRows) Less(i int, j int) bool {
+	return h[i].Weight() > h[j].Weight()
+}
+
+func (h QueryRows) Swap(i int, j int) {
+	h[i], h[j] = h[j], h[i]
+}
+
+func (h *QueryRows) Push(item interface{}) {
+	*h = append(*h, item.(QueryRow))
+}
+
+func (h *QueryRows) Pop() interface{} {
+	original := *h
+	end := len(original) - 1
+	result := original[end]
+	*h = original[:end]
+	return result
+}
+
+func (h *QueryRows) Next() QueryRow {
+	return heap.Pop(h).(QueryRow)
 }

@@ -1,6 +1,8 @@
 package query_test
 
 import (
+	"container/heap"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
@@ -69,5 +71,26 @@ var _ = Describe("QueryRow", func() {
 		Expect(row.Cells()[0].String).To(Equal("left"))
 		Expect(row.Cells()[1].String).To(Equal("left"))
 		Expect(row.Cells()[2].String).To(Equal("right"))
+	})
+})
+
+var _ = Describe("QueryRows", func() {
+	It("implements the heap interface", func() {
+		h := query.QueryRows{}
+		heap.Init(&h)
+	})
+
+	It("offers rows in decreasing weight", func() {
+		var h query.QueryRows = newResults(1.0, "first", 0.1, "last", 0.5, "middle")
+		heap.Init(&h)
+		row := h.Next()
+		Expect(row.Weight()).To(Equal(1.0))
+		Expect(row.Cells()[0].String).To(Equal("first"))
+		row = h.Next()
+		Expect(row.Weight()).To(Equal(0.5))
+		Expect(row.Cells()[0].String).To(Equal("middle"))
+		row = h.Next()
+		Expect(row.Weight()).To(Equal(0.1))
+		Expect(row.Cells()[0].String).To(Equal("last"))
 	})
 })
