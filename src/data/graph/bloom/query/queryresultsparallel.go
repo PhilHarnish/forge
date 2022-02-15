@@ -23,7 +23,7 @@ type queryResultsParallel struct {
 	sourceRows  [][]QueryRow
 	maxResult   weight.Weight
 	sourceHeap  queryRowResultsRowHeap
-	resultsHeap queryRowResultsRowHeap
+	resultsHeap QueryRows
 }
 
 type queryRowResultsRow struct {
@@ -44,7 +44,7 @@ func (results *queryResultsParallel) Next() QueryRow {
 	for {
 		potentialRow := results.maybeReturnRow()
 		if potentialRow != nil {
-			return potentialRow.row
+			return potentialRow
 		}
 		nextBestResult := results.takeFromSource()
 		if nextBestResult != nil {
@@ -63,10 +63,7 @@ func (results *queryResultsParallel) accumulateQueryRow(
 	}
 	if index >= len(results.sourceRows) {
 		// End of recursion reached.
-		heap.Push(&results.resultsHeap, &queryRowResultsRow{
-			row:   reference.Copy(),
-			value: reference.Weight(),
-		})
+		heap.Push(&results.resultsHeap, reference.Copy())
 		return
 	}
 	initialWeight := reference.Weight()
@@ -103,12 +100,7 @@ func (results *queryResultsParallel) init() {
 		firstResultRow.AssignCells(index, firstResultRow.weight, result.Cells())
 	}
 	results.maxResult = firstResultRow.weight
-	results.resultsHeap = []*queryRowResultsRow{
-		{
-			row:   firstResultRow,
-			value: firstResultRow.weight,
-		},
-	}
+	results.resultsHeap = QueryRows{firstResultRow}
 	// 2. Prime the heap with more.
 	results.sourceHeap = []*queryRowResultsRow{}
 	for index := range results.sources {
@@ -116,13 +108,13 @@ func (results *queryResultsParallel) init() {
 	}
 }
 
-func (results *queryResultsParallel) maybeReturnRow() *queryRowResultsRow {
+func (results *queryResultsParallel) maybeReturnRow() QueryRow {
 	nextResultIsValid := len(results.resultsHeap) > 0
 	// Determine the newest "valid" result from the best source.
 	if nextResultIsValid && len(results.sourceHeap) > 0 {
 		// We can only ensure results are optimal when the next best source
 		// is guaranteed to generate an inferior result.
-		nextResultIsValid = results.resultsHeap[0].value > (results.maxResult * results.sourceHeap[0].value)
+		nextResultIsValid = results.resultsHeap[0].Weight() > (results.maxResult * results.sourceHeap[0].value)
 	}
 	if nextResultIsValid {
 		return results.resultsHeap.Next()
