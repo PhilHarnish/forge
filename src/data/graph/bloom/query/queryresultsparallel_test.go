@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sort"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -111,9 +112,9 @@ var _ = Describe("QueryResults parallel", func() {
 			})
 			i++
 		}
-		a.SortResults()
-		b.SortResults()
-		c.SortResults()
+		sort.Sort(a.results)
+		sort.Sort(b.results)
+		sort.Sort(c.results)
 		q := query.Select().From(a, b, c)
 		results := q.Results()
 		last := math.Inf(1)

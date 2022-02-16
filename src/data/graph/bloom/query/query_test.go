@@ -1,7 +1,6 @@
 package query_test
 
 import (
-	"sort"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -75,10 +74,6 @@ func (source *testSource) Next() query.QueryRow {
 
 func (source *testSource) String() string {
 	return source.name
-}
-
-func (source *testSource) SortResults() {
-	sort.Sort(source.results)
 }
 
 var _ = Describe("testSource", func() {
