@@ -66,7 +66,7 @@ func (query *Query) Limit(count int) *Query {
 }
 
 func (query *Query) Results() QueryResults {
-	return newQueryResults(query)
+	return newQueryResultsForQuery(query)
 }
 
 func (query *Query) String() string {

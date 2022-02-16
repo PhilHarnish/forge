@@ -50,26 +50,13 @@ func (source *testSource) Header() query.QueryRowHeader {
 }
 
 func (source *testSource) Results() query.QueryResults {
-	sourceCopy := &testSource{
-		name:    source.name,
-		results: make([]query.QueryRow, len(source.results)),
-	}
-	copy(sourceCopy.results, source.results)
-	return sourceCopy
-}
-
-func (source *testSource) HasNext() bool {
-	return len(source.results) > 0
+	rows := make([]query.QueryRow, len(source.results))
+	copy(rows, source.results)
+	return query.NewQueryResults(rows)
 }
 
 func (source *testSource) Labels() []string {
 	return []string{"Text"}
-}
-
-func (source *testSource) Next() query.QueryRow {
-	next := source.results[0]
-	source.results = source.results[1:]
-	return next
 }
 
 func (source *testSource) String() string {
