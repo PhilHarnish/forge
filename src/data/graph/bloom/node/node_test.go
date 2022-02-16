@@ -36,6 +36,24 @@ var _ = Describe("Match", func() {
 	})
 })
 
+var _ = Describe("Matches", func() {
+	It("Initially does not match", func() {
+		node := node.NewNode()
+		Expect(node.Matches()).To(BeFalse())
+	})
+
+	It("Matches if constructed with a match weight", func() {
+		node := node.NewNode(1.0)
+		Expect(node.Matches()).To(BeTrue())
+	})
+
+	It("Matches after Match()", func() {
+		node := node.NewNode(0)
+		node.Match(1.0)
+		Expect(node.Matches()).To(BeTrue())
+	})
+})
+
 var _ = Describe("MaskPath", func() {
 	It("Root inherits requirements from child", func() {
 		root := node.NewNode()

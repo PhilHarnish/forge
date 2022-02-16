@@ -32,6 +32,10 @@ func NewNode(matchWeight ...weight.Weight) *Node {
 	return result
 }
 
+func (node *Node) Matches() bool {
+	return node.LengthsMask&mask.Mask(0b1) == 1
+}
+
 func (node *Node) Match(weight weight.Weight) {
 	if node.MatchWeight != 0.0 {
 		panic(fmt.Errorf("duplicate attempts to set match weight (%f and %f)",
