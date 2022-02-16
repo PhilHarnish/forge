@@ -11,7 +11,7 @@ import (
 var _ = Describe("Results", func() {
 	It("Returns no results for empty Trie", func() {
 		q := query.Select().From(trie.NewTrie())
-		Expect(q.String()).To(matchers.LookLike(`
+		Expect(q.String(true)).To(matchers.LookLike(`
 				SELECT *
 				FROM Trie('', '', 0);
 				∅
@@ -22,7 +22,7 @@ var _ = Describe("Results", func() {
 		t := trie.NewTrie()
 		t.Add("child", 1.0)
 		q := query.Select().From(t)
-		Expect(q.String()).To(matchers.LookLike(`
+		Expect(q.String(true)).To(matchers.LookLike(`
 				SELECT *
 				FROM Trie('CDHIL', '     #', 0);
 				Score | Text

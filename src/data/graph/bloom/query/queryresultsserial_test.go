@@ -14,7 +14,7 @@ var _ = Describe("QueryResults", func() {
 			results: newResults(0.0, "result"),
 		}
 		q := query.Select().From(src).As("example")
-		Expect(q.String()).To(matchers.LookLike(`
+		Expect(q.String(true)).To(matchers.LookLike(`
 		SELECT *
 		FROM example AS example;
 		Score | example

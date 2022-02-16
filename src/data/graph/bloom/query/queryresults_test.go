@@ -17,7 +17,6 @@ var _ = Describe("QueryResults", func() {
 		Expect(q.String()).To(matchers.LookLike(`
 				SELECT *
 				FROM example;
-				∅
 		`))
 	})
 
@@ -26,7 +25,6 @@ var _ = Describe("QueryResults", func() {
 		Expect(q.String()).To(matchers.LookLike(`
 				SELECT *
 				FROM example;
-				∅
 		`))
 	})
 
@@ -37,7 +35,6 @@ var _ = Describe("QueryResults", func() {
 			FROM
 				example,
 				example;
-			∅
 		`))
 	})
 })

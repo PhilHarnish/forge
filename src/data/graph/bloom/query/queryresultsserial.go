@@ -22,3 +22,7 @@ func (results *queryResultsSerial) getResults() QueryResults {
 	}
 	return results.results
 }
+
+func (results *queryResultsSerial) String() string {
+	return resultsString(results.query.Header(), results)
+}

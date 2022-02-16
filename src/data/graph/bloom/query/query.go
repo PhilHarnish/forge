@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onsi/gomega/gmeasure/table"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
@@ -54,7 +53,7 @@ func (query *Query) From(sources ...interface{}) *Query {
 		if sourceAsQuerySource != nil {
 			query.sources = append(query.sources, sourceAsQuerySource)
 		} else {
-			panic(fmt.Sprintf("Source is invalid type: %v", source))
+			panic(fmt.Sprintf("Source is invalid type: %s", source))
 		}
 	}
 	return query
@@ -69,7 +68,7 @@ func (query *Query) Results() QueryResults {
 	return newQueryResultsForQuery(query)
 }
 
-func (query *Query) String() string {
+func (query *Query) String(includeResults ...bool) string {
 	lines := []string{
 		"SELECT *",
 	}
@@ -99,32 +98,8 @@ func (query *Query) String() string {
 		lines = append(lines, fmt.Sprintf("LIMIT %d", query.limit))
 	}
 	lines[len(lines)-1] = lines[len(lines)-1] + ";"
-	results := query.Results()
-	if !results.HasNext() {
-		lines = append(lines, "∅")
-	} else {
-		resultsTable := table.NewTable()
-		tableRow := table.R(table.Divider("="))
-		resultsTable.AppendRow(tableRow)
-		tableRow.AppendCell(table.C("Score"))
-		for _, label := range query.Header().Labels() {
-			tableRow.AppendCell(table.C(label))
-		}
-		i := 0
-		for results.HasNext() {
-			i++
-			tableRow = table.R()
-			if (query.limit != 0 && i > query.limit) || i > QUERY_MAX_ROWS {
-				break
-			}
-			resultsTable.AppendRow(tableRow)
-			resultRow := results.Next()
-			tableRow.AppendCell(table.C(fmt.Sprintf("%.2f", resultRow.Weight())))
-			for _, result := range resultRow.Cells() {
-				tableRow.AppendCell(table.C(result.String))
-			}
-		}
-		lines = append(lines, resultsTable.Render())
+	if len(includeResults) == 1 && includeResults[0] {
+		lines = append(lines, query.Results().String())
 	}
 	return strings.Join(lines, "\n")
 }

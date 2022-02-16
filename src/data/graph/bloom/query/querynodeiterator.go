@@ -12,6 +12,7 @@ type queryNodeResultsSource struct {
 }
 
 type queryNodeResults struct {
+	source       *queryNodeResultsSource
 	resultsQueue QueryRows
 	fringe       queryNodeFringe
 }
@@ -30,6 +31,7 @@ func queryNodeIterator(iterator node.NodeIterator) QueryResultsSource {
 
 func (source *queryNodeResultsSource) Results() QueryResults {
 	return &queryNodeResults{
+		source: source,
 		fringe: queryNodeFringe{
 			{
 				leaf: source.iterator,
@@ -38,7 +40,7 @@ func (source *queryNodeResultsSource) Results() QueryResults {
 	}
 }
 
-func (source *queryNodeResultsSource) String() string {
+func (source *queryNodeResultsSource) String(includeResults ...bool) string {
 	return source.iterator.String()
 }
 
@@ -71,6 +73,10 @@ func (results *queryNodeResults) HasNext() bool {
 
 func (results *queryNodeResults) Next() QueryRow {
 	return results.resultsQueue.Next()
+}
+
+func (results *queryNodeResults) String() string {
+	return resultsString(results.source.Header(), results)
 }
 
 func newQueryNodeCursorFromItems(parent *queryNodeCursor, items node.NodeItems) *queryNodeCursor {

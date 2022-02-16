@@ -20,7 +20,6 @@ var _ = Describe("Select", func() {
 		q := query.Select()
 		Expect(q.String()).To(matchers.LookLike(`
 		SELECT *;
-		∅
 		`))
 	})
 })
@@ -52,20 +51,25 @@ func (source *testSource) Header() query.QueryRowHeader {
 func (source *testSource) Results() query.QueryResults {
 	rows := make([]query.QueryRow, len(source.results))
 	copy(rows, source.results)
-	return query.NewQueryResults(rows)
+	return query.NewQueryResults(source.Header(), rows)
 }
 
 func (source *testSource) Labels() []string {
 	return []string{"Text"}
 }
 
-func (source *testSource) String() string {
+func (source *testSource) String(includeResults ...bool) string {
 	return source.name
 }
 
 var _ = Describe("testSource", func() {
 	It("implements the QueryResultsSource interface", func() {
 		var src query.QueryResultsSource = &testSource{name: "example"}
+		Expect(src).NotTo(Equal(nil))
+	})
+
+	It("implements the QueryResultsSource interface, recursively", func() {
+		var src query.QueryResultsSource = query.Select().From(&testSource{name: "example"})
 		Expect(src).NotTo(Equal(nil))
 	})
 })
@@ -77,7 +81,6 @@ var _ = Describe("From", func() {
 		Expect(q.String()).To(matchers.LookLike(`
 				SELECT *
 				FROM example;
-				∅
 		`))
 	})
 
@@ -91,7 +94,6 @@ var _ = Describe("From", func() {
 				FROM
 					example1,
 					example2;
-				∅
 		`))
 	})
 
@@ -106,7 +108,6 @@ var _ = Describe("From", func() {
 				FROM
 					example1 AS A,
 					example2 AS B;
-				∅
 		`))
 	})
 
@@ -133,7 +134,6 @@ var _ = Describe("Limits", func() {
 		Expect(q.String()).To(matchers.LookLike(`
 				SELECT *
 				LIMIT 30;
-				∅
 		`))
 	})
 })

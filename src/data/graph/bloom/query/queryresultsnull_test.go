@@ -10,7 +10,7 @@ import (
 var _ = Describe("queryResultsNull", func() {
 	It("Has no results", func() {
 		q := query.Select()
-		Expect(q.String()).To(matchers.LookLike(`
+		Expect(q.String(true)).To(matchers.LookLike(`
 				SELECT *;
 				∅
 		`))

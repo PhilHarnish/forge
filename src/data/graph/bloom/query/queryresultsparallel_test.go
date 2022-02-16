@@ -19,7 +19,7 @@ var _ = Describe("QueryResults parallel", func() {
 			name: "example",
 		}
 		q := query.Select().From(src).As("a").From(src).As("b")
-		Expect(q.String()).To(matchers.LookLike(`
+		Expect(q.String(true)).To(matchers.LookLike(`
 		SELECT *
 		FROM
 			example AS a,
@@ -34,7 +34,7 @@ var _ = Describe("QueryResults parallel", func() {
 			results: newResults(0.5, "result"),
 		}
 		q := query.Select().From(src).As("a").From(src).As("b")
-		Expect(q.String()).To(matchers.LookLike(`
+		Expect(q.String(true)).To(matchers.LookLike(`
 				SELECT *
 				FROM
 					example AS a,
@@ -55,7 +55,7 @@ var _ = Describe("QueryResults parallel", func() {
 			results: newResults(0.5, "ba", 0.25, "bb"),
 		}
 		q := query.Select().From(a).As("a").From(b).As("b")
-		Expect(q.String()).To(matchers.LookLike(`
+		Expect(q.String(true)).To(matchers.LookLike(`
 				SELECT *
 				FROM
 					a AS a,

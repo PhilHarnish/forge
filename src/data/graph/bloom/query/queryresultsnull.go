@@ -11,3 +11,7 @@ func (results *queryResultsNull) HasNext() bool {
 func (results *queryResultsNull) Next() QueryRow {
 	panic("No results")
 }
+
+func (results *queryResultsNull) String() string {
+	return "∅"
+}

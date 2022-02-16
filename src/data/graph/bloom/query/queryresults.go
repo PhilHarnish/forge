@@ -1,23 +1,33 @@
 package query
 
+import (
+	"fmt"
+	"strings"
+
+	"github.com/onsi/gomega/gmeasure/table"
+)
+
 type QueryResultsSource interface {
 	Results() QueryResults
 	Header() QueryRowHeader
-	String() string
+	String(includeResults ...bool) string
 }
 
 type QueryResults interface {
 	HasNext() bool
 	Next() QueryRow
+	String() string
 }
 
 type queryResults struct {
-	rows QueryRows
+	header QueryRowHeader
+	rows   QueryRows
 }
 
-func NewQueryResults(rows QueryRows) QueryResults {
+func NewQueryResults(header QueryRowHeader, rows QueryRows) QueryResults {
 	return &queryResults{
-		rows: rows,
+		header: header,
+		rows:   rows,
 	}
 }
 
@@ -31,6 +41,10 @@ func (source *queryResults) Next() QueryRow {
 	return next
 }
 
+func (source *queryResults) String() string {
+	return resultsString(source.header, source)
+}
+
 func newQueryResultsForQuery(query *Query) QueryResults {
 	if len(query.sources) == 0 {
 		return queryResultsNullSource
@@ -42,4 +56,32 @@ func newQueryResultsForQuery(query *Query) QueryResults {
 	return &queryResultsParallel{
 		query: query,
 	}
+}
+
+func resultsString(header QueryRowHeader, results QueryResults) string {
+	lines := []string{}
+	if !results.HasNext() {
+		lines = append(lines, "∅")
+	} else {
+		resultsTable := table.NewTable()
+		tableRow := table.R(table.Divider("="))
+		resultsTable.AppendRow(tableRow)
+		tableRow.AppendCell(table.C("Score"))
+		for _, label := range header.Labels() {
+			tableRow.AppendCell(table.C(label))
+		}
+		i := 0
+		for results.HasNext() {
+			i++
+			tableRow = table.R()
+			resultsTable.AppendRow(tableRow)
+			resultRow := results.Next()
+			tableRow.AppendCell(table.C(fmt.Sprintf("%.2f", resultRow.Weight())))
+			for _, result := range resultRow.Cells() {
+				tableRow.AppendCell(table.C(result.String))
+			}
+		}
+		lines = append(lines, resultsTable.Render())
+	}
+	return strings.Join(lines, "\n")
 }

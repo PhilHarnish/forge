@@ -55,6 +55,10 @@ func (results *queryResultsParallel) Next() QueryRow {
 	}
 }
 
+func (results *queryResultsParallel) String() string {
+	return resultsString(results.query.Header(), results)
+}
+
 func (results *queryResultsParallel) accumulateQueryRow(
 	reference QueryRow, skipRow int, index int) {
 	if skipRow == index {
