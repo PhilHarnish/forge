@@ -63,7 +63,7 @@ func (results *queryResultsParallel) accumulateQueryRow(
 	}
 	if index >= len(results.sourceRows) {
 		// End of recursion reached.
-		heap.Push(&results.resultsHeap, reference.Copy())
+		results.resultsHeap.Insert(reference.Copy())
 		return
 	}
 	initialWeight := reference.Weight()
