@@ -23,7 +23,7 @@ var _ = Describe("QueryRowHeader", func() {
 	It("labels child sources automatically", func() {
 		child := query.Select().From(emptySource).From(emptySource)
 		parent := query.Select().From(emptySource).From(child)
-		Expect(parent.Header().Labels()).To(Equal([]string{"_0", "_1._0", "_1._1"}))
+		Expect(parent.Header().Labels()).To(Equal([]string{"Text", "Text.Text", "Text.Text"}))
 	})
 
 	It("labels child sources with names", func() {

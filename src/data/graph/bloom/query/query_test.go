@@ -64,7 +64,7 @@ func (source *testSource) HasNext() bool {
 }
 
 func (source *testSource) Labels() []string {
-	return []string{source.String()}
+	return []string{"Text"}
 }
 
 func (source *testSource) Next() query.QueryRow {

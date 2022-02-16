@@ -77,10 +77,15 @@ func newQueryRowHeaderForQuery(query *Query) *queryRowHeader {
 	for sourceIndex, source := range sources {
 		result.offsets[sourceIndex] = len(result.labels)
 		name, exists := sourceNames[sourceIndex]
-		if !exists {
-			name = fmt.Sprintf("_%d", sourceIndex)
-		}
 		childLabels := source.Header().Labels()
+		if exists {
+			// Use alias as name.
+		} else if childLabels[0] == "" {
+			name = fmt.Sprintf("_%d", sourceIndex)
+		} else {
+			// Inherit child's name.
+			name = childLabels[0]
+		}
 		if len(childLabels) == 1 {
 			result.labels = append(result.labels, name)
 			position++
