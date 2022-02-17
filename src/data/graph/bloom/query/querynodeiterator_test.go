@@ -9,7 +9,7 @@ import (
 )
 
 var _ = Describe("Results", func() {
-	It("Returns no results for empty Trie", func() {
+	It("returns no results for empty Trie", func() {
 		q := query.Select().From(trie.NewTrie())
 		Expect(q.String(true)).To(matchers.LookLike(`
 				SELECT *
@@ -18,7 +18,7 @@ var _ = Describe("Results", func() {
 		`))
 	})
 
-	It("Returns result for shallow Trie", func() {
+	It("returns result for shallow Trie", func() {
 		t := trie.NewTrie()
 		t.Add("child", 1.0)
 		q := query.Select().From(t)
@@ -28,6 +28,25 @@ var _ = Describe("Results", func() {
 				Score | Text
 				=============
 				1.00  | child
+		`))
+	})
+
+	FIt("returns result for Trie with children", func() {
+		t := trie.NewTrie()
+		t.Add("a", .5)
+		t.Get("a").Add("c", .25)
+		t.Get("a").Add("b", 1.0)
+		q := query.Select().From(t)
+		Expect(q.String(true)).To(matchers.LookLike(`
+				SELECT *
+				FROM Trie('A', ' #', 0);
+				Score | Text
+				============
+				1.00  | ab
+				------------
+				0.50  | a
+				------------
+				0.25  | ac
 		`))
 	})
 })

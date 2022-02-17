@@ -56,19 +56,17 @@ func (results *queryNodeResults) HasNext() bool {
 	if len(results.resultsQueue) > 0 {
 		return true
 	}
-	// <otherwise, look for results>
 	for len(results.fringe) > 0 {
 		edge := results.fringe.Next()
 		if edge.leaf.Root().Matches() {
 			results.resultsQueue.Insert(newQueryNodeQueryRow(edge))
-			return true
 		}
 		items := edge.leaf.Items(node.NodeAcceptAll)
 		for items.HasNext() {
-			results.fringe = append(results.fringe, newQueryNodeCursorFromItems(edge, items))
+			heap.Push(&results.fringe, newQueryNodeCursorFromItems(edge, items))
 		}
 	}
-	return false
+	return len(results.resultsQueue) > 0
 }
 
 func (results *queryNodeResults) Next() QueryRow {
