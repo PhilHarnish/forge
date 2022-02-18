@@ -31,7 +31,7 @@ var _ = Describe("Results", func() {
 		`))
 	})
 
-	FIt("returns result for Trie with children", func() {
+	It("returns result for Trie with children", func() {
 		t := trie.NewTrie()
 		t.Add("a", .5)
 		t.Get("a").Add("c", .25)

@@ -19,8 +19,9 @@ type queryNodeResults struct {
 
 type queryNodeCursor struct {
 	parent *queryNodeCursor
+	value  weight.Weight
 	path   string
-	leaf   node.NodeIterator
+	items  node.NodeItems
 }
 
 type queryNodeFringe []*queryNodeCursor
@@ -30,14 +31,12 @@ func queryNodeIterator(iterator node.NodeIterator) QueryResultsSource {
 }
 
 func (source *queryNodeResultsSource) Results() QueryResults {
-	return &queryNodeResults{
+	results := &queryNodeResults{
 		source: source,
-		fringe: queryNodeFringe{
-			{
-				leaf: source.iterator,
-			},
-		},
+		fringe: queryNodeFringe{},
 	}
+	results.maybeExpandIterator(nil, "", source.iterator)
+	return results
 }
 
 func (source *queryNodeResultsSource) String(includeResults ...bool) string {
@@ -57,14 +56,7 @@ func (results *queryNodeResults) HasNext() bool {
 		return true
 	}
 	for len(results.fringe) > 0 {
-		edge := results.fringe.Next()
-		if edge.leaf.Root().Matches() {
-			results.resultsQueue.Insert(newQueryNodeQueryRow(edge))
-		}
-		items := edge.leaf.Items(node.NodeAcceptAll)
-		for items.HasNext() {
-			heap.Push(&results.fringe, newQueryNodeCursorFromItems(edge, items))
-		}
+		results.maybeContinueIteration(results.fringe.Next())
 	}
 	return len(results.resultsQueue) > 0
 }
@@ -77,18 +69,37 @@ func (results *queryNodeResults) String() string {
 	return resultsString(results.source.Header(), results)
 }
 
-func newQueryNodeCursorFromItems(parent *queryNodeCursor, items node.NodeItems) *queryNodeCursor {
-	path, iterator := items.Next()
-	return &queryNodeCursor{
-		parent: parent,
-		path:   path,
-		leaf:   iterator,
+func (results *queryNodeResults) maybeExpandIterator(
+	parent *queryNodeCursor, path string, iterator node.NodeIterator) {
+	if iterator.Root().Matches() {
+		results.resultsQueue.Insert(newQueryNodeQueryRow(parent, iterator.Root().MatchWeight, path))
+	}
+	items := iterator.Items(node.NodeAcceptAll)
+	if items.HasNext() {
+		heap.Push(&results.fringe, &queryNodeCursor{
+			parent: parent,
+			value:  iterator.Root().MaxWeight,
+			path:   path,
+			items:  items,
+		})
 	}
 }
 
-func newQueryNodeQueryRow(cursor *queryNodeCursor) QueryRow {
+func (results *queryNodeResults) maybeContinueIteration(parent *queryNodeCursor) {
+	parentItems := parent.items
+	childPath, childIterator := parentItems.Next()
+	results.maybeExpandIterator(parent, childPath, childIterator)
+	// If there are more items, continue iteration.
+	if parentItems.HasNext() {
+		// Lower value to the value most recently returned.
+		parent.value = childIterator.Root().MaxWeight
+		heap.Push(&results.fringe, parent)
+	}
+}
+
+func newQueryNodeQueryRow(cursor *queryNodeCursor, weight weight.Weight, suffix string) QueryRow {
 	// Join the paths to make the string.
-	end := 0
+	end := len(suffix)
 	idx := cursor
 	for idx != nil {
 		end += len(idx.path)
@@ -96,13 +107,17 @@ func newQueryNodeQueryRow(cursor *queryNodeCursor) QueryRow {
 	}
 	path := make([]byte, end)
 	idx = cursor
+	copy(path[end-len(suffix):end], []byte(suffix))
+	end -= len(suffix)
 	for idx != nil {
-		copy(path[end-len(idx.path):end], []byte(idx.path))
-		end -= len(idx.path)
+		if len(idx.path) > 0 {
+			copy(path[end-len(idx.path):end], []byte(idx.path))
+			end -= len(idx.path)
+		}
 		idx = idx.parent
 	}
 	cell := QueryRowCell{
-		Weight: cursor.leaf.Root().MatchWeight,
+		Weight: weight,
 		String: string(path),
 	}
 	return NewQueryRow([]QueryRowCell{cell})
@@ -113,7 +128,7 @@ func (h queryNodeFringe) Len() int {
 }
 
 func (h queryNodeFringe) Less(i int, j int) bool {
-	return h[i].leaf.Root().MaxWeight > h[j].leaf.Root().MaxWeight
+	return h[i].value > h[j].value
 }
 
 func (h queryNodeFringe) Swap(i int, j int) {
