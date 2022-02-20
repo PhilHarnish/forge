@@ -37,24 +37,30 @@ func (root *reTrieNode) String() string {
 	return node.Format("ReTrie", root.Root())
 }
 
-func (root *reTrieNode) linkAnyChar(child *reTrieNode) {
+func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) {
 	root.rootNode.ProvideMask = mask.ALL
 	root.rootNode.MaskDistanceToChild(1, child.rootNode)
+	if repeats {
+		root.rootNode.RepeatLengthMask(1)
+	}
 	root.links = append(root.links, &reTrieLink{
 		prefix: DOT_PREFIX,
 		node:   child,
 	})
 }
 
-func (root *reTrieNode) linkPath(path string, child *reTrieNode) {
+func (root *reTrieNode) linkPath(path string, child *reTrieNode, repeats bool) {
 	root.rootNode.MaskPathToChild(path, child.rootNode)
+	if repeats {
+		root.rootNode.RepeatLengthMask(len(path))
+	}
 	root.links = append(root.links, &reTrieLink{
 		prefix: path,
 		node:   child,
 	})
 }
 
-func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode) {
+func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool) {
 	if len(runes)%2 != 0 {
 		panic("linkRunes does not support an odd number of runes")
 	}
@@ -81,6 +87,9 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode) {
 		i += 2
 	}
 	root.rootNode.MaskDistanceToChild(1, child.rootNode)
+	if repeats {
+		root.rootNode.RepeatLengthMask(1)
+	}
 	root.rootNode.ProvideMask |= pathMask
 	root.links = append(root.links, &reTrieLink{
 		runes: filteredRunes,

@@ -194,4 +194,60 @@ var _ = Describe("ReTrie", func() {
 				└─xyz = ReTrie('', '#', 1)
 		`))
 	})
+
+	It("matches +", func() {
+		trie := retrie.NewReTrie("a+", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie('A', ' #*62...', 0)
+				└─a = ReTrie('A', '#*63...', 1)
+				• └─a = ReTrie('A', '#*63...', 1)
+				• • └─a = ReTrie('A', '#*63...', 1)
+		`))
+	})
+
+	It("matches + with suffix", func() {
+		trie := retrie.NewReTrie("a+xyz", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie('AXYZ', '    #*59...', 0)
+				└─a = ReTrie('aXYZ', '   #*60...', 0)
+				• ├─xyz = ReTrie('', '#', 1)
+				• └─a = ReTrie('aXYZ', '   #*60...', 0)
+				• • ├─xyz = ReTrie('', '#', 1)
+				• • └─a = ReTrie('aXYZ', '   #*60...', 0)
+		`))
+	})
+
+	It("matches (?:group|of|choices)+ with alt suffix", func() {
+		trie := retrie.NewReTrie("(?:a|bbbbb)+(?:xxx|yyyyyy)", 1.0)
+		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
+				ReTrie('abxy', '    #*59...', 0)
+				├─a = ReTrie('abxy', '   #*60...', 0)
+				│ ├─xxx = ReTrie('', '#', 1)
+				│ ├─yyyyyy = ReTrie('', '#', 1)
+				│ ├─a = ReTrie('abxy', '   #*60...', 0)
+				│ └─bbbbb = ReTrie('abxy', '   #*60...', 0)
+				└─bbbbb = ReTrie('abxy', '   #*60...', 0)
+				• ├─xxx = ReTrie('', '#', 1)
+				• ├─yyyyyy = ReTrie('', '#', 1)
+				• ├─a = ReTrie('abxy', '   #*60...', 0)
+				• └─bbbbb = ReTrie('abxy', '   #*60...', 0)
+		`))
+	})
+
+	It("matches (?:group|of|choices)+ which require 3x len strings", func() {
+		trie := retrie.NewReTrie("(?:aaa|bbb)+(?:xxx|yyy)", 1.0)
+		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
+				ReTrie('abxy', '      #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
+				├─aaa = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
+				│ ├─xxx = ReTrie('', '#', 1)
+				│ ├─yyy = ReTrie('', '#', 1)
+				│ ├─aaa = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
+				│ └─bbb = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
+				└─bbb = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
+				• ├─xxx = ReTrie('', '#', 1)
+				• ├─yyy = ReTrie('', '#', 1)
+				• ├─aaa = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
+				• └─bbb = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
+		`))
+	})
 })
