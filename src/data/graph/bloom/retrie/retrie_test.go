@@ -32,6 +32,14 @@ var _ = Describe("ReTrie", func() {
 		`))
 	})
 
+	It("ignores ^ and $", func() {
+		trie := retrie.NewReTrie("^x$", 1.0)
+		Expect(node.StringChildren(trie)).To(matchers.LookLike(`
+				ReTrie('X', ' #', 0)
+				└─x = ReTrie('', '#', 1)
+		`))
+	})
+
 	It("matches specified characters", func() {
 		trie := retrie.NewReTrie("abc", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`

@@ -48,6 +48,8 @@ func linker(root *reTrieNode, re *syntax.Regexp) *reTrieNode {
 		parent := newReTrieNode(node.NewNode())
 		parent.linkAnyChar(root)
 		return parent
+	case syntax.OpBeginLine, syntax.OpEndLine, syntax.OpBeginText, syntax.OpEndText:
+		return root
 	case syntax.OpEmptyMatch:
 		return root
 	case syntax.OpCharClass: // [xyz]
