@@ -24,7 +24,7 @@ func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 
 	re = re.Simplify()
 	return &reTrie{
-		rootTrieNode: linker(newReTrieNode(node.NewNode(matchWeight)), re),
+		rootTrieNode: linker(nil, newReTrieNode(node.NewNode(matchWeight)), re),
 		captureCount: captureCount,
 		captureNames: captureNames,
 	}
@@ -42,39 +42,58 @@ func (root *reTrie) String() string {
 	return root.rootTrieNode.String()
 }
 
-func linker(root *reTrieNode, re *syntax.Regexp) *reTrieNode {
+func ensureNode(given *reTrieNode) *reTrieNode {
+	if given == nil {
+		return newReTrieNode(node.NewNode())
+	}
+	return given
+}
+
+func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp) *reTrieNode {
 	switch re.Op {
+	case syntax.OpAlternate:
+		parent = ensureNode(parent)
+		for _, alternative := range re.Sub {
+			linker(parent, child, alternative)
+		}
+		return parent
 	case syntax.OpAnyChar, syntax.OpAnyCharNotNL:
-		parent := newReTrieNode(node.NewNode())
-		parent.linkAnyChar(root)
+		parent = ensureNode(parent)
+		parent.linkAnyChar(child)
 		return parent
 	case syntax.OpBeginLine, syntax.OpEndLine, syntax.OpBeginText, syntax.OpEndText:
-		return root
+		if parent != nil {
+			panic(fmt.Sprintf("Cannot connect parent -> child with instruction: %d", re.Op))
+		}
+		return child
 	case syntax.OpEmptyMatch:
-		return root
+		if parent != nil {
+			panic(fmt.Sprintf("Cannot connect parent -> child with instruction: %d", re.Op))
+		}
+		return child
 	case syntax.OpCharClass: // [xyz]
-		parent := newReTrieNode(node.NewNode())
-		parent.linkRunes(re.Rune, root)
+		parent = ensureNode(parent)
+		parent.linkRunes(re.Rune, child)
 		return parent
 	case syntax.OpConcat: // xyz
 		i := len(re.Sub)
 		for i > 0 {
 			i--
-			root = linker(root, re.Sub[i])
+			parent, child = nil, linker(parent, child, re.Sub[i])
 		}
-		return root
+		return child
 	case syntax.OpLiteral: // x
-		parent := newReTrieNode(node.NewNode())
-		parent.linkPath(string(re.Rune), root)
+		parent = ensureNode(parent)
+		parent.linkPath(string(re.Rune), child)
 		return parent
 	case syntax.OpQuest: // x?
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpQuest with 2+ Sub options")
 		}
 		// Offer link to alternate path.
-		parent := linker(root, re.Sub[0])
+		parent = linker(parent, child, re.Sub[0])
 		// The alternate path is optional so copy this node's information.
-		parent.rootNode.Union(root.rootNode)
+		parent.rootNode.Union(child.rootNode)
 		return parent
 	}
 	panic(fmt.Sprintf("Unsupported instruction: %d", re.Op))

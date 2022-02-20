@@ -140,4 +140,14 @@ var _ = Describe("ReTrie", func() {
 				• • • └─a = ReTrie('', '#', 1)
 		`))
 	})
+
+	It("matches hidden middle alternatives", func() {
+		trie := retrie.NewReTrie("abc|axc", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie('AbCx', '   #', 0)
+				└─a = ReTrie('bCx', '  #', 0)
+				• ├─bc = ReTrie('', '#', 1)
+				• └─xc = ReTrie('', '#', 1)
+		`))
+	})
 })
