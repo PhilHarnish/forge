@@ -14,6 +14,22 @@ func TestMask(t *testing.T) {
 	RunSpecs(t, "Mask tests")
 }
 
+var _ = Describe("Default masks", func() {
+	It("NONE is matches none of ALPHABET", func() {
+		for _, c := range mask.ALPHABET {
+			m, _ := mask.AlphabetMask(c)
+			Expect(m & mask.NONE).To(Equal(mask.Mask(0)))
+		}
+	})
+
+	It("ALL is matches all of ALPHABET", func() {
+		for _, c := range mask.ALPHABET {
+			m, _ := mask.AlphabetMask(c)
+			Expect(m & mask.ALL).NotTo(Equal(mask.Mask(0)))
+		}
+	})
+})
+
 var _ = Describe("Position", func() {
 	It("Accepts all characters from ALPHABET", func() {
 		for _, c := range mask.ALPHABET {
@@ -180,6 +196,20 @@ var _ = Describe("EdgeMaskAndLength", func() {
 	})
 })
 
+var _ = Describe("LengthString", func() {
+	It("Returns empty string for 0", func() {
+		Expect(mask.LengthString(0b0)).To(Equal(""))
+	})
+
+	It("Indicates matching lengths", func() {
+		Expect(mask.LengthString(0b1011)).To(Equal("## #"))
+	})
+
+	It("Indicates when ALL_REMAINING_LENGTH is set", func() {
+		Expect(mask.LengthString(mask.Mask(0b101 | mask.ALL_REMAINING_LENGTH))).To(Equal("# #..."))
+	})
+})
+
 var _ = Describe("MaskString", func() {
 	It("Returns empty string for 0", func() {
 		Expect(mask.MaskString(0b0, 0b0)).To(Equal(""))
@@ -215,31 +245,5 @@ var _ = Describe("MaskString", func() {
 
 	It("Is not fooled by UNSET", func() {
 		Expect(mask.MaskString(mask.ALL, mask.UNSET)).To(Equal(mask.ALPHABET))
-	})
-})
-
-var _ = Describe("LengthString", func() {
-	It("Returns empty string for 0", func() {
-		Expect(mask.LengthString(0b0)).To(Equal(""))
-	})
-
-	It("Indicates matching lengths", func() {
-		Expect(mask.LengthString(0b1011)).To(Equal("## #"))
-	})
-})
-
-var _ = Describe("Default masks", func() {
-	It("NONE is matches none of ALPHABET", func() {
-		for _, c := range mask.ALPHABET {
-			m, _ := mask.AlphabetMask(c)
-			Expect(m & mask.NONE).To(Equal(mask.Mask(0)))
-		}
-	})
-
-	It("ALL is matches all of ALPHABET", func() {
-		for _, c := range mask.ALPHABET {
-			m, _ := mask.AlphabetMask(c)
-			Expect(m & mask.ALL).NotTo(Equal(mask.Mask(0)))
-		}
 	})
 })

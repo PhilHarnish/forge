@@ -19,6 +19,8 @@ const (
 	NONE      = Mask(0b0)
 	// NB: Unset is all 1s so that require is iteratively less over time.
 	UNSET = Mask(1<<SIZE) | ALL
+	// This bit indicates the end has been reached.
+	ALL_REMAINING_LENGTH = Mask(1 << 63)
 )
 
 var missingRequirementMap = [...]rune{
@@ -124,6 +126,30 @@ func EdgeMaskAndLength(edge string) (Mask, int, error) {
 }
 
 /*
+Converts lengths mask to a human-readable string.
+*/
+func LengthString(lengthMask Mask) string {
+	if lengthMask == 0 {
+		return ""
+	}
+	hasAllRemainingBit := lengthMask&ALL_REMAINING_LENGTH != 0
+	lengthMask &= ALL_REMAINING_LENGTH - 1
+	binary := strconv.FormatUint(lengthMask, 2)
+	result := strings.Builder{}
+	for i := len(binary) - 1; i >= 0; i-- {
+		if binary[i] == '0' {
+			result.WriteByte(' ')
+		} else {
+			result.WriteByte('#')
+		}
+	}
+	if hasAllRemainingBit {
+		result.WriteString("...")
+	}
+	return result.String()
+}
+
+/*
 Converts `provide` & `require` BitMasks to a human-readable string.
 */
 func MaskString(provide Mask, require Mask) string {
@@ -147,23 +173,4 @@ func MaskString(provide Mask, require Mask) string {
 		}
 	}
 	return acc.String()
-}
-
-/*
-Converts lengths mask to a human-readable string.
-*/
-func LengthString(lengths Mask) string {
-	if lengths == 0 {
-		return ""
-	}
-	binary := strconv.FormatUint(lengths, 2)
-	result := strings.Builder{}
-	for i := len(binary) - 1; i >= 0; i-- {
-		if binary[i] == '0' {
-			result.WriteByte(' ')
-		} else {
-			result.WriteByte('#')
-		}
-	}
-	return result.String()
 }
