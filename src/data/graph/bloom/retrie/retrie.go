@@ -44,6 +44,10 @@ func (root *reTrie) String() string {
 
 func linker(root *reTrieNode, re *syntax.Regexp) *reTrieNode {
 	switch re.Op {
+	case syntax.OpAnyChar, syntax.OpAnyCharNotNL:
+		parent := newReTrieNode(node.NewNode())
+		parent.linkAnyChar(root)
+		return parent
 	case syntax.OpEmptyMatch:
 		return root
 	case syntax.OpCharClass: // [xyz]

@@ -1,6 +1,7 @@
 package retrie
 
 import (
+	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
@@ -11,6 +12,8 @@ type reTrieItems struct {
 	runeIndex  int
 	runeOffset rune
 }
+
+const DOT_PREFIX = "."
 
 func newTrieItems(acceptor node.NodeAcceptor, root *reTrieNode) *reTrieItems {
 	return &reTrieItems{
@@ -25,7 +28,14 @@ func (items *reTrieItems) HasNext() bool {
 
 func (items *reTrieItems) Next() (string, node.NodeIterator) {
 	link := items.root.links[items.index]
-	if link.runes == nil {
+	if link.prefix == DOT_PREFIX {
+		prefix := string(mask.ALPHABET[items.runeIndex])
+		items.runeIndex++
+		if items.runeIndex >= mask.SIZE {
+			items.index++
+		}
+		return prefix, link.node
+	} else if link.runes == nil {
 		items.index++
 		return link.prefix, link.node
 	}

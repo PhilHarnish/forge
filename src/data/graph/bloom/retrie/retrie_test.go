@@ -6,6 +6,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
+	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/retrie"
 )
@@ -72,6 +73,25 @@ var _ = Describe("ReTrie", func() {
 				├─y = ReTrie('', '#', 1)
 				└─z = ReTrie('', '#', 1)
 		`))
+	})
+
+	It("matches dot", func() {
+		trie := retrie.NewReTrie(".", 1.0)
+		Expect(trie.String()).To(Equal("ReTrie('abcdefghijklmnopqrstuvwxyz -'', ' #', 0)"))
+		items := trie.Items(node.NodeAcceptAll)
+		seen := mask.Mask(0b0)
+		for items.HasNext() {
+			path, _ := items.Next()
+			pathMask, _ := mask.EdgeMask(path)
+			seen |= pathMask
+		}
+		Expect(mask.MaskString(seen, mask.NONE)).To(Equal(mask.ALPHABET))
+	})
+
+	It("matches dot and full range the same way", func() {
+		dot := retrie.NewReTrie(".", 1.0)
+		fullRange := retrie.NewReTrie("[a-z '-]", 1.0)
+		Expect(dot.String()).To(Equal(fullRange.String()))
 	})
 
 	It("matches question mark", func() {

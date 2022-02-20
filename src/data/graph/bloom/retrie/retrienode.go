@@ -35,6 +35,15 @@ func (root *reTrieNode) String() string {
 	return node.Format("ReTrie", root.Root())
 }
 
+func (root *reTrieNode) linkAnyChar(child *reTrieNode) {
+	root.rootNode.ProvideMask = mask.ALL
+	root.rootNode.MaskDistanceToChild(1, child.rootNode)
+	root.links = append(root.links, &reTrieLink{
+		prefix: DOT_PREFIX,
+		node:   child,
+	})
+}
+
 func (root *reTrieNode) linkPath(path string, child *reTrieNode) {
 	root.rootNode.MaskPathToChild(path, child.rootNode)
 	root.links = append(root.links, &reTrieLink{
