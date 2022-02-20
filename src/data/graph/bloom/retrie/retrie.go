@@ -46,20 +46,29 @@ func linker(root *reTrieNode, re *syntax.Regexp) *reTrieNode {
 	switch re.Op {
 	case syntax.OpEmptyMatch:
 		return root
-	case syntax.OpCharClass:
+	case syntax.OpCharClass: // [xyz]
 		parent := newReTrieNode(node.NewNode())
 		parent.linkRunes(re.Rune, root)
 		return parent
-	case syntax.OpConcat:
+	case syntax.OpConcat: // xyz
 		i := len(re.Sub)
 		for i > 0 {
 			i--
 			root = linker(root, re.Sub[i])
 		}
 		return root
-	case syntax.OpLiteral:
+	case syntax.OpLiteral: // x
 		parent := newReTrieNode(node.NewNode())
 		parent.linkPath(string(re.Rune), root)
+		return parent
+	case syntax.OpQuest: // x?
+		if len(re.Sub) != 1 {
+			panic("Unable to handle OpQuest with 2+ Sub options")
+		}
+		// Offer link to alternate path.
+		parent := linker(root, re.Sub[0])
+		// The alternate path is optional so copy this node's information.
+		parent.rootNode.Union(root.rootNode)
 		return parent
 	}
 	panic(fmt.Sprintf("Unsupported instruction: %d", re.Op))

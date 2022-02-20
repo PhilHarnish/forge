@@ -74,12 +74,32 @@ var _ = Describe("ReTrie", func() {
 		`))
 	})
 
+	It("matches question mark", func() {
+		trie := retrie.NewReTrie("ab?", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie('Ab', ' ##', 0)
+				└─a = ReTrie('B', '##', 1)
+				• └─b = ReTrie('', '#', 1)
+		`))
+	})
+
 	It("matches simple repeats", func() {
 		trie := retrie.NewReTrie("a{2}", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
 				ReTrie('A', '  #', 0)
 				└─a = ReTrie('A', ' #', 0)
 				• └─a = ReTrie('', '#', 1)
+		`))
+	})
+
+	It("matches simple ranges", func() {
+		trie := retrie.NewReTrie("a{2,4}", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie('A', '  ###', 0)
+				└─a = ReTrie('A', ' ###', 0)
+				• └─a = ReTrie('A', '###', 1)
+				• • └─a = ReTrie('A', '##', 1)
+				• • • └─a = ReTrie('', '#', 1)
 		`))
 	})
 })
