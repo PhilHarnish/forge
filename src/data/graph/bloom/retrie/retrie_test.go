@@ -75,6 +75,16 @@ var _ = Describe("ReTrie", func() {
 		`))
 	})
 
+	It("matches \\w special character classes", func() {
+		trie := retrie.NewReTrie(`\w`, 1.0)
+		Expect(trie.String()).To(Equal("ReTrie('abcdefghijklmnopqrstuvwxyz', ' #', 0)"))
+	})
+
+	It("matches [:alpha:] character classes", func() {
+		trie := retrie.NewReTrie(`[[:alpha:]]`, 1.0)
+		Expect(trie.String()).To(Equal("ReTrie('abcdefghijklmnopqrstuvwxyz', ' #', 0)"))
+	})
+
 	It("matches dot", func() {
 		trie := retrie.NewReTrie(".", 1.0)
 		Expect(trie.String()).To(Equal("ReTrie('abcdefghijklmnopqrstuvwxyz -'', ' #', 0)"))

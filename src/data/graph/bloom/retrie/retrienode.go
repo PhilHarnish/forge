@@ -1,6 +1,8 @@
 package retrie
 
 import (
+	"unicode"
+
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
@@ -58,18 +60,30 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode) {
 	}
 	pathMask := mask.Mask(0b0)
 	i := 0
+	filteredRunes := make([]rune, 0, len(runes))
 	for i < len(runes) {
-		rangeMask, err := mask.AlphabetMaskRange(runes[i], runes[i+1])
-		if err != nil {
+		start := runes[i]
+		end := runes[i+1]
+		rangeMask, err := mask.AlphabetMaskRange(start, end)
+		if err == nil {
+			pathMask |= rangeMask
+			filteredRunes = append(filteredRunes, runes[i])
+			filteredRunes = append(filteredRunes, runes[i+1])
+		} else if unicode.IsLetter(start) && unicode.IsLetter(end) {
+			// A letter is a reasonable character to attempt; skip.
+		} else if unicode.IsNumber(start) && unicode.IsNumber(end) {
+			// A number is a reasonable character to attempt; skip.
+		} else if start == '_' && end == '_' {
+			// _ is a reasonable character to attempt; skip.
+		} else {
 			panic(err)
 		}
-		pathMask |= rangeMask
 		i += 2
 	}
 	root.rootNode.MaskDistanceToChild(1, child.rootNode)
 	root.rootNode.ProvideMask |= pathMask
 	root.links = append(root.links, &reTrieLink{
-		runes: runes,
+		runes: filteredRunes,
 		node:  child,
 	})
 }
