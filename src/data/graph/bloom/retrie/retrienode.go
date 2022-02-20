@@ -35,7 +35,7 @@ func (root *reTrieNode) String() string {
 	return node.Format("ReTrie", root.Root())
 }
 
-func (root *reTrieNode) linkRune(path string, child *reTrieNode) {
+func (root *reTrieNode) linkPath(path string, child *reTrieNode) {
 	root.rootNode.MaskPathToChild(path, child.rootNode)
 	root.links = append(root.links, &reTrieLink{
 		prefix: path,

@@ -35,9 +35,7 @@ var _ = Describe("ReTrie", func() {
 		trie := retrie.NewReTrie("abc", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
 				ReTrie('ABC', '   #', 0)
-				└─a = ReTrie('BC', '  #', 0)
-				• └─b = ReTrie('C', ' #', 0)
-				• • └─c = ReTrie('', '#', 1)
+				└─abc = ReTrie('', '#', 1)
 		`))
 	})
 
@@ -51,6 +49,18 @@ var _ = Describe("ReTrie", func() {
 		`))
 	})
 
+	It("matches sandwiched character classes", func() {
+		trie := retrie.NewReTrie("a[bc]d", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie('AbcD', '   #', 0)
+				└─a = ReTrie('bcD', '  #', 0)
+				• ├─b = ReTrie('D', ' #', 0)
+				• │ └─d = ReTrie('', '#', 1)
+				• └─c = ReTrie('D', ' #', 0)
+				• • └─d = ReTrie('', '#', 1)
+		`))
+	})
+
 	It("matches complex character classes", func() {
 		trie := retrie.NewReTrie("[a-cxyz]", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
@@ -61,6 +71,15 @@ var _ = Describe("ReTrie", func() {
 				├─x = ReTrie('', '#', 1)
 				├─y = ReTrie('', '#', 1)
 				└─z = ReTrie('', '#', 1)
+		`))
+	})
+
+	It("matches simple repeats", func() {
+		trie := retrie.NewReTrie("a{2}", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie('A', '  #', 0)
+				└─a = ReTrie('A', ' #', 0)
+				• └─a = ReTrie('', '#', 1)
 		`))
 	})
 })
