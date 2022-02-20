@@ -19,15 +19,48 @@ var _ = Describe("ReTrie", func() {
 	It("is initially empty", func() {
 		trie := retrie.NewReTrie("", 1.0)
 		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
-			ReTrie('', '#', 1)
+				ReTrie('', '#', 1)
 		`))
 	})
 
 	It("matches specified character", func() {
 		trie := retrie.NewReTrie("x", 1.0)
 		Expect(node.StringChildren(trie)).To(matchers.LookLike(`
-			ReTrie('X', ' #', 0)
-			└─x = ReTrie('', '#', 1)
+				ReTrie('X', ' #', 0)
+				└─x = ReTrie('', '#', 1)
+		`))
+	})
+
+	It("matches specified characters", func() {
+		trie := retrie.NewReTrie("abc", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie('ABC', '   #', 0)
+				└─a = ReTrie('BC', '  #', 0)
+				• └─b = ReTrie('C', ' #', 0)
+				• • └─c = ReTrie('', '#', 1)
+		`))
+	})
+
+	It("matches simple character class", func() {
+		trie := retrie.NewReTrie("[abc]", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie('abc', ' #', 0)
+				├─a = ReTrie('', '#', 1)
+				├─b = ReTrie('', '#', 1)
+				└─c = ReTrie('', '#', 1)
+		`))
+	})
+
+	It("matches complex character classes", func() {
+		trie := retrie.NewReTrie("[a-cxyz]", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie('abcxyz', ' #', 0)
+				├─a = ReTrie('', '#', 1)
+				├─b = ReTrie('', '#', 1)
+				├─c = ReTrie('', '#', 1)
+				├─x = ReTrie('', '#', 1)
+				├─y = ReTrie('', '#', 1)
+				└─z = ReTrie('', '#', 1)
 		`))
 	})
 })

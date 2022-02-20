@@ -67,10 +67,12 @@ func linker(root *reTrieNode, instructions []syntax.Inst) *reTrieNode {
 		case syntax.InstFail, syntax.InstNop, syntax.InstMatch:
 			// Do nothing.
 		case syntax.InstRune:
-			// Do nothing.
-		case syntax.InstRune1:
 			parent := newReTrieNode(node.NewNode())
 			parent.linkRunes(instruction.Rune, root)
+			root = parent
+		case syntax.InstRune1:
+			parent := newReTrieNode(node.NewNode())
+			parent.linkRune(string(instruction.Rune), root)
 			root = parent
 		default:
 			panic(fmt.Sprintf("Unsupported instruction: %d", instruction.Op))
