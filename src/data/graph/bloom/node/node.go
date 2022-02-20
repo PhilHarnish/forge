@@ -111,6 +111,10 @@ func (node *Node) MaskPathToChild(path string, child *Node) error {
 	return nil
 }
 
+func (node *Node) RepeatLengthMask(interval int) {
+	node.LengthsMask = mask.RepeatLengths(node.LengthsMask, interval)
+}
+
 func (node *Node) Intersection(other *Node) *Node {
 	// Copy weights using MIN operation.
 	node.MatchWeight = math.Min(node.MatchWeight, other.MatchWeight)

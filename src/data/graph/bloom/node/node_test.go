@@ -171,6 +171,16 @@ var _ = Describe("MaskPathToChild", func() {
 	})
 })
 
+var _ = Describe("MaskPathToChild", func() {
+	It("Repeats path if requested", func() {
+		root := node.NewNode()
+		root.MaskPathToChild("abcd", node.NewNode(1.0))
+		root.RepeatLengthMask(4)
+		Expect(root.String()).To(Equal(
+			"Node('ABCD', '    #   #   #   #   #   #   #   #   #   #   #   #   #   #   #...', 0)"))
+	})
+})
+
 var _ = Describe("Union", func() {
 	It("Empty nodes are a no-op", func() {
 		source := node.NewNode()
