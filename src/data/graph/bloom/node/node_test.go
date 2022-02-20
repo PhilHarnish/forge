@@ -61,6 +61,12 @@ var _ = Describe("MaskPath", func() {
 		Expect(root.String()).To(Equal("Node('A', ' #', 0)"))
 	})
 
+	It("Rejects invalid input", func() {
+		root := node.NewNode()
+		err := root.MaskPath("🚫")
+		Expect(err).To(HaveOccurred())
+	})
+
 	It("Root inherits complex requirements from child", func() {
 		root := node.NewNode()
 		root.MaskPath("abc")
@@ -69,12 +75,51 @@ var _ = Describe("MaskPath", func() {
 })
 
 var _ = Describe("MaskDistanceToChild", func() {
+	It("Root inherits child at zero distance", func() {
+		root := node.NewNode()
+		child := node.NewNode(1.0)
+		child.ProvideMask, _ = mask.AlphabetMask('a')
+		root.MaskDistanceToChild(0, child)
+		Expect(root.String()).To(Equal("Node('a', '#', 1)"))
+	})
+
 	It("Root inherits simple requirements from child", func() {
 		root := node.NewNode()
 		child := node.NewNode(1.0)
 		child.ProvideMask, _ = mask.AlphabetMask('a')
 		root.MaskDistanceToChild(5, child)
 		Expect(root.String()).To(Equal("Node('a', '     #', 0)"))
+	})
+
+	It("Root ignores child requirements if root is a match", func() {
+		root := node.NewNode(1.0)
+		child := node.NewNode(1.0)
+		child.ProvideMask, _ = mask.AlphabetMask('a')
+		child.RequireMask = child.ProvideMask
+		Expect(child.String()).To(Equal("Node('A', '#', 1)"))
+		root.MaskDistanceToChild(5, child)
+		Expect(root.String()).To(Equal("Node('a', '#    #', 1)"))
+	})
+
+	It("Root ignores child requirements if child is a match", func() {
+		root := node.NewNode()
+		child := node.NewNode(1.0)
+		child.ProvideMask, _ = mask.AlphabetMask('a')
+		child.RequireMask = child.ProvideMask
+		Expect(child.String()).To(Equal("Node('A', '#', 1)"))
+		root.MaskDistanceToChild(5, child)
+		Expect(root.String()).To(Equal("Node('a', '     #', 0)"))
+	})
+
+	It("Root inherits child requirements if child is not a match", func() {
+		root := node.NewNode()
+		child := node.NewNode()
+		child.LengthsMask = 0b10
+		child.ProvideMask, _ = mask.AlphabetMask('a')
+		child.RequireMask = child.ProvideMask
+		Expect(child.String()).To(Equal("Node('A', ' #', 0)"))
+		root.MaskDistanceToChild(5, child)
+		Expect(root.String()).To(Equal("Node('A', '      #', 0)"))
 	})
 })
 
@@ -85,10 +130,36 @@ var _ = Describe("MaskPathToChild", func() {
 		Expect(root.String()).To(Equal("Node('A', ' #', 0)"))
 	})
 
+	It("Rejects unsupported paths", func() {
+		root := node.NewNode()
+		err := root.MaskPathToChild("🚫", node.NewNode(1.0))
+		Expect(err).To(HaveOccurred())
+	})
+
 	It("Root inherits complex requirements from child", func() {
 		root := node.NewNode()
 		root.MaskPathToChild("abc", node.NewNode(1.0))
 		Expect(root.String()).To(Equal("Node('ABC', '   #', 0)"))
+	})
+
+	It("Root only requires path to child if the child is itself a match", func() {
+		root := node.NewNode()
+		child := node.NewNode(1.0)
+		bridge := node.NewNode(.5)
+		bridge.MaskPathToChild("xyz", child)
+		Expect(bridge.String()).To(Equal("Node('XYZ', '#  #', 0.5)"))
+		root.MaskPathToChild("abc", bridge)
+		Expect(root.String()).To(Equal("Node('ABCxyz', '   #  #', 0)"))
+	})
+
+	It("Root inherits all requirements from child if child is not a match", func() {
+		root := node.NewNode()
+		child := node.NewNode(1.0)
+		bridge := node.NewNode()
+		bridge.MaskPathToChild("xyz", child)
+		Expect(bridge.String()).To(Equal("Node('XYZ', '   #', 0)"))
+		root.MaskPathToChild("abc", bridge)
+		Expect(root.String()).To(Equal("Node('ABCXYZ', '      #', 0)"))
 	})
 
 	It("Root merges requirements from reference zero distance away", func() {

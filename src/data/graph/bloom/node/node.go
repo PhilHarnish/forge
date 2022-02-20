@@ -69,14 +69,16 @@ func (node *Node) MaskDistanceToChild(distance int, child *Node) {
 	} else {
 		// Provide anything ANY children provides.
 		node.ProvideMask |= mask.Mask(child.ProvideMask)
+		// Inherit matching lengths.
+		node.LengthsMask |= child.LengthsMask << uint64(distance)
 		if child.RequireMask == mask.UNSET {
 			// Ignore the child's require mask if it is UNSET.
+		} else if child.Matches() {
+			// Since the child is a match no requirements are inherited.
 		} else {
 			// Require anything ALL children requires.
 			node.RequireMask &= mask.Mask(child.RequireMask)
 		}
-		// Inherit matching lengths.
-		node.LengthsMask |= child.LengthsMask << uint64(distance)
 	}
 }
 
@@ -93,15 +95,18 @@ func (node *Node) MaskPathToChild(path string, child *Node) error {
 		}
 		// Provide anything ANY children provides (including the edge itself).
 		node.ProvideMask |= edgeMask | mask.Mask(child.ProvideMask)
+		// Inherit matching lengths.
+		node.LengthsMask |= child.LengthsMask << runeLength
 		if child.RequireMask == mask.UNSET {
 			// Ignore the child's require mask if it is UNSET.
+			node.RequireMask &= edgeMask
+		} else if child.Matches() {
+			// Since the child is a match only the edge is required.
 			node.RequireMask &= edgeMask
 		} else {
 			// Require anything ALL children requires (including the edge itself).
 			node.RequireMask &= edgeMask | mask.Mask(child.RequireMask)
 		}
-		// Inherit matching lengths.
-		node.LengthsMask |= child.LengthsMask << runeLength
 	}
 	return nil
 }
