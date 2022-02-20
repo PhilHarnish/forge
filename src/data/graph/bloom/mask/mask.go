@@ -18,7 +18,8 @@ const (
 	ALL       = Mask((1 << SIZE) - 1)
 	NONE      = Mask(0b0)
 	// NB: Unset is all 1s so that require is iteratively less over time.
-	UNSET = Mask(1<<SIZE) | ALL
+	UNSET         = Mask(1<<SIZE) | ALL
+	VALID_LENGTHS = Mask((1 << 63) - 1)
 	// This bit indicates the end has been reached.
 	ALL_REMAINING_LENGTH = Mask(1 << 63)
 )
@@ -173,4 +174,13 @@ func MaskString(provide Mask, require Mask) string {
 		}
 	}
 	return acc.String()
+}
+
+/*
+Shift lengthMask while preserving ALL_REMAINING_LENGTH
+*/
+func ShiftLength(lengthMask Mask, distance int) Mask {
+	// Split apart VALID_LENGTHS and ALL_REMAINING_LENGTH, shift, then restore.
+	allRemainingBit := lengthMask & ALL_REMAINING_LENGTH
+	return ((lengthMask & VALID_LENGTHS) << distance) | allRemainingBit
 }

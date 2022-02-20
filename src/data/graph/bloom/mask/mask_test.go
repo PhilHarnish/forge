@@ -247,3 +247,18 @@ var _ = Describe("MaskString", func() {
 		Expect(mask.MaskString(mask.ALL, mask.UNSET)).To(Equal(mask.ALPHABET))
 	})
 })
+
+var _ = Describe("ShiftLength", func() {
+	It("Is a no-op for zero shift", func() {
+		Expect(mask.ShiftLength(0b111, 0)).To(Equal(mask.Mask(0b111)))
+	})
+
+	It("shifts simple numbers", func() {
+		Expect(mask.ShiftLength(0b111, 3)).To(Equal(mask.Mask(0b111000)))
+	})
+
+	It("preserves the ALL_REMAINING_LENGTH bit", func() {
+		given := mask.Mask(0b111 | mask.ALL_REMAINING_LENGTH)
+		Expect(mask.ShiftLength(given, 3)).To(Equal(mask.Mask(0b111000 | mask.ALL_REMAINING_LENGTH)))
+	})
+})
