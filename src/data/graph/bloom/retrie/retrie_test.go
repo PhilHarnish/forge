@@ -161,4 +161,37 @@ var _ = Describe("ReTrie", func() {
 				└─xyz = ReTrie('', '#', 1)
 		`))
 	})
+
+	It("matches (?:non|capturing|groups|with|different|sizes)", func() {
+		trie := retrie.NewReTrie("(?:a|bbbb|xyz)", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie('abxyz', ' # ##', 0)
+				├─a = ReTrie('', '#', 1)
+				├─bbbb = ReTrie('', '#', 1)
+				└─xyz = ReTrie('', '#', 1)
+		`))
+	})
+
+	It("matches (?:non|capturing|groups|with|shared|prefix)", func() {
+		trie := retrie.NewReTrie("(?:aaabc|aabc|abc)", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie('ABC', '   ###', 0)
+				└─a = ReTrie('aBC', '  ###', 0)
+				• ├─a = ReTrie('aBC', '  ##', 0)
+				• │ ├─abc = ReTrie('', '#', 1)
+				• │ └─bc = ReTrie('', '#', 1)
+				• └─bc = ReTrie('', '#', 1)
+		`))
+	})
+
+	It("matches (?:non|capturing|groups|with|mixed|prefix)", func() {
+		trie := retrie.NewReTrie("(?:aabc|abc|xyz)", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie('abcxyz', '   ##', 0)
+				├─a = ReTrie('aBC', '  ##', 0)
+				│ ├─abc = ReTrie('', '#', 1)
+				│ └─bc = ReTrie('', '#', 1)
+				└─xyz = ReTrie('', '#', 1)
+		`))
+	})
 })
