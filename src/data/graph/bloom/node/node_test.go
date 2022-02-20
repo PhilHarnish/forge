@@ -68,6 +68,16 @@ var _ = Describe("MaskPath", func() {
 	})
 })
 
+var _ = Describe("MaskDistanceToChild", func() {
+	It("Root inherits simple requirements from child", func() {
+		root := node.NewNode()
+		child := node.NewNode(1.0)
+		child.ProvideMask, _ = mask.AlphabetMask('a')
+		root.MaskDistanceToChild(5, child)
+		Expect(root.String()).To(Equal("Node('a', '     #', 0)"))
+	})
+})
+
 var _ = Describe("MaskPathToChild", func() {
 	It("Root inherits simple requirements from child", func() {
 		root := node.NewNode()
