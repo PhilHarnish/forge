@@ -54,7 +54,7 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp) *reTrieNod
 	case syntax.OpAlternate:
 		parent = ensureNode(parent)
 		for _, alternative := range re.Sub {
-			linker(parent, child, alternative)
+			parent = linker(parent, child, alternative)
 		}
 		return parent
 	case syntax.OpAnyChar, syntax.OpAnyCharNotNL:

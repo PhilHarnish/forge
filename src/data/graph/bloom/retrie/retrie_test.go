@@ -150,4 +150,15 @@ var _ = Describe("ReTrie", func() {
 				• └─xc = ReTrie('', '#', 1)
 		`))
 	})
+
+	It("matches alternatives which cannot be easily simplified", func() {
+		trie := retrie.NewReTrie("abc|acd|xyz", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie('abcdxyz', '   #', 0)
+				├─a = ReTrie('bCd', '  #', 0)
+				│ ├─bc = ReTrie('', '#', 1)
+				│ └─cd = ReTrie('', '#', 1)
+				└─xyz = ReTrie('', '#', 1)
+		`))
+	})
 })
