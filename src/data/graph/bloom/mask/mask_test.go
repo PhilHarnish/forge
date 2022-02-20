@@ -79,6 +79,30 @@ var _ = Describe("AlphabetMask", func() {
 	})
 })
 
+var _ = Describe("AlphabetMaskRange", func() {
+	It("Accepts a range of width zero", func() {
+		result, err := mask.AlphabetMaskRange('a', 'a')
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result).To(Equal(mask.Mask(0b1)))
+	})
+
+	It("Accepts a range of several characters", func() {
+		result, err := mask.AlphabetMaskRange('a', 'c')
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result).To(Equal(mask.Mask(0b111)))
+	})
+
+	It("Rejects invalid input", func() {
+		_, err := mask.AlphabetMaskRange('a', '🚫')
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("Rejects invalid range", func() {
+		_, err := mask.AlphabetMaskRange('a', ' ')
+		Expect(err).To(HaveOccurred())
+	})
+})
+
 var _ = Describe("AlphabetMasks", func() {
 	It("Starts empty, initially", func() {
 		masks, err := mask.AlphabetMasks(nil)

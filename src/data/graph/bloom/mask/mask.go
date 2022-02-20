@@ -54,6 +54,29 @@ func AlphabetMask(c rune) (Mask, error) {
 }
 
 /*
+Returns a BitMask for all runes between start and error, otherwise error.
+*/
+func AlphabetMaskRange(start rune, end rune) (Mask, error) {
+	startPosition, err := Position(start)
+	if err != nil {
+		return 0, err
+	}
+	endPosition, err := Position(end)
+	if err != nil {
+		return 0, err
+	}
+	delta := int(end - start)
+	// Assume positions are contiguous.
+	if delta != endPosition-startPosition {
+		return 0, fmt.Errorf("AlphabetMaskRange only supports contiguous ranges")
+	}
+	upperBits := (1 << (endPosition + 1)) - 1
+	lowerBits := (1 << startPosition) - 1
+
+	return uint64(upperBits - lowerBits), nil
+}
+
+/*
 Returns a slice of BitMasks which match required runes.
 Earlier BitMasks assume all later BitMasks also apply.
 */
