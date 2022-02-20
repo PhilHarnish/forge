@@ -2,6 +2,7 @@ package mask
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -22,12 +23,15 @@ const (
 	VALID_LENGTHS = Mask((1 << 63) - 1)
 	// This bit indicates the end has been reached.
 	ALL_REMAINING_LENGTH = Mask(1 << 63)
+	ALL_LENGTHS          = (ALL_REMAINING_LENGTH - 1) | ALL_REMAINING_LENGTH
 )
 
 var missingRequirementMap = [...]rune{
 	'Ⓐ', 'Ⓑ', 'Ⓒ', 'Ⓓ', 'Ⓔ', 'Ⓕ', 'Ⓖ', 'Ⓗ', 'Ⓘ', 'Ⓙ', 'Ⓚ', 'Ⓛ', 'Ⓜ',
 	'Ⓝ', 'Ⓞ', 'Ⓟ', 'Ⓠ', 'Ⓡ', 'Ⓢ', 'Ⓣ', 'Ⓤ', 'Ⓥ', 'Ⓦ', 'Ⓧ', 'Ⓨ', 'Ⓩ',
 }
+
+var truncateLengths = regexp.MustCompile("#{5,}$")
 
 /*
 Returns the position for the given rune if supported, otherwise error.
@@ -144,10 +148,15 @@ func LengthString(lengthMask Mask) string {
 			result.WriteByte('#')
 		}
 	}
-	if hasAllRemainingBit {
-		result.WriteString("...")
+	combined := truncateLengths.ReplaceAllLiteralString(result.String(), "")
+	delta := len(binary) - len(combined)
+	if delta > 0 {
+		combined += fmt.Sprintf("#*%d", delta)
 	}
-	return result.String()
+	if hasAllRemainingBit {
+		combined += "..."
+	}
+	return combined
 }
 
 /*
@@ -174,6 +183,25 @@ func MaskString(provide Mask, require Mask) string {
 		}
 	}
 	return acc.String()
+}
+
+/*
+Repeats lengthMask into higher bits.
+*/
+func RepeatLengths(lengthMask Mask, interval int) Mask {
+	if interval == 1 {
+		// Special case: set all bits above lowest set bit.
+		lowestBit := lengthMask & (^lengthMask + 1)
+		lowerBitMask := (lowestBit - 1) | ALL_REMAINING_LENGTH
+		allBits := (ALL_REMAINING_LENGTH - 1) ^ lowerBitMask
+		return allBits
+	}
+	for interval < 63 {
+		lengthMask |= lengthMask << interval
+		interval <<= 1
+	}
+	lengthMask |= ALL_REMAINING_LENGTH
+	return lengthMask
 }
 
 /*
