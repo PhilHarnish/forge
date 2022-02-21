@@ -9,13 +9,7 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/span"
 )
 
-type Operation interface {
-	Root() *node.Node
-	Items(acceptor node.NodeAcceptor) node.NodeItems
-	String() string
-}
-
-func And(operands ...node.NodeIterator) Operation {
+func And(operands ...node.NodeIterator) node.NodeIterator {
 	if len(operands) == 0 {
 		return null.Null
 	} else if len(operands) == 1 {
@@ -27,7 +21,7 @@ func And(operands ...node.NodeIterator) Operation {
 	}
 }
 
-func Or(operands ...node.NodeIterator) Operation {
+func Or(operands ...node.NodeIterator) node.NodeIterator {
 	if len(operands) == 0 {
 		return null.Null
 	} else if len(operands) == 1 {
@@ -39,7 +33,7 @@ func Or(operands ...node.NodeIterator) Operation {
 	}
 }
 
-func Concat(operands ...node.NodeIterator) Operation {
+func Concat(operands ...node.NodeIterator) node.NodeIterator {
 	if len(operands) == 0 {
 		return null.Null
 	} else if len(operands) == 1 {
@@ -51,7 +45,7 @@ func Concat(operands ...node.NodeIterator) Operation {
 	}
 }
 
-func Join(separator string, operands ...node.NodeIterator) Operation {
+func Join(separator string, operands ...node.NodeIterator) node.NodeIterator {
 	if len(operands) == 0 {
 		return null.Null
 	} else if len(operands) == 1 {
