@@ -24,6 +24,10 @@ var _ = Describe("ReTrie", func() {
 				ReTrie: 100
 		`))
 	})
+
+	It("rejects invalid input", func() {
+		Expect(func() { retrie.NewReTrie("[(", 1.0) }).To(Panic())
+	})
 })
 
 var _ = Describe("ReTrie syntax", func() {
@@ -219,6 +223,16 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
+	It("matches empty alternative", func() {
+		trie := retrie.NewReTrie("abc|xyz|", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie: 100 abcxyz
+				│●◌◌●
+				├abc●->ReTrie: 100
+				└xyz●->ReTrie: 100
+		`))
+	})
+
 	It("matches (?:non|capturing|groups|with|different|sizes)", func() {
 		trie := retrie.NewReTrie("(?:a|bbbb|xyz)", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
@@ -409,6 +423,7 @@ var _ = Describe("ReTrie Header + Metadata", func() {
 		trie := retrie.NewReTrie("a", 1.0)
 		Expect(trie.Header()).NotTo(BeNil())
 		Expect(trie.Header().Labels()).To(HaveLen(0))
+		Expect(trie.Metadata("a")).To(HaveLen(0))
 	})
 
 	It("has numbered headers for numbered capture groups", func() {

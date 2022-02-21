@@ -117,10 +117,11 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 		}
 		return child
 	case syntax.OpEmptyMatch:
-		if parent != nil {
-			panic(fmt.Sprintf("Cannot connect parent -> child with instruction: %d", re.Op))
+		if parent == nil {
+			return child
 		}
-		return child
+		// Allow skipping straight to child.
+		return parent.optionalPath(child, repeats)
 	case syntax.OpLiteral: // x
 		parent = ensureNode(parent)
 		parent.linkPath(string(re.Rune), child, repeats)
@@ -140,8 +141,7 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 		// Offer link to alternate path.
 		parent = linker(parent, child, re.Sub[0], repeats)
 		// Allow skipping straight to child.
-		parent = parent.optionalPath(child, repeats)
-		return parent
+		return parent.optionalPath(child, repeats)
 	case syntax.OpStar: // x*
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpStar with 2+ Sub options")
@@ -150,8 +150,7 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 		// However, child may optionally link through as well.
 		linker(child, child, re.Sub[0], true)
 		// Allow skipping straight to child.
-		parent = parent.optionalPath(child, true)
-		return parent
+		return parent.optionalPath(child, true)
 	}
 	panic(fmt.Sprintf("Unsupported instruction: %d", re.Op))
 }
