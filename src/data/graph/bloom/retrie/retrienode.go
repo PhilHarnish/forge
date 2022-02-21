@@ -5,6 +5,7 @@ import (
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/op"
 )
 
 type reTrieNode struct {
@@ -15,7 +16,7 @@ type reTrieNode struct {
 type reTrieLink struct {
 	prefix string
 	runes  []rune
-	node   *reTrieNode
+	node   node.NodeIterator
 }
 
 func newReTrieNode(root *node.Node) *reTrieNode {
@@ -95,4 +96,18 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 		runes: filteredRunes,
 		node:  child,
 	})
+}
+
+func (root *reTrieNode) optionalPath(child *reTrieNode, repeats bool) *reTrieNode {
+	merged := op.Or(root, child)
+	result := &reTrieNode{
+		rootNode: merged.Root(),
+		links: []*reTrieLink{
+			{
+				prefix: OPTIONAL_PREFIX,
+				node:   merged,
+			},
+		},
+	}
+	return result
 }

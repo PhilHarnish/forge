@@ -135,6 +135,39 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
+	It("matches question mark with suffix", func() {
+		trie := retrie.NewReTrie("ab?c", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: AbC
+				│◌◌●●
+				└a ->ReTrie: bC
+				·│◌●●
+				·├b ->ReTrie: C
+				·││◌●
+				·│└c●->ReTrie: 100
+				·└c●->ReTrie: 100
+		`))
+	})
+
+	It("matches question mark with tricky suffix", func() {
+		trie := retrie.NewReTrie("a(?:bxyz)?[a-c]", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie: ABcXYZ
+				│◌◌●◌◌◌●
+				└a ->ReTrie: aBcXYZ
+				·│◌●◌◌◌●
+				·├b●->((((Span: 'xyz' 0) + (ReTrie: abc)): XYZ) || (ReTrie: 100)): 100 XYZ
+				·││●◌◌●
+				·│└xyz ->ReTrie: abc
+				·│   │◌●
+				·│   ├a●->ReTrie: 100
+				·│   ├b●->ReTrie: 100
+				·│   └c●->ReTrie: 100
+				·├c●->ReTrie: 100
+				·└a●->ReTrie: 100
+		`))
+	})
+
 	It("matches simple repeats", func() {
 		trie := retrie.NewReTrie("a{2}", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
@@ -293,6 +326,37 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
+	It("matches *", func() {
+		trie := retrie.NewReTrie("ab*", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: Ab
+				│◌●●●···
+				└a●->ReTrie: 100 B
+				·│●●●···
+				·└b●->((ReTrie: 100 B) || (ReTrie: 100 B)): 100 B
+				· │●●●···
+				· └b●->((ReTrie: 100 B) || (ReTrie: 100 B)): 100 B
+		`))
+	})
+
+	It("matches * with suffix", func() {
+		trie := retrie.NewReTrie("ab*xyz", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie: AbXYZ
+				│◌◌◌◌●●●···
+				└a ->ReTrie: bXYZ
+				·│◌◌◌●●●···
+				·├b ->((ReTrie: bXYZ) || (ReTrie: bXYZ)): bXYZ
+				·││◌◌◌●●●···
+				·│├xyz●->((ReTrie: 100) || (ReTrie: 100)): 100
+				·│└b ->((ReTrie: bXYZ) || (ReTrie: bXYZ)): bXYZ
+				·│ │◌◌◌●●●···
+				·│ ├xyz●->((ReTrie: 100) || (ReTrie: 100)): 100
+				·│ └b ->((ReTrie: bXYZ) || (ReTrie: bXYZ)): bXYZ
+				·└xyz●->ReTrie: 100
+		`))
+	})
+
 	It("matches capturing groups", func() {
 		trie := retrie.NewReTrie("(a|b)(x|y)", 1.0)
 		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
@@ -302,6 +366,24 @@ var _ = Describe("ReTrie syntax", func() {
 				││◌●
 				│├x●->ReTrie: 100
 				│└y●->ReTrie: 100
+				└b ->ReTrie: xy
+				·│◌●
+				·├x●->ReTrie: 100
+				·└y●->ReTrie: 100
+		`))
+	})
+
+	It("matches optional capturing groups", func() {
+		trie := retrie.NewReTrie("(a|b)?(x|y)", 1.0)
+		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
+				ReTrie: abxy
+				│◌●●
+				├a ->ReTrie: xy
+				││◌●
+				│├x●->ReTrie: 100
+				│└y●->ReTrie: 100
+				├y●->ReTrie: 100
+				├x●->ReTrie: 100
 				└b ->ReTrie: xy
 				·│◌●
 				·├x●->ReTrie: 100

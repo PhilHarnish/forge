@@ -139,8 +139,18 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 		}
 		// Offer link to alternate path.
 		parent = linker(parent, child, re.Sub[0], repeats)
-		// The alternate path is optional so copy this node's information.
-		parent.rootNode.Union(child.rootNode)
+		// Allow skipping straight to child.
+		parent = parent.optionalPath(child, repeats)
+		return parent
+	case syntax.OpStar: // x*
+		if len(re.Sub) != 1 {
+			panic("Unable to handle OpStar with 2+ Sub options")
+		}
+		parent = linker(parent, child, re.Sub[0], true)
+		// However, child may optionally link through as well.
+		linker(child, child, re.Sub[0], true)
+		// Allow skipping straight to child.
+		parent = parent.optionalPath(child, true)
 		return parent
 	}
 	panic(fmt.Sprintf("Unsupported instruction: %d", re.Op))
