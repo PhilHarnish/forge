@@ -85,14 +85,15 @@ var _ = Describe("process", func() {
 			`))
 		})
 
-		XIt("Supports shared multi-rune paths", func() {
+		It("Supports shared multi-rune paths", func() {
 			a := extend(trie.NewTrie(1.0), "a", "b", "c")
 			b := extend(trie.NewTrie(.5), "abc")
 			operation := op.And(a, b)
-			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
-					OR(Trie('A', ' #', 0), Trie('XYZ', '   #', 0))
-					├─a = Trie('', '#', 1)
-					└─xyz = Trie('', '#', 0.5)
+			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
+					AND(Trie('ABC', '   #', 0), Trie('ABC', '   #', 0))
+					└─a = AND(Trie('BC', '  #', 0), CONCAT(Span('bc', 0), Trie('', '#', 0.5)))
+					• └─b = AND(Trie('C', ' #', 0), CONCAT(Span('c', 0), Trie('', '#', 0.5)))
+					• • └─c = AND(Trie('', '#', 1), Trie('', '#', 0.5))
 			`))
 		})
 
@@ -158,6 +159,17 @@ var _ = Describe("process", func() {
 			`))
 		})
 
+		It("Prefers the highest value result", func() {
+			a := extend(trie.NewTrie(1.0), "ab")
+			b := extend(trie.NewTrie(.5), "ab")
+			c := extend(trie.NewTrie(.1), "ab")
+			operation := op.Or(c, a, b)
+			items := operation.Items(node.NodeAcceptAll)
+			path, item := items.Next()
+			Expect(path).To(Equal("ab"))
+			Expect(item.Root().String()).To(Equal("Node('', '#', 1)"))
+		})
+
 		It("Supports (unique) multi-rune paths", func() {
 			a := extend(trie.NewTrie(1.0), "a")
 			b := extend(trie.NewTrie(.5), "xyz")
@@ -169,15 +181,27 @@ var _ = Describe("process", func() {
 			`))
 		})
 
-		XIt("Supports duplicative multi-rune paths", func() {
+		It("Supports duplicative multi-rune paths", func() {
 			a := extend(trie.NewTrie(1.0), "a")
 			b := extend(trie.NewTrie(.5), "abc")
 			operation := op.Or(a, b)
-			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
-					OR(Trie('C', ' #', 0), Trie('A', ' #', 0), Trie('B', ' #', 0))
-					├─a = Trie('', '#', 1)
-					├─b = Trie('', '#', 0.5)
-					└─c = Trie('', '#', 0.1)
+			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
+				OR(Trie('A', ' #', 0), Trie('ABC', '   #', 0))
+				└─a = OR(Trie('', '#', 1), CONCAT(Span('bc', 0), Trie('', '#', 0.5)))
+				• └─bc = Trie('', '#', 0.5)
+			`))
+		})
+
+		It("Reacts to paths that need to be split retroactively", func() {
+			a := extend(trie.NewTrie(1.0), "abc")
+			b := extend(trie.NewTrie(.5), "abc")
+			c := extend(trie.NewTrie(.25), "a", "b", "c")
+			operation := op.Or(a, b, c)
+			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
+					OR(Trie('ABC', '   #', 0), Trie('ABC', '   #', 0), Trie('ABC', '   #', 0))
+					└─a = OR(CONCAT(Span('bc', 0), Trie('', '#', 1)), CONCAT(Span('bc', 0), Trie('', '#', 0.5)), Trie('BC', '  #', 0))
+					• └─b = OR(CONCAT(Span('c', 0), Trie('', '#', 1)), CONCAT(Span('c', 0), Trie('', '#', 0.5)), Trie('C', ' #', 0))
+					• • └─c = OR(Trie('', '#', 1), Trie('', '#', 0.5), Trie('', '#', 0.25))
 			`))
 		})
 

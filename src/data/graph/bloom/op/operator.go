@@ -7,6 +7,7 @@ import (
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/span"
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
@@ -122,8 +123,9 @@ func processParallel(operation *operation, acceptor node.NodeAcceptor) operatorE
 				outgoingEdge.weight = itemWeight
 			} else {
 				// Duplicate edge.
-				if path != outgoingEdge.path {
-					panic("Multi-rune edges only supported when they always match")
+				if outgoingEdge.path != path {
+					// The existing path for this edge looks different; split.
+					item = outgoingEdge.updatePath(path, item)
 				}
 				if (minWeight && itemWeight < outgoingEdge.weight) ||
 					(!minWeight && itemWeight > outgoingEdge.weight) {
@@ -194,6 +196,39 @@ func processSequential(operation *operation, acceptor node.NodeAcceptor) operato
 		availableOutgoingEdges = append(availableOutgoingEdges, outgoingEdge)
 	}
 	return availableOutgoingEdges
+}
+
+func (edge *operatorEdge) updatePath(path string, item node.NodeIterator) node.NodeIterator {
+	prefix := commonPrefix(edge.path, path)
+	if prefix != edge.path {
+		// Fix existing operands.
+		originalSuffix := edge.path[len(prefix):]
+		for i, operand := range edge.operands {
+			edge.operands[i] = Concat(span.NewSpan(originalSuffix), operand)
+		}
+	}
+	if prefix != path {
+		// Fix provided path.
+		newSuffix := path[len(prefix):]
+		item = Concat(span.NewSpan(newSuffix), item)
+	}
+	edge.path = prefix
+	return item
+}
+
+func commonPrefix(a string, b string) string {
+	aLen := len(a)
+	bLen := len(b)
+	smallest := a
+	if bLen < aLen {
+		smallest = b
+	}
+	for i := range smallest {
+		if a[i] != b[i] {
+			return a[:i-1]
+		}
+	}
+	return smallest
 }
 
 func (h operatorEdgeHeap) Len() int {

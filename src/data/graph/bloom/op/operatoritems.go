@@ -19,11 +19,11 @@ func newOperatorItems(acceptor node.NodeAcceptor, operation *operation) *operato
 
 func (items *operatorItems) HasNext() bool {
 	edges := items.getHeap()
-	return len(edges) > 0
+	return len(*edges) > 0
 }
 
 func (items *operatorItems) Next() (string, node.NodeIterator) {
-	next := items.edges.Next()
+	next := items.getHeap().Next()
 	if len(next.operands) == 1 {
 		// Operation only needed for 1+ arguments.
 		return next.path, next.operands[0]
@@ -36,10 +36,10 @@ func (items *operatorItems) Next() (string, node.NodeIterator) {
 	return next.path, nextOperation
 }
 
-func (items *operatorItems) getHeap() operatorEdgeHeap {
+func (items *operatorItems) getHeap() *operatorEdgeHeap {
 	if items.edges == nil {
 		items.edges = items.operation.operator.process(
 			items.operation, items.acceptor)
 	}
-	return items.edges
+	return &items.edges
 }
