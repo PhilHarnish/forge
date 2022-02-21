@@ -5,6 +5,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
+	"github.com/philharnish/forge/src/data/graph/bloom/retrie"
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 )
 
@@ -47,6 +48,40 @@ var _ = Describe("Results", func() {
 				0.50  | a
 				------------
 				0.25  | ac
+		`))
+	})
+
+	It("returns metadata for regex", func() {
+		t := retrie.NewReTrie("(ab)(cd)", 1)
+		q := query.Select().From(t)
+		Expect(q.String(true)).To(matchers.LookLike(`
+				SELECT *
+				FROM (ReTrie: ABCD ◌◌◌◌●);
+				Score | Text.Text | Text.1 | Text.2
+				===================================
+				1.00  | abcd      | ab     | cd
+		`))
+	})
+
+	It("returns metadata for tricky regex", func() {
+		t := retrie.NewReTrie("a(bxyz)?[a-c]", 1)
+		q := query.Select().From(t)
+		Expect(q.String(true)).To(matchers.LookLike(`
+				SELECT *
+				FROM (ReTrie: ABcXYZ ◌◌●◌◌◌●);
+				Score | Text.Text | Text.1
+				==========================
+				1.00  | ab        |
+				--------------------------
+				1.00  | abxyzc    | bxyz
+				--------------------------
+				1.00  | abxyzb    | bxyz
+				--------------------------
+				1.00  | aa        |
+				--------------------------
+				1.00  | abxyza    | bxyz
+				--------------------------
+				1.00  | ac        |
 		`))
 	})
 })

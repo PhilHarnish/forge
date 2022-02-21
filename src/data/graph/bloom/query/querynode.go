@@ -50,6 +50,10 @@ func (source *queryNodeResultsSource) Header() QueryRowHeader {
 
 func (source *queryNodeResultsSource) Labels() []string {
 	labels := []string{"Text"}
+	iteratorHeaderProvider, hasHeader := source.iterator.(QueryHeaderProvider)
+	if hasHeader {
+		labels = append(labels, iteratorHeaderProvider.Header().Labels()...)
+	}
 	return labels
 }
 
@@ -74,7 +78,7 @@ func (results *queryNodeResults) String() string {
 func (results *queryNodeResults) maybeExpandIterator(
 	parent *queryNodeCursor, path string, iterator node.NodeIterator) {
 	if iterator.Root().Matches() {
-		results.resultsQueue.Insert(newQueryNodeQueryRow(parent, iterator.Root().MatchWeight, path))
+		results.resultsQueue.Insert(results.newQueryNodeQueryRow(parent, iterator.Root().MatchWeight, path))
 	}
 	items := iterator.Items(node.NodeAcceptAll)
 	if items.HasNext() {
@@ -99,7 +103,8 @@ func (results *queryNodeResults) maybeContinueIteration(parent *queryNodeCursor)
 	}
 }
 
-func newQueryNodeQueryRow(cursor *queryNodeCursor, weight weight.Weight, suffix string) QueryRow {
+func (results *queryNodeResults) newQueryNodeQueryRow(
+	cursor *queryNodeCursor, weight weight.Weight, suffix string) QueryRow {
 	// Join the paths to make the string.
 	end := len(suffix)
 	idx := cursor
@@ -118,11 +123,16 @@ func newQueryNodeQueryRow(cursor *queryNodeCursor, weight weight.Weight, suffix 
 		}
 		idx = idx.parent
 	}
-	cell := QueryRowCell{
+	pathResult := string(path)
+	cells := []QueryRowCell{{
 		Weight: weight,
-		String: string(path),
+		String: pathResult,
+	}}
+	metadataProvider, isProvider := results.source.iterator.(node.NodeMetadataProvider)
+	if isProvider {
+		cells = append(cells, metadataProvider.Metadata(pathResult)...)
 	}
-	return NewQueryRow([]QueryRowCell{cell})
+	return NewQueryRow(cells)
 }
 
 func (h queryNodeFringe) Len() int {
@@ -151,34 +161,4 @@ func (h *queryNodeFringe) Pop() interface{} {
 
 func (h *queryNodeFringe) Next() *queryNodeCursor {
 	return heap.Pop(h).(*queryNodeCursor)
-}
-
-type queryNodeQueryRow struct {
-	cells []weight.WeightedString
-}
-
-func NewQueryNodeQueryRow() *queryNodeQueryRow {
-	return &queryNodeQueryRow{
-		cells: make([]weight.WeightedString, 1),
-	}
-}
-
-func (row *queryNodeQueryRow) Weight() weight.Weight {
-	return row.cells[0].Weight
-}
-
-func (row *queryNodeQueryRow) Cells() []QueryRowCell {
-	return row.cells
-}
-
-func (row *queryNodeQueryRow) Copy() QueryRow {
-	result := &queryRowForQuery{
-		cells: make([]weight.WeightedString, len(row.cells)),
-	}
-	copy(result.cells, row.cells)
-	return result
-}
-
-func (row *queryNodeQueryRow) AssignCells(index int, baseWeight weight.Weight, cells []QueryRowCell) {
-	copy(row.cells[index:index+len(cells)], cells)
 }
