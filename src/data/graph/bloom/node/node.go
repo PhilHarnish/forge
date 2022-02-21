@@ -23,6 +23,17 @@ type Node struct {
 	LengthsMask mask.Mask
 }
 
+type NodeIterator interface {
+	Items(acceptor NodeAcceptor) NodeItems
+	Root() *Node
+	String() string
+}
+
+type NodeItems interface {
+	HasNext() bool
+	Next() (string, NodeIterator)
+}
+
 func NewNode(matchWeight ...weight.Weight) *Node {
 	result := &Node{
 		RequireMask: mask.UNSET,
@@ -152,17 +163,6 @@ func (node *Node) Weight(weight weight.Weight) {
 
 func (node *Node) String() string {
 	return Format("Node", node)
-}
-
-type NodeIterator interface {
-	Items(acceptor NodeAcceptor) NodeItems
-	Root() *Node
-	String() string
-}
-
-type NodeItems interface {
-	HasNext() bool
-	Next() (string, NodeIterator)
 }
 
 // Evaluate the `Weight` for a `node` at `path`.
