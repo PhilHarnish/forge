@@ -85,6 +85,17 @@ var _ = Describe("process", func() {
 			`))
 		})
 
+		XIt("Supports shared multi-rune paths", func() {
+			a := extend(trie.NewTrie(1.0), "a", "b", "c")
+			b := extend(trie.NewTrie(.5), "abc")
+			operation := op.And(a, b)
+			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
+					OR(Trie('A', ' #', 0), Trie('XYZ', '   #', 0))
+					├─a = Trie('', '#', 1)
+					└─xyz = Trie('', '#', 0.5)
+			`))
+		})
+
 		It("Merges redundant OR(a, OR(b, c)) to OR(a, b, c)", func() {
 			a := extend(trie.NewTrie(1.0), "a")
 			b := extend(trie.NewTrie(.5), "b")
@@ -139,6 +150,29 @@ var _ = Describe("process", func() {
 			b := extend(trie.NewTrie(.5), "b")
 			c := extend(trie.NewTrie(.1), "c")
 			operation := op.Or(c, a, b)
+			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
+					OR(Trie('C', ' #', 0), Trie('A', ' #', 0), Trie('B', ' #', 0))
+					├─a = Trie('', '#', 1)
+					├─b = Trie('', '#', 0.5)
+					└─c = Trie('', '#', 0.1)
+			`))
+		})
+
+		It("Supports (unique) multi-rune paths", func() {
+			a := extend(trie.NewTrie(1.0), "a")
+			b := extend(trie.NewTrie(.5), "xyz")
+			operation := op.Or(a, b)
+			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
+					OR(Trie('A', ' #', 0), Trie('XYZ', '   #', 0))
+					├─a = Trie('', '#', 1)
+					└─xyz = Trie('', '#', 0.5)
+			`))
+		})
+
+		XIt("Supports duplicative multi-rune paths", func() {
+			a := extend(trie.NewTrie(1.0), "a")
+			b := extend(trie.NewTrie(.5), "abc")
+			operation := op.Or(a, b)
 			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
 					OR(Trie('C', ' #', 0), Trie('A', ' #', 0), Trie('B', ' #', 0))
 					├─a = Trie('', '#', 1)

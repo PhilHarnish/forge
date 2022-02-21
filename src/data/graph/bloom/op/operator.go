@@ -111,10 +111,7 @@ func processParallel(operation *operation, acceptor node.NodeAcceptor) operatorE
 		items := operand.Items(acceptor)
 		for items.HasNext() {
 			path, item := items.Next()
-			edge, size := utf8.DecodeRuneInString(path)
-			if size < len(path) {
-				panic("Multi-rune edges are not supported")
-			}
+			edge, _ := utf8.DecodeRuneInString(path)
 			// NB: We assume `err` is nil here.
 			position, _ := mask.Position(edge)
 			outgoingEdge := &outgoingEdgeList[position]
@@ -123,10 +120,16 @@ func processParallel(operation *operation, acceptor node.NodeAcceptor) operatorE
 				// First operator to use this edge.
 				outgoingEdge.path = path
 				outgoingEdge.weight = itemWeight
-			} else if (minWeight && itemWeight < outgoingEdge.weight) ||
-				(!minWeight && itemWeight > outgoingEdge.weight) {
-				// Duplicate operator with this edge; update weight.
-				outgoingEdge.weight = itemWeight
+			} else {
+				// Duplicate edge.
+				if path != outgoingEdge.path {
+					panic("Multi-rune edges only supported when they always match")
+				}
+				if (minWeight && itemWeight < outgoingEdge.weight) ||
+					(!minWeight && itemWeight > outgoingEdge.weight) {
+					// Duplicate operator with this edge; update weight.
+					outgoingEdge.weight = itemWeight
+				}
 			}
 			outgoingEdge.operands = append(outgoingEdge.operands, item)
 			availableEdge := filterEdge(outgoingEdge, operator, nOperands)
