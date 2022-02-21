@@ -8,6 +8,7 @@ import (
 	"github.com/philharnish/forge/spec/matchers"
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/query"
 	"github.com/philharnish/forge/src/data/graph/bloom/retrie"
 )
 
@@ -23,7 +24,9 @@ var _ = Describe("ReTrie", func() {
 				ReTrie: 100
 		`))
 	})
+})
 
+var _ = Describe("ReTrie syntax", func() {
 	It("matches specified character", func() {
 		trie := retrie.NewReTrie("x", 1.0)
 		Expect(node.StringChildren(trie)).To(matchers.LookLike(`
@@ -308,5 +311,41 @@ var _ = Describe("ReTrie", func() {
 
 	It("rejects \\b boundary", func() {
 		Expect(func() { retrie.NewReTrie(`a\bb`, 1.0) }).To(Panic())
+	})
+})
+
+var _ = Describe("ReTrie Header + Metadata", func() {
+	It("implements Header provider and Metadata provider", func() {
+		trie := retrie.NewReTrie("a", 1.0)
+		var headerProvider query.QueryHeaderProvider = trie
+		var metadatProvider node.NodeMetadataProvider = trie
+		Expect(headerProvider).NotTo(BeNil())
+		Expect(metadatProvider).NotTo(BeNil())
+	})
+
+	It("initially has no special headers or metadata", func() {
+		trie := retrie.NewReTrie("a", 1.0)
+		Expect(trie.Header()).NotTo(BeNil())
+		Expect(trie.Header().Labels()).To(HaveLen(0))
+	})
+
+	It("has numbered headers for numbered capture groups", func() {
+		trie := retrie.NewReTrie("(a)(b)(c)", 1.0)
+		Expect(trie.Header().Labels()).To(Equal([]string{"1", "2", "3"}))
+	})
+
+	It("has named headers for named capture groups", func() {
+		trie := retrie.NewReTrie("(?P<first>a)(?P<second>b)(?P<third>c)", 1.0)
+		Expect(trie.Header().Labels()).To(Equal([]string{"first", "second", "third"}))
+	})
+
+	It("provides metadata on matches", func() {
+		trie := retrie.NewReTrie("(a)(b)(c)", 1.0)
+		metadata := trie.Metadata("abc")
+		Expect(metadata).To(HaveLen(3))
+		for i, expected := range []string{"a", "b", "c"} {
+			Expect(metadata[i].Weight).To(Equal(1.0))
+			Expect(metadata[i].String).To(Equal(expected))
+		}
 	})
 })
