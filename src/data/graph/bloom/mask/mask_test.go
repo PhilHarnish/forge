@@ -202,20 +202,19 @@ var _ = Describe("LengthString", func() {
 	})
 
 	It("Indicates matching lengths", func() {
-		Expect(mask.LengthString(0b1011)).To(Equal("## #"))
-	})
-
-	It("Truncates trailing matches", func() {
-		Expect(mask.LengthString(0b001111)).To(Equal("####"))
-		Expect(mask.LengthString(0b011111)).To(Equal("#*5"))
-		Expect(mask.LengthString(0b111111)).To(Equal("#*6"))
-		Expect(mask.LengthString(0b1111111111)).To(Equal("#*10"))
-		// *63 as one bit is reserved for ALL_REMAINING_LENGTH.
-		Expect(mask.LengthString(mask.ALL_LENGTHS)).To(Equal("#*63..."))
+		Expect(mask.LengthString(0b1011)).To(Equal("●●◌●"))
 	})
 
 	It("Indicates when ALL_REMAINING_LENGTH is set", func() {
-		Expect(mask.LengthString(mask.Mask(0b101 | mask.ALL_REMAINING_LENGTH))).To(Equal("# #..."))
+		Expect(mask.LengthString(mask.Mask(0b101 | mask.ALL_REMAINING_LENGTH))).To(Equal(
+			"●◌●◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌◌●···"))
+	})
+
+	It("Truncates when the end is all 1s", func() {
+		lengthMask := mask.ALL_LENGTHS | mask.ALL_REMAINING_LENGTH
+		Expect(mask.LengthString(lengthMask)).To(Equal("●●●···"))
+		lengthMask -= mask.Mask(0b110101)
+		Expect(mask.LengthString(lengthMask)).To(Equal("◌●◌●◌◌●●●···"))
 	})
 })
 
@@ -259,17 +258,18 @@ var _ = Describe("MaskString", func() {
 
 var _ = Describe("RepeatLengths", func() {
 	It("Blurs bits when interval is 1", func() {
-		Expect(mask.LengthString(mask.RepeatLengths(0b100, 1))).To(Equal("  #*61..."))
+		Expect(mask.LengthString(mask.RepeatLengths(0b100, 1))).To(Equal(
+			"◌◌●●●···"))
 	})
 
 	It("Repeats pattern when interval is 2+", func() {
 		Expect(mask.LengthString(mask.RepeatLengths(0b100, 2))).To(Equal(
-			"  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #..."))
+			"◌◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●●···"))
 	})
 
 	It("Repeats unique pattern with high interval", func() {
 		Expect(mask.LengthString(mask.RepeatLengths(0b1101, 7))).To(Equal(
-			"# ##   # ##   # ##   # ##   # ##   # ##   # ##   # ##   # ##..."))
+			"●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●···"))
 	})
 })
 

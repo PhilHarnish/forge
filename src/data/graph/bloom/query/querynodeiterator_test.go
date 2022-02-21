@@ -13,7 +13,7 @@ var _ = Describe("Results", func() {
 		q := query.Select().From(trie.NewTrie())
 		Expect(q.String(true)).To(matchers.LookLike(`
 				SELECT *
-				FROM Trie('', '', 0);
+				FROM (Trie);
 				∅
 		`))
 	})
@@ -24,7 +24,7 @@ var _ = Describe("Results", func() {
 		q := query.Select().From(t)
 		Expect(q.String(true)).To(matchers.LookLike(`
 				SELECT *
-				FROM Trie('CDHIL', '     #', 0);
+				FROM (Trie: CDHIL ◌◌◌◌◌●);
 				Score | Text
 				=============
 				1.00  | child
@@ -39,7 +39,7 @@ var _ = Describe("Results", func() {
 		q := query.Select().From(t)
 		Expect(q.String(true)).To(matchers.LookLike(`
 				SELECT *
-				FROM Trie('A', ' #', 0);
+				FROM (Trie: A ◌●);
 				Score | Text
 				============
 				1.00  | ab

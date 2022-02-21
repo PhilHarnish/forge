@@ -3,6 +3,7 @@ package node
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"strings"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
@@ -177,14 +178,26 @@ func NodeAcceptNone(path string, node *Node) weight.Weight {
 	return 0.0
 }
 
+var lengthMaskRemover = regexp.MustCompile(" [◌●]+·*")
+
 func Format(name string, node *Node) string {
-	return fmt.Sprintf(
-		"%s('%s', '%s', %.2g)",
-		name,
-		mask.MaskString(node.ProvideMask, node.RequireMask),
-		mask.LengthString(node.LengthsMask),
-		node.MatchWeight,
-	)
+	parts := []string{}
+	if node.Matches() {
+		parts = append(parts, weight.String(node.MatchWeight))
+	}
+	acc := mask.MaskString(node.ProvideMask, node.RequireMask)
+	if len(acc) > 0 {
+		parts = append(parts, acc)
+	}
+	acc = mask.LengthString(node.LengthsMask)
+	if len(acc) > 0 {
+		parts = append(parts, acc)
+	}
+	acc = strings.Join(parts, " ")
+	if len(acc) > 0 {
+		return name + ": " + acc
+	}
+	return name
 }
 
 func StringChildren(iterator NodeIterator, depth ...int) string {
@@ -195,23 +208,36 @@ func StringChildren(iterator NodeIterator, depth ...int) string {
 }
 
 func stringChildrenWithPrefix(iterator NodeIterator, base string, remaining int) string {
+	nodeString := lengthMaskRemover.ReplaceAllLiteralString(iterator.String(), "")
 	if remaining == 0 {
-		return iterator.String()
+		return nodeString
 	}
 	results := []string{
-		iterator.String(),
+		nodeString,
+	}
+	if iterator.Root().LengthsMask > 1 {
+		results = append(results, base+"│"+mask.LengthString(iterator.Root().LengthsMask))
 	}
 	items := iterator.Items(NodeAcceptAll)
 	for items.HasNext() {
 		path, item := items.Next()
-		line := "├─"
-		prefix := "│ "
+		line := "├"
+		prefix := "│"
 		if !items.HasNext() {
-			line = "└─"
-			prefix = "• "
+			line = "└"
+			if base == "" {
+				prefix = "·"
+			} else {
+				prefix = " "
+			}
 		}
-		results = append(results, fmt.Sprintf("%s%s = %s",
-			base+line, path, stringChildrenWithPrefix(item, base+prefix, remaining-1)))
+		prefix += strings.Repeat(" ", len(path)-1)
+		matchString := " "
+		if item.Root().Matches() {
+			matchString = "●"
+		}
+		results = append(results, fmt.Sprintf("%s%s%s->%s",
+			base+line, path, matchString, stringChildrenWithPrefix(item, base+prefix, remaining-1)))
 
 	}
 	return strings.Join(results, "\n")

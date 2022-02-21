@@ -31,7 +31,7 @@ var missingRequirementMap = [...]rune{
 	'Ⓝ', 'Ⓞ', 'Ⓟ', 'Ⓠ', 'Ⓡ', 'Ⓢ', 'Ⓣ', 'Ⓤ', 'Ⓥ', 'Ⓦ', 'Ⓧ', 'Ⓨ', 'Ⓩ',
 }
 
-var truncateLengths = regexp.MustCompile("#{5,}$")
+var truncateLengths = regexp.MustCompile("●{5,}$")
 
 /*
 Returns the position for the given rune if supported, otherwise error.
@@ -138,23 +138,22 @@ func LengthString(lengthMask Mask) string {
 		return ""
 	}
 	hasAllRemainingBit := lengthMask&ALL_REMAINING_LENGTH != 0
-	lengthMask &= ALL_REMAINING_LENGTH - 1
 	binary := strconv.FormatUint(lengthMask, 2)
 	result := strings.Builder{}
 	for i := len(binary) - 1; i >= 0; i-- {
 		if binary[i] == '0' {
-			result.WriteByte(' ')
+			result.WriteRune('◌')
 		} else {
-			result.WriteByte('#')
+			result.WriteRune('●')
 		}
 	}
-	combined := truncateLengths.ReplaceAllLiteralString(result.String(), "")
-	delta := len(binary) - len(combined)
-	if delta > 0 {
-		combined += fmt.Sprintf("#*%d", delta)
-	}
+	combined := result.String()
+
 	if hasAllRemainingBit {
-		combined += "..."
+		if len(binary) == 64 {
+			combined = truncateLengths.ReplaceAllLiteralString(result.String(), "●●●")
+		}
+		combined += "···"
 	}
 	return combined
 }

@@ -17,11 +17,11 @@ func Test(t *testing.T) {
 
 var _ = Describe("Node interfaces", func() {
 	It("String", func() {
-		Expect(span.NewSpan("test").String()).To(Equal("Span('test', 0)"))
+		Expect(span.NewSpan("test").String()).To(Equal("Span: 'test' 0"))
 	})
 
 	It("Root", func() {
-		Expect(span.NewSpan("test").Root().String()).To(Equal("Node('EST', '    #', 0)"))
+		Expect(span.NewSpan("test").Root().String()).To(Equal("Node: EST ◌◌◌◌●"))
 	})
 
 	It("Items", func() {
@@ -30,13 +30,14 @@ var _ = Describe("Node interfaces", func() {
 		Expect(items.HasNext()).To(BeTrue())
 		path, next := items.Next()
 		Expect(path).To(Equal("test"))
-		Expect(next.String()).To(Equal("Null()"))
+		Expect(next.String()).To(Equal("Null: 0 ●"))
 	})
 
 	It("StringChildren", func() {
 		Expect(node.StringChildren(span.NewSpan("test"))).To(matchers.LookLike(`
-				Span('test', 0)
-				└─test = Null()
+				Span: 'test' 0
+				│◌◌◌◌●
+				└test●->Null: 0
 		`))
 	})
 })

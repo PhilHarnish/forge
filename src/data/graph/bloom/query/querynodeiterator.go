@@ -2,6 +2,7 @@ package query
 
 import (
 	"container/heap"
+	"fmt"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
@@ -40,7 +41,7 @@ func (source *queryNodeResultsSource) Results() QueryResults {
 }
 
 func (source *queryNodeResultsSource) String(includeResults ...bool) string {
-	return source.iterator.String()
+	return fmt.Sprintf("(%s)", source.iterator.String())
 }
 
 func (source *queryNodeResultsSource) Header() QueryRowHeader {

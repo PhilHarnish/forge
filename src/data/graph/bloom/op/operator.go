@@ -41,6 +41,7 @@ func (op *operator) synthesizeNode(operands []node.NodeIterator) *node.Node {
 
 type operator struct {
 	template        string
+	infix           string
 	processMethod   processMethod
 	maxWeightPolicy maxWeightPolicy
 	edgePolicy      edgePolicy
@@ -69,21 +70,24 @@ const (
 )
 
 var andOperator = &operator{
-	template:        "AND(%s)",
+	template:        "(%s)",
+	infix:           " && ",
 	processMethod:   parallel,
 	maxWeightPolicy: useSmallest,
 	edgePolicy:      allOperands,
 }
 
 var orOperator = &operator{
-	template:        "OR(%s)",
+	template:        "(%s)",
+	infix:           " || ",
 	processMethod:   parallel,
 	maxWeightPolicy: useLargest,
 	edgePolicy:      anyOperands,
 }
 
 var concatOperator = &operator{
-	template:        "CONCAT(%s)",
+	template:        "(%s)",
+	infix:           " + ",
 	processMethod:   sequential,
 	maxWeightPolicy: useLargest,
 	edgePolicy:      firstOperand,

@@ -20,82 +20,91 @@ var _ = Describe("ReTrie", func() {
 	It("is initially empty", func() {
 		trie := retrie.NewReTrie("", 1.0)
 		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
-				ReTrie('', '#', 1)
+				ReTrie: 100
 		`))
 	})
 
 	It("matches specified character", func() {
 		trie := retrie.NewReTrie("x", 1.0)
 		Expect(node.StringChildren(trie)).To(matchers.LookLike(`
-				ReTrie('X', ' #', 0)
-				└─x = ReTrie('', '#', 1)
+				ReTrie: X
+				│◌●
+				└x●->ReTrie: 100
 		`))
 	})
 
 	It("ignores ^ and $", func() {
 		trie := retrie.NewReTrie("^x$", 1.0)
 		Expect(node.StringChildren(trie)).To(matchers.LookLike(`
-				ReTrie('X', ' #', 0)
-				└─x = ReTrie('', '#', 1)
+				ReTrie: X
+				│◌●
+				└x●->ReTrie: 100
 		`))
 	})
 
 	It("matches specified characters", func() {
 		trie := retrie.NewReTrie("abc", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
-				ReTrie('ABC', '   #', 0)
-				└─abc = ReTrie('', '#', 1)
+				ReTrie: ABC
+				│◌◌◌●
+				└abc●->ReTrie: 100
 		`))
 	})
 
 	It("matches simple character class", func() {
 		trie := retrie.NewReTrie("[abc]", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
-				ReTrie('abc', ' #', 0)
-				├─a = ReTrie('', '#', 1)
-				├─b = ReTrie('', '#', 1)
-				└─c = ReTrie('', '#', 1)
+				ReTrie: abc
+				│◌●
+				├a●->ReTrie: 100
+				├b●->ReTrie: 100
+				└c●->ReTrie: 100
 		`))
 	})
 
 	It("matches sandwiched character classes", func() {
 		trie := retrie.NewReTrie("a[bc]d", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
-				ReTrie('AbcD', '   #', 0)
-				└─a = ReTrie('bcD', '  #', 0)
-				• ├─b = ReTrie('D', ' #', 0)
-				• │ └─d = ReTrie('', '#', 1)
-				• └─c = ReTrie('D', ' #', 0)
-				• • └─d = ReTrie('', '#', 1)
+				ReTrie: AbcD
+				│◌◌◌●
+				└a ->ReTrie: bcD
+				·│◌◌●
+				·├b ->ReTrie: D
+				·││◌●
+				·│└d●->ReTrie: 100
+				·└c ->ReTrie: D
+				· │◌●
+				· └d●->ReTrie: 100
 		`))
 	})
 
 	It("matches complex character classes", func() {
 		trie := retrie.NewReTrie("[a-cxyz]", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
-				ReTrie('abcxyz', ' #', 0)
-				├─a = ReTrie('', '#', 1)
-				├─b = ReTrie('', '#', 1)
-				├─c = ReTrie('', '#', 1)
-				├─x = ReTrie('', '#', 1)
-				├─y = ReTrie('', '#', 1)
-				└─z = ReTrie('', '#', 1)
+				ReTrie: abcxyz
+				│◌●
+				├a●->ReTrie: 100
+				├b●->ReTrie: 100
+				├c●->ReTrie: 100
+				├x●->ReTrie: 100
+				├y●->ReTrie: 100
+				└z●->ReTrie: 100
 		`))
 	})
 
 	It("matches \\w special character classes", func() {
 		trie := retrie.NewReTrie(`\w`, 1.0)
-		Expect(trie.String()).To(Equal("ReTrie('abcdefghijklmnopqrstuvwxyz', ' #', 0)"))
+		Expect(trie.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz ◌●"))
 	})
 
 	It("matches [:alpha:] character classes", func() {
 		trie := retrie.NewReTrie(`[[:alpha:]]`, 1.0)
-		Expect(trie.String()).To(Equal("ReTrie('abcdefghijklmnopqrstuvwxyz', ' #', 0)"))
+		Expect(trie.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz ◌●"))
 	})
 
 	It("matches dot", func() {
 		trie := retrie.NewReTrie(".", 1.0)
-		Expect(trie.String()).To(Equal("ReTrie('abcdefghijklmnopqrstuvwxyz -'', ' #', 0)"))
+		Expect(trie.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz -' ◌●"))
 		items := trie.Items(node.NodeAcceptAll)
 		seen := mask.Mask(0b0)
 		for items.HasNext() {
@@ -115,139 +124,169 @@ var _ = Describe("ReTrie", func() {
 	It("matches question mark", func() {
 		trie := retrie.NewReTrie("ab?", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
-				ReTrie('Ab', ' ##', 0)
-				└─a = ReTrie('B', '##', 1)
-				• └─b = ReTrie('', '#', 1)
+				ReTrie: Ab
+				│◌●●
+				└a●->ReTrie: 100 B
+				·│●●
+				·└b●->ReTrie: 100
 		`))
 	})
 
 	It("matches simple repeats", func() {
 		trie := retrie.NewReTrie("a{2}", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
-				ReTrie('A', '  #', 0)
-				└─a = ReTrie('A', ' #', 0)
-				• └─a = ReTrie('', '#', 1)
+				ReTrie: A
+				│◌◌●
+				└a ->ReTrie: A
+				·│◌●
+				·└a●->ReTrie: 100
 		`))
 	})
 
 	It("matches simple ranges", func() {
 		trie := retrie.NewReTrie("a{2,4}", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-				ReTrie('A', '  ###', 0)
-				└─a = ReTrie('A', ' ###', 0)
-				• └─a = ReTrie('A', '###', 1)
-				• • └─a = ReTrie('A', '##', 1)
-				• • • └─a = ReTrie('', '#', 1)
+				ReTrie: A
+				│◌◌●●●
+				└a ->ReTrie: A
+				·│◌●●●
+				·└a●->ReTrie: 100 A
+				· │●●●
+				· └a●->ReTrie: 100 A
+				·  │●●
+				·  └a●->ReTrie: 100
 		`))
 	})
 
 	It("matches hidden middle alternatives", func() {
 		trie := retrie.NewReTrie("abc|axc", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-				ReTrie('AbCx', '   #', 0)
-				└─a = ReTrie('bCx', '  #', 0)
-				• ├─bc = ReTrie('', '#', 1)
-				• └─xc = ReTrie('', '#', 1)
+				ReTrie: AbCx
+				│◌◌◌●
+				└a ->ReTrie: bCx
+				·│◌◌●
+				·├bc●->ReTrie: 100
+				·└xc●->ReTrie: 100
 		`))
 	})
 
 	It("matches alternatives which cannot be easily simplified", func() {
 		trie := retrie.NewReTrie("abc|acd|xyz", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-				ReTrie('abcdxyz', '   #', 0)
-				├─a = ReTrie('bCd', '  #', 0)
-				│ ├─bc = ReTrie('', '#', 1)
-				│ └─cd = ReTrie('', '#', 1)
-				└─xyz = ReTrie('', '#', 1)
+				ReTrie: abcdxyz
+				│◌◌◌●
+				├a ->ReTrie: bCd
+				││◌◌●
+				│├bc●->ReTrie: 100
+				│└cd●->ReTrie: 100
+				└xyz●->ReTrie: 100
 		`))
 	})
 
 	It("matches (?:non|capturing|groups|with|different|sizes)", func() {
 		trie := retrie.NewReTrie("(?:a|bbbb|xyz)", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-				ReTrie('abxyz', ' # ##', 0)
-				├─a = ReTrie('', '#', 1)
-				├─bbbb = ReTrie('', '#', 1)
-				└─xyz = ReTrie('', '#', 1)
+				ReTrie: abxyz
+				│◌●◌●●
+				├a●->ReTrie: 100
+				├bbbb●->ReTrie: 100
+				└xyz●->ReTrie: 100
 		`))
 	})
 
 	It("matches (?:non|capturing|groups|with|shared|prefix)", func() {
 		trie := retrie.NewReTrie("(?:aaabc|aabc|abc)", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-				ReTrie('ABC', '   ###', 0)
-				└─a = ReTrie('aBC', '  ###', 0)
-				• ├─a = ReTrie('aBC', '  ##', 0)
-				• │ ├─abc = ReTrie('', '#', 1)
-				• │ └─bc = ReTrie('', '#', 1)
-				• └─bc = ReTrie('', '#', 1)
+				ReTrie: ABC
+				│◌◌◌●●●
+				└a ->ReTrie: aBC
+				·│◌◌●●●
+				·├a ->ReTrie: aBC
+				·││◌◌●●
+				·│├abc●->ReTrie: 100
+				·│└bc●->ReTrie: 100
+				·└bc●->ReTrie: 100
 		`))
 	})
 
 	It("matches (?:non|capturing|groups|with|mixed|prefix)", func() {
 		trie := retrie.NewReTrie("(?:aabc|abc|xyz)", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-				ReTrie('abcxyz', '   ##', 0)
-				├─a = ReTrie('aBC', '  ##', 0)
-				│ ├─abc = ReTrie('', '#', 1)
-				│ └─bc = ReTrie('', '#', 1)
-				└─xyz = ReTrie('', '#', 1)
+				ReTrie: abcxyz
+				│◌◌◌●●
+				├a ->ReTrie: aBC
+				││◌◌●●
+				│├abc●->ReTrie: 100
+				│└bc●->ReTrie: 100
+				└xyz●->ReTrie: 100
 		`))
 	})
 
 	It("matches +", func() {
 		trie := retrie.NewReTrie("a+", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
-				ReTrie('A', ' #*62...', 0)
-				└─a = ReTrie('A', '#*63...', 1)
-				• └─a = ReTrie('A', '#*63...', 1)
-				• • └─a = ReTrie('A', '#*63...', 1)
+				ReTrie: A
+				│◌●●●···
+				└a●->ReTrie: 100 A
+				·│●●●···
+				·└a●->ReTrie: 100 A
+				· │●●●···
+				· └a●->ReTrie: 100 A
 		`))
 	})
 
 	It("matches + with suffix", func() {
 		trie := retrie.NewReTrie("a+xyz", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
-				ReTrie('AXYZ', '    #*59...', 0)
-				└─a = ReTrie('aXYZ', '   #*60...', 0)
-				• ├─xyz = ReTrie('', '#', 1)
-				• └─a = ReTrie('aXYZ', '   #*60...', 0)
-				• • ├─xyz = ReTrie('', '#', 1)
-				• • └─a = ReTrie('aXYZ', '   #*60...', 0)
+				ReTrie: AXYZ
+				│◌◌◌◌●●●···
+				└a ->ReTrie: aXYZ
+				·│◌◌◌●●●···
+				·├xyz●->ReTrie: 100
+				·└a ->ReTrie: aXYZ
+				· │◌◌◌●●●···
+				· ├xyz●->ReTrie: 100
+				· └a ->ReTrie: aXYZ
 		`))
 	})
 
 	It("matches (?:group|of|choices)+ with alt suffix", func() {
 		trie := retrie.NewReTrie("(?:a|bbbbb)+(?:xxx|yyyyyy)", 1.0)
 		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
-				ReTrie('abxy', '    #*59...', 0)
-				├─a = ReTrie('abxy', '   #*60...', 0)
-				│ ├─xxx = ReTrie('', '#', 1)
-				│ ├─yyyyyy = ReTrie('', '#', 1)
-				│ ├─a = ReTrie('abxy', '   #*60...', 0)
-				│ └─bbbbb = ReTrie('abxy', '   #*60...', 0)
-				└─bbbbb = ReTrie('abxy', '   #*60...', 0)
-				• ├─xxx = ReTrie('', '#', 1)
-				• ├─yyyyyy = ReTrie('', '#', 1)
-				• ├─a = ReTrie('abxy', '   #*60...', 0)
-				• └─bbbbb = ReTrie('abxy', '   #*60...', 0)
+				ReTrie: abxy
+				│◌◌◌◌●●●···
+				├a ->ReTrie: abxy
+				││◌◌◌●●●···
+				│├xxx●->ReTrie: 100
+				│├yyyyyy●->ReTrie: 100
+				│├a ->ReTrie: abxy
+				│└bbbbb ->ReTrie: abxy
+				└bbbbb ->ReTrie: abxy
+				·    │◌◌◌●●●···
+				·    ├xxx●->ReTrie: 100
+				·    ├yyyyyy●->ReTrie: 100
+				·    ├a ->ReTrie: abxy
+				·    └bbbbb ->ReTrie: abxy
 		`))
 	})
 
 	It("matches (?:group|of|choices)+ which require 3x len strings", func() {
 		trie := retrie.NewReTrie("(?:aaa|bbb)+(?:xxx|yyy)", 1.0)
 		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
-				ReTrie('abxy', '      #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
-				├─aaa = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
-				│ ├─xxx = ReTrie('', '#', 1)
-				│ ├─yyy = ReTrie('', '#', 1)
-				│ ├─aaa = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
-				│ └─bbb = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
-				└─bbb = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
-				• ├─xxx = ReTrie('', '#', 1)
-				• ├─yyy = ReTrie('', '#', 1)
-				• ├─aaa = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
-				• └─bbb = ReTrie('abxy', '   #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #  #...', 0)
+				ReTrie: abxy
+				│◌◌◌◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●···
+				├aaa ->ReTrie: abxy
+				│  │◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●···
+				│  ├xxx●->ReTrie: 100
+				│  ├yyy●->ReTrie: 100
+				│  ├aaa ->ReTrie: abxy
+				│  └bbb ->ReTrie: abxy
+				└bbb ->ReTrie: abxy
+				·  │◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●···
+				·  ├xxx●->ReTrie: 100
+				·  ├yyy●->ReTrie: 100
+				·  ├aaa ->ReTrie: abxy
+				·  └bbb ->ReTrie: abxy
 		`))
 	})
 })

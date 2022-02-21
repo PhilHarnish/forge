@@ -27,10 +27,10 @@ var _ = Describe("Node interfaces", func() {
 	})
 
 	It("includes String func", func() {
-		Expect(null.Null.String()).To(Equal("Null()"))
+		Expect(null.Null.String()).To(Equal("Null: 0 ●"))
 	})
 
 	It("includes Root func", func() {
-		Expect(null.Null.Root().String()).To(Equal("Node('', '#', 0)"))
+		Expect(null.Null.Root().String()).To(Equal("Node: 0 ●"))
 	})
 })

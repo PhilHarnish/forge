@@ -25,13 +25,20 @@ func (op *operation) Items(acceptor node.NodeAcceptor) node.NodeItems {
 }
 
 func (op *operation) String() string {
-	return fmt.Sprintf(op.operator.template, formatOperands(op.operands))
+	return node.Format(
+		fmt.Sprintf(op.operator.template, formatOperands(op.operator.infix, op.operands)),
+		op.Root(),
+	)
 }
 
-func formatOperands(operands []node.NodeIterator) string {
+func formatOperands(infix string, operands []node.NodeIterator) string {
 	formatted := make([]string, len(operands))
 	for i, operand := range operands {
-		formatted[i] = fmt.Sprint(operand)
+		operandString := fmt.Sprint(operand)
+		if !strings.HasPrefix("(", operandString) && strings.Contains(operandString, " ") {
+			operandString = fmt.Sprintf("(%s)", operandString)
+		}
+		formatted[i] = operandString
 	}
-	return strings.Join(formatted, ", ")
+	return strings.Join(formatted, infix)
 }

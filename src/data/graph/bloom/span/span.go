@@ -45,5 +45,5 @@ func (items *spanItems) Next() (string, node.NodeIterator) {
 }
 
 func (root *span) String() string {
-	return fmt.Sprintf("Span('%s', %.2g)", root.path, root.MatchWeight)
+	return fmt.Sprintf("Span: '%s' %s", root.path, weight.String(root.MatchWeight))
 }

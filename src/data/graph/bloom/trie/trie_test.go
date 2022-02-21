@@ -26,7 +26,7 @@ var _ = Describe("Link", func() {
 	It("Linked child is indicated in output", func() {
 		err := root.Link("c", trie.NewTrie(1.0))
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(root.String()).To(Equal("Trie('C', ' #', 0)"))
+		Expect(root.String()).To(Equal("Trie: C ◌●"))
 	})
 
 	It("Rejects empty links", func() {
@@ -50,7 +50,7 @@ var _ = Describe("Link", func() {
 	It("Accepts multi-rune links", func() {
 		err := root.Link("abc", trie.NewTrie(1.0))
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(root.String()).To(Equal("Trie('ABC', '   #', 0)"))
+		Expect(root.String()).To(Equal("Trie: ABC ◌◌◌●"))
 	})
 
 	It("Multiple links eliminate requirement for parent", func() {
@@ -58,16 +58,16 @@ var _ = Describe("Link", func() {
 			err := root.Link(string(c), trie.NewTrie(1.0))
 			Expect(err).ShouldNot(HaveOccurred())
 		}
-		Expect(root.String()).To(Equal("Trie('abc', ' #', 0)"))
+		Expect(root.String()).To(Equal("Trie: abc ◌●"))
 	})
 
 	It("Requirements are inherited", func() {
 		cursor := trie.NewTrie(1.0)
 		for _, c := range []string{
-			"a=Trie('A', ' #', 0)",
-			"b=Trie('AB', '  #', 0)",
-			"c=Trie('ABC', '   #', 0)",
-			"a=Trie('ABC', '    #', 0)",
+			"a=Trie: A ◌●",
+			"b=Trie: AB ◌◌●",
+			"c=Trie: ABC ◌◌◌●",
+			"a=Trie: ABC ◌◌◌◌●",
 		} {
 			next := trie.NewTrie()
 			err := next.Link(string(c[0]), cursor)
@@ -88,14 +88,14 @@ var _ = Describe("Get", func() {
 
 	It("Finds requested child", func() {
 		child := root.Get("a")
-		Expect(child.String()).To(Equal("Trie('', '#', 1)"))
+		Expect(child.String()).To(Equal("Trie: 100 ●"))
 	})
 
 	It("Finds requested child recursively", func() {
 		ancestor := trie.NewTrie()
 		ancestor.Link("b", root)
 		child := ancestor.Get("b").Get("a")
-		Expect(child.String()).To(Equal("Trie('', '#', 1)"))
+		Expect(child.String()).To(Equal("Trie: 100 ●"))
 	})
 
 	It("Returns nil, not error, for missing child", func() {
@@ -115,8 +115,9 @@ var _ = Describe("Add", func() {
 		err := root.Add("a", 1.0)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(node.StringChildren(root)).To(matchers.LookLike(`
-				Trie('A', ' #', 0)
-				└─a = Trie('', '#', 1)
+				Trie: A
+				│◌●
+				└a●->Trie: 100
 		`))
 	})
 
@@ -125,9 +126,11 @@ var _ = Describe("Add", func() {
 		err := root.Add("ab", 0.5)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(node.StringChildren(root, 2)).To(matchers.LookLike(`
-			Trie('Ab', ' ##', 0)
-			└─a = Trie('B', '##', 1)
-			• └─b = Trie('', '#', 0.5)
+				Trie: Ab
+				│◌●●
+				└a●->Trie: 100 B
+				·│●●
+				·└b●->Trie: 50
 		`))
 	})
 })

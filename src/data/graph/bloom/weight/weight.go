@@ -1,5 +1,10 @@
 package weight
 
+import (
+	"fmt"
+	"math"
+)
+
 type Weight = float64
 
 type WeightedString struct {
@@ -16,4 +21,8 @@ func CumulativeWeight(strings []WeightedString) Weight {
 		result *= item.Weight
 	}
 	return result
+}
+
+func String(weight Weight) string {
+	return fmt.Sprintf("%g", math.Round(weight*100))
 }

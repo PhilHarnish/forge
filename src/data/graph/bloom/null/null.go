@@ -25,5 +25,5 @@ func (root *null) Next() (string, node.NodeIterator) {
 }
 
 func (root *null) String() string {
-	return "Null()"
+	return node.Format("Null", root.Root())
 }
