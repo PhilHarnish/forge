@@ -305,4 +305,8 @@ var _ = Describe("ReTrie", func() {
 				·└y●->ReTrie: 100
 		`))
 	})
+
+	It("rejects \\b boundary", func() {
+		Expect(func() { retrie.NewReTrie(`a\bb`, 1.0) }).To(Panic())
+	})
 })
