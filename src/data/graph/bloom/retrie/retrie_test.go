@@ -289,4 +289,20 @@ var _ = Describe("ReTrie", func() {
 				·  └bbb ->ReTrie: abxy
 		`))
 	})
+
+	It("matches capturing groups", func() {
+		trie := retrie.NewReTrie("(a|b)(x|y)", 1.0)
+		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
+				ReTrie: abxy
+				│◌◌●
+				├a ->ReTrie: xy
+				││◌●
+				│├x●->ReTrie: 100
+				│└y●->ReTrie: 100
+				└b ->ReTrie: xy
+				·│◌●
+				·├x●->ReTrie: 100
+				·└y●->ReTrie: 100
+		`))
+	})
 })

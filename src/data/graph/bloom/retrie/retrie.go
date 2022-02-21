@@ -66,11 +66,11 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 			panic(fmt.Sprintf("Cannot connect parent -> child with instruction: %d", re.Op))
 		}
 		return child
-	case syntax.OpEmptyMatch:
-		if parent != nil {
-			panic(fmt.Sprintf("Cannot connect parent -> child with instruction: %d", re.Op))
+	case syntax.OpCapture: // (xyz)
+		if len(re.Sub) != 1 {
+			panic("Unable to handle OpCapture with 2+ Sub options")
 		}
-		return child
+		return linker(parent, child, re.Sub[0], repeats)
 	case syntax.OpCharClass: // [xyz]
 		parent = ensureNode(parent)
 		parent.linkRunes(re.Rune, child, repeats)
@@ -80,6 +80,11 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 		for i > 0 {
 			i--
 			parent, child = nil, linker(parent, child, re.Sub[i], repeats)
+		}
+		return child
+	case syntax.OpEmptyMatch:
+		if parent != nil {
+			panic(fmt.Sprintf("Cannot connect parent -> child with instruction: %d", re.Op))
 		}
 		return child
 	case syntax.OpLiteral: // x
