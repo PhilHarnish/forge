@@ -34,6 +34,10 @@ type NodeItems interface {
 	Next() (string, NodeIterator)
 }
 
+type NodeMetadataProvider interface {
+	Metadata(path string) []weight.WeightedString
+}
+
 func NewNode(matchWeight ...weight.Weight) *Node {
 	result := &Node{
 		RequireMask: mask.UNSET,
