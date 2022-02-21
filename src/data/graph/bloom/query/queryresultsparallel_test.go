@@ -117,12 +117,16 @@ var _ = Describe("QueryResults parallel", func() {
 		sort.Sort(c.results)
 		q := query.Select().From(a, b, c)
 		results := q.Results()
-		last := math.Inf(1)
+		lastWeight := math.Inf(1)
 		count := 0
 		for results.HasNext() {
 			next := results.Next()
-			Expect(next.Weight()).To(BeNumerically("<=", last, 0.01))
-			last = next.Weight()
+			nextWeight := next.Weight()
+			delta := math.Abs(lastWeight - nextWeight)
+			// Implement fuzzy <= by ensuring the drop mostly negative, with up to 1e-8 error.
+			fuzzyLessThan := (nextWeight < lastWeight) || delta < 1e-8
+			Expect(fuzzyLessThan).To(BeTrue())
+			lastWeight = next.Weight()
 			count++
 		}
 		Expect(count).To(Equal(len(a.results) * len(b.results) * len(c.results)))
