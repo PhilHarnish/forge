@@ -8,9 +8,13 @@ import (
 )
 
 type QueryResultsSource interface {
+	QueryHeaderProvider
 	Results() QueryResults
-	Header() QueryRowHeader
 	String(includeResults ...bool) string
+}
+
+type QueryHeaderProvider interface {
+	Header() QueryRowHeader
 }
 
 type QueryResults interface {

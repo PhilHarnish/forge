@@ -48,7 +48,7 @@ func (query *Query) From(sources ...interface{}) *Query {
 		case QueryResultsSource:
 			sourceAsQuerySource = x
 		case node.NodeIterator:
-			sourceAsQuerySource = queryNodeIterator(x)
+			sourceAsQuerySource = newQueryNodeResultsSource(x)
 		}
 		if sourceAsQuerySource != nil {
 			query.sources = append(query.sources, sourceAsQuerySource)

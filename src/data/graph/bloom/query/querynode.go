@@ -27,7 +27,7 @@ type queryNodeCursor struct {
 
 type queryNodeFringe []*queryNodeCursor
 
-func queryNodeIterator(iterator node.NodeIterator) QueryResultsSource {
+func newQueryNodeResultsSource(iterator node.NodeIterator) QueryResultsSource {
 	return &queryNodeResultsSource{iterator: iterator}
 }
 
@@ -49,7 +49,8 @@ func (source *queryNodeResultsSource) Header() QueryRowHeader {
 }
 
 func (source *queryNodeResultsSource) Labels() []string {
-	return []string{"Text"}
+	labels := []string{"Text"}
+	return labels
 }
 
 func (results *queryNodeResults) HasNext() bool {
