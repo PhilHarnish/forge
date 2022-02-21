@@ -9,6 +9,27 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 )
 
+var _ = Describe("Root", func() {
+	It("Is initially empty", func() {
+		a := trie.NewTrie()
+		o := op.And(a, a)
+		Expect(o.Root().String()).To(Equal("Node('', '', 0)"))
+	})
+
+	It("Is includes weights", func() {
+		a := trie.NewTrie(1.0)
+		o := op.And(a, a)
+		Expect(o.Root().String()).To(Equal("Node('', '#', 1)"))
+	})
+
+	It("Is includes required characters", func() {
+		a := trie.NewTrie()
+		a.MaskPath("abc")
+		o := op.And(a, a)
+		Expect(o.Root().String()).To(Equal("Node('ABC', '   #', 0)"))
+	})
+})
+
 var _ = Describe("Operations", func() {
 	var a *trie.Trie
 	var b *trie.Trie

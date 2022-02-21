@@ -5,63 +5,7 @@ import (
 	"strings"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
-	"github.com/philharnish/forge/src/data/graph/bloom/null"
-	"github.com/philharnish/forge/src/data/graph/bloom/span"
 )
-
-func And(operands ...node.NodeIterator) node.NodeIterator {
-	if len(operands) == 0 {
-		return null.Null
-	} else if len(operands) == 1 {
-		return operands[0]
-	}
-	return &operation{
-		operator: andOperator,
-		operands: operands,
-	}
-}
-
-func Or(operands ...node.NodeIterator) node.NodeIterator {
-	if len(operands) == 0 {
-		return null.Null
-	} else if len(operands) == 1 {
-		return operands[0]
-	}
-	return &operation{
-		operator: orOperator,
-		operands: operands,
-	}
-}
-
-func Concat(operands ...node.NodeIterator) node.NodeIterator {
-	if len(operands) == 0 {
-		return null.Null
-	} else if len(operands) == 1 {
-		return operands[0]
-	}
-	return &operation{
-		operator: concatOperator,
-		operands: operands,
-	}
-}
-
-func Join(separator string, operands ...node.NodeIterator) node.NodeIterator {
-	if len(operands) == 0 {
-		return null.Null
-	} else if len(operands) == 1 {
-		return operands[0]
-	} else if separator == "" {
-		return Concat(operands...)
-	}
-	sep := span.NewSpan(separator)
-	concatOperands := make([]node.NodeIterator, len(operands)*2-1)
-	concatOperands[0] = operands[0]
-	for i, operand := range operands[1:] {
-		concatOperands[(i*2)+1] = sep
-		concatOperands[(i*2)+2] = operand
-	}
-	return Concat(concatOperands...)
-}
 
 type operation struct {
 	operator *operator

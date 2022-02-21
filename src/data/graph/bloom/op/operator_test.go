@@ -84,6 +84,16 @@ var _ = Describe("process", func() {
 					AND(Trie('ABC', '   #', 0), Trie('A', '   #', 0))
 			`))
 		})
+
+		It("Merges redundant OR(a, OR(b, c)) to OR(a, b, c)", func() {
+			a := extend(trie.NewTrie(1.0), "a")
+			b := extend(trie.NewTrie(.5), "b")
+			c := extend(trie.NewTrie(.1), "c")
+			operation := op.And(a, op.And(b, c))
+			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
+					AND(Trie('A', ' #', 0), Trie('B', ' #', 0), Trie('C', ' #', 0))
+			`))
+		})
 	})
 
 	Describe("Or", func() {
@@ -136,6 +146,19 @@ var _ = Describe("process", func() {
 					└─c = Trie('', '#', 0.1)
 			`))
 		})
+
+		It("Merges redundant OR(a, OR(b, c)) to OR(a, b, c)", func() {
+			a := extend(trie.NewTrie(1.0), "a")
+			b := extend(trie.NewTrie(.5), "b")
+			c := extend(trie.NewTrie(.1), "c")
+			operation := op.Or(a, op.Or(b, c))
+			Expect(node.StringChildren(operation)).To(matchers.LookLike(`
+					OR(Trie('A', ' #', 0), Trie('B', ' #', 0), Trie('C', ' #', 0))
+					├─a = Trie('', '#', 1)
+					├─b = Trie('', '#', 0.5)
+					└─c = Trie('', '#', 0.1)
+			`))
+		})
 	})
 
 	Describe("Concat", func() {
@@ -165,6 +188,22 @@ var _ = Describe("process", func() {
 					• ├─a = Trie('B', ' #', 0)
 					• │ └─b = Trie('', '#', 0.5)
 					• └─b = Trie('', '#', 0.5)
+			`))
+		})
+
+		It("Merges redundant Concat calls", func() {
+			a := trie.NewTrie()
+			a.Add("a", 1.0)
+			b := trie.NewTrie()
+			b.Add("b", 0.5)
+			c := trie.NewTrie()
+			c.Add("c", 0.5)
+			operation := op.Concat(a, op.Concat(b, c))
+			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
+					CONCAT(Trie('A', ' #', 0), Trie('B', ' #', 0), Trie('C', ' #', 0))
+					└─a = CONCAT(Trie('B', ' #', 0), Trie('C', ' #', 0))
+					• └─b = Trie('C', ' #', 0)
+					• • └─c = Trie('', '#', 0.5)
 			`))
 		})
 	})
