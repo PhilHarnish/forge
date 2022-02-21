@@ -24,6 +24,7 @@ type queryResultsParallel struct {
 	maxResult   weight.Weight
 	sourceHeap  queryRowResultsRowHeap
 	resultsHeap QueryRows
+	resultCount int
 }
 
 type queryRowResultsRow struct {
@@ -35,6 +36,9 @@ type queryRowResultsRow struct {
 type queryRowResultsRowHeap []*queryRowResultsRow
 
 func (results *queryResultsParallel) HasNext() bool {
+	if results.query.limit > 0 && results.resultCount >= results.query.limit {
+		return false
+	}
 	results.init()
 	return len(results.resultsHeap) > 0 || len(results.sourceHeap) > 0
 }
@@ -44,6 +48,7 @@ func (results *queryResultsParallel) Next() QueryRow {
 	for {
 		potentialRow := results.maybeReturnRow()
 		if potentialRow != nil {
+			results.resultCount++
 			return potentialRow
 		}
 		nextBestResult := results.takeFromSource()

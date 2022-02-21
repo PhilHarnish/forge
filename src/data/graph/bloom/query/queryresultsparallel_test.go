@@ -14,7 +14,7 @@ import (
 )
 
 var _ = Describe("QueryResults parallel", func() {
-	It("Reads from 2+ empty source", func() {
+	It("reads from 2+ empty source", func() {
 		src := &testSource{
 			name: "example",
 		}
@@ -28,7 +28,7 @@ var _ = Describe("QueryResults parallel", func() {
 		`))
 	})
 
-	It("Reads from 2+ populated sources", func() {
+	It("reads from 2+ populated sources", func() {
 		src := &testSource{
 			name:    "example",
 			results: newResults(0.5, "result"),
@@ -45,7 +45,7 @@ var _ = Describe("QueryResults parallel", func() {
 		`))
 	})
 
-	It("Reads multiple results from multiple sources", func() {
+	It("reads multiple results from multiple sources", func() {
 		a := &testSource{
 			name:    "a",
 			results: newResults(1.0, "aa", 0.8, "ab"),
@@ -72,7 +72,32 @@ var _ = Describe("QueryResults parallel", func() {
 		`))
 	})
 
-	It("Iterates streams returns results with decreasing value", func() {
+	It("reads up until a given limit", func() {
+		a := &testSource{
+			name:    "a",
+			results: newResults(1.0, "aa", 0.8, "ab"),
+		}
+		q := query.Select().From(a, a, a).Limit(4)
+		Expect(q.String(true)).To(matchers.LookLike(`
+				SELECT *
+				FROM
+					a,
+					a,
+					a
+				LIMIT 4;
+				Score | Text | Text | Text
+				==========================
+				1.00  | aa   | aa   | aa
+				--------------------------
+				0.80  | ab   | aa   | aa
+				--------------------------
+				0.80  | aa   | aa   | ab
+				--------------------------
+				0.80  | aa   | ab   | aa
+		`))
+	})
+
+	It("iterates streams returns results with decreasing value", func() {
 		rand.Seed(GinkgoRandomSeed())
 		size := 5
 		a := &testSource{
