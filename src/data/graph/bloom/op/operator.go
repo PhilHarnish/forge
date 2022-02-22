@@ -11,7 +11,7 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
-func (op *operator) process(operation *operation, acceptor node.NodeAcceptor) operatorEdgeHeap {
+func (op *operator) process(operation *operation, acceptor node.NodeAcceptor) *operatorEdgeHeap {
 	if op.processMethod == parallel {
 		return processParallel(operation, acceptor)
 	} else {
@@ -25,14 +25,14 @@ func (op *operator) synthesizeNode(operands []node.NodeIterator) *node.Node {
 	switch op.edgePolicy {
 	case firstOperand:
 		return result
-	case anyOperands:
-		for _, operand := range operands[1:] {
-			result.Union(operand.Root())
-		}
-		return result
 	case allOperands:
 		for _, operand := range operands[1:] {
 			result.Intersection(operand.Root())
+		}
+		return result
+	case anyOperands:
+		for _, operand := range operands[1:] {
+			result.Union(operand.Root())
 		}
 		return result
 	}
@@ -102,7 +102,7 @@ type operatorEdge struct {
 
 type operatorEdgeHeap []*operatorEdge
 
-func processParallel(operation *operation, acceptor node.NodeAcceptor) operatorEdgeHeap {
+func processParallel(operation *operation, acceptor node.NodeAcceptor) *operatorEdgeHeap {
 	operator := operation.operator
 	operands := operation.operands
 	minWeight := operator.maxWeightPolicy == useSmallest
@@ -146,7 +146,7 @@ func processParallel(operation *operation, acceptor node.NodeAcceptor) operatorE
 		}
 	}
 	heap.Init(&availableOutgoingEdges)
-	return availableOutgoingEdges
+	return &availableOutgoingEdges
 }
 
 func filterEdge(edge *operatorEdge, operator *operator, nOperands int) *operatorEdge {
@@ -171,7 +171,7 @@ func filterEdge(edge *operatorEdge, operator *operator, nOperands int) *operator
 	return nil
 }
 
-func processSequential(operation *operation, acceptor node.NodeAcceptor) operatorEdgeHeap {
+func processSequential(operation *operation, acceptor node.NodeAcceptor) *operatorEdgeHeap {
 	operands := operation.operands
 	availableOutgoingEdges := operatorEdgeHeap{}
 	operand := operands[0]
@@ -199,7 +199,7 @@ func processSequential(operation *operation, acceptor node.NodeAcceptor) operato
 		}
 		availableOutgoingEdges = append(availableOutgoingEdges, outgoingEdge)
 	}
-	return availableOutgoingEdges
+	return &availableOutgoingEdges
 }
 
 func (edge *operatorEdge) updatePath(path string, item node.NodeIterator) node.NodeIterator {

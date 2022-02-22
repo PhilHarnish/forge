@@ -7,7 +7,7 @@ import (
 type operatorItems struct {
 	acceptor  node.NodeAcceptor
 	operation *operation
-	edges     operatorEdgeHeap
+	edges     *operatorEdgeHeap
 }
 
 func newOperatorItems(acceptor node.NodeAcceptor, operation *operation) *operatorItems {
@@ -18,8 +18,7 @@ func newOperatorItems(acceptor node.NodeAcceptor, operation *operation) *operato
 }
 
 func (items *operatorItems) HasNext() bool {
-	edges := items.getHeap()
-	return len(*edges) > 0
+	return items.getHeap().Len() > 0
 }
 
 func (items *operatorItems) Next() (string, node.NodeIterator) {
@@ -41,5 +40,5 @@ func (items *operatorItems) getHeap() *operatorEdgeHeap {
 		items.edges = items.operation.operator.process(
 			items.operation, items.acceptor)
 	}
-	return &items.edges
+	return items.edges
 }
