@@ -48,6 +48,16 @@ func NewNode(matchWeight ...weight.Weight) *Node {
 	return result
 }
 
+func (node *Node) Copy() *Node {
+	return &Node{
+		MatchWeight: node.MatchWeight,
+		MaxWeight:   node.MaxWeight,
+		ProvideMask: node.ProvideMask,
+		RequireMask: node.RequireMask,
+		LengthsMask: node.LengthsMask,
+	}
+}
+
 func (node *Node) Matches() bool {
 	return node.LengthsMask&mask.Mask(0b1) == 1
 }

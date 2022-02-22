@@ -15,6 +15,15 @@ func Test(t *testing.T) {
 	RunSpecs(t, "Tests")
 }
 
+var _ = Describe("Copy", func() {
+	It("copies do not modify original", func() {
+		original := node.NewNode()
+		nodeCopy := original.Copy()
+		original.MatchWeight = 1.0
+		Expect(nodeCopy.MatchWeight).To(Equal(0.0))
+	})
+})
+
 var _ = Describe("Match", func() {
 	It("Initially does not match", func() {
 		node := node.NewNode()
