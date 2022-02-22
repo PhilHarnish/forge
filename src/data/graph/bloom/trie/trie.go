@@ -66,7 +66,7 @@ func (trie *Trie) Link(path string, child *Trie) error {
 				return fmt.Errorf("link '%s' already exists", path)
 			}
 			// Attempt to reuse link.
-			return fmt.Errorf("splitting an existing link is currently unsupported")
+			panic("splitting an existing link is currently unsupported")
 		}
 		if links[second].node.MaxWeight > links[first].node.MaxWeight {
 			// The second node is better than first; swap.
