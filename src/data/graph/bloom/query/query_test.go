@@ -6,7 +6,11 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
+	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/op"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
+	"github.com/philharnish/forge/src/data/graph/bloom/retrie"
+	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
@@ -134,6 +138,43 @@ var _ = Describe("Limits", func() {
 		Expect(q.String()).To(matchers.LookLike(`
 				SELECT *
 				LIMIT 30;
+		`))
+	})
+})
+
+var _ = Describe("Functional tests", func() {
+	It("finds intersecting regular expressions", func() {
+		a := retrie.NewReTrie("a*b*c*", 1.0)
+		b := retrie.NewReTrie("abc|xyz", 1.0)
+		q := query.Select().From(op.And(a, b))
+		Expect(q.String(true)).To(matchers.LookLike(`
+				SELECT *
+				FROM (((ReTrie: 100 abc ●●●···) && (ReTrie: abcxyz ◌◌◌●)): abc ◌◌◌●);
+				Score | Text
+				============
+				1.00  | abc
+		`))
+	})
+
+	FIt("finds words matching regular expressions", func() {
+		a := retrie.NewReTrie("a+.*b+.*c+.*", 1.0)
+		b := trie.NewTrie()
+		b.Add("banana", 1.0)
+		b.Link("a", trie.NewTrie())
+		child := b.Get("a")
+		child.Add("pple", 1.0)
+		child.Add("rabic", 1.0)
+		child.Add("bstract", 1.0)
+		merged := op.And(a, b)
+		Expect(node.StringChildren(merged, 3)).To(matchers.LookLike(`
+		`))
+		q := query.Select().From(op.And(a, b))
+		Expect(q.String(true)).To(matchers.LookLike(`
+				SELECT *
+				FROM (((ReTrie: 100 abc ●●●···) && (ReTrie: abcxyz ◌◌◌●)): abc ◌◌◌●);
+				Score | Text
+				============
+				1.00  | abc
 		`))
 	})
 })

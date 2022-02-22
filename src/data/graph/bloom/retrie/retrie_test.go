@@ -318,6 +318,66 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
+	It("matches + with duplicate literal suffix", func() {
+		trie := retrie.NewReTrie("a+a", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+		ReTrie: A
+		│◌◌●●●···
+		└a ->ReTrie: A
+		·│◌●●●···
+		·└a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		· │●●●···
+		· └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		·  │●●●···
+		·  └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		`))
+	})
+
+	It("matches + with duplicate range suffix", func() {
+		trie := retrie.NewReTrie("a+[a-b]", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+		ReTrie: A
+		│◌◌●●●···
+		└a ->ReTrie: A
+		·│◌●●●···
+		·└a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		· │●●●···
+		· └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		·  │●●●···
+		·  └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		`))
+	})
+
+	It("matches range+ with duplicate literal suffix", func() {
+		trie := retrie.NewReTrie("[a-b]+a", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+		ReTrie: A
+		│◌◌●●●···
+		└a ->ReTrie: A
+		·│◌●●●···
+		·└a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		· │●●●···
+		· └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		·  │●●●···
+		·  └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		`))
+	})
+
+	It("matches range+ with duplicate range suffix", func() {
+		trie := retrie.NewReTrie("[a-b]+[a-b]", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+		ReTrie: A
+		│◌◌●●●···
+		└a ->ReTrie: A
+		·│◌●●●···
+		·└a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		· │●●●···
+		· └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		·  │●●●···
+		·  └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+		`))
+	})
+
 	It("matches .+ with suffix", func() {
 		trie := retrie.NewReTrie(".+", 1.0)
 		depth := 3

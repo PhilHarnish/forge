@@ -1,7 +1,9 @@
 package retrie
 
 import (
+	"fmt"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
@@ -11,12 +13,14 @@ import (
 type reTrieNode struct {
 	rootNode *node.Node
 	links    []*reTrieLink
+	edgeMask mask.Mask
 }
 
 type reTrieLink struct {
-	prefix string
-	runes  []rune
-	node   node.NodeIterator
+	prefix   string
+	runes    []rune
+	node     node.NodeIterator
+	edgeMask mask.Mask
 }
 
 func newReTrieNode(root *node.Node) *reTrieNode {
@@ -54,8 +58,9 @@ func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) {
 		root.rootNode.RepeatLengthMask(1)
 	}
 	root.addLink(&reTrieLink{
-		prefix: DOT_PREFIX,
-		node:   child,
+		prefix:   DOT_PREFIX,
+		node:     child,
+		edgeMask: mask.ALL,
 	})
 }
 
@@ -64,9 +69,12 @@ func (root *reTrieNode) linkPath(path string, child *reTrieNode, repeats bool) {
 	if repeats {
 		root.rootNode.RepeatLengthMask(len(path))
 	}
+	edge, _ := utf8.DecodeRuneInString(path)
+	edgeMask, _ := mask.AlphabetMask(edge)
 	root.addLink(&reTrieLink{
-		prefix: path,
-		node:   child,
+		prefix:   path,
+		node:     child,
+		edgeMask: edgeMask,
 	})
 }
 
@@ -102,13 +110,48 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 	}
 	root.rootNode.ProvideMask |= pathMask
 	root.addLink(&reTrieLink{
-		runes: filteredRunes,
-		node:  child,
+		runes:    filteredRunes,
+		node:     child,
+		edgeMask: pathMask,
 	})
 }
 
 func (root *reTrieNode) addLink(link *reTrieLink) {
-	root.links = append(root.links, link)
+	edgeMask := link.edgeMask
+	if edgeMask&root.edgeMask == 0 {
+		root.edgeMask |= edgeMask
+		// Optimized simple case.
+		root.links = append(root.links, link)
+	}
+	for i, child := range root.links {
+		if link.node == child.node {
+			// This link is already present; no-op.
+			return
+		}
+		if edgeMask&child.edgeMask == 0 {
+			continue
+		}
+		if link.prefix != "" {
+			if child.prefix == link.prefix {
+				// Exact match. Swap with an OR.
+				root.links[i].node = op.Or(link.node, child.node)
+			} else if len(child.runes) > 0 {
+				prefixRune, _ := utf8.DecodeRuneInString(link.prefix)
+				child.runes = removeRunes(child.runes, []rune{prefixRune, prefixRune})
+				link.node = op.Or(link.node, child.node)
+				root.links = append(root.links, link)
+			}
+		} else if len(link.runes) > 0 {
+			if child.prefix != "" {
+				prefixRune, _ := utf8.DecodeRuneInString(child.prefix)
+				link.runes = removeRunes(link.runes, []rune{prefixRune, prefixRune})
+				child.node = op.Or(link.node, child.node)
+				root.links = append(root.links, link)
+			}
+			panic("Splitting link runes is unsupported")
+		}
+		panic(fmt.Sprintf("unhandled matching child: %s %s", mask.MaskString(root.edgeMask, edgeMask), child.node.String()))
+	}
 }
 
 func (root *reTrieNode) optionalPath(child *reTrieNode) *reTrieNode {
@@ -141,4 +184,12 @@ func (root *reTrieNode) optionalLink() *reTrieLink {
 		return root.links[0]
 	}
 	return nil
+}
+
+/*
+Remove targets from runes.
+*/
+func removeRunes(runes []rune, targets []rune) []rune {
+	panic("Splitting child runes is unsupported.")
+	return runes
 }
