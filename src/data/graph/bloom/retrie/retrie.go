@@ -97,7 +97,7 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 		return parent
 	case syntax.OpBeginLine, syntax.OpEndLine, syntax.OpBeginText, syntax.OpEndText:
 		if parent != nil {
-			panic(fmt.Sprintf("Cannot connect parent -> child with instruction: %d", re.Op))
+			return parent
 		}
 		return child
 	case syntax.OpCapture: // (xyz)
@@ -121,7 +121,7 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 			return child
 		}
 		// Allow skipping straight to child.
-		return parent.optionalPath(child, repeats)
+		return parent.optionalPath(child)
 	case syntax.OpLiteral: // x
 		parent = ensureNode(parent)
 		parent.linkPath(string(re.Rune), child, repeats)
@@ -129,28 +129,39 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 	case syntax.OpPlus:
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpPlus with 2+ Sub options")
+		} else if parent == nil {
+			// Only allow looping through child.
+			linker(child, child, re.Sub[0], true)
+			// Require at least one path through re.Sub[0]
+			return linker(parent, child, re.Sub[0], true)
 		}
-		parent = linker(parent, child, re.Sub[0], true)
-		// However, child may optionally link through as well.
-		linker(child, child, re.Sub[0], true)
-		return parent
+		// We must not contaminate child which may be used by others.
+		detour := child.Copy()
+		// Child may optionally loop back to itself.
+		linker(detour, detour, re.Sub[0], true)
+		// Require at least one path through re.Sub[0]
+		return linker(parent, detour, re.Sub[0], true)
 	case syntax.OpQuest: // x?
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpQuest with 2+ Sub options")
 		}
 		// Offer link to alternate path.
 		parent = linker(parent, child, re.Sub[0], repeats)
-		// Allow skipping straight to child.
-		return parent.optionalPath(child, repeats)
+		// Mark the path to child as optional.
+		return parent.optionalPath(child)
 	case syntax.OpStar: // x*
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpStar with 2+ Sub options")
+		} else if parent == nil {
+			// Only allow looping through child.
+			return linker(child, child, re.Sub[0], true)
 		}
-		parent = linker(parent, child, re.Sub[0], true)
-		// However, child may optionally link through as well.
-		linker(child, child, re.Sub[0], true)
-		// Allow skipping straight to child.
-		return parent.optionalPath(child, true)
+		// We must not contaminate child which may be used by others.
+		detour := child.Copy()
+		// Allow looping through (copied) child.
+		linker(detour, detour, re.Sub[0], true)
+		// Ensure it is possible to go straight from parent to child.
+		return parent.optionalPath(detour)
 	}
 	panic(fmt.Sprintf("Unsupported instruction: %d", re.Op))
 }

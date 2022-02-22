@@ -17,9 +17,10 @@ const DOT_PREFIX = "."
 const OPTIONAL_PREFIX = "?"
 
 func newTrieItems(acceptor node.NodeAcceptor, root *reTrieNode) node.NodeItems {
-	if len(root.links) == 1 && root.links[0].prefix == OPTIONAL_PREFIX {
+	optionalLink := root.optionalLink()
+	if optionalLink != nil {
 		// The "?" operator has zero length so iterate that node directly.
-		return root.links[0].node.Items(acceptor)
+		return optionalLink.node.Items(acceptor)
 	}
 	return &reTrieItems{
 		acceptor: acceptor,

@@ -300,6 +300,84 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
+	It("matches [abc]+ with suffix", func() {
+		trie := retrie.NewReTrie("[ab]+xyz", 1.0)
+		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
+				ReTrie: abXYZ
+				│◌◌◌◌●●●···
+				├a ->ReTrie: abXYZ
+				││◌◌◌●●●···
+				│├xyz●->ReTrie: 100
+				│├a ->ReTrie: abXYZ
+				│└b ->ReTrie: abXYZ
+				└b ->ReTrie: abXYZ
+				·│◌◌◌●●●···
+				·├xyz●->ReTrie: 100
+				·├a ->ReTrie: abXYZ
+				·└b ->ReTrie: abXYZ
+		`))
+	})
+
+	It("matches .+ with suffix", func() {
+		trie := retrie.NewReTrie(".+", 1.0)
+		depth := 3
+		var item node.NodeIterator = trie
+		Expect(item.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz -' ◌●●●···"))
+		for depth > 0 {
+			depth--
+			items := item.Items(node.NodeAcceptAll)
+			Expect(items.HasNext()).To(BeTrue())
+			_, item = items.Next()
+			Expect(item.String()).To(Equal("ReTrie: 100 abcdefghijklmnopqrstuvwxyz -' ●●●···"))
+			count := 1 // One extracted already.
+			for items.HasNext() {
+				items.Next()
+				count++
+			}
+			Expect(count).To(Equal(mask.SIZE))
+		}
+	})
+
+	It("matches alternative +s", func() {
+		trie := retrie.NewReTrie("^(?:(?:a+)|(?:b+))$", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: ab
+				│◌●●●···
+				├a●->ReTrie: 100 A
+				││●●●···
+				│└a●->ReTrie: 100 A
+				│ │●●●···
+				│ └a●->ReTrie: 100 A
+				└b●->ReTrie: 100 B
+				·│●●●···
+				·└b●->ReTrie: 100 B
+				· │●●●···
+				· └b●->ReTrie: 100 B
+		`))
+	})
+
+	It("matches alternative +s with suffix", func() {
+		trie := retrie.NewReTrie("^(?:(?:a+)|(?:b+))xy$", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: abXY
+				│◌◌◌●●●···
+				├a ->ReTrie: aXY
+				││◌◌●●●···
+				│├xy●->ReTrie: 100
+				│└a ->ReTrie: aXY
+				│ │◌◌●●●···
+				│ ├xy●->ReTrie: 100
+				│ └a ->ReTrie: aXY
+				└b ->ReTrie: bXY
+				·│◌◌●●●···
+				·├xy●->ReTrie: 100
+				·└b ->ReTrie: bXY
+				· │◌◌●●●···
+				· ├xy●->ReTrie: 100
+				· └b ->ReTrie: bXY
+		`))
+	})
+
 	It("matches (?:group|of|choices)+ with alt suffix", func() {
 		trie := retrie.NewReTrie("(?:a|bbbbb)+(?:xxx|yyyyyy)", 1.0)
 		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
@@ -347,9 +425,9 @@ var _ = Describe("ReTrie syntax", func() {
 				│◌●●●···
 				└a●->ReTrie: 100 B
 				·│●●●···
-				·└b●->((ReTrie: 100 B) || (ReTrie: 100 B)): 100 B
+				·└b●->ReTrie: 100 B
 				· │●●●···
-				· └b●->((ReTrie: 100 B) || (ReTrie: 100 B)): 100 B
+				· └b●->ReTrie: 100 B
 		`))
 	})
 
@@ -360,14 +438,83 @@ var _ = Describe("ReTrie syntax", func() {
 				│◌◌◌◌●●●···
 				└a ->ReTrie: bXYZ
 				·│◌◌◌●●●···
-				·├b ->((ReTrie: bXYZ) || (ReTrie: bXYZ)): bXYZ
-				·││◌◌◌●●●···
-				·│├xyz●->((ReTrie: 100) || (ReTrie: 100)): 100
-				·│└b ->((ReTrie: bXYZ) || (ReTrie: bXYZ)): bXYZ
-				·│ │◌◌◌●●●···
-				·│ ├xyz●->((ReTrie: 100) || (ReTrie: 100)): 100
-				·│ └b ->((ReTrie: bXYZ) || (ReTrie: bXYZ)): bXYZ
-				·└xyz●->ReTrie: 100
+				·├xyz●->ReTrie: 100
+				·└b ->ReTrie: bXYZ
+				· │◌◌◌●●●···
+				· ├xyz●->ReTrie: 100
+				· └b ->ReTrie: bXYZ
+				·  │◌◌◌●●●···
+				·  ├xyz●->ReTrie: 100
+				·  └b ->ReTrie: bXYZ
+		`))
+	})
+
+	It("matches multiple *s", func() {
+		trie := retrie.NewReTrie("a*b*", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: 100 ab
+				│●●●···
+				├b●->ReTrie: 100 ab
+				││●●●···
+				│├b●->ReTrie: 100 ab
+				│││●●●···
+				││├b●->ReTrie: 100 ab
+				││└a●->ReTrie: 100 ab
+				│└a●->ReTrie: 100 ab
+				│ │●●●···
+				│ ├b●->ReTrie: 100 ab
+				│ └a●->ReTrie: 100 ab
+				└a●->ReTrie: 100 ab
+				·│●●●···
+				·├b●->ReTrie: 100 ab
+				·││●●●···
+				·│├b●->ReTrie: 100 ab
+				·│└a●->ReTrie: 100 ab
+				·└a●->ReTrie: 100 ab
+				· │●●●···
+				· ├b●->ReTrie: 100 ab
+				· └a●->ReTrie: 100 ab
+		`))
+	})
+
+	It("matches alternative *s", func() {
+		trie := retrie.NewReTrie("^(?:(?:a*)|(?:b*))$", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: 100 ab
+				│●●●···
+				├a●->ReTrie: 100 A
+				││●●●···
+				│└a●->ReTrie: 100 A
+				│ │●●●···
+				│ └a●->ReTrie: 100 A
+				└b●->ReTrie: 100 B
+				·│●●●···
+				·└b●->ReTrie: 100 B
+				· │●●●···
+				· └b●->ReTrie: 100 B
+		`))
+	})
+
+	It("matches alternative *s with suffix", func() {
+		trie := retrie.NewReTrie("^(?:(?:a*)|(?:b*))xy$", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: abXY
+				│◌◌●●●···
+				├xy●->((ReTrie: 100) || (ReTrie: 100)): 100
+				├b ->ReTrie: bXY
+				││◌◌●●●···
+				│├xy●->ReTrie: 100
+				│└b ->ReTrie: bXY
+				│ │◌◌●●●···
+				│ ├xy●->ReTrie: 100
+				│ └b ->ReTrie: bXY
+				└a ->ReTrie: aXY
+				·│◌◌●●●···
+				·├xy●->ReTrie: 100
+				·└a ->ReTrie: aXY
+				· │◌◌●●●···
+				· ├xy●->ReTrie: 100
+				· └a ->ReTrie: aXY
 		`))
 	})
 
