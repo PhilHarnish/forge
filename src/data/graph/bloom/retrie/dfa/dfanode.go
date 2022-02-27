@@ -24,12 +24,21 @@ type dfaNode struct {
 type dfaNodeEdge struct {
 	runes       []rune
 	destination dfaId
+	edgeMask    mask.Mask
 }
 type dfaNodeEdgeList = []*dfaNodeEdge
 
 func newDfaNode(directory *dfaDirectory) *dfaNode {
 	return &dfaNode{
 		directory: directory,
+	}
+}
+
+func newDfaNodeEdge(runes []rune, destination dfaId) *dfaNodeEdge {
+	return &dfaNodeEdge{
+		runes:       runes,
+		destination: destination,
+		edgeMask:    runesMask(runes),
 	}
 }
 
@@ -59,12 +68,12 @@ func (root *dfaNode) graphVizEdgeStrings(acc *[]string, sweep int) {
 		return
 	}
 	if root.nodeNode.Matches() {
-		*acc = append(*acc, fmt.Sprintf(`  "%s" [shape=doublecircle]`, dfaIdToString(root.id)))
+		*acc = append(*acc, fmt.Sprintf(`	"%s" [shape=doublecircle]`, dfaIdToString(root.id)))
 	} else {
-		*acc = append(*acc, fmt.Sprintf("  // %s does not match", dfaIdToString(root.id)))
+		*acc = append(*acc, fmt.Sprintf("	// %s does not match", dfaIdToString(root.id)))
 	}
 	for _, edge := range root.outgoing {
-		*acc = append(*acc, fmt.Sprintf(`  "%s" -> "%s" [label="%s"]`,
+		*acc = append(*acc, fmt.Sprintf(`	"%s" -> "%s" [label="%s"]`,
 			dfaIdToString(root.id), dfaIdToString(edge.destination),
 			edge.String()))
 		destination, ok := root.directory.table[edge.destination]
@@ -72,7 +81,7 @@ func (root *dfaNode) graphVizEdgeStrings(acc *[]string, sweep int) {
 			sweep++
 			destination.graphVizEdgeStrings(acc, sweep)
 		} else {
-			*acc = append(*acc, fmt.Sprintf(`  "%s" [color=red]`, dfaIdToString(root.id)))
+			*acc = append(*acc, fmt.Sprintf(`	"%s" [color=red]`, dfaIdToString(root.id)))
 		}
 	}
 }
@@ -104,11 +113,11 @@ func (root *dfaNode) initOutgoing() dfaNodeEdgeList {
 	return root.outgoing
 }
 
-func (root *dfaNode) maskRunes(runes []rune, child *node.Node) {
-	edgeMask := runesMask(runes)
+func (root *dfaNode) maskEdge(edge *dfaNodeEdge, child *node.Node) {
+	edgeMask := edge.edgeMask
 	duplicates := root.outMask & edgeMask
 	if duplicates != 0 {
-		panic(fmt.Sprintf("Duplicate edges added: %s", mask.MaskString(duplicates, 0)))
+		// Split edges.
 	}
 	root.outMask |= edgeMask
 	root.nodeNode.MaskEdgeMaskToChild(edgeMask, child)

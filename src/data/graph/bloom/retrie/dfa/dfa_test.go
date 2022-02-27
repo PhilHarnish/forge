@@ -279,13 +279,7 @@ var _ = Describe("Regexp syntax", func() {
 	XIt("dfa example online", func() {
 		n := dfa.Dfa("(a|b)*ba", 1.0)
 		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
-				ReTrie: A
-				│◌●●●···
-				└a●->ReTrie: 100 A
-				·│●●●···
-				·└a●->ReTrie: 100 A
-				· │●●●···
-				· └a●->ReTrie: 100 A
+				TODO.
 		`))
 	})
 })
@@ -295,7 +289,7 @@ var _ = Describe("GraphVizString", func() {
 		result := dfa.Dfa("", 1.0)
 		Expect(result.GraphVizString()).To(matchers.LookLike(`
 			digraph G {
-			  "1,2" [shape=doublecircle]
+				"1,2" [shape=doublecircle]
 			}
 		`))
 	})
@@ -304,21 +298,21 @@ var _ = Describe("GraphVizString", func() {
 		result := dfa.Dfa("abc|acd|xyz", 1.0)
 		Expect(result.GraphVizString()).To(matchers.LookLike(`
 			digraph G {
-			  // 1,7,10 does not match
-			  "1,7,10" -> "2,4,6" [label="a"]
-			  // 2,4,6 does not match
-			  "2,4,6" -> "3" [label="b"]
-			  // 3 does not match
-			  "3" -> "11" [label="c"]
-			  "11" [shape=doublecircle]
-			  "2,4,6" -> "5" [label="c"]
-			  // 5 does not match
-			  "5" -> "11" [label="d"]
-			  "1,7,10" -> "8" [label="x"]
-			  // 8 does not match
-			  "8" -> "9" [label="y"]
-			  // 9 does not match
-			  "9" -> "11" [label="z"]
+				// 1,7,10 does not match
+				"1,7,10" -> "2,4,6" [label="a"]
+				// 2,4,6 does not match
+				"2,4,6" -> "3" [label="b"]
+				// 3 does not match
+				"3" -> "11" [label="c"]
+				"11" [shape=doublecircle]
+				"2,4,6" -> "5" [label="c"]
+				// 5 does not match
+				"5" -> "11" [label="d"]
+				"1,7,10" -> "8" [label="x"]
+				// 8 does not match
+				"8" -> "9" [label="y"]
+				// 9 does not match
+				"9" -> "11" [label="z"]
 			}
 		`))
 	})
@@ -327,17 +321,28 @@ var _ = Describe("GraphVizString", func() {
 		result := dfa.Dfa("[ab]+", 1.0)
 		Expect(result.GraphVizString()).To(matchers.LookLike(`
 			digraph G {
-			  // 1 does not match
-			  "1" -> "1,2,3" [label="[ab]"]
-			  "1,2,3" [shape=doublecircle]
-			  "1,2,3" -> "1,2,3" [label="[ab]"]
+				// 1 does not match
+				"1" -> "1,2,3" [label="[ab]"]
+				"1,2,3" [shape=doublecircle]
+				"1,2,3" -> "1,2,3" [label="[ab]"]
 			}
 		`))
 	})
 
-	XIt("dfa example online", func() {
+	It("dfa example online", func() {
 		result := dfa.Dfa("(a|b)*ba", 1.0)
 		Expect(result.GraphVizString()).To(matchers.LookLike(`
+		digraph G {
+			// 1,2,4,5 does not match
+			"1,2,4,5" -> "1,2,3,4,5" [label="[ab]"]
+			// 1,2,3,4,5 does not match
+			"1,2,3,4,5" -> "1,2,3,4,5" [label="[ab]"]
+			"1,2,3,4,5" -> "6" [label="b"]
+			// 6 does not match
+			"6" -> "7" [label="a"]
+			"7" [shape=doublecircle]
+			"1,2,4,5" -> "6" [label="b"]
+		}
 		`))
 	})
 })

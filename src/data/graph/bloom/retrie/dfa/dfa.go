@@ -107,18 +107,20 @@ func (directory *dfaDirectory) init(instructions []syntax.Inst) {
 		if len(instruction.Rune) == 0 {
 			continue
 		}
-		edge := &dfaNodeEdge{
-			destination: directory.nfa2dfa[instruction.Out],
-		}
-		directory.nfaEdges[nfaId] = edge
+		var runes []rune
 		switch instruction.Op {
 		case syntax.InstRune, syntax.InstRune1:
-			edge.runes = instruction.Rune
+			runes = instruction.Rune
 		case syntax.InstRuneAny, syntax.InstRuneAnyNotNL:
-			edge.runes = anyRunes
+			runes = anyRunes
 		default:
 			panic(fmt.Sprintf("Unsupported init operand: %s", instruction.Op))
 		}
+		edge := newDfaNodeEdge(
+			runes,
+			directory.nfa2dfa[instruction.Out],
+		)
+		directory.nfaEdges[nfaId] = edge
 	}
 }
 
@@ -135,13 +137,18 @@ func (directory *dfaDirectory) expandFrom(depth int, cursor *dfaNode) int {
 		return 0
 	}
 	// 3. Expand edges for DFAs.
+	cycles := []int{}
 	for _, edge := range cursor.initOutgoing() {
 		destinationDfa := directory.table[edge.destination]
 		cycleLength := directory.expandFrom(depth+1, destinationDfa)
-		cursor.maskRunes(edge.runes, destinationDfa.nodeNode)
+		cursor.maskEdge(edge, destinationDfa.nodeNode)
 		if cycleLength > 0 {
-			cursor.nodeNode.RepeatLengthMask(cycleLength)
+			cycles = append(cycles, cycleLength)
 		}
+	}
+	// Mark cycles after masking all edges.
+	for _, cycle := range cycles {
+		cursor.nodeNode.RepeatLengthMask(cycle)
 	}
 	cursor.finishVisit()
 	return 0
