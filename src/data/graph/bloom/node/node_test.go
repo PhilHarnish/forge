@@ -63,6 +63,38 @@ var _ = Describe("Matches", func() {
 	})
 })
 
+var _ = Describe("MaskEdgeMask", func() {
+	It("Applies simple mask", func() {
+		root := node.NewNode()
+		edgeMask, _ := mask.AlphabetMaskRange('a', 'a')
+		root.MaskEdgeMask(edgeMask)
+		Expect(root.String()).To(Equal("Node: A"))
+	})
+
+	It("Applies compound mask", func() {
+		root := node.NewNode()
+		edgeMask, _ := mask.AlphabetMaskRange('a', 'c')
+		root.MaskEdgeMask(edgeMask)
+		Expect(root.String()).To(Equal("Node: ABC"))
+	})
+})
+
+var _ = Describe("MaskEdgeMaskToChild", func() {
+	It("Applies simple mask, assumes one option is requied", func() {
+		root := node.NewNode()
+		edgeMask, _ := mask.AlphabetMaskRange('a', 'a')
+		root.MaskEdgeMaskToChild(edgeMask, node.NewNode(1.0))
+		Expect(root.String()).To(Equal("Node: A ◌●"))
+	})
+
+	It("Applies compound mask, assumes multiple paths are not required", func() {
+		root := node.NewNode()
+		edgeMask, _ := mask.AlphabetMaskRange('a', 'c')
+		root.MaskEdgeMaskToChild(edgeMask, node.NewNode(1.0))
+		Expect(root.String()).To(Equal("Node: abc ◌●"))
+	})
+})
+
 var _ = Describe("MaskPath", func() {
 	It("Root inherits requirements from child", func() {
 		root := node.NewNode()
@@ -269,10 +301,17 @@ var _ = Describe("String", func() {
 	})
 })
 
-type TestIterator struct{}
+type TestIterator struct {
+	root *node.Node
+}
 
 func (iterator *TestIterator) Root() *node.Node {
-	return &node.Node{}
+	if iterator.root == nil {
+		result := node.NewNode(1.0)
+		result.RepeatLengthMask(1)
+		return result
+	}
+	return iterator.root
 }
 
 func (iterator *TestIterator) Items(acceptor node.NodeAcceptor) node.NodeItems {
@@ -307,7 +346,12 @@ var _ = Describe("TestIterator", func() {
 	var iterator *TestIterator
 
 	BeforeEach(func() {
-		iterator = &TestIterator{}
+		root := node.NewNode()
+		root.LengthsMask = 0b10
+		root.RepeatLengthMask(1)
+		iterator = &TestIterator{
+			root: root,
+		}
 	})
 
 	It("Conforms with interface and compiles", func() {
@@ -316,26 +360,30 @@ var _ = Describe("TestIterator", func() {
 	})
 
 	It("Produces string results", func() {
-		Expect(iterator.String()).To(Equal("TestIterator"))
+		Expect(iterator.String()).To(Equal("TestIterator: ◌●●●···"))
 	})
 
 	It("Produces shallow string results", func() {
 		Expect(node.StringChildren(iterator)).To(matchers.LookLike(`
-				TestIterator
-				├a ->TestIterator
-				└b ->TestIterator
+			TestIterator:
+			│◌●●●···
+			├a●->TestIterator: 100
+			└b●->TestIterator: 100
 		`))
 	})
 
 	It("Produces deeper string results", func() {
 		Expect(node.StringChildren(iterator, 2)).To(matchers.LookLike(`
-				TestIterator
-				├a ->TestIterator
-				│├a ->TestIterator
-				│└b ->TestIterator
-				└b ->TestIterator
-				·├a ->TestIterator
-				·└b ->TestIterator
+			TestIterator:
+			│◌●●●···
+			├a●->TestIterator: 100
+			││●●●···
+			│├a●->TestIterator: 100
+			│└b●->TestIterator: 100
+			└b●->TestIterator: 100
+			·│●●●···
+			·├a●->TestIterator: 100
+			·└b●->TestIterator: 100
 		`))
 	})
 })

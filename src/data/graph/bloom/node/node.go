@@ -72,15 +72,31 @@ func (node *Node) Match(weight weight.Weight) {
 	node.Weight(weight)
 }
 
+func (node *Node) MaskEdgeMask(edgeMask mask.Mask) {
+	// Provide anything the edge provides.
+	node.ProvideMask |= edgeMask
+	// Require anything the edge provides.
+	node.RequireMask &= edgeMask
+}
+
+func (node *Node) MaskEdgeMaskToChild(edgeMask mask.Mask, child *Node) {
+	oneBitRemoved := edgeMask & (edgeMask - 1)
+	if oneBitRemoved == 0 {
+		// The path to child has only one option which implies path is required.
+		node.maskMaskDistanceToChild(edgeMask, 1, child)
+	} else {
+		// Multiple runes implies path to child is not required.
+		node.MaskDistanceToChild(1, child)
+		node.ProvideMask |= edgeMask
+	}
+}
+
 func (node *Node) MaskPath(path string) error {
 	edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
 	if err != nil {
 		return err
 	}
-	// Provide anything the edge provides.
-	node.ProvideMask |= edgeMask
-	// Require anything the edge provides.
-	node.RequireMask &= edgeMask
+	node.MaskEdgeMask(edgeMask)
 	// Set match at the end of path.
 	node.LengthsMask |= 1 << runeLength
 	return nil
@@ -109,20 +125,24 @@ func (node *Node) MaskDistanceToChild(distance int, child *Node) {
 }
 
 func (node *Node) MaskPathToChild(path string, child *Node) error {
+	edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
+	if err != nil {
+		return err
+	}
+	return node.maskMaskDistanceToChild(edgeMask, runeLength, child)
+}
+
+func (node *Node) maskMaskDistanceToChild(edgeMask mask.Mask, distance int, child *Node) error {
 	// Inherit maxWeight.
 	node.Weight(child.MaxWeight)
-	if path == "" {
+	if distance == 0 {
 		// Optimized path for zero-length paths.
 		node.Union(child)
 	} else {
-		edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
-		if err != nil {
-			return err
-		}
 		// Provide anything ANY children provides (including the edge itself).
-		node.ProvideMask |= edgeMask | mask.Mask(child.ProvideMask)
+		node.ProvideMask |= edgeMask | child.ProvideMask
 		// Inherit matching lengths.
-		node.LengthsMask |= mask.ShiftLength(child.LengthsMask, runeLength)
+		node.LengthsMask |= mask.ShiftLength(child.LengthsMask, distance)
 		if child.RequireMask == mask.UNSET {
 			// Ignore the child's require mask if it is UNSET.
 			node.RequireMask &= edgeMask
@@ -131,7 +151,7 @@ func (node *Node) MaskPathToChild(path string, child *Node) error {
 			node.RequireMask &= edgeMask
 		} else {
 			// Require anything ALL children requires (including the edge itself).
-			node.RequireMask &= edgeMask | mask.Mask(child.RequireMask)
+			node.RequireMask &= edgeMask | child.RequireMask
 		}
 	}
 	return nil
