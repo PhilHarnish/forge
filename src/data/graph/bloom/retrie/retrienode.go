@@ -51,7 +51,7 @@ func (root *reTrieNode) String() string {
 	return node.Format("ReTrie", root.Root())
 }
 
-func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) {
+func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) *reTrieNode {
 	root.rootNode.ProvideMask = mask.ALL
 	root.rootNode.MaskDistanceToChild(1, child.rootNode)
 	if repeats {
@@ -62,9 +62,10 @@ func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) {
 		node:     child,
 		edgeMask: mask.ALL,
 	})
+	return root
 }
 
-func (root *reTrieNode) linkPath(path string, child *reTrieNode, repeats bool) {
+func (root *reTrieNode) linkPath(path string, child *reTrieNode, repeats bool) *reTrieNode {
 	root.rootNode.MaskPathToChild(path, child.rootNode)
 	if repeats {
 		root.rootNode.RepeatLengthMask(len(path))
@@ -76,9 +77,10 @@ func (root *reTrieNode) linkPath(path string, child *reTrieNode, repeats bool) {
 		node:     child,
 		edgeMask: edgeMask,
 	})
+	return root
 }
 
-func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool) {
+func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool) *reTrieNode {
 	if len(runes)%2 != 0 {
 		panic("linkRunes does not support an odd number of runes")
 	}
@@ -104,16 +106,16 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 		}
 		i += 2
 	}
-	root.rootNode.MaskDistanceToChild(1, child.rootNode)
+	root.rootNode.MaskEdgeMaskToChild(pathMask, child.rootNode)
 	if repeats {
 		root.rootNode.RepeatLengthMask(1)
 	}
-	root.rootNode.ProvideMask |= pathMask
 	root.addLink(&reTrieLink{
 		runes:    filteredRunes,
 		node:     child,
 		edgeMask: pathMask,
 	})
+	return root
 }
 
 func (root *reTrieNode) addLink(link *reTrieLink) {
@@ -122,16 +124,15 @@ func (root *reTrieNode) addLink(link *reTrieLink) {
 		root.edgeMask |= edgeMask
 		// Optimized simple case.
 		root.links = append(root.links, link)
+		return
 	}
 	for i, child := range root.links {
 		if link.node == child.node {
 			// This link is already present; no-op.
 			return
-		}
-		if edgeMask&child.edgeMask == 0 {
+		} else if edgeMask&child.edgeMask == 0 {
 			continue
-		}
-		if link.prefix != "" {
+		} else if link.prefix != "" {
 			if child.prefix == link.prefix {
 				// Exact match. Swap with an OR.
 				root.links[i].node = op.Or(link.node, child.node)
@@ -140,6 +141,8 @@ func (root *reTrieNode) addLink(link *reTrieLink) {
 				child.runes = removeRunes(child.runes, []rune{prefixRune, prefixRune})
 				link.node = op.Or(link.node, child.node)
 				root.links = append(root.links, link)
+			} else {
+				panic(fmt.Sprintf("Unable to match prefixes: %s vs %s", child.prefix, link.prefix))
 			}
 		} else if len(link.runes) > 0 {
 			if child.prefix != "" {
@@ -147,10 +150,12 @@ func (root *reTrieNode) addLink(link *reTrieLink) {
 				link.runes = removeRunes(link.runes, []rune{prefixRune, prefixRune})
 				child.node = op.Or(link.node, child.node)
 				root.links = append(root.links, link)
+			} else {
+				panic("Splitting link runes is unsupported")
 			}
-			panic("Splitting link runes is unsupported")
+		} else {
+			panic(fmt.Sprintf("unhandled matching child: %s %s", mask.MaskString(root.edgeMask, edgeMask), child.node.String()))
 		}
-		panic(fmt.Sprintf("unhandled matching child: %s %s", mask.MaskString(root.edgeMask, edgeMask), child.node.String()))
 	}
 }
 
@@ -191,5 +196,4 @@ Remove targets from runes.
 */
 func removeRunes(runes []rune, targets []rune) []rune {
 	panic("Splitting child runes is unsupported.")
-	return runes
 }

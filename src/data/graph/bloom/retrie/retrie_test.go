@@ -333,48 +333,24 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
-	It("matches + with duplicate range suffix", func() {
+	XIt("matches + with duplicate range suffix", func() {
 		trie := retrie.NewReTrie("a+[a-b]", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-		ReTrie: A
-		│◌◌●●●···
-		└a ->ReTrie: A
-		·│◌●●●···
-		·└a●->((ReTrie: A) || (ReTrie: 100)): 100 A
-		· │●●●···
-		· └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
-		·  │●●●···
-		·  └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+			TODO.
 		`))
 	})
 
-	It("matches range+ with duplicate literal suffix", func() {
+	XIt("matches range+ with duplicate literal suffix", func() {
 		trie := retrie.NewReTrie("[a-b]+a", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-		ReTrie: A
-		│◌◌●●●···
-		└a ->ReTrie: A
-		·│◌●●●···
-		·└a●->((ReTrie: A) || (ReTrie: 100)): 100 A
-		· │●●●···
-		· └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
-		·  │●●●···
-		·  └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+			TODO.
 		`))
 	})
 
-	It("matches range+ with duplicate range suffix", func() {
+	XIt("matches range+ with duplicate range suffix", func() {
 		trie := retrie.NewReTrie("[a-b]+[a-b]", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-		ReTrie: A
-		│◌◌●●●···
-		└a ->ReTrie: A
-		·│◌●●●···
-		·└a●->((ReTrie: A) || (ReTrie: 100)): 100 A
-		· │●●●···
-		· └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
-		·  │●●●···
-		·  └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+			TODO.
 		`))
 	})
 
