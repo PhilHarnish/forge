@@ -93,6 +93,17 @@ var _ = Describe("MaskEdgeMaskToChild", func() {
 		root.MaskEdgeMaskToChild(edgeMask, node.NewNode(1.0))
 		Expect(root.String()).To(Equal("Node: abc ◌●"))
 	})
+
+	It("Clears requirements when new paths are added", func() {
+		root := node.NewNode()
+		edgeMask, _ := mask.AlphabetMaskRange('a', 'c')
+		bRequired := node.NewNode()
+		bRequired.MaskPath("b")
+		root.MaskEdgeMaskToChild(edgeMask, node.NewNode(1.0))
+		root.Union(bRequired)
+		Expect(root.String()).To(Equal("Node: abc ◌●"))
+		Expect(root.RequireMask).To(Equal(mask.Mask(0)))
+	})
 })
 
 var _ = Describe("MaskPath", func() {

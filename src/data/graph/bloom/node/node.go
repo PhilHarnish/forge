@@ -85,9 +85,14 @@ func (node *Node) MaskEdgeMaskToChild(edgeMask mask.Mask, child *Node) {
 		// The path to child has only one option which implies path is required.
 		node.maskMaskDistanceToChild(edgeMask, 1, child)
 	} else {
-		// Multiple runes implies path to child is not required.
+		// Inherit requirements from child.
 		node.MaskDistanceToChild(1, child)
 		node.ProvideMask |= edgeMask
+		// If node's RequireMask is still unset...
+		if node.RequireMask == mask.UNSET {
+			// Clear it because multiple runes implies path to child is not required.
+			node.RequireMask = mask.Mask(0)
+		}
 	}
 }
 
