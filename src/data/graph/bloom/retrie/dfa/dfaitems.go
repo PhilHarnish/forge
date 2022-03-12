@@ -37,6 +37,8 @@ func (items *dfaItems) Next() (string, node.NodeIterator) {
 	}
 	if items.runeIndex >= len(edge.runes) {
 		items.edgeIndex++
+		items.runeIndex = 0
+		items.runeOffset = 0
 	}
 	return path, items.directory.table[edge.destination]
 }
@@ -44,7 +46,7 @@ func (items *dfaItems) Next() (string, node.NodeIterator) {
 func maybeMergeTraversal(directory *dfaDirectory, edge *dfaNodeEdge) (string, *dfaNode) {
 	path := ""
 	var result *dfaNode = nil
-	for len(edge.runes) == 1 {
+	for len(edge.runes) == 2 && edge.runes[0] == edge.runes[1] {
 		path += string(edge.runes[0])
 		result = directory.table[edge.destination]
 		if result.nodeNode.Matches() {
