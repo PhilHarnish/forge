@@ -153,22 +153,21 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
-	It("matches question mark with tricky suffix", func() {
+	XIt("matches question mark with tricky suffix", func() {
 		trie := retrie.NewReTrie("a(?:bxyz)?[a-c]", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-				ReTrie: ABcXYZ
+				ReTrie: Abcxyz
 				│◌◌●◌◌◌●
-				└a ->ReTrie: aBcXYZ
+				└a ->ReTrie: abcxyz
 				·│◌●◌◌◌●
-				·├b●->((((Span: 'xyz' 0) + (ReTrie: abc)): XYZ) || (ReTrie: 100)): 100 XYZ
-				·││●◌◌●
-				·│└xyz ->ReTrie: abc
+				·├bxyz ->ReTrie: abc
 				·│   │◌●
 				·│   ├a●->ReTrie: 100
 				·│   ├b●->ReTrie: 100
 				·│   └c●->ReTrie: 100
-				·├c●->ReTrie: 100
-				·└a●->ReTrie: 100
+				·├a●->ReTrie: 100
+				·├b●->ReTrie: 100
+				·└c●->ReTrie: 100
 		`))
 	})
 
@@ -536,21 +535,21 @@ var _ = Describe("ReTrie syntax", func() {
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
 				ReTrie: abXY
 				│◌◌●●●···
-				├xy●->((ReTrie: 100) || (ReTrie: 100)): 100
-				├b ->ReTrie: bXY
+				├a ->ReTrie: aXY
 				││◌◌●●●···
 				│├xy●->ReTrie: 100
-				│└b ->ReTrie: bXY
+				│└a ->ReTrie: aXY
 				│ │◌◌●●●···
 				│ ├xy●->ReTrie: 100
-				│ └b ->ReTrie: bXY
-				└a ->ReTrie: aXY
+				│ └a ->ReTrie: aXY
+				├xy●->ReTrie: 100
+				└b ->ReTrie: bXY
 				·│◌◌●●●···
 				·├xy●->ReTrie: 100
-				·└a ->ReTrie: aXY
+				·└b ->ReTrie: bXY
 				· │◌◌●●●···
 				· ├xy●->ReTrie: 100
-				· └a ->ReTrie: aXY
+				· └b ->ReTrie: bXY
 		`))
 	})
 
@@ -579,12 +578,12 @@ var _ = Describe("ReTrie syntax", func() {
 				││◌●
 				│├x●->ReTrie: 100
 				│└y●->ReTrie: 100
-				├y●->ReTrie: 100
+				├b ->ReTrie: xy
+				││◌●
+				│├x●->ReTrie: 100
+				│└y●->ReTrie: 100
 				├x●->ReTrie: 100
-				└b ->ReTrie: xy
-				·│◌●
-				·├x●->ReTrie: 100
-				·└y●->ReTrie: 100
+				└y●->ReTrie: 100
 		`))
 	})
 

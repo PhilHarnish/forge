@@ -1,6 +1,7 @@
 package retrie
 
 import (
+	"container/heap"
 	"fmt"
 	"unicode"
 	"unicode/utf8"
@@ -11,9 +12,11 @@ import (
 )
 
 type reTrieNode struct {
-	rootNode *node.Node
-	links    []*reTrieLink
-	edgeMask mask.Mask
+	directory *dfaDirectory
+	id        dfaId
+	rootNode  *node.Node
+	links     reTrieLinkList
+	edgeMask  mask.Mask
 }
 
 type reTrieLink struct {
@@ -23,17 +26,24 @@ type reTrieLink struct {
 	edgeMask mask.Mask
 }
 
-func newReTrieNode(root *node.Node) *reTrieNode {
+type reTrieLinkList []*reTrieLink
+
+func newReTrieNode(directory *dfaDirectory, id dfaId, root *node.Node) *reTrieNode {
 	return &reTrieNode{
-		rootNode: root,
-		links:    []*reTrieLink{},
+		directory: directory,
+		id:        id,
+		rootNode:  root,
+		links:     reTrieLinkList{},
 	}
 }
 
 func (root *reTrieNode) Copy() *reTrieNode {
+	if EPSILON_EXPANSION {
+		panic("Not implemented")
+	}
 	result := &reTrieNode{
 		rootNode: root.rootNode.Copy(),
-		links:    make([]*reTrieLink, len(root.links)),
+		links:    make(reTrieLinkList, len(root.links)),
 	}
 	copy(result.links, root.links)
 	return result
@@ -93,8 +103,7 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 		rangeMask, err := mask.AlphabetMaskRange(start, end)
 		if err == nil {
 			pathMask |= rangeMask
-			filteredRunes = append(filteredRunes, runes[i])
-			filteredRunes = append(filteredRunes, runes[i+1])
+			filteredRunes = append(filteredRunes, runes[i], runes[i+1])
 		} else if unicode.IsLetter(start) && unicode.IsLetter(end) {
 			// A letter is a reasonable character to attempt; skip.
 		} else if unicode.IsNumber(start) && unicode.IsNumber(end) {
@@ -160,6 +169,13 @@ func (root *reTrieNode) addLink(link *reTrieLink) {
 }
 
 func (root *reTrieNode) optionalPath(child *reTrieNode) *reTrieNode {
+	if EPSILON_EXPANSION {
+		return root.directory.merge(root, child)
+	}
+	return root.legacyOptionalPath(child)
+}
+
+func (root *reTrieNode) legacyOptionalPath(child *reTrieNode) *reTrieNode {
 	optionalLink := root.optionalLink()
 	var parent node.NodeIterator = root
 	if optionalLink != nil {
@@ -169,7 +185,7 @@ func (root *reTrieNode) optionalPath(child *reTrieNode) *reTrieNode {
 	result := root
 	if optionalLink == nil {
 		result = &reTrieNode{
-			links: []*reTrieLink{
+			links: reTrieLinkList{
 				{
 					prefix: OPTIONAL_PREFIX,
 					node:   merged,
@@ -191,9 +207,51 @@ func (root *reTrieNode) optionalLink() *reTrieLink {
 	return nil
 }
 
+func (root *reTrieNode) combineLinks(a *reTrieNode, b *reTrieNode) {
+	nonOverlapping := a.edgeMask&b.edgeMask == 0
+	if len(a.links) == 0 || len(b.links) == 0 || nonOverlapping {
+		root.links = append(root.links, a.links...)
+		root.links = append(root.links, b.links...)
+		root.edgeMask = a.edgeMask | b.edgeMask
+		return
+	}
+	panic("Not implemented")
+}
+
 /*
 Remove targets from runes.
 */
 func removeRunes(runes []rune, targets []rune) []rune {
 	panic("Splitting child runes is unsupported.")
+}
+
+func (edges reTrieLinkList) Len() int {
+	return len(edges)
+}
+
+func (edges reTrieLinkList) Less(i int, j int) bool {
+	if edges[i].runes[0] == edges[j].runes[0] {
+		return edges[i].runes[1] < edges[j].runes[1]
+	}
+	return edges[i].runes[0] < edges[j].runes[0]
+}
+
+func (h reTrieLinkList) Swap(i int, j int) {
+	h[i], h[j] = h[j], h[i]
+}
+
+func (h *reTrieLinkList) Push(item interface{}) {
+	*h = append(*h, item.(*reTrieLink))
+}
+
+func (h *reTrieLinkList) Pop() interface{} {
+	original := *h
+	end := len(original) - 1
+	result := original[end]
+	*h = original[:end]
+	return result
+}
+
+func (h *reTrieLinkList) Next() *reTrieLink {
+	return heap.Pop(h).(*reTrieLink)
 }

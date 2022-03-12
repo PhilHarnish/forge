@@ -17,13 +17,25 @@ type reTrie struct {
 	original     *regexp.Regexp
 	captureNames []string
 	instructions []*reTrieNode
+	directory    *dfaDirectory
 }
 
-const USE_COMPILED_INSTRUCTIONS = false
+type dfaDirectory struct {
+	table     map[dfaId]*reTrieNode
+	nextNfaId dfaId
+	nfa2dfa   []dfaId
+	nfaLinks  []*reTrieLink
+}
 
-var failNode = newReTrieNode(&node.Node{
+type dfaId = int64
+
+const USE_COMPILED_INSTRUCTIONS = false
+const EPSILON_EXPANSION = true
+
+var failNode = &node.Node{
 	RequireMask: mask.ALL,
-})
+}
+var failReTrieNode = newReTrieNode(nil, 0, failNode)
 
 func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 	re, err := syntax.Parse(regularExpression, syntax.Perl)
@@ -33,7 +45,8 @@ func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 	captureNames := processCaptureNames(re.CapNames())
 
 	re = re.Simplify()
-	matchNode := newReTrieNode(node.NewNode(matchWeight))
+	directory := newDfaDirectory()
+	matchNode := directory.addRegexp(nil, node.NewNode(matchWeight))
 	var instructions []*reTrieNode
 	var rootTrieNode *reTrieNode
 	if USE_COMPILED_INSTRUCTIONS {
@@ -44,7 +57,7 @@ func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 		instructions = compile(prog, matchNode)
 		rootTrieNode = instructions[prog.Start]
 	} else {
-		rootTrieNode = linker(nil, matchNode, re, false)
+		rootTrieNode = directory.linker(nil, matchNode, re, false)
 	}
 
 	return &reTrie{
@@ -52,6 +65,7 @@ func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 		original:     regexp.MustCompile(regularExpression),
 		captureNames: captureNames,
 		instructions: instructions,
+		directory:    directory,
 	}
 }
 
@@ -100,23 +114,45 @@ func processCaptureNames(captureNames []string) []string {
 	return captureNames
 }
 
-func ensureNode(given *reTrieNode) *reTrieNode {
+func newDfaDirectory() *dfaDirectory {
+	result := &dfaDirectory{
+		table: make(map[int64]*reTrieNode),
+	}
+	return result
+}
+
+func (directory *dfaDirectory) addRegexp(re *syntax.Regexp, source *node.Node) *reTrieNode {
+	nfaId := directory.nextNfaId
+	directory.nextNfaId++
+	dfaId := dfaId(1) << nfaId
+	dfaNode := newReTrieNode(directory, dfaId, source)
+	directory.table[dfaId] = dfaNode
+	return dfaNode
+}
+
+func (directory *dfaDirectory) addRegexpAs(re *syntax.Regexp, source *reTrieNode) *reTrieNode {
+	result := directory.addRegexp(re, source.rootNode.Copy())
+	return directory.merge(result, source)
+}
+
+func (directory *dfaDirectory) ensureNode(re *syntax.Regexp, given *reTrieNode) *reTrieNode {
 	if given == nil {
-		return newReTrieNode(node.NewNode())
+		return directory.addRegexp(re, node.NewNode())
 	}
 	return given
 }
 
-func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bool) *reTrieNode {
+func (directory *dfaDirectory) linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bool) *reTrieNode {
+	fmt.Sprintf("DO NOT SUBMIT %s", re.String())
 	switch re.Op {
 	case syntax.OpAlternate:
-		parent = ensureNode(parent)
+		parent = directory.ensureNode(re, parent)
 		for _, alternative := range re.Sub {
-			parent = linker(parent, child, alternative, repeats)
+			parent = directory.linker(parent, child, alternative, repeats)
 		}
 		return parent
 	case syntax.OpAnyChar, syntax.OpAnyCharNotNL:
-		parent = ensureNode(parent)
+		parent = directory.ensureNode(re, parent)
 		parent.linkAnyChar(child, repeats)
 		return parent
 	case syntax.OpBeginLine, syntax.OpEndLine, syntax.OpBeginText, syntax.OpEndText:
@@ -128,16 +164,16 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpCapture with 2+ Sub options")
 		}
-		return linker(parent, child, re.Sub[0], repeats)
+		return directory.linker(parent, child, re.Sub[0], repeats)
 	case syntax.OpCharClass: // [xyz]
-		parent = ensureNode(parent)
+		parent = directory.ensureNode(re, parent)
 		parent.linkRunes(re.Rune, child, repeats)
 		return parent
 	case syntax.OpConcat: // xyz
 		i := len(re.Sub)
 		for i > 0 {
 			i--
-			parent, child = nil, linker(parent, child, re.Sub[i], repeats)
+			parent, child = nil, directory.linker(parent, child, re.Sub[i], repeats)
 		}
 		return child
 	case syntax.OpEmptyMatch:
@@ -147,7 +183,7 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 		// Allow skipping straight to child.
 		return parent.optionalPath(child)
 	case syntax.OpLiteral: // x
-		parent = ensureNode(parent)
+		parent = directory.ensureNode(re, parent)
 		parent.linkPath(string(re.Rune), child, repeats)
 		return parent
 	case syntax.OpPlus:
@@ -155,22 +191,32 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 			panic("Unable to handle OpPlus with 2+ Sub options")
 		} else if parent == nil {
 			// Only allow looping through child.
-			linker(child, child, re.Sub[0], true)
+			directory.linker(child, child, re.Sub[0], true)
 			// Require at least one path through re.Sub[0]
-			return linker(parent, child, re.Sub[0], true)
+			return directory.linker(parent, child, re.Sub[0], true)
 		}
-		// We must not contaminate child which may be used by others.
-		detour := child.Copy()
-		// Child may optionally loop back to itself.
-		linker(detour, detour, re.Sub[0], true)
-		// Require at least one path through re.Sub[0]
-		return linker(parent, detour, re.Sub[0], true)
+		if EPSILON_EXPANSION {
+			// We must not contaminate child which may be used by others.
+			detour := directory.addRegexpAs(re, child)
+			// Child may optionally loop back to itself.
+			directory.linker(detour, detour, re.Sub[0], true)
+			// Require at least one path through re.Sub[0]
+			directory.linker(parent, detour, re.Sub[0], true)
+			return parent
+		} else {
+			// We must not contaminate child which may be used by others.
+			detour := child.Copy()
+			// Child may optionally loop back to itself.
+			directory.linker(detour, detour, re.Sub[0], true)
+			// Require at least one path through re.Sub[0]
+			return directory.linker(parent, detour, re.Sub[0], true)
+		}
 	case syntax.OpQuest: // x?
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpQuest with 2+ Sub options")
 		}
 		// Offer link to alternate path.
-		parent = linker(parent, child, re.Sub[0], repeats)
+		parent = directory.linker(parent, child, re.Sub[0], repeats)
 		// Mark the path to child as optional.
 		return parent.optionalPath(child)
 	case syntax.OpStar: // x*
@@ -178,16 +224,40 @@ func linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bo
 			panic("Unable to handle OpStar with 2+ Sub options")
 		} else if parent == nil {
 			// Only allow looping through child.
-			return linker(child, child, re.Sub[0], true)
+			return directory.linker(child, child, re.Sub[0], true)
 		}
-		// We must not contaminate child which may be used by others.
-		detour := child.Copy()
-		// Allow looping through (copied) child.
-		linker(detour, detour, re.Sub[0], true)
-		// Ensure it is possible to go straight from parent to child.
-		return parent.optionalPath(detour)
+		if EPSILON_EXPANSION {
+			// We must not contaminate parent which may be used by others.
+			detour := directory.addRegexpAs(re, child)
+			// Create a branching path to the detour via re.Sub[0]...
+			directory.linker(parent, detour, re.Sub[0], true)
+			// ...which repeats.
+			directory.linker(detour, detour, re.Sub[0], true)
+			// Ensure it is possible to go straight from parent to child.
+			return directory.merge(parent, child)
+		} else {
+			// We must not contaminate child which may be used by others.
+			detour := child.Copy()
+			// Allow looping through (copied) child.
+			directory.linker(detour, detour, re.Sub[0], true)
+			// Ensure it is possible to go straight from parent to child.
+			return parent.optionalPath(detour)
+		}
 	}
 	panic(fmt.Sprintf("Unsupported instruction: %d", re.Op))
+}
+
+func (directory *dfaDirectory) merge(a *reTrieNode, b *reTrieNode) *reTrieNode {
+	mergedId := a.id | b.id
+	mergedDfaNode, exists := directory.table[mergedId]
+	if exists {
+		return mergedDfaNode
+	}
+	result := newReTrieNode(directory, mergedId, a.rootNode.Copy())
+	directory.table[mergedId] = result
+	result.rootNode.MaskDistanceToChild(0, b.rootNode)
+	result.combineLinks(a, b)
+	return result
 }
 
 func compile(program *syntax.Prog, matchNode *reTrieNode) []*reTrieNode {
@@ -206,8 +276,8 @@ func nodeAtInstruction(program *syntax.Prog, instructionNodes []*reTrieNode, ind
 	instruction := program.Inst[index]
 	// Handle terminal cases first.
 	if instruction.Op == syntax.InstFail {
-		instructionNodes[index] = failNode
-		return failNode
+		instructionNodes[index] = failReTrieNode
+		return failReTrieNode
 	} else if instruction.Op == syntax.InstMatch {
 		instructionNodes[index] = matchNode
 		return matchNode
@@ -221,7 +291,7 @@ func nodeAtInstruction(program *syntax.Prog, instructionNodes []*reTrieNode, ind
 	var result *reTrieNode
 	switch instruction.Op {
 	case syntax.InstAlt:
-		result = newReTrieNode(node.NewNode())
+		result = newReTrieNode(nil, 0, node.NewNode())
 		arg := nodeAtInstruction(program, instructionNodes, instruction.Arg, matchNode)
 		result = result.optionalPath(arg)
 		instructionNodes[index] = result
@@ -232,15 +302,15 @@ func nodeAtInstruction(program *syntax.Prog, instructionNodes []*reTrieNode, ind
 	case syntax.InstNop:
 		result = out
 	case syntax.InstRune:
-		result = newReTrieNode(node.NewNode())
+		result = newReTrieNode(nil, 0, node.NewNode())
 		result.linkRunes(instruction.Rune, out, false)
 	case syntax.InstRune1:
-		result = newReTrieNode(node.NewNode())
+		result = newReTrieNode(nil, 0, node.NewNode())
 		path, exit := mergeRune1(program, index)
 		out = nodeAtInstruction(program, instructionNodes, exit, matchNode)
 		result.linkPath(path, out, false)
 	case syntax.InstRuneAnyNotNL, syntax.InstRuneAny:
-		result = newReTrieNode(node.NewNode())
+		result = newReTrieNode(nil, 0, node.NewNode())
 		result.linkAnyChar(out, false)
 	default:
 		panic(fmt.Sprintf("Unsupported instruction: %d %v", instruction.Op, instruction))
