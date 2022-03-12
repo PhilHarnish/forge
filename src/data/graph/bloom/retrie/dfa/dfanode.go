@@ -161,19 +161,6 @@ func (root *dfaNode) initOutgoing() dfaNodeEdgeList {
 	return root.outgoing
 }
 
-func (root *dfaNode) addOutgoingFrom(other *dfaNode) {
-	duplicates := mask.Mask(0)
-	for _, edge := range other.outgoing {
-		edgeMask := edge.edgeMask
-		duplicates |= root.outMask & edgeMask
-		root.outMask |= edgeMask
-		root.outgoing = append(root.outgoing, edge)
-	}
-	if duplicates != 0 {
-		root.splitEdges(duplicates)
-	}
-}
-
 func (root *dfaNode) splitEdges(duplicates mask.Mask) {
 	original := root.outgoing
 	root.outgoing = make(dfaNodeEdgeList, 0, len(original)*2)
