@@ -78,7 +78,7 @@ func (directory *dfaDirectory) init(instructions []syntax.Inst) {
 	epsilonExpand = func(root *dfaNode, cursor uint32) {
 		nextId := dfaId(1 << cursor)
 		if root.id&nextId != 0 {
-			panic("Cycle detected in ε expansion")
+			return
 		}
 		root.id |= nextId
 		root.sources = append(root.sources, uint8(cursor))

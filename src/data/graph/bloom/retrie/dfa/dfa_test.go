@@ -580,4 +580,42 @@ var _ = Describe("GraphVizString", func() {
 			}
 		`))
 	})
+
+	It("multiple star prefixes", func() {
+		result := dfa.Dfa("^(?:(?:a*)|(?:b*))xy$", 1.0)
+		Expect(result.GraphVizString()).To(matchers.LookLike(`
+			digraph G {
+				label="/^(?:(?:a*)|(?:b*))xy$/";
+				subgraph nfa {
+					node [shape=record];
+					nfa:n1:ne -> nfa:n6:n [labeldistance=2 headlabel="ε" style=dotted];
+					nfa:n2:ne -> nfa:n3:n [labeldistance=2 headlabel="a"];
+					nfa:n3:ne -> nfa:n2:n [labeldistance=2 headlabel="ε" style=dotted];
+					nfa:n3:ne -> nfa:n7:n [labeldistance=2 headlabel="ε" style=dotted];
+					nfa:n4:ne -> nfa:n5:n [labeldistance=2 headlabel="b"];
+					nfa:n5:ne -> nfa:n4:n [labeldistance=2 headlabel="ε" style=dotted];
+					nfa:n5:ne -> nfa:n7:n [labeldistance=2 headlabel="ε" style=dotted];
+					nfa:n6:ne -> nfa:n3:n [labeldistance=2 headlabel="ε" style=dotted];
+					nfa:n6:ne -> nfa:n5:n [labeldistance=2 headlabel="ε" style=dotted];
+					nfa:n7:ne -> nfa:n8:n [labeldistance=2 headlabel="x"];
+					nfa:n8:ne -> nfa:n9:n [labeldistance=2 headlabel="y"];
+					nfa:n9:ne -> nfa:n10:n [labeldistance=2 headlabel="ε" style=dotted];
+					nfa [label="{<n0>0|fail|}|{<n1>1|empty 4|6}|{<n2>2|rune1 'a'|3}|{<n3>3|alt|2, 7}|{<n4>4|rune1 'b'|5}|{<n5>5|alt|4, 7}|{<n6>6|alt|3, 5}|{<n7>7|rune1 'x'|8}|{<n8>8|rune1 'y'|9}|{<n9>9|empty 8|10}|{<n10>10|match|}"];
+				}
+				// 1,2,3,4,5,6,7 does not match
+				"1,2,3,4,5,6,7" -> "2,3,7" [label="a"];
+				// 2,3,7 does not match
+				"2,3,7" -> "2,3,7" [label="a"];
+				"2,3,7" -> "8" [label="x"];
+				// 8 does not match
+				"8" -> "9,10" [label="y"];
+				"9,10" [shape=doublecircle];
+				"1,2,3,4,5,6,7" -> "8" [label="x"];
+				"1,2,3,4,5,6,7" -> "4,5,7" [label="b"];
+				// 4,5,7 does not match
+				"4,5,7" -> "4,5,7" [label="b"];
+				"4,5,7" -> "8" [label="x"];
+			}
+		`))
+	})
 })
