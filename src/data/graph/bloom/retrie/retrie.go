@@ -11,7 +11,7 @@ import (
 )
 
 type reTrie struct {
-	rootTrieNode *reTrieNode
+	root         *reTrieNode
 	original     *regexp.Regexp // Used in Metadata().
 	captureNames []string
 	directory    *reTrieDirectory
@@ -30,7 +30,7 @@ func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 	rootTrieNode := directory.linker(nil, matchNode, re, false)
 
 	return &reTrie{
-		rootTrieNode: rootTrieNode,
+		root:         rootTrieNode,
 		original:     regexp.MustCompile(regularExpression),
 		captureNames: captureNames,
 		directory:    directory,
@@ -38,11 +38,11 @@ func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 }
 
 func (root *reTrie) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	return root.rootTrieNode.Items(acceptor)
+	return root.root.Items(acceptor)
 }
 
 func (root *reTrie) Root() *node.Node {
-	return root.rootTrieNode.Root()
+	return root.root.Root()
 }
 
 func (root *reTrie) Header() query.QueryRowHeader {
@@ -67,7 +67,7 @@ func (root *reTrie) Metadata(path string) []weight.WeightedString {
 }
 
 func (root *reTrie) String() string {
-	return root.rootTrieNode.String()
+	return root.root.String()
 }
 
 func processCaptureNames(captureNames []string) []string {
