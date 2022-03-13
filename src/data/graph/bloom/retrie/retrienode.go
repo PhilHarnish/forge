@@ -12,7 +12,7 @@ import (
 )
 
 type reTrieNode struct {
-	directory   *dfaDirectory
+	directory   *reTrieDirectory
 	id          dfaId
 	rootNode    *node.Node
 	links       reTrieLinkList
@@ -28,13 +28,9 @@ type reTrieLink struct {
 }
 
 func newReTrieLinkFromRunes(runes []rune, node node.NodeIterator) *reTrieLink {
-	edgeMask := mask.Mask(0)
-	for i := 0; i < len(runes); i += 2 {
-		mask, err := mask.AlphabetMaskRange(runes[i], runes[i+1])
-		edgeMask |= mask
-		if err != nil {
-			panic(err)
-		}
+	edgeMask, err := mask.AlphabetMaskRanges(runes)
+	if err != nil {
+		panic(err)
 	}
 	return &reTrieLink{
 		runes:    runes,
@@ -56,7 +52,7 @@ func newReTrieLinkForPrefix(prefix string, node node.NodeIterator) *reTrieLink {
 
 type reTrieLinkList []*reTrieLink
 
-func newReTrieNode(directory *dfaDirectory, id dfaId, root *node.Node) *reTrieNode {
+func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTrieNode {
 	return &reTrieNode{
 		directory: directory,
 		id:        id,
@@ -97,7 +93,7 @@ func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) *reTrieNode
 		root.rootNode.RepeatLengthMask(1)
 	}
 	if EPSILON_EXPANSION {
-		root.addLink(newReTrieLinkFromRunes(anyRunes, child))
+		root.addLink(newReTrieLinkFromRunes(mask.AlphabetRuneRanges, child))
 	} else {
 		root.addLink(&reTrieLink{
 			prefix:   DOT_PREFIX,
