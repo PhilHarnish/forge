@@ -108,24 +108,24 @@ func (node *Node) MaskPath(path string) error {
 }
 
 func (node *Node) MaskDistanceToChild(distance int, child *Node) {
-	// Inherit maxWeight.
-	node.Weight(child.MaxWeight)
 	if distance == 0 {
 		// Optimized path for zero-length paths.
 		node.Union(child)
+		return
+	}
+	// Inherit maxWeight.
+	node.Weight(child.MaxWeight)
+	// Provide anything ANY children provides.
+	node.ProvideMask |= mask.Mask(child.ProvideMask)
+	// Inherit matching lengths.
+	node.LengthsMask |= mask.ShiftLength(child.LengthsMask, distance)
+	if child.RequireMask == mask.UNSET {
+		// Ignore the child's require mask if it is UNSET.
+	} else if child.Matches() {
+		// Since the child is a match no requirements are inherited.
 	} else {
-		// Provide anything ANY children provides.
-		node.ProvideMask |= mask.Mask(child.ProvideMask)
-		// Inherit matching lengths.
-		node.LengthsMask |= mask.ShiftLength(child.LengthsMask, distance)
-		if child.RequireMask == mask.UNSET {
-			// Ignore the child's require mask if it is UNSET.
-		} else if child.Matches() {
-			// Since the child is a match no requirements are inherited.
-		} else {
-			// Require anything ALL children requires.
-			node.RequireMask &= mask.Mask(child.RequireMask)
-		}
+		// Require anything ALL children requires.
+		node.RequireMask &= mask.Mask(child.RequireMask)
 	}
 }
 
