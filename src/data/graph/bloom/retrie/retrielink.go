@@ -14,16 +14,20 @@ type reTrieLink struct {
 	edgeMask mask.Mask
 }
 
-func newReTrieLinkFromRunes(runes []rune, node *reTrieNode) *reTrieLink {
-	edgeMask, err := mask.AlphabetMaskRanges(runes)
-	if err != nil {
-		panic(err)
-	}
+func newReTrieLink(runes []rune, node *reTrieNode, edgeMask mask.Mask) *reTrieLink {
 	return &reTrieLink{
 		runes:    runes,
 		node:     node,
 		edgeMask: edgeMask,
 	}
+}
+
+func newReTrieLinkFromRunes(runes []rune, node *reTrieNode) *reTrieLink {
+	edgeMask, err := mask.AlphabetMaskRanges(runes)
+	if err != nil {
+		panic(err)
+	}
+	return newReTrieLink(runes, node, edgeMask)
 }
 
 func newReTrieLinkForPrefix(prefix string, node *reTrieNode) *reTrieLink {

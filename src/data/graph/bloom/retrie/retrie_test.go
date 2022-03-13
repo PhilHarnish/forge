@@ -431,6 +431,63 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
+	It("splits rune blocks as needed", func() {
+		trie := retrie.NewReTrie("[a-bd-e]?[d-e]", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: abde
+				│◌●●
+				├a ->ReTrie: de
+				││◌●
+				│├d●->ReTrie: 100
+				│└e●->ReTrie: 100
+				├b ->ReTrie: de
+				││◌●
+				│├d●->ReTrie: 100
+				│└e●->ReTrie: 100
+				├d●->ReTrie: 100 de
+				││●●
+				│├d●->ReTrie: 100
+				│└e●->ReTrie: 100
+				└e●->ReTrie: 100 de
+				·│●●
+				·├d●->ReTrie: 100
+				·└e●->ReTrie: 100
+		`))
+	})
+
+	FIt("splits many rune blocks", func() {
+		trie := retrie.NewReTrie("[ab]?[bc]?[cd]?", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: 100 abcd
+				│●●●●
+				├c●->ReTrie: 100
+				││●●
+				│├c●->ReTrie: 100
+				│└d●->ReTrie: 100
+				├d●->ReTrie: 100
+				├a●->ReTrie: 100 bcd
+				││●●●
+				│├b●->ReTrie: 100 cd
+				│││●●
+				││├c●->ReTrie: 100
+				││└d●->ReTrie: 100
+				│└c●->ReTrie: 100 cd
+				│ │●●
+				│ ├c●->ReTrie: 100
+				│ └d●->ReTrie: 100
+				└b●->ReTrie: 100 bcd
+				·│●●●
+				·├b●->ReTrie: 100 cd
+				·││●●
+				·│├c●->ReTrie: 100
+				·│└d●->ReTrie: 100
+				·└c●->ReTrie: 100 cd
+				· │●●
+				· ├c●->ReTrie: 100
+				· └d●->ReTrie: 100
+		`))
+	})
+
 	It("matches .+ with suffix", func() {
 		trie := retrie.NewReTrie(".+", 1.0)
 		depth := 3

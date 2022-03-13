@@ -27,7 +27,7 @@ func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTri
 }
 
 func (root *reTrieNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	root.splitEdges()
+	root.fixOverlapping()
 	return newTrieItems(acceptor, root)
 }
 
@@ -87,85 +87,40 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 	if repeats {
 		root.rootNode.RepeatLengthMask(1)
 	}
-	root.addLink(&reTrieLink{
-		runes:    filteredRunes,
-		node:     child,
-		edgeMask: pathMask,
-	})
+	root.addLink(newReTrieLink(filteredRunes, child, pathMask))
 	return root
 }
 
 func (root *reTrieNode) mergeNode(other *reTrieNode) {
-	root.overlapping |= (root.edgeMask & other.edgeMask)
-	root.links = append(root.links, other.links...)
+	root.overlapping |= root.edgeMask & other.edgeMask
 	root.edgeMask |= other.edgeMask
+	root.links = append(root.links, other.links...)
 }
 
 func (root *reTrieNode) addLink(link *reTrieLink) {
-	edgeMask := link.edgeMask
-	overlapping := edgeMask & root.edgeMask
-	if overlapping == 0 {
-		root.edgeMask |= edgeMask
-		// Optimized simple case.
-		root.links = append(root.links, link)
-		return
-	}
-	root.overlapping |= overlapping
+	root.overlapping |= link.edgeMask & root.edgeMask
+	root.edgeMask |= link.edgeMask
 	root.links = append(root.links, link)
-	root.edgeMask |= edgeMask
 }
 
-func (root *reTrieNode) splitEdges() {
+func (root *reTrieNode) fixOverlapping() {
 	if root.overlapping == 0 {
 		return
 	}
 	overlapping := root.overlapping
-	original := root.links
-	root.links = make(reTrieLinkList, 0, len(original)*2)
-	heap.Init(&original)
+	filtered, linkHeap := filterLinks(root.directory, overlapping, root.links)
+	root.links = filtered
 	newNodes := []*reTrieNode{}
-	for len(original) > 0 {
-		first := original.Next()
+	for len(linkHeap) > 0 {
+		first := linkHeap.Next()
 		// First, confirm there are any remaining edges to compare with.
-		if len(original) == 0 {
+		// Also check if the first edge is non-overlapping.
+		if len(linkHeap) == 0 {
 			root.links = append(root.links, first) // Finished; add and continue.
 			continue
 		}
-		// Next, confirm this edge was problematic.
-		if first.edgeMask&overlapping == 0 {
-			root.links = append(root.links, first) // No issue; add and continue.
-			continue
-		}
-		// Next, split any edges with multiple rune blocks.
-		if len(first.runes) > 2 {
-			runes := first.runes
-			for i := 0; i < len(runes); i += 2 {
-				batchEdge := newReTrieLinkFromRunes(runes, first.node)
-				batchMask := batchEdge.edgeMask
-				if batchMask&overlapping == 0 {
-					// This batch is OK.
-					root.links = append(root.links, batchEdge)
-				} else {
-					// This batch needs to be reprocessed.
-					heap.Push(&original, batchEdge)
-				}
-			}
-			continue
-		}
-		// Similarly, split split apart prefix into pieces.
-		if len(first.prefix) > 1 {
-			first = root.directory.split(first)
-		}
 		// Edge has exactly one batch; this is a confirmed hit.
-		second := original.Next()
-		if len(second.runes) > 2 {
-			// Similarly, split split apart prefix into pieces.
-			panic("Splitting the second link is not implemented.")
-		}
-		if len(second.prefix) > 1 {
-			second = root.directory.split(second)
-		}
-
+		second := linkHeap.Next()
 		firstDestination := first.node
 		secondDestination := second.node
 		if firstDestination.id == secondDestination.id {
@@ -176,11 +131,9 @@ func (root *reTrieNode) splitEdges() {
 			}
 			root.links = append(root.links, newReTrieLinkFromRunes(batch0, first.node))
 			continue
-		}
-		if first.edgeMask&second.edgeMask == 0 {
+		} else if first.edgeMask&second.edgeMask == 0 {
 			panic("Heap should have brought overlapping edges together")
-		}
-		if first.runes[0] < second.runes[0] {
+		} else if first.runes[0] < second.runes[0] {
 			// Batch #1 will begin and end before second edge starts.
 			batch1 := []rune{first.runes[0], second.runes[0] - 1}
 			root.links = append(root.links, newReTrieLinkFromRunes(batch1, first.node))
@@ -193,10 +146,10 @@ func (root *reTrieNode) splitEdges() {
 		if !exists {
 			newNodes = append(newNodes, merged, firstDestination, secondDestination)
 		}
-		if len(original) > 0 && original[0].edgeMask&overlapEdge.edgeMask != 0 {
+		if len(linkHeap) > 0 && linkHeap[0].edgeMask&overlapEdge.edgeMask != 0 {
 			// Unfortunately, this overlaping portion overlaps with yet-more edges.
 			// Return for further processing.
-			heap.Push(&original, overlapEdge)
+			heap.Push(&linkHeap, overlapEdge)
 		} else {
 			root.links = append(root.links, overlapEdge)
 		}
@@ -211,10 +164,10 @@ func (root *reTrieNode) splitEdges() {
 			}
 			batch3 := []rune{overlapEnd + 1, remainderEnd}
 			remainingEdge := newReTrieLinkFromRunes(batch3, destination)
-			if len(original) > 0 && original[0].edgeMask&remainingEdge.edgeMask != 0 {
+			if len(linkHeap) > 0 && linkHeap[0].edgeMask&remainingEdge.edgeMask != 0 {
 				// Unfortunately, this remaining portion overlaps with yet-more edges.
 				// Return for further processing.
-				heap.Push(&original, remainingEdge)
+				heap.Push(&linkHeap, remainingEdge)
 			} else {
 				root.links = append(root.links, remainingEdge)
 			}
@@ -226,6 +179,38 @@ func (root *reTrieNode) splitEdges() {
 		parent.mergeNode(newNodes[i+2])
 	}
 	root.overlapping = 0
+}
+
+func filterLinks(directory *reTrieDirectory, overlapping mask.Mask, links reTrieLinkList) (filtered reTrieLinkList, linkHeap reTrieLinkList) {
+	filtered = make(reTrieLinkList, 0, len(links)*2)
+	linkHeap = make(reTrieLinkList, 0, len(links)*2)
+	for i := 0; i < len(links); i++ {
+		link := links[i]
+		if link.edgeMask&overlapping == 0 {
+			// This link is non-overlapping.
+			filtered = append(filtered, link)
+		} else if len(link.runes) > 2 {
+			// This link overlaps and has multiple rune blocks.
+			runes := link.runes
+			for i := 0; i < len(runes); i += 2 {
+				batchEdge := newReTrieLinkFromRunes(runes[i:i+2], link.node)
+				if batchEdge.edgeMask&overlapping == 0 {
+					// This batch is OK.
+					filtered = append(filtered, batchEdge)
+				} else {
+					links = append(links, batchEdge) // Reprocess.
+				}
+			}
+		} else { // Link overlaps
+			if len(link.prefix) > 1 {
+				// If there is a prefix, split it into [rune]+[prefix].
+				link = directory.split(link)
+			}
+			linkHeap = append(linkHeap, link)
+		}
+	}
+	heap.Init(&linkHeap)
+	return filtered, linkHeap
 }
 
 func min(a rune, b rune) rune {
