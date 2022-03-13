@@ -153,6 +153,56 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
+	It("merges many consecutive question marks", func() {
+		trie := retrie.NewReTrie("[abc]?[ab]?a?", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: 100 abc
+				│●●●●
+				├a●->ReTrie: 100 ab
+				││●●●
+				│├a●->ReTrie: 100 A
+				│││●●
+				││└a●->ReTrie: 100
+				│└b●->ReTrie: 100 A
+				│ │●●
+				│ └a●->ReTrie: 100
+				├b●->ReTrie: 100 ab
+				││●●●
+				│├a●->ReTrie: 100 A
+				│││●●
+				││└a●->ReTrie: 100
+				│└b●->ReTrie: 100 A
+				│ │●●
+				│ └a●->ReTrie: 100
+				└c●->ReTrie: 100 ab
+				·│●●●
+				·├a●->ReTrie: 100 A
+				·││●●
+				·│└a●->ReTrie: 100
+				·└b●->ReTrie: 100 A
+				· │●●
+				· └a●->ReTrie: 100
+		`))
+	})
+
+	It("merges many alternative question marks", func() {
+		trie := retrie.NewReTrie("(?:[abc]|[ab]|a?)bc", 1.0)
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: aBC
+				│◌◌●●
+				├a ->ReTrie: BC
+				││◌◌●
+				│└bc●->ReTrie: 100
+				├b ->ReTrie: bC
+				││◌●●
+				│├bc●->ReTrie: 100
+				│└c●->ReTrie: 100
+				└c ->ReTrie: BC
+				·│◌◌●
+				·└bc●->ReTrie: 100
+		`))
+	})
+
 	It("matches question mark with tricky suffix", func() {
 		trie := retrie.NewReTrie("a(?:bxyz)?[a-c]", 1.0)
 		Expect(node.StringChildren(trie, 6)).To(matchers.LookLike(`
