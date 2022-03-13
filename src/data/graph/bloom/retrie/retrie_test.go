@@ -333,6 +333,30 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
+	It("matches multiple +s", func() {
+		trie := retrie.NewReTrie("a+b+", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie: AB
+				│◌◌●●●···
+				└a ->ReTrie: aB
+				·│◌●●●···
+				·├b●->ReTrie: 100 B
+				·││●●●···
+				·│└b●->ReTrie: 100 B
+				·│ │●●●···
+				·│ └b●->ReTrie: 100 B
+				·└a ->ReTrie: aB
+				· │◌●●●···
+				· ├b●->ReTrie: 100 B
+				· ││●●●···
+				· │└b●->ReTrie: 100 B
+				· └a ->ReTrie: aB
+				·  │◌●●●···
+				·  ├b●->ReTrie: 100 B
+				·  └a ->ReTrie: aB
+		`))
+	})
+
 	It("matches + with duplicate range suffix", func() {
 		trie := retrie.NewReTrie("a+[a-b]", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
@@ -527,14 +551,14 @@ var _ = Describe("ReTrie syntax", func() {
 				│◌◌◌◌●●●···
 				└a ->ReTrie: bXYZ
 				·│◌◌◌●●●···
-				·├xyz●->ReTrie: 100
-				·└b ->ReTrie: bXYZ
-				· │◌◌◌●●●···
-				· ├xyz●->ReTrie: 100
-				· └b ->ReTrie: bXYZ
-				·  │◌◌◌●●●···
-				·  ├xyz●->ReTrie: 100
-				·  └b ->ReTrie: bXYZ
+				·├b ->ReTrie: bXYZ
+				·││◌◌◌●●●···
+				·│├xyz●->ReTrie: 100
+				·│└b ->ReTrie: bXYZ
+				·│ │◌◌◌●●●···
+				·│ ├xyz●->ReTrie: 100
+				·│ └b ->ReTrie: bXYZ
+				·└xyz●->ReTrie: 100
 		`))
 	})
 
@@ -543,26 +567,20 @@ var _ = Describe("ReTrie syntax", func() {
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
 				ReTrie: 100 ab
 				│●●●···
-				├b●->ReTrie: 100 ab
+				├a●->ReTrie: 100 ab
 				││●●●···
-				│├b●->ReTrie: 100 ab
+				│├b●->ReTrie: 100 B
 				│││●●●···
-				││├b●->ReTrie: 100 ab
-				││└a●->ReTrie: 100 ab
+				││└b●->ReTrie: 100 B
 				│└a●->ReTrie: 100 ab
 				│ │●●●···
-				│ ├b●->ReTrie: 100 ab
+				│ ├b●->ReTrie: 100 B
 				│ └a●->ReTrie: 100 ab
-				└a●->ReTrie: 100 ab
+				└b●->ReTrie: 100 B
 				·│●●●···
-				·├b●->ReTrie: 100 ab
-				·││●●●···
-				·│├b●->ReTrie: 100 ab
-				·│└a●->ReTrie: 100 ab
-				·└a●->ReTrie: 100 ab
+				·└b●->ReTrie: 100 B
 				· │●●●···
-				· ├b●->ReTrie: 100 ab
-				· └a●->ReTrie: 100 ab
+				· └b●->ReTrie: 100 B
 		`))
 	})
 

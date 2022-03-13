@@ -9,25 +9,16 @@ import (
 )
 
 type dfaId = int64
-
-type reTrieDirectory struct {
-	table     map[dfaId]*reTrieNode
-	nextNfaId dfaId
-}
+type reTrieDirectory map[dfaId]*reTrieNode
 
 func newDfaDirectory() *reTrieDirectory {
-	result := &reTrieDirectory{
-		table: make(map[int64]*reTrieNode),
-	}
-	return result
+	return &reTrieDirectory{}
 }
 
 func (directory *reTrieDirectory) addNode(source *node.Node) *reTrieNode {
-	nfaId := directory.nextNfaId
-	directory.nextNfaId++
-	dfaId := dfaId(1) << nfaId
+	dfaId := dfaId(1) << len(*directory)
 	dfaNode := newReTrieNode(directory, dfaId, source)
-	directory.table[dfaId] = dfaNode
+	(*directory)[dfaId] = dfaNode
 	return dfaNode
 }
 
@@ -53,8 +44,7 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 		return parent
 	case syntax.OpAnyChar, syntax.OpAnyCharNotNL:
 		parent = directory.ensureNode(parent)
-		parent.linkAnyChar(child, repeats)
-		return parent
+		return parent.linkAnyChar(child, repeats)
 	case syntax.OpBeginLine, syntax.OpEndLine, syntax.OpBeginText, syntax.OpEndText:
 		if parent != nil {
 			return parent
@@ -83,24 +73,18 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 		return parent.optionalPath(child)
 	case syntax.OpLiteral: // x
 		parent = directory.ensureNode(parent)
-		parent.linkPath(string(re.Rune), child, repeats)
-		return parent
+		return parent.linkPath(string(re.Rune), child, repeats)
 	case syntax.OpPlus:
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpPlus with 2+ Sub options")
-		} else if parent == nil {
-			// Only allow looping through child.
-			directory.linker(child, child, re.Sub[0], true)
-			// Require at least one path through re.Sub[0]
-			return directory.linker(parent, child, re.Sub[0], true)
+		} else if parent != nil {
+			// We must not contaminate child which may be used by others.
+			child = directory.copy(child)
 		}
-		// We must not contaminate child which may be used by others.
-		detour := directory.copy(child)
-		// Child may optionally loop back to itself.
-		directory.linker(detour, detour, re.Sub[0], true)
+		// Only allow looping through child.
+		directory.linker(child, child, re.Sub[0], true)
 		// Require at least one path through re.Sub[0]
-		directory.linker(parent, detour, re.Sub[0], true)
-		return parent
+		return directory.linker(parent, child, re.Sub[0], true)
 	case syntax.OpQuest: // x?
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpQuest with 2+ Sub options")
@@ -112,11 +96,9 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 	case syntax.OpStar: // x*
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpStar with 2+ Sub options")
-		} else if parent == nil {
-			// Only allow looping through child.
-			return directory.linker(child, child, re.Sub[0], true)
 		}
-		// We must not contaminate parent which may be used by others.
+		parent = directory.ensureNode(parent)
+		// We must not contaminate child which may be used by others.
 		detour := directory.copy(child)
 		// Create a branching path to the detour via re.Sub[0]...
 		directory.linker(parent, detour, re.Sub[0], true)
@@ -130,7 +112,7 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 
 func (directory *reTrieDirectory) merge(a *reTrieNode, b *reTrieNode) *reTrieNode {
 	mergedId := a.id | b.id
-	mergedDfaNode, exists := directory.table[mergedId]
+	mergedDfaNode, exists := (*directory)[mergedId]
 	if exists {
 		return mergedDfaNode
 	}
@@ -142,12 +124,12 @@ func (directory *reTrieDirectory) merge(a *reTrieNode, b *reTrieNode) *reTrieNod
 
 func (directory *reTrieDirectory) partialMerge(a *reTrieNode, b *reTrieNode) *reTrieNode {
 	mergedId := a.id | b.id
-	mergedDfaNode, exists := directory.table[mergedId]
+	mergedDfaNode, exists := (*directory)[mergedId]
 	if exists {
 		return mergedDfaNode
 	}
 	result := newReTrieNode(directory, mergedId, a.rootNode.Copy())
-	directory.table[mergedId] = result
+	(*directory)[mergedId] = result
 	result.rootNode.Union(b.rootNode)
 	return result
 }
