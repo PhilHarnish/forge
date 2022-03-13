@@ -153,9 +153,6 @@ func (root *reTrieNode) optionalPath(child *reTrieNode) *reTrieNode {
 }
 
 func (root *reTrieNode) optionalLink() *reTrieLink {
-	if len(root.links) == 1 && root.links[0].prefix == OPTIONAL_PREFIX {
-		return root.links[0]
-	}
 	return nil
 }
 
