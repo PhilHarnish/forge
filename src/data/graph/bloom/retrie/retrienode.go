@@ -2,13 +2,11 @@ package retrie
 
 import (
 	"container/heap"
-	"fmt"
 	"unicode"
 	"unicode/utf8"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
-	"github.com/philharnish/forge/src/data/graph/bloom/op"
 )
 
 type reTrieNode struct {
@@ -23,11 +21,11 @@ type reTrieNode struct {
 type reTrieLink struct {
 	prefix   string
 	runes    []rune
-	node     node.NodeIterator
+	node     *reTrieNode
 	edgeMask mask.Mask
 }
 
-func newReTrieLinkFromRunes(runes []rune, node node.NodeIterator) *reTrieLink {
+func newReTrieLinkFromRunes(runes []rune, node *reTrieNode) *reTrieLink {
 	edgeMask, err := mask.AlphabetMaskRanges(runes)
 	if err != nil {
 		panic(err)
@@ -39,7 +37,7 @@ func newReTrieLinkFromRunes(runes []rune, node node.NodeIterator) *reTrieLink {
 	}
 }
 
-func newReTrieLinkForPrefix(prefix string, node node.NodeIterator) *reTrieLink {
+func newReTrieLinkForPrefix(prefix string, node *reTrieNode) *reTrieLink {
 	prefixRune, _ := utf8.DecodeRuneInString(prefix)
 	edgeMask, _ := mask.AlphabetMask(prefixRune)
 	return &reTrieLink{
@@ -80,15 +78,7 @@ func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) *reTrieNode
 	if repeats {
 		root.rootNode.RepeatLengthMask(1)
 	}
-	if EPSILON_EXPANSION {
-		root.addLink(newReTrieLinkFromRunes(mask.AlphabetRuneRanges, child))
-	} else {
-		root.addLink(&reTrieLink{
-			prefix:   DOT_PREFIX,
-			node:     child,
-			edgeMask: mask.ALL,
-		})
-	}
+	root.addLink(newReTrieLinkFromRunes(mask.AlphabetRuneRanges, child))
 	return root
 }
 
@@ -97,17 +87,7 @@ func (root *reTrieNode) linkPath(path string, child *reTrieNode, repeats bool) *
 	if repeats {
 		root.rootNode.RepeatLengthMask(len(path))
 	}
-	if EPSILON_EXPANSION {
-		root.addLink(newReTrieLinkForPrefix(path, child))
-	} else {
-		edge, _ := utf8.DecodeRuneInString(path)
-		edgeMask, _ := mask.AlphabetMask(edge)
-		root.addLink(&reTrieLink{
-			prefix:   path,
-			node:     child,
-			edgeMask: edgeMask,
-		})
-	}
+	root.addLink(newReTrieLinkForPrefix(path, child))
 	return root
 }
 
@@ -163,75 +143,13 @@ func (root *reTrieNode) addLink(link *reTrieLink) {
 		root.links = append(root.links, link)
 		return
 	}
-	if EPSILON_EXPANSION {
-		root.overlapping |= overlapping
-		root.links = append(root.links, link)
-		root.edgeMask |= edgeMask
-		return
-	}
-	for i, child := range root.links {
-		if link.node == child.node {
-			// This link is already present; no-op.
-			return
-		} else if edgeMask&child.edgeMask == 0 {
-			continue
-		} else if link.prefix != "" {
-			if child.prefix == link.prefix {
-				// Exact match. Swap with an OR.
-				root.links[i].node = op.Or(link.node, child.node)
-			} else if len(child.runes) > 0 {
-				prefixRune, _ := utf8.DecodeRuneInString(link.prefix)
-				child.runes = removeRunes(child.runes, []rune{prefixRune, prefixRune})
-				link.node = op.Or(link.node, child.node)
-				root.links = append(root.links, link)
-			} else {
-				panic(fmt.Sprintf("Unable to match prefixes: %s vs %s", child.prefix, link.prefix))
-			}
-		} else if len(link.runes) > 0 {
-			if child.prefix != "" {
-				prefixRune, _ := utf8.DecodeRuneInString(child.prefix)
-				link.runes = removeRunes(link.runes, []rune{prefixRune, prefixRune})
-				child.node = op.Or(link.node, child.node)
-				root.links = append(root.links, link)
-			} else {
-				panic("Splitting link runes is unsupported")
-			}
-		} else {
-			panic(fmt.Sprintf("unhandled matching child: %s %s", mask.MaskString(root.edgeMask, edgeMask), child.node.String()))
-		}
-	}
+	root.overlapping |= overlapping
+	root.links = append(root.links, link)
+	root.edgeMask |= edgeMask
 }
 
 func (root *reTrieNode) optionalPath(child *reTrieNode) *reTrieNode {
-	if EPSILON_EXPANSION {
-		return root.directory.merge(root, child)
-	}
-	return root.legacyOptionalPath(child)
-}
-
-func (root *reTrieNode) legacyOptionalPath(child *reTrieNode) *reTrieNode {
-	optionalLink := root.optionalLink()
-	var parent node.NodeIterator = root
-	if optionalLink != nil {
-		parent = optionalLink.node
-	}
-	merged := op.Or(parent, child)
-	result := root
-	if optionalLink == nil {
-		result = &reTrieNode{
-			links: reTrieLinkList{
-				{
-					prefix: OPTIONAL_PREFIX,
-					node:   merged,
-				},
-			},
-		}
-	} else {
-		// Root already has an optional path.
-		optionalLink.node = merged
-	}
-	result.rootNode = merged.Root()
-	return result
+	return root.directory.merge(root, child)
 }
 
 func (root *reTrieNode) optionalLink() *reTrieLink {
@@ -292,8 +210,8 @@ func (root *reTrieNode) splitEdges() {
 			second = root.directory.split(second)
 		}
 
-		firstDestination := first.node.(*reTrieNode)
-		secondDestination := second.node.(*reTrieNode)
+		firstDestination := first.node
+		secondDestination := second.node
 		if firstDestination.id == secondDestination.id {
 			// Both edges go to the same place; return super-set of the range.
 			batch0 := []rune{
@@ -350,13 +268,6 @@ func (root *reTrieNode) splitEdges() {
 		parent.mergeNode(newNodes[i+2])
 	}
 	root.overlapping = 0
-}
-
-/*
-Remove targets from runes.
-*/
-func removeRunes(runes []rune, targets []rune) []rune {
-	panic("Splitting child runes is unsupported.")
 }
 
 func (edges reTrieLinkList) Len() int {

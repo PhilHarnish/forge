@@ -164,8 +164,6 @@ func (directory *reTrieDirectory) partialMerge(a *reTrieNode, b *reTrieNode) *re
 func (directory *reTrieDirectory) split(link *reTrieLink) *reTrieLink {
 	prefixRune, prefixRuneSize := utf8.DecodeRuneInString(link.prefix)
 	parent := directory.ensureNode(nil, nil)
-	// TODO: Remove cast.
-	child := link.node.(*reTrieNode)
-	parent.linkPath(link.prefix[prefixRuneSize:], child, false)
+	parent.linkPath(link.prefix[prefixRuneSize:], link.node, false)
 	return newReTrieLinkFromRunes([]rune{prefixRune, prefixRune}, parent)
 }
