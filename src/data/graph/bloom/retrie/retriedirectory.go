@@ -103,22 +103,13 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 			// Require at least one path through re.Sub[0]
 			return directory.linker(parent, child, re.Sub[0], true)
 		}
-		if EPSILON_EXPANSION {
-			// We must not contaminate child which may be used by others.
-			detour := directory.addRegexpAs(re, child)
-			// Child may optionally loop back to itself.
-			directory.linker(detour, detour, re.Sub[0], true)
-			// Require at least one path through re.Sub[0]
-			directory.linker(parent, detour, re.Sub[0], true)
-			return parent
-		} else {
-			// We must not contaminate child which may be used by others.
-			detour := child.Copy()
-			// Child may optionally loop back to itself.
-			directory.linker(detour, detour, re.Sub[0], true)
-			// Require at least one path through re.Sub[0]
-			return directory.linker(parent, detour, re.Sub[0], true)
-		}
+		// We must not contaminate child which may be used by others.
+		detour := directory.addRegexpAs(re, child)
+		// Child may optionally loop back to itself.
+		directory.linker(detour, detour, re.Sub[0], true)
+		// Require at least one path through re.Sub[0]
+		directory.linker(parent, detour, re.Sub[0], true)
+		return parent
 	case syntax.OpQuest: // x?
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpQuest with 2+ Sub options")
@@ -134,23 +125,14 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 			// Only allow looping through child.
 			return directory.linker(child, child, re.Sub[0], true)
 		}
-		if EPSILON_EXPANSION {
-			// We must not contaminate parent which may be used by others.
-			detour := directory.addRegexpAs(re, child)
-			// Create a branching path to the detour via re.Sub[0]...
-			directory.linker(parent, detour, re.Sub[0], true)
-			// ...which repeats.
-			directory.linker(detour, detour, re.Sub[0], true)
-			// Ensure it is possible to go straight from parent to child.
-			return directory.merge(parent, child)
-		} else {
-			// We must not contaminate child which may be used by others.
-			detour := child.Copy()
-			// Allow looping through (copied) child.
-			directory.linker(detour, detour, re.Sub[0], true)
-			// Ensure it is possible to go straight from parent to child.
-			return parent.optionalPath(detour)
-		}
+		// We must not contaminate parent which may be used by others.
+		detour := directory.addRegexpAs(re, child)
+		// Create a branching path to the detour via re.Sub[0]...
+		directory.linker(parent, detour, re.Sub[0], true)
+		// ...which repeats.
+		directory.linker(detour, detour, re.Sub[0], true)
+		// Ensure it is possible to go straight from parent to child.
+		return directory.merge(parent, child)
 	}
 	panic(fmt.Sprintf("Unsupported instruction: %d", re.Op))
 }

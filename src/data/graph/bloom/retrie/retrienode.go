@@ -61,18 +61,6 @@ func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTri
 	}
 }
 
-func (root *reTrieNode) Copy() *reTrieNode {
-	if EPSILON_EXPANSION {
-		panic("Not implemented")
-	}
-	result := &reTrieNode{
-		rootNode: root.rootNode.Copy(),
-		links:    make(reTrieLinkList, len(root.links)),
-	}
-	copy(result.links, root.links)
-	return result
-}
-
 func (root *reTrieNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
 	root.splitEdges()
 	return newTrieItems(acceptor, root)
