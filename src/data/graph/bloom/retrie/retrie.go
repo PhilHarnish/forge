@@ -271,11 +271,21 @@ func (directory *dfaDirectory) merge(a *reTrieNode, b *reTrieNode) *reTrieNode {
 	if exists {
 		return mergedDfaNode
 	}
+	result := directory.partialMerge(a, b)
+	result.mergeNode(a)
+	result.mergeNode(b)
+	return result
+}
+
+func (directory *dfaDirectory) partialMerge(a *reTrieNode, b *reTrieNode) *reTrieNode {
+	mergedId := a.id | b.id
+	mergedDfaNode, exists := directory.table[mergedId]
+	if exists {
+		return mergedDfaNode
+	}
 	result := newReTrieNode(directory, mergedId, a.rootNode.Copy())
 	directory.table[mergedId] = result
-	result.rootNode.MaskDistanceToChild(0, b.rootNode)
-	result.mergeNodes(a)
-	result.mergeNodes(b)
+	result.rootNode.Union(b.rootNode)
 	return result
 }
 

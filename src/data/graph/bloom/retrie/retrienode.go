@@ -164,12 +164,25 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 	return root
 }
 
+func (root *reTrieNode) mergeNode(other *reTrieNode) {
+	root.overlapping |= (root.edgeMask & other.edgeMask)
+	root.links = append(root.links, other.links...)
+	root.edgeMask |= other.edgeMask
+}
+
 func (root *reTrieNode) addLink(link *reTrieLink) {
 	edgeMask := link.edgeMask
-	if edgeMask&root.edgeMask == 0 {
+	overlapping := edgeMask & root.edgeMask
+	if overlapping == 0 {
 		root.edgeMask |= edgeMask
 		// Optimized simple case.
 		root.links = append(root.links, link)
+		return
+	}
+	if EPSILON_EXPANSION {
+		root.overlapping |= overlapping
+		root.links = append(root.links, link)
+		root.edgeMask |= edgeMask
 		return
 	}
 	for i, child := range root.links {
@@ -244,12 +257,6 @@ func (root *reTrieNode) optionalLink() *reTrieLink {
 	return nil
 }
 
-func (root *reTrieNode) mergeNodes(a *reTrieNode) {
-	root.overlapping = root.overlapping | (root.edgeMask & a.edgeMask)
-	root.links = append(root.links, a.links...)
-	root.edgeMask |= a.edgeMask
-}
-
 func (root *reTrieNode) splitEdges() {
 	if root.overlapping == 0 {
 		return
@@ -258,6 +265,7 @@ func (root *reTrieNode) splitEdges() {
 	original := root.links
 	root.links = make(reTrieLinkList, 0, len(original)*2)
 	heap.Init(&original)
+	newNodes := []*reTrieNode{}
 	for len(original) > 0 {
 		first := original.Next()
 		// First, confirm there are any remaining edges to compare with.
@@ -288,7 +296,7 @@ func (root *reTrieNode) splitEdges() {
 		}
 		// Similarly, split split apart prefix into pieces.
 		if len(first.prefix) > 1 {
-			panic("Not implemented.")
+			first = root.directory.split(first)
 		}
 		// Edge has exactly one batch; this is a confirmed hit.
 		second := original.Next()
@@ -322,10 +330,9 @@ func (root *reTrieNode) splitEdges() {
 		// The second batch is the portion which overlaps.
 		overlapEnd := min(first.runes[1], second.runes[1])
 		batch2 := []rune{second.runes[0], overlapEnd}
-		//newNodes = append(newNodes, first.destination, second.destination)
-		overlapEdge := newReTrieLinkFromRunes(
-			batch2, root.directory.merge(firstDestination, secondDestination))
-		//overlapEdge := newReTrieLinkFromRunes(batch2, first.destination|second.destination)
+		merged := root.directory.partialMerge(firstDestination, secondDestination)
+		overlapEdge := newReTrieLinkFromRunes(batch2, merged)
+		newNodes = append(newNodes, merged, firstDestination, secondDestination)
 		if len(original) > 0 && original[0].edgeMask&overlapEdge.edgeMask != 0 {
 			// Unfortunately, this overlaping portion overlaps with yet-more edges.
 			// Return for further processing.
@@ -353,9 +360,11 @@ func (root *reTrieNode) splitEdges() {
 			}
 		} // Else: Both ended at the same time; there isn't a 3rd batch.
 	}
-	// for i := 0; i < len(newNodes); i += 2 {
-	// 	root.directory.addDfaNodes(newNodes[i], newNodes[i+1])
-	// }
+	for i := 0; i < len(newNodes); i += 3 {
+		parent := newNodes[i]
+		parent.mergeNode(newNodes[i+1])
+		parent.mergeNode(newNodes[i+2])
+	}
 	root.overlapping = 0
 }
 

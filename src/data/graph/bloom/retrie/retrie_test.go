@@ -321,36 +321,89 @@ var _ = Describe("ReTrie syntax", func() {
 	It("matches + with duplicate literal suffix", func() {
 		trie := retrie.NewReTrie("a+a", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-		ReTrie: A
-		│◌◌●●●···
-		└a ->ReTrie: A
-		·│◌●●●···
-		·└a●->((ReTrie: A) || (ReTrie: 100)): 100 A
-		· │●●●···
-		· └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
-		·  │●●●···
-		·  └a●->((ReTrie: A) || (ReTrie: 100)): 100 A
+				ReTrie: A
+				│◌◌●●●···
+				└a ->ReTrie: A
+				·│◌●●●···
+				·└a●->ReTrie: 100 A
+				· │●●●···
+				· └a●->ReTrie: 100 A
+				·  │●●●···
+				·  └a●->ReTrie: 100 A
 		`))
 	})
 
-	XIt("matches + with duplicate range suffix", func() {
+	It("matches + with duplicate range suffix", func() {
 		trie := retrie.NewReTrie("a+[a-b]", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-			TODO.
+				ReTrie: Ab
+				│◌◌●●●···
+				└a ->ReTrie: ab
+				·│◌●●●···
+				·├a●->ReTrie: 100 ab
+				·││●●●···
+				·│├a●->ReTrie: 100 ab
+				·│││●●●···
+				·││├a●->ReTrie: 100 ab
+				·││└b●->ReTrie: 100
+				·│└b●->ReTrie: 100
+				·└b●->ReTrie: 100
 		`))
 	})
 
-	XIt("matches range+ with duplicate literal suffix", func() {
+	It("matches range+ with duplicate literal suffix", func() {
 		trie := retrie.NewReTrie("[a-b]+a", 1.0)
-		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-			TODO.
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: Ab
+				│◌◌●●●···
+				├a ->ReTrie: Ab
+				││◌●●●···
+				│├a●->ReTrie: 100 Ab
+				│││●●●···
+				││├a●->ReTrie: 100 Ab
+				││└b ->ReTrie: Ab
+				│└b ->ReTrie: Ab
+				│ │◌●●●···
+				│ ├a●->ReTrie: 100 Ab
+				│ └b ->ReTrie: Ab
+				└b ->ReTrie: Ab
+				·│◌●●●···
+				·├a●->ReTrie: 100 Ab
+				·││●●●···
+				·│├a●->ReTrie: 100 Ab
+				·│└b ->ReTrie: Ab
+				·└b ->ReTrie: Ab
+				· │◌●●●···
+				· ├a●->ReTrie: 100 Ab
+				· └b ->ReTrie: Ab
 		`))
 	})
 
-	XIt("matches range+ with duplicate range suffix", func() {
+	It("matches range+ with duplicate range suffix", func() {
 		trie := retrie.NewReTrie("[a-b]+[a-b]", 1.0)
-		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-			TODO.
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+				ReTrie: ab
+				│◌◌●●●···
+				├a ->ReTrie: ab
+				││◌●●●···
+				│├a●->ReTrie: 100 ab
+				│││●●●···
+				││├a●->ReTrie: 100 ab
+				││└b●->ReTrie: 100 ab
+				│└b●->ReTrie: 100 ab
+				│ │●●●···
+				│ ├a●->ReTrie: 100 ab
+				│ └b●->ReTrie: 100 ab
+				└b ->ReTrie: ab
+				·│◌●●●···
+				·├a●->ReTrie: 100 ab
+				·││●●●···
+				·│├a●->ReTrie: 100 ab
+				·│└b●->ReTrie: 100 ab
+				·└b●->ReTrie: 100 ab
+				· │●●●···
+				· ├a●->ReTrie: 100 ab
+				· └b●->ReTrie: 100 ab
 		`))
 	})
 
