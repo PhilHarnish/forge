@@ -28,6 +28,15 @@ var _ = Describe("Default masks", func() {
 			Expect(m & mask.ALL).NotTo(Equal(mask.Mask(0)))
 		}
 	})
+
+	It("sets AlphabetRuneRanges to all ranges", func() {
+		Expect(mask.AlphabetRuneRanges).To(Equal([]rune{
+			'a', 'z',
+			' ', ' ',
+			'-', '-',
+			'\'', '\'',
+		}))
+	})
 })
 
 var _ = Describe("Position", func() {

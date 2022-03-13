@@ -26,6 +26,8 @@ const (
 	ALL_LENGTHS          = (ALL_REMAINING_LENGTH - 1) | ALL_REMAINING_LENGTH
 )
 
+var AlphabetRuneRanges = collectRuneRanges([]rune(ALPHABET))
+
 var missingRequirementMap = [...]rune{
 	'Ⓐ', 'Ⓑ', 'Ⓒ', 'Ⓓ', 'Ⓔ', 'Ⓕ', 'Ⓖ', 'Ⓗ', 'Ⓘ', 'Ⓙ', 'Ⓚ', 'Ⓛ', 'Ⓜ',
 	'Ⓝ', 'Ⓞ', 'Ⓟ', 'Ⓠ', 'Ⓡ', 'Ⓢ', 'Ⓣ', 'Ⓤ', 'Ⓥ', 'Ⓦ', 'Ⓧ', 'Ⓨ', 'Ⓩ',
@@ -210,4 +212,18 @@ func ShiftLength(lengthMask Mask, distance int) Mask {
 	// Split apart VALID_LENGTHS and ALL_REMAINING_LENGTH, shift, then restore.
 	allRemainingBit := lengthMask & ALL_REMAINING_LENGTH
 	return ((lengthMask & VALID_LENGTHS) << distance) | allRemainingBit
+}
+
+func collectRuneRanges(runes []rune) []rune {
+	result := []rune{}
+	start := runes[0]
+	last := start
+	for _, c := range runes[1:] {
+		if c != last+1 {
+			result = append(result, start, last)
+			start = c
+		}
+		last = c
+	}
+	return append(result, start, last)
 }
