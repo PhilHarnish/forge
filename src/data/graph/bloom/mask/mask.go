@@ -86,6 +86,24 @@ func AlphabetMaskRange(start rune, end rune) (Mask, error) {
 }
 
 /*
+Return a Mask which combines the ranges from pairs of runes.
+*/
+func AlphabetMaskRanges(runes []rune) (Mask, error) {
+	if len(runes)%2 != 0 {
+		return NONE, fmt.Errorf("odd number of runes provided: %v", runes)
+	}
+	result := Mask(0)
+	for i := 0; i < len(runes); i += 2 {
+		mask, err := AlphabetMaskRange(runes[i], runes[i+1])
+		result |= mask
+		if err != nil {
+			return NONE, err
+		}
+	}
+	return result, nil
+}
+
+/*
 Returns a slice of BitMasks which match required runes.
 Earlier BitMasks assume all later BitMasks also apply.
 */

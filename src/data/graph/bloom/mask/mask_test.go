@@ -128,6 +128,47 @@ var _ = Describe("AlphabetMaskRange", func() {
 	})
 })
 
+var _ = Describe("AlphabetMaskRanges", func() {
+	It("Accepts empty set", func() {
+		result, err := mask.AlphabetMaskRanges([]rune{})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result).To(Equal(mask.NONE))
+	})
+
+	It("Accepts a range of several characters", func() {
+		result, err := mask.AlphabetMaskRanges([]rune{'a', 'c'})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result).To(Equal(mask.Mask(0b111)))
+	})
+
+	It("Accepts sets of characters", func() {
+		result, err := mask.AlphabetMaskRanges([]rune{'a', 'c', 'e', 'g'})
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result).To(Equal(mask.Mask(0b1110111)))
+	})
+
+	It("Accepts full set of characters", func() {
+		result, err := mask.AlphabetMaskRanges(mask.AlphabetRuneRanges)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(result).To(Equal(mask.ALL))
+	})
+
+	It("Rejects invalid input", func() {
+		_, err := mask.AlphabetMaskRanges([]rune{'a', '🚫'})
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("Rejects invalid length", func() {
+		_, err := mask.AlphabetMaskRanges([]rune{'a'})
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("Rejects invalid range", func() {
+		_, err := mask.AlphabetMaskRanges([]rune{'a', ' '})
+		Expect(err).To(HaveOccurred())
+	})
+})
+
 var _ = Describe("AlphabetMasks", func() {
 	It("Starts empty, initially", func() {
 		masks, err := mask.AlphabetMasks(nil)
