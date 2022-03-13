@@ -12,7 +12,7 @@ import (
 
 type reTrie struct {
 	rootTrieNode *reTrieNode
-	original     *regexp.Regexp
+	original     *regexp.Regexp // Used in Metadata().
 	captureNames []string
 	directory    *reTrieDirectory
 }
@@ -26,7 +26,7 @@ func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 
 	re = re.Simplify()
 	directory := newDfaDirectory()
-	matchNode := directory.addRegexp(nil, node.NewNode(matchWeight))
+	matchNode := directory.addNode(node.NewNode(matchWeight))
 	rootTrieNode := directory.linker(nil, matchNode, re, false)
 
 	return &reTrie{

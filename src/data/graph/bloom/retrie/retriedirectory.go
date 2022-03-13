@@ -22,7 +22,7 @@ func newDfaDirectory() *reTrieDirectory {
 	return result
 }
 
-func (directory *reTrieDirectory) addRegexp(re *syntax.Regexp, source *node.Node) *reTrieNode {
+func (directory *reTrieDirectory) addNode(source *node.Node) *reTrieNode {
 	nfaId := directory.nextNfaId
 	directory.nextNfaId++
 	dfaId := dfaId(1) << nfaId
@@ -31,14 +31,14 @@ func (directory *reTrieDirectory) addRegexp(re *syntax.Regexp, source *node.Node
 	return dfaNode
 }
 
-func (directory *reTrieDirectory) addRegexpAs(re *syntax.Regexp, source *reTrieNode) *reTrieNode {
-	result := directory.addRegexp(re, source.rootNode.Copy())
+func (directory *reTrieDirectory) copy(source *reTrieNode) *reTrieNode {
+	result := directory.addNode(source.rootNode.Copy())
 	return directory.merge(result, source)
 }
 
-func (directory *reTrieDirectory) ensureNode(re *syntax.Regexp, given *reTrieNode) *reTrieNode {
+func (directory *reTrieDirectory) ensureNode(given *reTrieNode) *reTrieNode {
 	if given == nil {
-		return directory.addRegexp(re, node.NewNode())
+		return directory.addNode(node.NewNode())
 	}
 	return given
 }
@@ -46,13 +46,13 @@ func (directory *reTrieDirectory) ensureNode(re *syntax.Regexp, given *reTrieNod
 func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bool) *reTrieNode {
 	switch re.Op {
 	case syntax.OpAlternate:
-		parent = directory.ensureNode(re, parent)
+		parent = directory.ensureNode(parent)
 		for _, alternative := range re.Sub {
 			parent = directory.linker(parent, child, alternative, repeats)
 		}
 		return parent
 	case syntax.OpAnyChar, syntax.OpAnyCharNotNL:
-		parent = directory.ensureNode(re, parent)
+		parent = directory.ensureNode(parent)
 		parent.linkAnyChar(child, repeats)
 		return parent
 	case syntax.OpBeginLine, syntax.OpEndLine, syntax.OpBeginText, syntax.OpEndText:
@@ -66,7 +66,7 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 		}
 		return directory.linker(parent, child, re.Sub[0], repeats)
 	case syntax.OpCharClass: // [xyz]
-		parent = directory.ensureNode(re, parent)
+		parent = directory.ensureNode(parent)
 		return parent.linkRunes(re.Rune, child, repeats)
 	case syntax.OpConcat: // xyz
 		i := len(re.Sub)
@@ -82,7 +82,7 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 		// Allow skipping straight to child.
 		return parent.optionalPath(child)
 	case syntax.OpLiteral: // x
-		parent = directory.ensureNode(re, parent)
+		parent = directory.ensureNode(parent)
 		parent.linkPath(string(re.Rune), child, repeats)
 		return parent
 	case syntax.OpPlus:
@@ -95,7 +95,7 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 			return directory.linker(parent, child, re.Sub[0], true)
 		}
 		// We must not contaminate child which may be used by others.
-		detour := directory.addRegexpAs(re, child)
+		detour := directory.copy(child)
 		// Child may optionally loop back to itself.
 		directory.linker(detour, detour, re.Sub[0], true)
 		// Require at least one path through re.Sub[0]
@@ -117,7 +117,7 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 			return directory.linker(child, child, re.Sub[0], true)
 		}
 		// We must not contaminate parent which may be used by others.
-		detour := directory.addRegexpAs(re, child)
+		detour := directory.copy(child)
 		// Create a branching path to the detour via re.Sub[0]...
 		directory.linker(parent, detour, re.Sub[0], true)
 		// ...which repeats.
@@ -154,7 +154,7 @@ func (directory *reTrieDirectory) partialMerge(a *reTrieNode, b *reTrieNode) *re
 
 func (directory *reTrieDirectory) split(link *reTrieLink) *reTrieLink {
 	prefixRune, prefixRuneSize := utf8.DecodeRuneInString(link.prefix)
-	parent := directory.ensureNode(nil, nil)
+	parent := directory.ensureNode(nil)
 	parent.linkPath(link.prefix[prefixRuneSize:], link.node, false)
 	return newReTrieLinkFromRunes([]rune{prefixRune, prefixRune}, parent)
 }
