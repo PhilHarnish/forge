@@ -70,7 +70,7 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 			return child
 		}
 		// Allow skipping straight to child.
-		return parent.optionalPath(child)
+		return directory.merge(parent, child)
 	case syntax.OpLiteral: // x
 		parent = directory.ensureNode(parent)
 		return parent.linkPath(string(re.Rune), child, repeats)
@@ -92,7 +92,7 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 		// Offer link to alternate path.
 		parent = directory.linker(parent, child, re.Sub[0], repeats)
 		// Mark the path to child as optional.
-		return parent.optionalPath(child)
+		return directory.merge(parent, child)
 	case syntax.OpStar: // x*
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpStar with 2+ Sub options")
@@ -111,32 +111,28 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 }
 
 func (directory *reTrieDirectory) merge(a *reTrieNode, b *reTrieNode) *reTrieNode {
-	mergedId := a.id | b.id
-	mergedDfaNode, exists := (*directory)[mergedId]
-	if exists {
-		return mergedDfaNode
+	result, exists := directory.get(a, b)
+	if !exists {
+		result.mergeNode(a)
+		result.mergeNode(b)
 	}
-	result := directory.partialMerge(a, b)
-	result.mergeNode(a)
-	result.mergeNode(b)
 	return result
 }
 
-func (directory *reTrieDirectory) partialMerge(a *reTrieNode, b *reTrieNode) *reTrieNode {
+func (directory *reTrieDirectory) get(a *reTrieNode, b *reTrieNode) (result *reTrieNode, exists bool) {
 	mergedId := a.id | b.id
-	mergedDfaNode, exists := (*directory)[mergedId]
-	if exists {
-		return mergedDfaNode
+	result, exists = (*directory)[mergedId]
+	if !exists {
+		result = newReTrieNode(directory, mergedId, a.rootNode.Copy())
+		(*directory)[mergedId] = result
+		result.rootNode.Union(b.rootNode)
 	}
-	result := newReTrieNode(directory, mergedId, a.rootNode.Copy())
-	(*directory)[mergedId] = result
-	result.rootNode.Union(b.rootNode)
-	return result
+	return result, exists
 }
 
 func (directory *reTrieDirectory) split(link *reTrieLink) *reTrieLink {
 	prefixRune, prefixRuneSize := utf8.DecodeRuneInString(link.prefix)
-	parent := directory.ensureNode(nil)
+	parent := directory.addNode(node.NewNode())
 	parent.linkPath(link.prefix[prefixRuneSize:], link.node, false)
 	return newReTrieLinkFromRunes([]rune{prefixRune, prefixRune}, parent)
 }

@@ -115,10 +115,6 @@ func (root *reTrieNode) addLink(link *reTrieLink) {
 	root.edgeMask |= edgeMask
 }
 
-func (root *reTrieNode) optionalPath(child *reTrieNode) *reTrieNode {
-	return root.directory.merge(root, child)
-}
-
 func (root *reTrieNode) splitEdges() {
 	if root.overlapping == 0 {
 		return
@@ -192,9 +188,11 @@ func (root *reTrieNode) splitEdges() {
 		// The second batch is the portion which overlaps.
 		overlapEnd := min(first.runes[1], second.runes[1])
 		batch2 := []rune{second.runes[0], overlapEnd}
-		merged := root.directory.partialMerge(firstDestination, secondDestination)
+		merged, exists := root.directory.get(firstDestination, secondDestination)
 		overlapEdge := newReTrieLinkFromRunes(batch2, merged)
-		newNodes = append(newNodes, merged, firstDestination, secondDestination)
+		if !exists {
+			newNodes = append(newNodes, merged, firstDestination, secondDestination)
+		}
 		if len(original) > 0 && original[0].edgeMask&overlapEdge.edgeMask != 0 {
 			// Unfortunately, this overlaping portion overlaps with yet-more edges.
 			// Return for further processing.
