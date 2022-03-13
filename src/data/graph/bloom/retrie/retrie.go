@@ -14,7 +14,6 @@ type reTrie struct {
 	rootTrieNode *reTrieNode
 	original     *regexp.Regexp
 	captureNames []string
-	instructions []*reTrieNode
 	directory    *reTrieDirectory
 }
 
@@ -28,14 +27,12 @@ func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 	re = re.Simplify()
 	directory := newDfaDirectory()
 	matchNode := directory.addRegexp(nil, node.NewNode(matchWeight))
-	var instructions []*reTrieNode
 	rootTrieNode := directory.linker(nil, matchNode, re, false)
 
 	return &reTrie{
 		rootTrieNode: rootTrieNode,
 		original:     regexp.MustCompile(regularExpression),
 		captureNames: captureNames,
-		instructions: instructions,
 		directory:    directory,
 	}
 }
