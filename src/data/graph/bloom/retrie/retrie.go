@@ -18,8 +18,6 @@ type reTrie struct {
 	directory    *reTrieDirectory
 }
 
-const EPSILON_EXPANSION = true
-
 func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 	re, err := syntax.Parse(regularExpression, syntax.Perl)
 	if err != nil {
