@@ -13,11 +13,6 @@ type reTrieItems struct {
 }
 
 func newTrieItems(acceptor node.NodeAcceptor, root *reTrieNode) node.NodeItems {
-	optionalLink := root.optionalLink()
-	if optionalLink != nil {
-		// The "?" operator has zero length so iterate that node directly.
-		return optionalLink.node.Items(acceptor)
-	}
 	return &reTrieItems{
 		acceptor: acceptor,
 		root:     root,

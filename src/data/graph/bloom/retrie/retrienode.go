@@ -152,10 +152,6 @@ func (root *reTrieNode) optionalPath(child *reTrieNode) *reTrieNode {
 	return root.directory.merge(root, child)
 }
 
-func (root *reTrieNode) optionalLink() *reTrieLink {
-	return nil
-}
-
 func (root *reTrieNode) splitEdges() {
 	if root.overlapping == 0 {
 		return
