@@ -77,7 +77,8 @@ func AlphabetMaskRange(start rune, end rune) (Mask, error) {
 	delta := int(end - start)
 	// Assume positions are contiguous.
 	if delta != endPosition-startPosition {
-		return 0, fmt.Errorf("AlphabetMaskRange only supports contiguous ranges")
+		return 0, fmt.Errorf(
+			"AlphabetMaskRange only supports contiguous ranges; given [%c-%c]", start, end)
 	}
 	upperBits := (1 << (endPosition + 1)) - 1
 	lowerBits := (1 << startPosition) - 1
