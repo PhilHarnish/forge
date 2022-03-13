@@ -43,7 +43,7 @@ func (items *reTrieItems) Next() (string, node.NodeIterator) {
 			items.index++
 		}
 		return prefix, link.node
-	} else if link.runes == nil {
+	} else if link.prefix != "" {
 		items.index++
 		return link.prefix, link.node
 	}
