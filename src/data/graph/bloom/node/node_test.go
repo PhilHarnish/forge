@@ -312,6 +312,20 @@ var _ = Describe("String", func() {
 	})
 })
 
+var _ = Describe("NodeIterator", func() {
+	It("Has no children", func() {
+		n := node.NewNode()
+		Expect(n.HasNext()).To(BeFalse())
+		items := n.Items(node.NodeAcceptAll)
+		Expect(items.HasNext()).To(BeFalse())
+	})
+
+	It("Formats empty children", func() {
+		n := node.NewNode()
+		Expect(node.StringChildren(n)).To(Equal("Node"))
+	})
+})
+
 type TestIterator struct {
 	root *node.Node
 }

@@ -204,6 +204,22 @@ func (node *Node) String() string {
 	return Format("Node", node)
 }
 
+func (node *Node) Root() *Node {
+	return node
+}
+
+func (node *Node) Items(acceptor NodeAcceptor) NodeItems {
+	return node
+}
+
+func (node *Node) HasNext() bool {
+	return false
+}
+
+func (node *Node) Next() (string, NodeIterator) {
+	panic("Node has no children")
+}
+
 // Evaluate the `Weight` for a `node` at `path`.
 // Typically, when the result is non-zero the caller should immediately
 // return Cursor{node, path}
