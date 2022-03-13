@@ -364,14 +364,14 @@ var _ = Describe("ReTrie syntax", func() {
 				│◌◌●●●···
 				└a ->ReTrie: ab
 				·│◌●●●···
-				·├a●->ReTrie: 100 ab
-				·││●●●···
-				·│├a●->ReTrie: 100 ab
-				·│││●●●···
-				·││├a●->ReTrie: 100 ab
-				·││└b●->ReTrie: 100
-				·│└b●->ReTrie: 100
-				·└b●->ReTrie: 100
+				·├b●->ReTrie: 100
+				·└a●->ReTrie: 100 ab
+				· │●●●···
+				· ├b●->ReTrie: 100
+				· └a●->ReTrie: 100 ab
+				·  │●●●···
+				·  ├b●->ReTrie: 100
+				·  └a●->ReTrie: 100 ab
 		`))
 	})
 
@@ -382,24 +382,24 @@ var _ = Describe("ReTrie syntax", func() {
 				│◌◌●●●···
 				├a ->ReTrie: Ab
 				││◌●●●···
-				│├a●->ReTrie: 100 Ab
-				│││●●●···
-				││├a●->ReTrie: 100 Ab
-				││└b ->ReTrie: Ab
-				│└b ->ReTrie: Ab
-				│ │◌●●●···
-				│ ├a●->ReTrie: 100 Ab
-				│ └b ->ReTrie: Ab
+				│├b ->ReTrie: Ab
+				│││◌●●●···
+				││├b ->ReTrie: Ab
+				││└a●->ReTrie: 100 Ab
+				│└a●->ReTrie: 100 Ab
+				│ │●●●···
+				│ ├b ->ReTrie: Ab
+				│ └a●->ReTrie: 100 Ab
 				└b ->ReTrie: Ab
 				·│◌●●●···
-				·├a●->ReTrie: 100 Ab
-				·││●●●···
-				·│├a●->ReTrie: 100 Ab
-				·│└b ->ReTrie: Ab
-				·└b ->ReTrie: Ab
-				· │◌●●●···
-				· ├a●->ReTrie: 100 Ab
-				· └b ->ReTrie: Ab
+				·├b ->ReTrie: Ab
+				·││◌●●●···
+				·│├b ->ReTrie: Ab
+				·│└a●->ReTrie: 100 Ab
+				·└a●->ReTrie: 100 Ab
+				· │●●●···
+				· ├b ->ReTrie: Ab
+				· └a●->ReTrie: 100 Ab
 		`))
 	})
 
@@ -455,12 +455,12 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
-	FIt("splits many rune blocks", func() {
+	It("splits many rune blocks", func() {
 		trie := retrie.NewReTrie("[ab]?[bc]?[cd]?", 1.0)
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
 				ReTrie: 100 abcd
 				│●●●●
-				├c●->ReTrie: 100
+				├c●->ReTrie: 100 cd
 				││●●
 				│├c●->ReTrie: 100
 				│└d●->ReTrie: 100
@@ -471,20 +471,22 @@ var _ = Describe("ReTrie syntax", func() {
 				│││●●
 				││├c●->ReTrie: 100
 				││└d●->ReTrie: 100
-				│└c●->ReTrie: 100 cd
-				│ │●●
-				│ ├c●->ReTrie: 100
-				│ └d●->ReTrie: 100
+				│├c●->ReTrie: 100 cd
+				│││●●
+				││├c●->ReTrie: 100
+				││└d●->ReTrie: 100
+				│└d●->ReTrie: 100
 				└b●->ReTrie: 100 bcd
 				·│●●●
 				·├b●->ReTrie: 100 cd
 				·││●●
 				·│├c●->ReTrie: 100
 				·│└d●->ReTrie: 100
-				·└c●->ReTrie: 100 cd
-				· │●●
-				· ├c●->ReTrie: 100
-				· └d●->ReTrie: 100
+				·├c●->ReTrie: 100 cd
+				·││●●
+				·│├c●->ReTrie: 100
+				·│└d●->ReTrie: 100
+				·└d●->ReTrie: 100
 		`))
 	})
 

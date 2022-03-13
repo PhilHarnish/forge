@@ -92,6 +92,7 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 }
 
 func (root *reTrieNode) mergeNode(other *reTrieNode) {
+	other.fixOverlapping()
 	root.overlapping |= root.edgeMask & other.edgeMask
 	root.edgeMask |= other.edgeMask
 	root.links = append(root.links, other.links...)
