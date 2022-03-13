@@ -153,20 +153,21 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
-	XIt("matches question mark with tricky suffix", func() {
+	It("matches question mark with tricky suffix", func() {
 		trie := retrie.NewReTrie("a(?:bxyz)?[a-c]", 1.0)
-		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+		Expect(node.StringChildren(trie, 6)).To(matchers.LookLike(`
 				ReTrie: Abcxyz
 				│◌◌●◌◌◌●
 				└a ->ReTrie: abcxyz
 				·│◌●◌◌◌●
-				·├bxyz ->ReTrie: abc
+				·├a●->ReTrie: 100
+				·├b●->ReTrie: 100 abcXYZ
+				·││●◌◌◌●
+				·│└xyz ->ReTrie: abc
 				·│   │◌●
 				·│   ├a●->ReTrie: 100
 				·│   ├b●->ReTrie: 100
 				·│   └c●->ReTrie: 100
-				·├a●->ReTrie: 100
-				·├b●->ReTrie: 100
 				·└c●->ReTrie: 100
 		`))
 	})

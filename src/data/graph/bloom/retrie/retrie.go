@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"regexp/syntax"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
@@ -31,11 +32,18 @@ type dfaId = int64
 
 const USE_COMPILED_INSTRUCTIONS = false
 const EPSILON_EXPANSION = true
+const SPLIT_LITERAL_INTO_RUNES = false
 
 var failNode = &node.Node{
 	RequireMask: mask.ALL,
 }
 var failReTrieNode = newReTrieNode(nil, 0, failNode)
+var anyRunes = []rune{
+	'a', 'z',
+	' ', ' ',
+	'-', '-',
+	'\'', '\'',
+}
 
 func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 	re, err := syntax.Parse(regularExpression, syntax.Perl)
@@ -167,8 +175,7 @@ func (directory *dfaDirectory) linker(parent *reTrieNode, child *reTrieNode, re 
 		return directory.linker(parent, child, re.Sub[0], repeats)
 	case syntax.OpCharClass: // [xyz]
 		parent = directory.ensureNode(re, parent)
-		parent.linkRunes(re.Rune, child, repeats)
-		return parent
+		return parent.linkRunes(re.Rune, child, repeats)
 	case syntax.OpConcat: // xyz
 		i := len(re.Sub)
 		for i > 0 {
@@ -183,9 +190,20 @@ func (directory *dfaDirectory) linker(parent *reTrieNode, child *reTrieNode, re 
 		// Allow skipping straight to child.
 		return parent.optionalPath(child)
 	case syntax.OpLiteral: // x
-		parent = directory.ensureNode(re, parent)
-		parent.linkPath(string(re.Rune), child, repeats)
-		return parent
+		if SPLIT_LITERAL_INTO_RUNES {
+			i := len(re.Rune)
+			for i > 0 {
+				i--
+				parent = directory.ensureNode(re, parent)
+				runes := []rune{re.Rune[i], re.Rune[i]}
+				parent, child = nil, parent.linkRunes(runes, child, repeats)
+			}
+			return child
+		} else {
+			parent = directory.ensureNode(re, parent)
+			parent.linkPath(string(re.Rune), child, repeats)
+			return parent
+		}
 	case syntax.OpPlus:
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpPlus with 2+ Sub options")
@@ -256,8 +274,18 @@ func (directory *dfaDirectory) merge(a *reTrieNode, b *reTrieNode) *reTrieNode {
 	result := newReTrieNode(directory, mergedId, a.rootNode.Copy())
 	directory.table[mergedId] = result
 	result.rootNode.MaskDistanceToChild(0, b.rootNode)
-	result.combineLinks(a, b)
+	result.mergeNodes(a)
+	result.mergeNodes(b)
 	return result
+}
+
+func (directory *dfaDirectory) split(link *reTrieLink) *reTrieLink {
+	prefixRune, prefixRuneSize := utf8.DecodeRuneInString(link.prefix)
+	parent := directory.ensureNode(nil, nil)
+	// TODO: Remove cast.
+	child := link.node.(*reTrieNode)
+	parent.linkPath(link.prefix[prefixRuneSize:], child, false)
+	return newReTrieLinkFromRunes([]rune{prefixRune, prefixRune}, parent)
 }
 
 func compile(program *syntax.Prog, matchNode *reTrieNode) []*reTrieNode {
