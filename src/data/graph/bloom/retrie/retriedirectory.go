@@ -8,6 +8,8 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
+type dfaId = int64
+
 type reTrieDirectory struct {
 	table     map[dfaId]*reTrieNode
 	nextNfaId dfaId
@@ -80,20 +82,9 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 		// Allow skipping straight to child.
 		return parent.optionalPath(child)
 	case syntax.OpLiteral: // x
-		if SPLIT_LITERAL_INTO_RUNES {
-			i := len(re.Rune)
-			for i > 0 {
-				i--
-				parent = directory.ensureNode(re, parent)
-				runes := []rune{re.Rune[i], re.Rune[i]}
-				parent, child = nil, parent.linkRunes(runes, child, repeats)
-			}
-			return child
-		} else {
-			parent = directory.ensureNode(re, parent)
-			parent.linkPath(string(re.Rune), child, repeats)
-			return parent
-		}
+		parent = directory.ensureNode(re, parent)
+		parent.linkPath(string(re.Rune), child, repeats)
+		return parent
 	case syntax.OpPlus:
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpPlus with 2+ Sub options")

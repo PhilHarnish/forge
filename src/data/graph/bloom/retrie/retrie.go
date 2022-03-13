@@ -18,10 +18,7 @@ type reTrie struct {
 	directory    *reTrieDirectory
 }
 
-type dfaId = int64
-
 const EPSILON_EXPANSION = true
-const SPLIT_LITERAL_INTO_RUNES = false
 
 func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 	re, err := syntax.Parse(regularExpression, syntax.Perl)
