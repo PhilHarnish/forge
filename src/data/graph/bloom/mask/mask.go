@@ -207,6 +207,7 @@ func MaskString(provide Mask, require Mask) string {
 
 /*
 Return a mask which combines all paths through `first` to `second`.
+For optimal execution first should contain fewer bits.
 */
 func ConcatLengths(first Mask, second Mask) Mask {
 	result := Mask(0)
