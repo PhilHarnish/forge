@@ -248,8 +248,8 @@ var _ = Describe("process", func() {
 			b.Add("b", 0.5)
 			operation := op.Concat(a, b)
 			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
-					((Trie: A) + (Trie: B)): A
-					│◌●
+					((Trie: A) + (Trie: B)): AB
+					│◌◌●
 					└a ->Trie: B
 					·│◌●
 					·└b●->Trie: 50
@@ -264,10 +264,10 @@ var _ = Describe("process", func() {
 			b.Add("b", 0.5)
 			operation := op.Concat(a, b)
 			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
-					((Trie: A) + (Trie: B)): A
-					│◌●●
-					└a●->((((Trie: 100 A) + (Trie: B)): 100 A) || (Trie: B)): 100 ab
-					·│●●
+					((Trie: A) + (Trie: B)): AB
+					│◌◌●●
+					└a ->((((Trie: 100 A) + (Trie: B)): AB) || (Trie: B)): aB
+					·│◌●●
 					·├a ->Trie: B
 					·││◌●
 					·│└b●->Trie: 50
@@ -284,10 +284,10 @@ var _ = Describe("process", func() {
 			c.Add("c", 0.5)
 			operation := op.Concat(a, op.Concat(b, c))
 			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
-					((Trie: A) + (Trie: B) + (Trie: C)): A
-					│◌●
-					└a ->((Trie: B) + (Trie: C)): B
-					·│◌●
+					((Trie: A) + (Trie: B) + (Trie: C)): ABC
+					│◌◌◌●
+					└a ->((Trie: B) + (Trie: C)): BC
+					·│◌◌●
 					·└b ->Trie: C
 					· │◌●
 					· └c●->Trie: 50
@@ -303,8 +303,8 @@ var _ = Describe("process", func() {
 			b.Add("b", 0.5)
 			operation := op.Join("z", a, b)
 			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
-					((Trie: A) + (Span: 'z'->Trie: B)): A
-					│◌●
+					((Trie: A) + (Span: 'z'->Trie: B)): ABZ
+					│◌◌◌●
 					└a ->Span: 'z'->Trie: B
 					·│◌◌●
 					·└z ->Trie: B
@@ -312,5 +312,61 @@ var _ = Describe("process", func() {
 					· └b●->Trie: 50
 			`))
 		})
+
+		It("Returns cross product for 2+ item", func() {
+			a := trie.NewTrie()
+			a.Add("aaa", 1.0)
+			a.Add("bbbbb", .75)
+			b := trie.NewTrie()
+			b.Add("ccccccc", 0.5)
+			b.Add("ddddddddddd", 0.25)
+			operation := op.Join("z", a, b)
+			Expect(node.StringChildren(operation, 5)).To(matchers.LookLike(`
+					((Trie: ab) + (Span: 'z'->Trie: cd)): abcdZ
+					│◌◌◌◌◌◌◌◌◌◌◌●◌●◌●◌●
+					├aaa ->Span: 'z'->Trie: cd
+					│  │◌◌◌◌◌◌◌◌●◌◌◌●
+					│  └z ->Trie: cd
+					│   │◌◌◌◌◌◌◌●◌◌◌●
+					│   ├ccccccc●->Trie: 50
+					│   └ddddddddddd●->Trie: 25
+					└bbbbb ->Span: 'z'->Trie: cd
+					·    │◌◌◌◌◌◌◌◌●◌◌◌●
+					·    └z ->Trie: cd
+					·     │◌◌◌◌◌◌◌●◌◌◌●
+					·     ├ccccccc●->Trie: 50
+					·     └ddddddddddd●->Trie: 25
+			`))
+		})
+	})
+
+	It("Returns cross product 2+ item, shared prefix", func() {
+		a := trie.NewTrie()
+		prefix := trie.NewTrie(1.0) // aaa
+		prefix.Add("aa", .75)       // aaa + aa
+		a.Link("aaa", prefix)
+		b := trie.NewTrie()
+		prefix = trie.NewTrie(.5) // bbbbbbb
+		prefix.Add("bbbb", .25)   // bbbbbbb + bbbb
+		b.Link("bbbbbbb", prefix)
+		operation := op.Join("z", a, b)
+		Expect(node.StringChildren(operation, 5)).To(matchers.LookLike(`
+				((Trie: A) + (Span: 'z'->Trie: B)): ABZ
+				│◌◌◌◌◌◌◌◌◌◌◌●◌●◌●◌●
+				└aaa ->((((Trie: 100 A) + (Span: 'z'->Trie: B)): ABZ) || (Span: 'z'->Trie: B)): aBZ
+				·  │◌◌◌◌◌◌◌◌●◌●◌●◌●
+				·  ├aa ->Span: 'z'->Trie: B
+				·  │ │◌◌◌◌◌◌◌◌●◌◌◌●
+				·  │ └z ->Trie: B
+				·  │  │◌◌◌◌◌◌◌●◌◌◌●
+				·  │  └bbbbbbb●->Trie: 50 B
+				·  │         │●◌◌◌●
+				·  │         └bbbb●->Trie: 25
+				·  └z ->Trie: B
+				·   │◌◌◌◌◌◌◌●◌◌◌●
+				·   └bbbbbbb●->Trie: 50 B
+				·          │●◌◌◌●
+				·          └bbbb●->Trie: 25
+		`))
 	})
 })

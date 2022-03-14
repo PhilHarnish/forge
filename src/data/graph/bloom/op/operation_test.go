@@ -122,7 +122,7 @@ var _ = Describe("Operations", func() {
 
 		It("Creates operation for 2+ operands", func() {
 			o := op.Join(" ", a, b)
-			Expect(o.String()).To(Equal("(Trie + (Span: ' '->Trie))"))
+			Expect(o.String()).To(Equal("(Trie + (Span: ' '->Trie)): ␣"))
 		})
 
 		It("Reuses Concat when separator is ''", func() {

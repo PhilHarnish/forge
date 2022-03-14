@@ -20,17 +20,24 @@ func (op *operator) process(operation *operation, acceptor node.NodeAcceptor) *o
 }
 
 func (op *operator) synthesizeNode(operands []node.NodeIterator) *node.Node {
-	result := node.NewNode()
-	result.Union(operands[0].Root())
 	switch op.edgePolicy {
-	case firstOperand:
+	case sequentialOperands:
+		i := len(operands) - 1
+		result := operands[i].Root().Copy()
+		for i > 0 {
+			i--
+			next := operands[i].Root()
+			result.MaskConcatenateChild(next)
+		}
 		return result
 	case allOperands:
+		result := operands[0].Root().Copy()
 		for _, operand := range operands[1:] {
 			result.Intersection(operand.Root())
 		}
 		return result
 	case anyOperands:
+		result := operands[0].Root().Copy()
 		for _, operand := range operands[1:] {
 			result.Union(operand.Root())
 		}
@@ -64,7 +71,7 @@ const (
 type edgePolicy int
 
 const (
-	firstOperand edgePolicy = iota
+	sequentialOperands edgePolicy = iota
 	allOperands
 	anyOperands
 )
@@ -90,7 +97,7 @@ var concatOperator = &operator{
 	infix:           " + ",
 	processMethod:   sequential,
 	maxWeightPolicy: useLargest,
-	edgePolicy:      firstOperand,
+	edgePolicy:      sequentialOperands,
 }
 
 type operatorEdge struct {
