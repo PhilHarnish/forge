@@ -306,6 +306,42 @@ var _ = Describe("MaskString", func() {
 	})
 })
 
+var _ = Describe("ConcatLengths", func() {
+	It("Returns zeros out for zeros in", func() {
+		Expect(mask.LengthString(mask.ConcatLengths(0b0, 0b0))).To(Equal(
+			""))
+	})
+
+	It("Returns one for ones in", func() {
+		Expect(mask.LengthString(mask.ConcatLengths(0b1, 0b1))).To(Equal(
+			"●"))
+	})
+
+	It("Returns shifted input for twos", func() {
+		Expect(mask.LengthString(mask.ConcatLengths(0b10, 0b10))).To(Equal(
+			"◌◌●"))
+	})
+
+	It("Mirrors input for multiples", func() {
+		first := mask.Mask((1 << 3) | (1 << 5))
+		second := mask.Mask((1 << 7) | (1 << 11))
+		expected := mask.Mask(
+			(1<<3)*(1<<7) |
+				(1<<3)*(1<<11) |
+				(1<<5)*(1<<7) |
+				(1<<5)*(1<<11))
+		Expect(mask.LengthString(mask.ConcatLengths(first, second))).To(Equal(
+			mask.LengthString(expected)))
+	})
+
+	It("Handles repeats", func() {
+		first := mask.RepeatLengths(0b100, 5)
+		second := mask.Mask(0b101)
+		Expect(mask.LengthString(mask.ConcatLengths(first, second))).To(Equal(
+			"◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●●···"))
+	})
+})
+
 var _ = Describe("RepeatLengths", func() {
 	It("Blurs bits when interval is 1", func() {
 		Expect(mask.LengthString(mask.RepeatLengths(0b100, 1))).To(Equal(

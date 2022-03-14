@@ -206,6 +206,22 @@ func MaskString(provide Mask, require Mask) string {
 }
 
 /*
+Return a mask which combines all paths through `first` to `second`.
+*/
+func ConcatLengths(first Mask, second Mask) Mask {
+	result := Mask(0)
+	for first != 0 {
+		oneBitRemoved := first & (first - 1)
+		removedBit := first - oneBitRemoved
+		first = oneBitRemoved
+		result |= second * removedBit
+	}
+	// Copy over the ALL_REMAINING_LENGTH bit if it was set.
+	result |= (first | second) & ALL_REMAINING_LENGTH
+	return result
+}
+
+/*
 Repeats lengthMask into higher bits.
 */
 func RepeatLengths(lengthMask Mask, interval int) Mask {
