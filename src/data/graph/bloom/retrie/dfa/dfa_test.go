@@ -1,6 +1,7 @@
 package dfa_test
 
 import (
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -110,7 +111,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches dot", func() {
 		n := dfa.Dfa(".", 1.0)
-		Expect(n.String()).To(Equal("DFA{1}: abcdefghijklmnopqrstuvwxyz -' ◌●"))
+		Expect(n.String()).To(Equal("DFA{1}: abcdefghijklmnopqrstuvwxyz␣-' ◌●"))
 		items := n.Items(node.NodeAcceptAll)
 		seen := mask.Mask(0b0)
 		for items.HasNext() {
@@ -118,7 +119,8 @@ var _ = Describe("Regexp syntax", func() {
 			pathMask, _ := mask.EdgeMask(path)
 			seen |= pathMask
 		}
-		Expect(mask.MaskString(seen, mask.NONE)).To(Equal(mask.ALPHABET))
+		Expect(mask.MaskString(seen, mask.NONE)).To(Equal(
+			strings.ReplaceAll(mask.ALPHABET, " ", "␣")))
 	})
 
 	It("matches dot and full range the same way", func() {

@@ -308,7 +308,7 @@ var _ = Describe("String", func() {
 			LengthsMask: mask.Mask(0b1010101),
 			MatchWeight: 1.0,
 		}
-		Expect(n.String()).To(Equal("Node: 100 ABCDEFGHIJKLMNOPQRSTUVWXYZ -' ●◌●◌●◌●"))
+		Expect(n.String()).To(Equal("Node: 100 ABCDEFGHIJKLMNOPQRSTUVWXYZ␣-' ●◌●◌●◌●"))
 	})
 })
 
