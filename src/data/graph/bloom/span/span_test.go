@@ -17,27 +17,32 @@ func Test(t *testing.T) {
 
 var _ = Describe("Node interfaces", func() {
 	It("String", func() {
-		Expect(span.NewSpan("test").String()).To(Equal("Span: 'test' 0"))
+		Expect(span.NewSpan("test").String()).To(Equal("Span: 'test'->Node"))
 	})
 
-	It("Root", func() {
-		Expect(span.NewSpan("test").Root().String()).To(Equal("Node: EST ◌◌◌◌●"))
+	It("Root without match", func() {
+		Expect(span.NewSpan("test").Root().String()).To(Equal("Node: EST"))
+	})
+
+	It("Root with match", func() {
+		Expect(span.NewSpan("test", node.NewNode(1)).Root().String()).To(Equal("Node: EST ◌◌◌◌●"))
 	})
 
 	It("Items", func() {
-		s := span.NewSpan("test")
+		s := span.NewSpan("test", node.NewNode(1))
 		items := s.Items(node.NodeAcceptAll)
 		Expect(items.HasNext()).To(BeTrue())
 		path, next := items.Next()
 		Expect(path).To(Equal("test"))
-		Expect(next.String()).To(Equal("Null: 0 ●"))
+		Expect(next.String()).To(Equal("Node: 100 ●"))
 	})
 
 	It("StringChildren", func() {
-		Expect(node.StringChildren(span.NewSpan("test"))).To(matchers.LookLike(`
-				Span: 'test' 0
+		parent := span.NewSpan("test", node.NewNode(1))
+		Expect(node.StringChildren(parent)).To(matchers.LookLike(`
+				Span: 'test'->Node: 100
 				│◌◌◌◌●
-				└test●->Null: 0
+				└test●->Node: 100
 		`))
 	})
 })
