@@ -287,22 +287,24 @@ var _ = Describe("MaskString", func() {
 	})
 
 	It("Converts round-trip", func() {
-		given := "it's an example"
-		expected := "aeilmnpstx '"
+		given := "aeilmnpstx '"
 		acc := mask.Mask(0)
 		for _, c := range given {
 			mask, _ := mask.AlphabetMask(c)
 			acc |= mask
 		}
-		Expect(mask.MaskString(acc, 0)).To(Equal(expected))
+		Expect(mask.MaskString(acc, 0)).To(Equal(
+			strings.ReplaceAll(given, " ", "␣")))
 	})
 
 	It("Converts ALL to ALPHABET", func() {
-		Expect(mask.MaskString(mask.ALL, 0)).To(Equal(mask.ALPHABET))
+		Expect(mask.MaskString(mask.ALL, 0)).To(Equal(
+			strings.ReplaceAll(mask.ALPHABET, " ", "␣")))
 	})
 
 	It("Is not fooled by UNSET", func() {
-		Expect(mask.MaskString(mask.ALL, mask.UNSET)).To(Equal(mask.ALPHABET))
+		Expect(mask.MaskString(mask.ALL, mask.UNSET)).To(Equal(
+			strings.ReplaceAll(mask.ALPHABET, " ", "␣")))
 	})
 })
 

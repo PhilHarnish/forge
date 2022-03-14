@@ -33,6 +33,10 @@ var missingRequirementMap = [...]rune{
 	'Ⓝ', 'Ⓞ', 'Ⓟ', 'Ⓠ', 'Ⓡ', 'Ⓢ', 'Ⓣ', 'Ⓤ', 'Ⓥ', 'Ⓦ', 'Ⓧ', 'Ⓨ', 'Ⓩ',
 }
 
+var printableCharMap = map[rune]rune{
+	' ': '␣',
+}
+
 var truncateLengths = regexp.MustCompile("●{5,}$")
 
 /*
@@ -190,6 +194,9 @@ func MaskString(provide Mask, require Mask) string {
 		required := require & masked
 		missing := (require & mask) - required
 		if require != UNSET && required > 0 {
+			if printableChar, found := printableCharMap[c]; found {
+				c = printableChar
+			}
 			acc.WriteRune(unicode.ToUpper(c))
 		} else if require != UNSET && missing > 0 {
 			position, _ := Position(c)
@@ -199,10 +206,17 @@ func MaskString(provide Mask, require Mask) string {
 				acc.WriteString(fmt.Sprintf("(%c)", c))
 			}
 		} else if masked > 0 {
+			if printableChar, found := printableCharMap[c]; found {
+				c = printableChar
+			}
 			acc.WriteRune(c)
 		}
 	}
-	return acc.String()
+	result := acc.String()
+	if result == " " {
+		return `" "`
+	}
+	return result
 }
 
 /*
