@@ -1,6 +1,8 @@
 package retrie_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -15,6 +17,33 @@ import (
 func Test(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Tests")
+}
+
+func traverse(source node.NodeIterator, path ...string) string {
+	acc := strings.Builder{}
+	acc.WriteString(source.String() + "\n")
+	for _, part := range path {
+		child := find(source, part)
+		if child == nil {
+			acc.WriteString(fmt.Sprintf("%s = nil\n", part))
+			break
+		} else {
+			acc.WriteString(fmt.Sprintf("%s = %s\n", part, child.String()))
+		}
+		source = child
+	}
+	return acc.String()
+}
+
+func find(source node.NodeIterator, path string) (result node.NodeIterator) {
+	items := source.Items(node.NodeAcceptAll)
+	for items.HasNext() {
+		itemPath, item := items.Next()
+		if path == itemPath {
+			return item
+		}
+	}
+	return result
 }
 
 var _ = Describe("ReTrie", func() {
@@ -111,7 +140,7 @@ var _ = Describe("ReTrie syntax", func() {
 
 	It("matches dot", func() {
 		trie := retrie.NewReTrie(".", 1.0)
-		Expect(trie.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz -' ◌●"))
+		Expect(trie.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz␣-' ◌●"))
 		items := trie.Items(node.NodeAcceptAll)
 		seen := mask.Mask(0b0)
 		for items.HasNext() {
@@ -119,7 +148,8 @@ var _ = Describe("ReTrie syntax", func() {
 			pathMask, _ := mask.EdgeMask(path)
 			seen |= pathMask
 		}
-		Expect(mask.MaskString(seen, mask.NONE)).To(Equal(mask.ALPHABET))
+		Expect(mask.MaskString(seen, mask.NONE)).To(Equal(
+			strings.ReplaceAll(mask.ALPHABET, " ", "␣")))
 	})
 
 	It("matches dot and full range the same way", func() {
@@ -544,13 +574,13 @@ var _ = Describe("ReTrie syntax", func() {
 		trie := retrie.NewReTrie(".+", 1.0)
 		depth := 3
 		var item node.NodeIterator = trie
-		Expect(item.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz -' ◌●●●···"))
+		Expect(item.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz␣-' ◌●●●···"))
 		for depth > 0 {
 			depth--
 			items := item.Items(node.NodeAcceptAll)
 			Expect(items.HasNext()).To(BeTrue())
 			_, item = items.Next()
-			Expect(item.String()).To(Equal("ReTrie: 100 abcdefghijklmnopqrstuvwxyz -' ●●●···"))
+			Expect(item.String()).To(Equal("ReTrie: 100 abcdefghijklmnopqrstuvwxyz␣-' ●●●···"))
 			count := 1 // One extracted already.
 			for items.HasNext() {
 				items.Next()
@@ -765,6 +795,32 @@ var _ = Describe("ReTrie syntax", func() {
 				│└y●->ReTrie: 100
 				├x●->ReTrie: 100
 				└y●->ReTrie: 100
+		`))
+	})
+
+	It("Handles [ac]*c+[de]", func() {
+		trie := retrie.NewReTrie("[ac]*c+[de]", 1.0)
+		Expect(traverse(trie, "a", "a", "c", "d")).To(matchers.LookLike(`
+				ReTrie: aCde ◌◌●●●···
+				a = ReTrie: aCde ◌◌●●●···
+				a = ReTrie: aCde ◌◌●●●···
+				c = ReTrie: acde ◌●●●···
+				d = ReTrie: 100 ●
+		`))
+		Expect(traverse(trie, "a", "c", "a")).To(matchers.LookLike(`
+				ReTrie: aCde ◌◌●●●···
+				a = ReTrie: aCde ◌◌●●●···
+				c = ReTrie: acde ◌●●●···
+				a = ReTrie: aCde ◌◌●●●···
+		`))
+	})
+
+	It("handles [abc]*c+[cd]*", func() {
+		trie := retrie.NewReTrie("c+.*", 1.0)
+		Expect(traverse(trie, "c", "d")).To(matchers.LookLike(`
+				ReTrie: abCdefghijklmnopqrstuvwxyz␣-' ◌●●●···
+				c = ReTrie: 100 abcdefghijklmnopqrstuvwxyz␣-' ●●●···
+				d = ReTrie: 100 abcdefghijklmnopqrstuvwxyz␣-' ●●●···
 		`))
 	})
 

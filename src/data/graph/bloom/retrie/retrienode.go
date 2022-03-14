@@ -40,8 +40,7 @@ func (root *reTrieNode) String() string {
 }
 
 func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) *reTrieNode {
-	root.rootNode.ProvideMask = mask.ALL
-	root.rootNode.MaskDistanceToChild(1, child.rootNode)
+	root.rootNode.MaskEdgeMaskToChild(mask.ALL, child.rootNode)
 	if repeats {
 		root.rootNode.RepeatLengthMask(1)
 	}
@@ -126,14 +125,25 @@ func (root *reTrieNode) fixOverlapping() {
 		secondDestination := second.node
 		if firstDestination.id == secondDestination.id {
 			// Both edges go to the same place; return super-set of the range.
-			batch0 := []rune{
-				min(first.runes[0], second.runes[0]),
-				max(first.runes[1], second.runes[1]),
+			var batch0 []rune
+			if first.edgeMask&second.edgeMask == 0 { // Non-overlapping.
+				batch0 = []rune{
+					first.runes[0], first.runes[1], // First set
+					second.runes[0], second.runes[1], // Then second set
+				}
+			} else { // Overlapping
+				batch0 = []rune{
+					min(first.runes[0], second.runes[0]),
+					max(first.runes[1], second.runes[1]),
+				}
 			}
 			root.links = append(root.links, newReTrieLinkFromRunes(batch0, first.node))
 			continue
 		} else if first.edgeMask&second.edgeMask == 0 {
-			panic("Heap should have brought overlapping edges together")
+			// Non-overlapping. Add first, return second and try again.
+			root.links = append(root.links, first)
+			heap.Push(&linkHeap, second)
+			continue
 		} else if first.runes[0] < second.runes[0] {
 			// Batch #1 will begin and end before second edge starts.
 			batch1 := []rune{first.runes[0], second.runes[0] - 1}

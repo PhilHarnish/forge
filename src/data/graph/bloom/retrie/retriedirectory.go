@@ -9,16 +9,22 @@ import (
 )
 
 type dfaId = int64
-type reTrieDirectory map[dfaId]*reTrieNode
+type reTrieDirectory struct {
+	table map[dfaId]*reTrieNode
+	next  dfaId
+}
 
 func newDfaDirectory() *reTrieDirectory {
-	return &reTrieDirectory{}
+	return &reTrieDirectory{
+		table: map[dfaId]*reTrieNode{},
+	}
 }
 
 func (directory *reTrieDirectory) addNode(source *node.Node) *reTrieNode {
-	dfaId := dfaId(1) << len(*directory)
+	dfaId := dfaId(1) << directory.next
+	directory.next++
 	dfaNode := newReTrieNode(directory, dfaId, source)
-	(*directory)[dfaId] = dfaNode
+	directory.table[dfaId] = dfaNode
 	return dfaNode
 }
 
@@ -121,10 +127,10 @@ func (directory *reTrieDirectory) merge(a *reTrieNode, b *reTrieNode) *reTrieNod
 
 func (directory *reTrieDirectory) get(a *reTrieNode, b *reTrieNode) (result *reTrieNode, exists bool) {
 	mergedId := a.id | b.id
-	result, exists = (*directory)[mergedId]
+	result, exists = directory.table[mergedId]
 	if !exists {
 		result = newReTrieNode(directory, mergedId, a.rootNode.Copy())
-		(*directory)[mergedId] = result
+		directory.table[mergedId] = result
 		result.rootNode.Union(b.rootNode)
 	}
 	return result, exists
