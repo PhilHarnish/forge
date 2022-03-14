@@ -6,7 +6,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
-	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/op"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
 	"github.com/philharnish/forge/src/data/graph/bloom/retrie"
@@ -156,25 +155,25 @@ var _ = Describe("Functional tests", func() {
 		`))
 	})
 
-	FIt("finds words matching regular expressions", func() {
+	It("finds words matching regular expressions", func() {
 		a := retrie.NewReTrie("a+.*b+.*c+.*", 1.0)
 		b := trie.NewTrie()
 		b.Add("banana", 1.0)
-		b.Link("a", trie.NewTrie())
-		child := b.Get("a")
+		child := trie.NewTrie()
 		child.Add("pple", 1.0)
-		child.Add("rabic", 1.0)
-		child.Add("bstract", 1.0)
+		child.Add("rabic", 0.5)
+		child.Add("bstract", 0.25)
+		b.Link("a", child)
 		merged := op.And(a, b)
-		Expect(node.StringChildren(merged, 3)).To(matchers.LookLike(`
-		`))
-		q := query.Select().From(op.And(a, b))
+		q := query.Select().From(merged)
 		Expect(q.String(true)).To(matchers.LookLike(`
 				SELECT *
-				FROM (((ReTrie: 100 abc ●●●···) && (ReTrie: abcxyz ◌◌◌●)): abc ◌◌◌●);
+				FROM (((ReTrie: ABCdefghijklmnopqrstuvwxyz␣-' ◌◌◌●●●···) && (Trie: Abceilnprst ◌◌◌◌◌●●◌●)): ABCeilnprst ◌◌◌◌◌●●◌●);
 				Score | Text
-				============
-				1.00  | abc
+				================
+				0.50  | arabic
+				----------------
+				0.25  | abstract
 		`))
 	})
 })

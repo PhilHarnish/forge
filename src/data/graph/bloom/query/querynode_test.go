@@ -68,20 +68,20 @@ var _ = Describe("Results", func() {
 		q := query.Select().From(t)
 		Expect(q.String(true)).To(matchers.LookLike(`
 				SELECT *
-				FROM (ReTrie: ABcXYZ ◌◌●◌◌◌●);
+				FROM (ReTrie: Abcxyz ◌◌●◌◌◌●);
 				Score | Text.Text | Text.1
 				==========================
-				1.00  | ab        |
+				1.00  | aa        |
 				--------------------------
 				1.00  | abxyzc    | bxyz
 				--------------------------
 				1.00  | abxyzb    | bxyz
 				--------------------------
-				1.00  | aa        |
-				--------------------------
 				1.00  | abxyza    | bxyz
 				--------------------------
 				1.00  | ac        |
+				--------------------------
+				1.00  | ab        |
 		`))
 	})
 })
