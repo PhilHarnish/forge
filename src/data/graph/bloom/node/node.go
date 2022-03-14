@@ -72,6 +72,14 @@ func (node *Node) Match(weight weight.Weight) {
 	node.Weight(weight)
 }
 
+func (node *Node) MaskConcatenateChild(child *Node) {
+	// Provide anything the child provides.
+	node.ProvideMask |= child.ProvideMask
+	// Require anything the child requires.
+	node.RequireMask |= child.RequireMask
+	node.LengthsMask = mask.ConcatLengths(node.LengthsMask, child.LengthsMask)
+}
+
 func (node *Node) MaskEdgeMask(edgeMask mask.Mask) {
 	// Provide anything the edge provides.
 	node.ProvideMask |= edgeMask
