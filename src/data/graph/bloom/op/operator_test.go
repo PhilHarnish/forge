@@ -98,9 +98,9 @@ var _ = Describe("process", func() {
 			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
 					((Trie: ABC) && (Trie: ABC)): ABC
 					│◌◌◌●
-					└a ->((Trie: BC) && (((Span: 'bc' 0) + (Trie: 50)): BC)): BC
+					└a ->((Trie: BC) && (Span: 'bc'->Trie: 50)): BC
 					·│◌◌●
-					·└b ->((Trie: C) && (((Span: 'c' 0) + (Trie: 50)): C)): C
+					·└b ->((Trie: C) && (Span: 'c'->Trie: 50)): C
 					· │◌●
 					· └c●->((Trie: 100) && (Trie: 50)): 50
 			`))
@@ -203,7 +203,7 @@ var _ = Describe("process", func() {
 			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
 					((Trie: A) || (Trie: ABC)): Abc
 					│◌●◌●
-					└a●->((Trie: 100) || (((Span: 'bc' 0) + (Trie: 50)): BC)): 100 BC
+					└a●->((Trie: 100) || (Span: 'bc'->Trie: 50)): 100 BC
 					·│●◌●
 					·└bc●->Trie: 50
 			`))
@@ -217,9 +217,9 @@ var _ = Describe("process", func() {
 			Expect(node.StringChildren(operation, 5)).To(matchers.LookLike(`
 					((Trie: ABC) || (Trie: ABC) || (Trie: ABC)): ABC
 					│◌◌◌●
-					└a ->((((Span: 'bc' 0) + (Trie: 100)): BC) || (((Span: 'bc' 0) + (Trie: 50)): BC) || (Trie: BC)): BC
+					└a ->((Span: 'bc'->Trie: 100) || (Span: 'bc'->Trie: 50) || (Trie: BC)): BC
 					·│◌◌●
-					·└b ->((((Span: 'c' 0) + (Trie: 100)): C) || (((Span: 'c' 0) + (Trie: 50)): C) || (Trie: C)): C
+					·└b ->((Span: 'c'->Trie: 100) || (Span: 'c'->Trie: 50) || (Trie: C)): C
 					· │◌●
 					· └c●->((Trie: 100) || (Trie: 50) || (Trie: 25)): 100
 			`))
@@ -303,10 +303,10 @@ var _ = Describe("process", func() {
 			b.Add("b", 0.5)
 			operation := op.Join("z", a, b)
 			Expect(node.StringChildren(operation, 3)).To(matchers.LookLike(`
-					((Trie: A) + (Span: 'z' 0) + (Trie: B)): A
+					((Trie: A) + (Span: 'z'->Trie: B)): A
 					│◌●
-					└a ->((Span: 'z' 0) + (Trie: B)): Z
-					·│◌●
+					└a ->Span: 'z'->Trie: B
+					·│◌◌●
 					·└z ->Trie: B
 					· │◌●
 					· └b●->Trie: 50

@@ -208,13 +208,13 @@ func (edge *operatorEdge) updatePath(path string, item node.NodeIterator) node.N
 		// Fix existing operands.
 		originalSuffix := edge.path[len(prefix):]
 		for i, operand := range edge.operands {
-			edge.operands[i] = Concat(span.NewSpan(originalSuffix), operand)
+			edge.operands[i] = span.NewSpan(originalSuffix, operand)
 		}
 	}
 	if prefix != path {
 		// Fix provided path.
 		newSuffix := path[len(prefix):]
-		item = Concat(span.NewSpan(newSuffix), item)
+		item = span.NewSpan(newSuffix, item)
 	}
 	edge.path = prefix
 	return item

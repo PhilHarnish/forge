@@ -41,12 +41,10 @@ func Join(separator string, operands ...node.NodeIterator) node.NodeIterator {
 	} else if separator == "" {
 		return Concat(operands...)
 	}
-	sep := span.NewSpan(separator)
-	concatOperands := make([]node.NodeIterator, len(operands)*2-1)
+	concatOperands := make([]node.NodeIterator, len(operands))
 	concatOperands[0] = operands[0]
 	for i, operand := range operands[1:] {
-		concatOperands[(i*2)+1] = sep
-		concatOperands[(i*2)+2] = operand
+		concatOperands[i+1] = span.NewSpan(separator, operand)
 	}
 	return Concat(concatOperands...)
 }
