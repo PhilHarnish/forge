@@ -49,8 +49,10 @@ func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) *reTrieNode
 }
 
 func (root *reTrieNode) linkPath(path string, child *reTrieNode, repeats bool) *reTrieNode {
-	root.rootNode.MaskPathToChild(path, child.rootNode)
-	if repeats {
+	err := root.rootNode.MaskPathToChild(path, child.rootNode)
+	if err != nil {
+		panic(err)
+	} else if repeats {
 		root.rootNode.RepeatLengthMask(len(path))
 	}
 	root.addLink(newReTrieLinkForPrefix(path, child))
