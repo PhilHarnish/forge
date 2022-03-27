@@ -58,6 +58,59 @@ var _ = Describe("ReTrie", func() {
 	})
 })
 
+var _ = Describe("Special syntax", func() {
+	It("matches ${child} pattern", func() {
+		Expect(func() {
+			trie := retrie.NewReTrie(`a${child}b`, 1.0)
+			Expect(trie.String()).To(Equal("TODO"))
+		}).To(PanicWith("Embedded nodes not implemented."))
+	})
+
+	It("fails to parse ${child pattern", func() {
+		Expect(func() {
+			trie := retrie.NewReTrie(`a${childb`, 1.0)
+			Expect(trie.String()).To(Equal("TODO"))
+		}).To(Panic())
+	})
+
+	It("matches ${child}{x,y} pattern", func() {
+		Expect(func() {
+			trie := retrie.NewReTrie(`a${child}{1,2}b`, 1.0)
+			Expect(trie.String()).To(Equal("TODO"))
+		}).To(PanicWith("Embedded nodes not implemented."))
+	})
+
+	It("fails to parse ${child.{x,y} pattern", func() {
+		Expect(func() {
+			retrie.NewReTrie(`a${child.{x,y}`, 1.0)
+		}).To(Panic())
+	})
+
+	It("ignores $a", func() {
+		trie := retrie.NewReTrie(`x$bz`, 1.0)
+		Expect(trie.String()).To(Equal("ReTrie: BXZ ◌◌◌●"))
+	})
+
+	It("ignores $a?", func() {
+		trie := retrie.NewReTrie(`x$b?z`, 1.0)
+		Expect(trie.String()).To(Equal("ReTrie: bXZ ◌◌●●"))
+	})
+
+	XIt("matches <anagram> pattern", func() {
+		Expect(func() {
+			trie := retrie.NewReTrie(`a<xyz>b`, 1.0)
+			Expect(trie.String()).To(Equal("TODO"))
+		}).To(PanicWith("Embedded nodes not implemented."))
+	})
+
+	XIt("matches <anagram>{x,y} pattern", func() {
+		Expect(func() {
+			trie := retrie.NewReTrie(`a<xyz>{1,2}b`, 1.0)
+			Expect(trie.String()).To(Equal("TODO"))
+		}).To(PanicWith("Embedded nodes not implemented."))
+	})
+})
+
 var _ = Describe("ReTrie Header + Metadata", func() {
 	It("implements Header provider and Metadata provider", func() {
 		trie := retrie.NewReTrie("a", 1.0)
