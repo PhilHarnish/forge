@@ -87,7 +87,7 @@ var _ = Describe("ReTrie syntax", func() {
 	})
 
 	It("matches [:alpha:] character classes", func() {
-		trie := retrie.NewReTrie(`[[:alpha:]]`, 1.0)
+		trie := retrie.NewReTrie("[[:alpha:]]", 1.0)
 		Expect(trie.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz ◌●"))
 	})
 

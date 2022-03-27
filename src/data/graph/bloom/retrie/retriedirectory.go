@@ -57,6 +57,9 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 		}
 		return child
 	case syntax.OpCapture: // (xyz)
+		if len(re.Name) != 0 && re.Name[0] == '$' {
+			panic("Embedded nodes not implemented.")
+		}
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpCapture with 2+ Sub options")
 		}
