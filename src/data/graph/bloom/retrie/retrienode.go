@@ -12,7 +12,7 @@ type reTrieNode struct {
 	directory   *reTrieDirectory
 	id          dfaId
 	rootNode    *node.Node
-	links       reTrieLinkList
+	links       reTrieLinks
 	edgeMask    mask.Mask
 	overlapping mask.Mask
 }
@@ -22,7 +22,7 @@ func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTri
 		directory: directory,
 		id:        id,
 		rootNode:  root,
-		links:     reTrieLinkList{},
+		links:     reTrieLinks{},
 	}
 }
 
@@ -194,9 +194,9 @@ func (root *reTrieNode) fixOverlapping() {
 	root.overlapping = 0
 }
 
-func filterLinks(directory *reTrieDirectory, overlapping mask.Mask, links reTrieLinkList) (filtered reTrieLinkList, linkHeap reTrieLinkList) {
-	filtered = make(reTrieLinkList, 0, len(links)*2)
-	linkHeap = make(reTrieLinkList, 0, len(links)*2)
+func filterLinks(directory *reTrieDirectory, overlapping mask.Mask, links reTrieLinks) (filtered reTrieLinks, linkHeap reTrieLinks) {
+	filtered = make(reTrieLinks, 0, len(links)*2)
+	linkHeap = make(reTrieLinks, 0, len(links)*2)
 	for i := 0; i < len(links); i++ {
 		link := links[i]
 		if link.edgeMask&overlapping == 0 {

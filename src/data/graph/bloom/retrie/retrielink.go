@@ -41,28 +41,28 @@ func newReTrieLinkForPrefix(prefix string, node *reTrieNode) *reTrieLink {
 	}
 }
 
-type reTrieLinkList []*reTrieLink
+type reTrieLinks []*reTrieLink
 
-func (edges reTrieLinkList) Len() int {
+func (edges reTrieLinks) Len() int {
 	return len(edges)
 }
 
-func (edges reTrieLinkList) Less(i int, j int) bool {
+func (edges reTrieLinks) Less(i int, j int) bool {
 	if edges[i].runes[0] == edges[j].runes[0] {
 		return edges[i].runes[1] < edges[j].runes[1]
 	}
 	return edges[i].runes[0] < edges[j].runes[0]
 }
 
-func (h reTrieLinkList) Swap(i int, j int) {
+func (h reTrieLinks) Swap(i int, j int) {
 	h[i], h[j] = h[j], h[i]
 }
 
-func (h *reTrieLinkList) Push(item interface{}) {
+func (h *reTrieLinks) Push(item interface{}) {
 	*h = append(*h, item.(*reTrieLink))
 }
 
-func (h *reTrieLinkList) Pop() interface{} {
+func (h *reTrieLinks) Pop() interface{} {
 	original := *h
 	end := len(original) - 1
 	result := original[end]
@@ -70,6 +70,6 @@ func (h *reTrieLinkList) Pop() interface{} {
 	return result
 }
 
-func (h *reTrieLinkList) Next() *reTrieLink {
+func (h *reTrieLinks) Next() *reTrieLink {
 	return heap.Pop(h).(*reTrieLink)
 }
