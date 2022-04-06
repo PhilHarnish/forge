@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"regexp/syntax"
+	"strings"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
@@ -20,11 +21,23 @@ type reTrie struct {
 
 type embeddedNodesMap = map[string]node.NodeIterator
 
-var embeddedNodeNameRegexp = regexp.MustCompile(`^{[^}]+}?`)
+const customNodeIdentifyingPrefix = "__RETRIE__"
+const customNodeColonSubstitution = "__RETRIE_COLON__"
+const matchedCaptureSubstitution = "__RETRIE_CAPTURE__"
+const retrieAnagramStartMarker = "(?P<__RETRIE__ANAGRAM__>"
+const retrieAnagramEndMarker = ")"
 
+var anagramLiteral = regexp.MustCompile(`<[^>]+(>|$)`)
+var embeddedNodeLiteral = regexp.MustCompile(`{[a-zA-Z_: ]+(}|$)`)
+var expandedSyntaxLiteral = regexp.MustCompile(`<[^>]+(>|$)|{[a-zA-Z_: ]+(}|$)`)
+var embeddedNodeNameRegexp = regexp.MustCompile(`^{[^}]+}?`)
+var embeddedNodeRegexp = regexp.MustCompile(`{[a-zA-Z][\w: ]*}`)
+var namedCaptureGroup = regexp.MustCompile(`\(?P<\w*>`)
+var matchedCaptureSubstitutionRegexp = regexp.MustCompile(matchedCaptureSubstitution)
 var embeddedRunes = []rune(".*?")
 
 func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
+	regularExpression = preprocessRegularExpression(regularExpression)
 	re, err := syntax.Parse(regularExpression, syntax.Perl)
 	if err != nil {
 		panic(err)
@@ -32,7 +45,7 @@ func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 	captureNames := processCaptureNames(re.CapNames())
 
 	embeddedNodes := embeddedNodesMap{}
-	processSpecialOpCodes(re, embeddedNodes)
+	re = processSpecialOpCodes(re, embeddedNodes)
 	re = re.Simplify()
 	directory := newDfaDirectory()
 	matchNode := directory.addNode(node.NewNode(matchWeight))
@@ -80,10 +93,8 @@ func (root *reTrie) String() string {
 	return root.root.String()
 }
 
-var anagramRe = regexp.MustCompile(`<[^<>]+>`)
-var embeddedNodeRegexp = regexp.MustCompile(`\${[\w]+}`)
-
 func processCaptureNames(captureNames []string) []string {
+	// TODO: Handle customNodeIdentifyingPrefix.
 	captureNames = captureNames[1:]
 	for i, name := range captureNames {
 		if name == "" {
@@ -95,90 +106,159 @@ func processCaptureNames(captureNames []string) []string {
 	return captureNames
 }
 
-func processSpecialOpCodes(re *syntax.Regexp, embeddedNodes embeddedNodesMap) {
+func processSpecialOpCodes(re *syntax.Regexp, embeddedNodes embeddedNodesMap) *syntax.Regexp {
+	if strings.HasPrefix(re.Name, customNodeIdentifyingPrefix) {
+		suffix := re.Name[len(customNodeIdentifyingPrefix):]
+		re.Name = fmt.Sprintf("$%s", suffix)
+	}
 	for position := 0; position < len(re.Sub); position++ {
 		child := re.Sub[position]
 		if len(child.Sub) > 0 {
 			processSpecialOpCodes(child, embeddedNodes)
 		}
-		position = maybeConsumeChildNode(re, position)
 	}
+	return re
 }
 
-func maybeConsumeChildNode(re *syntax.Regexp, position int) (nextPosition int) {
-	nextPosition = position
-	embeddedNodeChild := re.Sub[position]
-	if embeddedNodeChild.Op != syntax.OpEndText {
-		return nextPosition
+func maybeSplitLiterals(parent *syntax.Regexp) *syntax.Regexp {
+	if parent.Op == syntax.OpLiteral {
+		literal := string(parent.Rune)
+		if !anagramLiteral.MatchString(literal) && !embeddedNodeLiteral.MatchString(literal) {
+			return parent
+		}
+		parent = &syntax.Regexp{
+			Op:   syntax.OpConcat,
+			Sub0: [1]*syntax.Regexp{parent},
+		}
+		parent.Sub = parent.Sub0[:]
 	}
-	// Implement ${...}{min, max}
-	if position+1 >= len(re.Sub) {
-		return nextPosition
+	if parent.Op != syntax.OpConcat {
+		return parent
 	}
-	position++
-	literalChild := re.Sub[position]
-	if literalChild.Op != syntax.OpLiteral {
-		return nextPosition
-	}
-	match := embeddedNodeNameRegexp.FindStringIndex(string(literalChild.Rune))
-	if match == nil {
-		return nextPosition
-	}
-	start, end := match[0], match[1]
-	name := ""
-	substitutePosition := nextPosition
-	substituteChild := re.Sub[substitutePosition]
-	if literalChild.Rune[end-1] == '}' {
-		// Already valid.
-		name = "$" + string(literalChild.Rune[start:end])
-		// Patch literal child's name (may be no-op).
-		literalChild.Rune = literalChild.Rune[end:]
-	} else if position+1 < len(re.Sub) {
-		// Attempt to patch a missing "}" from "}{x,y}" syntax.
-		position++
-		repeatChar := retrieReRepeatChar(re, position)
-		if repeatChar == '}' {
-			name = "$" + string(literalChild.Rune[start:end]) + "}"
-			// Replace the embedded node with the OpRepeat.
-			substituteChild = re.Sub[position]
-			substituteChild.Sub0[0] = embeddedNodeChild
-			substituteChild.Sub = substituteChild.Sub0[:]
-			nextPosition = position + 1
-			// Rewrite re.Sub.
-			re.Sub[substitutePosition] = substituteChild
-			newLength := len(re.Sub) - (nextPosition - substitutePosition)
-			copy(re.Sub[substitutePosition+1:], re.Sub[nextPosition:])
-			re.Sub = re.Sub[:newLength+1]
+	children := make([]*syntax.Regexp, 0, 2*len(parent.Sub))
+	for position := 0; position < len(parent.Sub); position++ {
+		child := parent.Sub[position]
+		if child.Op != syntax.OpLiteral {
+			children = append(children, child)
+			continue
+		}
+		literal := string(child.Rune)
+		matches := expandedSyntaxLiteral.FindAllStringIndex(literal, -1)
+		if matches == nil {
+			children = append(children, child)
+			continue
+		}
+		suffix := findSuffixCharacter(parent, position+1)
+		fmt.Println(literal, ":", matches, suffix)
+		lastAppend := 0
+		for _, match := range matches {
+			substring := literal[match[0]:match[1]]
+			fmt.Println("match:", substring)
+			lastChar := substring[len(substring)-1]
+			if substring[0] == '{' {
+				if lastChar == '}' {
+					// Already valid.
+					children, lastAppend = maybeFlush(children, literal, lastAppend, match[0])
+					captureChild := newEmbeddedRegexpNode(substring)
+					children = append(children, captureChild)
+					lastAppend = match[1]
+				} else if suffix == '}' {
+					// Reparent.
+					children, lastAppend = maybeFlush(children, literal, lastAppend, match[0])
+					captureChild := newEmbeddedRegexpNode(substring)
+					// Skip past suffix operation.
+					position++
+					// Reuse suffix operation.
+					suffixOp := parent.Sub[position]
+					suffixOp.Sub0[0] = captureChild
+					suffixOp.Sub = suffixOp.Sub0[:]
+					children = append(children, suffixOp)
+					lastAppend = match[1]
+				}
+			} else if substring[0] == '<' {
+				if lastChar == '>' {
+					// Already valid.
+				} else if suffix == '>' {
+					// Reparent.
+				}
+			}
+		}
+		end := len(literal)
+		if lastAppend < end {
+			// Flush.
+			children = append(children, &syntax.Regexp{
+				Op:   syntax.OpLiteral,
+				Rune: []rune(literal[lastAppend:end]),
+			})
 		}
 	}
-	if name == "" {
-		// Not valid.
-		return nextPosition
-	}
-	// Rewrite embeddedNodeChild to be embedded node.
-	embeddedNodeChild.Op = syntax.OpCapture
-	embeddedNodeChild.Name = name
-	embeddedNodeChild.Rune = nil
-	embeddedNodeChild.Cap = 1
-	embeddedNodeChild.Sub0[0] = &syntax.Regexp{
-		Op:   syntax.OpLiteral,
-		Rune: []rune(name),
-	}
-	embeddedNodeChild.Sub = embeddedNodeChild.Sub0[:]
-	return substitutePosition
+	parent.Sub = children
+	parent.Sub0[0] = children[0]
+	return parent
 }
 
-func retrieReRepeatChar(re *syntax.Regexp, position int) rune {
-	if position > len(re.Sub) {
+func maybeFlush(children []*syntax.Regexp, literal string, start int, end int) ([]*syntax.Regexp, int) {
+	if end > start {
+		// Flush.
+		children = append(children, &syntax.Regexp{
+			Op:   syntax.OpLiteral,
+			Rune: []rune(literal[start:end]),
+		})
+	}
+	return children, end
+}
+
+func findSuffixCharacter(re *syntax.Regexp, position int) rune {
+	if position >= len(re.Sub) {
 		return 0
 	}
 	child := re.Sub[position]
-	if child.Op == syntax.OpRepeat && len(child.Sub) > 0 &&
-		child.Sub[0].Op == syntax.OpLiteral {
-		childChild := child.Sub[0]
-		if len(childChild.Rune) == 1 {
-			return childChild.Rune[0]
+	switch child.Op {
+	case syntax.OpPlus, syntax.OpRepeat, syntax.OpQuest, syntax.OpStar:
+		if len(child.Sub) > 0 && child.Sub[0].Op == syntax.OpLiteral {
+			childChild := child.Sub[0]
+			if len(childChild.Rune) == 1 {
+				return childChild.Rune[0]
+			}
 		}
 	}
 	return 0
+}
+
+func newEmbeddedRegexpNode(name string) *syntax.Regexp {
+	result := &syntax.Regexp{
+		Op:   syntax.OpCapture,
+		Name: name,
+		Sub0: [1]*syntax.Regexp{
+			{
+				Op:   syntax.OpLiteral,
+				Rune: []rune("xxx"),
+			},
+		},
+	}
+	result.Sub = result.Sub0[:]
+	return result
+}
+func preprocessRegularExpression(regularExpression string) string {
+	// First, hide all "?P<...>" expressions.
+	matchedCaptures := []string{}
+	regularExpression = namedCaptureGroup.ReplaceAllStringFunc(regularExpression, func(match string) string {
+		matchedCaptures = append(matchedCaptures, match)
+		return matchedCaptureSubstitution
+	})
+	// Next, replace all remaining < and > characters.
+	regularExpression = strings.ReplaceAll(regularExpression, ">", retrieAnagramEndMarker)
+	regularExpression = strings.ReplaceAll(regularExpression, "<", retrieAnagramStartMarker)
+	// Restore "?P<...>" expressions.
+	regularExpression = matchedCaptureSubstitutionRegexp.ReplaceAllStringFunc(regularExpression, func(match string) string {
+		next := matchedCaptures[0]
+		matchedCaptures = matchedCaptures[1:]
+		return next
+	})
+	regularExpression = embeddedNodeRegexp.ReplaceAllStringFunc(regularExpression, func(match string) string {
+		// Hide ":" characters from the parser.
+		name := strings.ReplaceAll(match[1:len(match)-1], ":", customNodeColonSubstitution)
+		return fmt.Sprintf("(?P<%s%s>)", customNodeIdentifyingPrefix, name)
+	})
+	return regularExpression
 }

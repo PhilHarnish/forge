@@ -59,51 +59,40 @@ var _ = Describe("ReTrie", func() {
 })
 
 var _ = Describe("Special syntax", func() {
-	It("matches ${child} pattern", func() {
+	It("matches {child} pattern", func() {
 		Expect(func() {
-			trie := retrie.NewReTrie(`a${child}b`, 1.0)
+			trie := retrie.NewReTrie(`a{child}b`, 1.0)
 			Expect(trie.String()).To(Equal("TODO"))
 		}).To(PanicWith("Embedded nodes not implemented."))
 	})
 
-	It("fails to parse ${child pattern", func() {
+	It("fails to parse {child pattern", func() {
 		Expect(func() {
-			trie := retrie.NewReTrie(`a${childb`, 1.0)
-			Expect(trie.String()).To(Equal("TODO"))
+			retrie.NewReTrie(`a{childb`, 1.0)
 		}).To(Panic())
 	})
 
-	It("matches ${child}{x,y} pattern", func() {
+	It("matches {child}{x,y} pattern", func() {
 		Expect(func() {
-			trie := retrie.NewReTrie(`a${child}{1,2}b`, 1.0)
+			trie := retrie.NewReTrie(`a{child}{1,2}b`, 1.0)
 			Expect(trie.String()).To(Equal("TODO"))
 		}).To(PanicWith("Embedded nodes not implemented."))
 	})
 
-	It("fails to parse ${child.{x,y} pattern", func() {
+	It("fails to parse {child.{x,y} pattern", func() {
 		Expect(func() {
-			retrie.NewReTrie(`a${child.{x,y}`, 1.0)
+			retrie.NewReTrie(`a{child.{x,y}`, 1.0)
 		}).To(Panic())
 	})
 
-	It("ignores $a", func() {
-		trie := retrie.NewReTrie(`x$bz`, 1.0)
-		Expect(trie.String()).To(Equal("ReTrie: BXZ ◌◌◌●"))
-	})
-
-	It("ignores $a?", func() {
-		trie := retrie.NewReTrie(`x$b?z`, 1.0)
-		Expect(trie.String()).To(Equal("ReTrie: bXZ ◌◌●●"))
-	})
-
-	XIt("matches <anagram> pattern", func() {
+	It("matches <anagram> pattern", func() {
 		Expect(func() {
 			trie := retrie.NewReTrie(`a<xyz>b`, 1.0)
 			Expect(trie.String()).To(Equal("TODO"))
 		}).To(PanicWith("Embedded nodes not implemented."))
 	})
 
-	XIt("matches <anagram>{x,y} pattern", func() {
+	It("matches <anagram>{x,y} pattern", func() {
 		Expect(func() {
 			trie := retrie.NewReTrie(`a<xyz>{1,2}b`, 1.0)
 			Expect(trie.String()).To(Equal("TODO"))
