@@ -2,19 +2,22 @@ package retrie
 
 import (
 	"container/heap"
+	"fmt"
 	"unicode"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/op"
 )
 
 type reTrieNode struct {
-	directory   *reTrieDirectory
-	id          dfaId
-	rootNode    *node.Node
-	links       reTrieLinks
-	edgeMask    mask.Mask
-	overlapping mask.Mask
+	directory    *reTrieDirectory
+	id           dfaId
+	rootNode     *node.Node
+	links        reTrieLinks
+	edgeMask     mask.Mask
+	overlapping  mask.Mask
+	embeddedNode node.NodeIterator
 }
 
 func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTrieNode {
@@ -27,6 +30,9 @@ func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTri
 }
 
 func (root *reTrieNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
+	if root.embeddedNode != nil {
+		return root.embeddedNode.Items(acceptor)
+	}
 	root.fixOverlapping()
 	return newTrieItems(acceptor, root)
 }
@@ -45,6 +51,15 @@ func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) *reTrieNode
 		root.rootNode.RepeatLengthMask(1)
 	}
 	root.addLink(newReTrieLinkFromRunes(mask.AlphabetRuneRanges, child))
+	return root
+}
+
+func (root *reTrieNode) linkEmbeddedNode(embeddedNode node.NodeIterator, child *reTrieNode, repeats bool) *reTrieNode {
+	root.embeddedNode = op.Concat(embeddedNode, child)
+	root.rootNode = root.embeddedNode.Root()
+	if repeats {
+		panic(fmt.Sprintf("Repeat for %s not implemented", embeddedNode.String()))
+	}
 	return root
 }
 
@@ -93,6 +108,9 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 }
 
 func (root *reTrieNode) mergeNode(other *reTrieNode) {
+	if root.embeddedNode != nil || other.embeddedNode != nil {
+		panic("Merging embedded nodes not implemented.")
+	}
 	other.fixOverlapping()
 	root.overlapping |= root.edgeMask & other.edgeMask
 	root.edgeMask |= other.edgeMask

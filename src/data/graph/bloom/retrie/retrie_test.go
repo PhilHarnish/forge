@@ -59,11 +59,24 @@ var _ = Describe("ReTrie", func() {
 })
 
 var _ = Describe("Special syntax", func() {
+	BeforeEach(func() {
+		retrie.ClearRegistry()
+		child := retrie.NewReTrie("xyz", 1.0)
+		retrie.Register("child", child)
+	})
+
 	It("matches {child} pattern", func() {
-		Expect(func() {
-			trie := retrie.NewReTrie(`a{child}b`, 1.0)
-			Expect(trie.String()).To(Equal("TODO"))
-		}).To(PanicWith("Embedded nodes not implemented."))
+		trie := retrie.NewReTrie(`a{child}b`, 1.0)
+		Expect(trie.Labels()).To(Equal([]string{"$child"}))
+		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+			ReTrie: ABXYZ
+			│◌◌◌◌◌●
+			└a ->ReTrie: BXYZ
+			·│◌◌◌◌●
+			·└xyz ->ReTrie: B
+			·   │◌●
+			·   └b●->ReTrie: 100
+		`))
 	})
 
 	It("fails to parse {child pattern", func() {
@@ -76,7 +89,7 @@ var _ = Describe("Special syntax", func() {
 		Expect(func() {
 			trie := retrie.NewReTrie(`a{child}{1,2}b`, 1.0)
 			Expect(trie.String()).To(Equal("TODO"))
-		}).To(PanicWith("Embedded nodes not implemented."))
+		}).To(PanicWith("Merging embedded nodes not implemented."))
 	})
 
 	It("fails to parse {child.{x,y} pattern", func() {
@@ -89,14 +102,14 @@ var _ = Describe("Special syntax", func() {
 		Expect(func() {
 			trie := retrie.NewReTrie(`a<xyz>b`, 1.0)
 			Expect(trie.String()).To(Equal("TODO"))
-		}).To(PanicWith("Embedded nodes not implemented."))
+		}).To(PanicWith("Anagram pattern not implemented."))
 	})
 
 	It("matches <anagram>{x,y} pattern", func() {
 		Expect(func() {
 			trie := retrie.NewReTrie(`a<xyz>{1,2}b`, 1.0)
 			Expect(trie.String()).To(Equal("TODO"))
-		}).To(PanicWith("Embedded nodes not implemented."))
+		}).To(PanicWith("Anagram pattern not implemented."))
 	})
 })
 

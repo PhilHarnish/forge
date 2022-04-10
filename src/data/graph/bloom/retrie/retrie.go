@@ -24,7 +24,8 @@ type embeddedNodesMap = map[string]node.NodeIterator
 const customNodeIdentifyingPrefix = "__RETRIE__"
 const customNodeColonSubstitution = "__RETRIE_COLON__"
 const matchedCaptureSubstitution = "__RETRIE_CAPTURE__"
-const retrieAnagramStartMarker = "(?P<__RETRIE__ANAGRAM__>"
+const retrieAnagramIdentifier = "__RETRIE_ANAGRAM__"
+const retrieAnagramStartMarker = "(?P<" + retrieAnagramIdentifier + ">"
 const retrieAnagramEndMarker = ")"
 
 var embeddedNodeRegexp = regexp.MustCompile(`{[a-zA-Z][\w: ]*}`)
@@ -101,7 +102,11 @@ func processCaptureNames(captureNames []string) []string {
 }
 
 func processSpecialOpCodes(re *syntax.Regexp, embeddedNodes embeddedNodesMap) *syntax.Regexp {
-	if strings.HasPrefix(re.Name, customNodeIdentifyingPrefix) {
+	if re.Name == retrieAnagramIdentifier {
+		// Note: Name is decorative.
+		re.Name = fmt.Sprintf("<%s>", re.String())
+	} else if strings.HasPrefix(re.Name, customNodeIdentifyingPrefix) {
+		// Remove customNodeIdentifyingPrefix.
 		suffix := re.Name[len(customNodeIdentifyingPrefix):]
 		suffix = strings.ReplaceAll(suffix, customNodeColonSubstitution, ":")
 		re.Name = fmt.Sprintf("$%s", suffix)

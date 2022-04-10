@@ -57,11 +57,20 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 		}
 		return child
 	case syntax.OpCapture: // (xyz)
-		if len(re.Name) != 0 && re.Name[0] == '$' {
-			panic("Embedded nodes not implemented.")
-		}
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpCapture with 2+ Sub options")
+		} else if len(re.Name) == 0 {
+			// Do nothing; return later.
+		} else if re.Name[0] == '$' {
+			embeddedNode := resolve(re.Name)
+			if embeddedNode == nil {
+				panic(fmt.Sprintf("Embeded node '%s' not found", re.Name))
+			}
+			parent = directory.ensureNode(parent)
+			parent.linkEmbeddedNode(embeddedNode, child, repeats)
+			return parent
+		} else if re.Name[0] == '<' {
+			panic("Anagram pattern not implemented.")
 		}
 		return directory.linker(parent, child, re.Sub[0], repeats)
 	case syntax.OpCharClass: // [xyz]
