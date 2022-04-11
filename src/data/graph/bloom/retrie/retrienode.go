@@ -2,7 +2,6 @@ package retrie
 
 import (
 	"container/heap"
-	"fmt"
 	"unicode"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
@@ -55,11 +54,17 @@ func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) *reTrieNode
 }
 
 func (root *reTrieNode) linkEmbeddedNode(embeddedNode node.NodeIterator, child *reTrieNode, repeats bool) *reTrieNode {
-	root.embeddedNode = op.Concat(embeddedNode, child)
-	root.rootNode = root.embeddedNode.Root()
 	if repeats {
-		panic(fmt.Sprintf("Repeat for %s not implemented", embeddedNode.String()))
+		embeddedNode.Root().RepeatLengthMask(-1)
 	}
+	if root.embeddedNode != nil {
+		panic("Cannot link multiple embedded nodes.")
+	} else if len(root.links) > 0 {
+		panic("Cannot link embedded node when links are already present.")
+	}
+	root.embeddedNode = op.Concat(embeddedNode, child)
+	// Note: Linking must be additive; union root nodes.
+	root.rootNode.Union(root.embeddedNode.Root())
 	return root
 }
 
