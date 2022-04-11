@@ -227,9 +227,26 @@ var _ = Describe("MaskPathToChild", func() {
 	It("Repeats path if requested", func() {
 		root := node.NewNode()
 		root.MaskPathToChild("abcd", node.NewNode(1.0))
+		Expect(root.String()).To(Equal("Node: ABCD ◌◌◌◌●"))
+	})
+})
+
+var _ = Describe("RepeatLengthMask", func() {
+	It("Repeats path if requested", func() {
+		root := node.NewNode()
+		root.MaskPathToChild("abcd", node.NewNode(1.0))
 		root.RepeatLengthMask(4)
 		Expect(root.String()).To(Equal(
 			"Node: ABCD ◌◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌◌●◌◌●···"))
+	})
+
+	It("Repeats path infinitely when length is -1", func() {
+		root := node.NewNode()
+		root.MaskPathToChild("abcd", node.NewNode(1.0))
+		root.MaskPathToChild("ab", node.NewNode(1.0))
+		root.RepeatLengthMask(-1)
+		Expect(root.String()).To(Equal(
+			"Node: ABcd ◌◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●●···"))
 	})
 })
 

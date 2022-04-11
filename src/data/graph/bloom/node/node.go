@@ -171,7 +171,11 @@ func (node *Node) maskMaskDistanceToChild(edgeMask mask.Mask, distance int, chil
 }
 
 func (node *Node) RepeatLengthMask(interval int) {
-	node.LengthsMask = mask.RepeatLengths(node.LengthsMask, interval)
+	if interval < 0 {
+		node.LengthsMask = mask.ConcatInfinitely(node.LengthsMask)
+	} else {
+		node.LengthsMask = mask.RepeatLengths(node.LengthsMask, interval)
+	}
 }
 
 func (node *Node) Intersection(other *Node) *Node {
