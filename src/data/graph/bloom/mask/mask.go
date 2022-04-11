@@ -237,10 +237,32 @@ func ConcatLengths(first Mask, second Mask) Mask {
 }
 
 /*
+Return a mask which combines all paths through `first` to `second`, repeatedly.
+*/
+func ConcatInfinitely(lengthMask Mask) Mask {
+	if lengthMask <= 1 {
+		// Note: 0 and 1 combine up to equal themselves (no length).
+		return lengthMask
+	}
+	// Special case: repeat infinitely.
+	lastLengthMask := lengthMask
+	nextLengthMask := ConcatLengths(lengthMask, lengthMask)
+	for lastLengthMask != nextLengthMask {
+		lastLengthMask = nextLengthMask
+		lengthMask |= nextLengthMask
+		nextLengthMask = ConcatLengths(lengthMask, lengthMask)
+	}
+	lengthMask |= nextLengthMask | ALL_REMAINING_LENGTH
+	return lengthMask
+}
+
+/*
 Repeats lengthMask into higher bits.
 */
 func RepeatLengths(lengthMask Mask, interval int) Mask {
-	if interval == 1 {
+	if interval <= 0 {
+		panic(fmt.Sprintf("Invalid RepeatLengths interval: %d", interval))
+	} else if interval == 1 {
 		// Special case: set all bits above lowest set bit.
 		lowestBit := lengthMask & (^lengthMask + 1)
 		lowerBitMask := (lowestBit - 1) | ALL_REMAINING_LENGTH

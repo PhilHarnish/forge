@@ -344,6 +344,33 @@ var _ = Describe("ConcatLengths", func() {
 	})
 })
 
+var _ = Describe("ConcatInfinitely", func() {
+	It("Returns zeros out for zeros in", func() {
+		Expect(mask.LengthString(mask.ConcatInfinitely(0b0))).To(Equal(
+			""))
+	})
+
+	It("Handles self-only (identity)", func() {
+		Expect(mask.LengthString(mask.ConcatInfinitely(0b1))).To(Equal(
+			"●"))
+	})
+
+	It("Handles shifted values", func() {
+		Expect(mask.LengthString(mask.ConcatInfinitely(0b100))).To(Equal(
+			"◌◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●●···"))
+	})
+
+	It("Handles combination of self + shift", func() {
+		Expect(mask.LengthString(mask.ConcatInfinitely(0b101))).To(Equal(
+			"●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●●···"))
+	})
+
+	It("Eventually sets all high bits", func() {
+		Expect(mask.LengthString(mask.ConcatInfinitely(0b110101))).To(Equal(
+			"●◌●◌●●●···"))
+	})
+})
+
 var _ = Describe("RepeatLengths", func() {
 	It("Blurs bits when interval is 1", func() {
 		Expect(mask.LengthString(mask.RepeatLengths(0b100, 1))).To(Equal(
@@ -358,6 +385,12 @@ var _ = Describe("RepeatLengths", func() {
 	It("Repeats unique pattern with high interval", func() {
 		Expect(mask.LengthString(mask.RepeatLengths(0b1101, 7))).To(Equal(
 			"●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●◌●●◌◌◌●···"))
+	})
+
+	It("Panics for invalid input", func() {
+		Expect(func() {
+			mask.RepeatLengths(0b100, -1)
+		}).To(PanicWith("Invalid RepeatLengths interval: -1"))
 	})
 })
 
