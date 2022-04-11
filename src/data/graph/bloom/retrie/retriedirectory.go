@@ -102,7 +102,7 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 		// Only allow looping through child.
 		directory.linker(child, child, re.Sub[0], true)
 		// Require at least one path through re.Sub[0]
-		return directory.linker(parent, child, re.Sub[0], true)
+		return directory.linker(parent, child, re.Sub[0], repeats)
 	case syntax.OpQuest: // x?
 		if len(re.Sub) != 1 {
 			panic("Unable to handle OpQuest with 2+ Sub options")
@@ -118,10 +118,10 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 		parent = directory.ensureNode(parent)
 		// We must not contaminate child which may be used by others.
 		detour := directory.copy(child)
-		// Create a branching path to the detour via re.Sub[0]...
-		directory.linker(parent, detour, re.Sub[0], true)
-		// ...which repeats.
+		// Create a branching path which repeats.
 		directory.linker(detour, detour, re.Sub[0], true)
+		// Link from parent to this branch.
+		directory.linker(parent, detour, re.Sub[0], repeats)
 		// Ensure it is possible to go straight from parent to child.
 		return directory.merge(parent, child)
 	}
