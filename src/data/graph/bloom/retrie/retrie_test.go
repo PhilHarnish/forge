@@ -113,6 +113,23 @@ var _ = Describe("Special syntax", func() {
 		`))
 	})
 
+	It("matches {child}+ repeats with suffix", func() {
+		trie := retrie.NewReTrie("a{child}+b", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+			ReTrie: ABXYZ
+			│◌◌◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●●···
+			└a ->ReTrie: BXYZ
+			·│◌◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌●···
+			·└xyz ->ReTrie: Bxyz
+			·   │◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌●···
+			·   ├b●->ReTrie: 100
+			·   └xyz ->ReTrie: Bxyz
+			·      │◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌●···
+			·      ├b●->ReTrie: 100
+			·      └xyz ->ReTrie: Bxyz
+		`))
+	})
+
 	It("matches <anagram> pattern", func() {
 		Expect(func() {
 			trie := retrie.NewReTrie(`a<xyz>b`, 1.0)

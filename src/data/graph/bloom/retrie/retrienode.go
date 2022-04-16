@@ -29,10 +29,11 @@ func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTri
 }
 
 func (root *reTrieNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	if root.embeddedNode != nil {
+	if root.embeddedNode != nil && len(root.links) == 0 {
+		// Optimized path: simply expand embeddedNode.
 		return root.embeddedNode.Items(acceptor)
 	}
-	root.fixOverlapping()
+	root.fixLinks()
 	return newTrieItems(acceptor, root)
 }
 
@@ -57,12 +58,12 @@ func (root *reTrieNode) linkEmbeddedNode(embeddedNode node.NodeIterator, child *
 	if repeats {
 		embeddedNode.Root().RepeatLengthMask(-1)
 	}
-	if root.embeddedNode != nil {
-		panic("Cannot link multiple embedded nodes.")
-	} else if len(root.links) > 0 {
-		panic("Cannot link embedded node when links are already present.")
+	embeddedNode = op.Concat(embeddedNode, child)
+	if root.embeddedNode == nil {
+		root.embeddedNode = embeddedNode
+	} else {
+		root.embeddedNode = op.Or(root.embeddedNode, embeddedNode)
 	}
-	root.embeddedNode = op.Concat(embeddedNode, child)
 	// Note: Linking must be additive; union root nodes.
 	root.rootNode.Union(root.embeddedNode.Root())
 	return root
@@ -116,7 +117,7 @@ func (root *reTrieNode) mergeNode(other *reTrieNode) {
 	if root.embeddedNode != nil || other.embeddedNode != nil {
 		panic("Merging embedded nodes not implemented.")
 	}
-	other.fixOverlapping()
+	other.fixLinks()
 	root.overlapping |= root.edgeMask & other.edgeMask
 	root.edgeMask |= other.edgeMask
 	root.links = append(root.links, other.links...)
@@ -128,7 +129,25 @@ func (root *reTrieNode) addLink(link *reTrieLink) {
 	root.links = append(root.links, link)
 }
 
-func (root *reTrieNode) fixOverlapping() {
+func (root *reTrieNode) expandEmbeddedNode() {
+	if root.embeddedNode == nil {
+		return
+	}
+	items := root.embeddedNode.Items(node.NodeAcceptAll)
+	for items.HasNext() {
+		path, item := items.Next()
+		reTrieItem, okay := item.(*reTrieNode)
+		if okay {
+			root.linkPath(path, reTrieItem, false)
+		} else {
+			panic("Only able to expand reTrieNode")
+		}
+	}
+	root.embeddedNode = nil
+}
+
+func (root *reTrieNode) fixLinks() {
+	root.expandEmbeddedNode()
 	if root.overlapping == 0 {
 		return
 	}
