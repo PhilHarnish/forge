@@ -76,13 +76,17 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 	case syntax.OpCharClass: // [xyz]
 		parent = directory.ensureNode(parent)
 		return parent.linkRunes(re.Rune, child, repeats)
-	case syntax.OpConcat: // xyz
+	case syntax.OpConcat: // {parent} -> re.Sub -> {child}
 		i := len(re.Sub)
 		for i > 0 {
 			i--
-			parent, child = nil, directory.linker(parent, child, re.Sub[i], repeats)
+			if i == 0 {
+				parent = directory.linker(parent, child, re.Sub[i], repeats)
+			} else {
+				child = directory.linker(nil, child, re.Sub[i], repeats)
+			}
 		}
-		return child
+		return parent
 	case syntax.OpEmptyMatch:
 		if parent == nil {
 			return child

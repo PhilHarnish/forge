@@ -278,6 +278,19 @@ var _ = Describe("ReTrie syntax", func() {
 	})
 
 	It("matches (?:non|capturing|groups|with|shared|prefix)", func() {
+		trie := retrie.NewReTrie("(?:ab|abc|abcd)", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie: ABcd
+				│◌◌●●●
+				└ab●->ReTrie: 100 Cd
+				· │●●●
+				· └c●->ReTrie: 100 D
+				·  │●●
+				·  └d●->ReTrie: 100
+		`))
+	})
+
+	It("matches (?:non|capturing|groups|with|shared|suffix)", func() {
 		trie := retrie.NewReTrie("(?:aaabc|aabc|abc)", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
 				ReTrie: ABC
