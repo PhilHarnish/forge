@@ -236,7 +236,7 @@ func commonPrefix(a string, b string) string {
 	}
 	for i := range smallest {
 		if a[i] != b[i] {
-			return a[:i-1]
+			return a[:i]
 		}
 	}
 	return smallest

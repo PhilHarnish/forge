@@ -225,6 +225,22 @@ var _ = Describe("process", func() {
 			`))
 		})
 
+		It("Reacts to paths that differ only slightly", func() {
+			a := extend(trie.NewTrie(1.0), "aab")
+			b := extend(trie.NewTrie(.5), "abb")
+			c := extend(trie.NewTrie(.25), "bbb")
+			operation := op.Or(a, b, c)
+			Expect(node.StringChildren(operation, 5)).To(matchers.LookLike(`
+					((Trie: AB) || (Trie: AB) || (Trie: B)): aB
+					│◌◌◌●
+					├a ->((Span: 'ab'->Trie: 100) || (Span: 'bb'->Trie: 50)): aB
+					││◌◌●
+					│├ab●->Trie: 100
+					│└bb●->Trie: 50
+					└bbb●->Trie: 25
+			`))
+		})
+
 		It("Merges redundant OR(a, OR(b, c)) to OR(a, b, c)", func() {
 			a := extend(trie.NewTrie(1.0), "a")
 			b := extend(trie.NewTrie(.5), "b")
