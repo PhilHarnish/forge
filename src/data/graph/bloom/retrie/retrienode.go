@@ -114,10 +114,10 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 }
 
 func (root *reTrieNode) mergeNode(other *reTrieNode) {
+	other.fixLinks()
 	if root.embeddedNode != nil || other.embeddedNode != nil {
 		panic("Merging embedded nodes not implemented.")
 	}
-	other.fixLinks()
 	root.overlapping |= root.edgeMask & other.edgeMask
 	root.edgeMask |= other.edgeMask
 	root.links = append(root.links, other.links...)
@@ -137,11 +137,11 @@ func (root *reTrieNode) expandEmbeddedNode() {
 	for items.HasNext() {
 		path, item := items.Next()
 		reTrieItem, okay := item.(*reTrieNode)
-		if okay {
-			root.linkPath(path, reTrieItem, false)
-		} else {
-			panic("Only able to expand reTrieNode")
+		if !okay {
+			reTrieItem = newReTrieNode(root.directory, 0, item.Root().Copy())
+			reTrieItem.embeddedNode = item
 		}
+		root.linkPath(path, reTrieItem, false)
 	}
 	root.embeddedNode = nil
 }

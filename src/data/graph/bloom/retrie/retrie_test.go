@@ -86,10 +86,19 @@ var _ = Describe("Special syntax", func() {
 	})
 
 	It("matches {child}{x,y} pattern", func() {
-		Expect(func() {
-			trie := retrie.NewReTrie(`a{child}{1,2}b`, 1.0)
-			Expect(trie.String()).To(Equal("TODO"))
-		}).To(PanicWith("Merging embedded nodes not implemented."))
+		trie := retrie.NewReTrie(`a{child}{1,2}b`, 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie: ABXYZ
+				│◌◌◌◌◌●◌◌●
+				└a ->ReTrie: BXYZ
+				·│◌◌◌◌●◌◌●
+				·└xyz ->ReTrie: Bxyz
+				·   │◌●◌◌●
+				·   ├xyz ->ReTrie: B
+				·   │  │◌●
+				·   │  └b●->ReTrie: 100
+				·   └b●->ReTrie: 100
+		`))
 	})
 
 	It("fails to parse {child.{x,y} pattern", func() {
@@ -127,6 +136,42 @@ var _ = Describe("Special syntax", func() {
 			·      │◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌●···
 			·      ├b●->ReTrie: 100
 			·      └xyz ->ReTrie: Bxyz
+		`))
+	})
+
+	It("matches alternate children", func() {
+		retrie.Register("a", retrie.NewReTrie("aab", 1.0))
+		retrie.Register("b", retrie.NewReTrie("abb", 1.0))
+		retrie.Register("c", retrie.NewReTrie("bbb", 1.0))
+		trie := retrie.NewReTrie("({a}|{b}|{c}|aba)", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie: AB
+				│◌◌◌●
+				├bbb●->ReTrie: 100
+				└a ->ReTrie: aB
+				·│◌◌●
+				·├ab●->ReTrie: 100
+				·└b ->ReTrie: ab
+				· │◌●
+				· ├a●->ReTrie: 100
+				· └b●->ReTrie: 100
+		`))
+	})
+
+	It("merges duplicate expressions", func() {
+		retrie.Register("a", retrie.NewReTrie("ab|aba|abaa", 1.0))
+		retrie.Register("b", retrie.NewReTrie("ab|aba|abaa", 1.0))
+		trie := retrie.NewReTrie("({a}|{b}|{b}|{a}|ab|aba|abaa)", 1.0)
+		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+				ReTrie: AB
+				│◌◌●●●
+				└a ->ReTrie: aB
+				·│◌●●●
+				·└b●->ReTrie: 100 A
+				· │●●●
+				· └a●->ReTrie: 100 A
+				·  │●●
+				·  └a●->ReTrie: 100
 		`))
 	})
 

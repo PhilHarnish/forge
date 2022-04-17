@@ -9,6 +9,9 @@ import (
 )
 
 type dfaId = int64
+
+const NO_ID = dfaId(0)
+
 type reTrieDirectory struct {
 	table map[dfaId]*reTrieNode
 	next  dfaId
@@ -142,12 +145,24 @@ func (directory *reTrieDirectory) merge(a *reTrieNode, b *reTrieNode) *reTrieNod
 }
 
 func (directory *reTrieDirectory) get(a *reTrieNode, b *reTrieNode) (result *reTrieNode, exists bool) {
+	if directory != a.directory && a.directory == b.directory {
+		// Both a and b belong to a different directory. Reroute there.
+		return a.directory.get(a, b)
+	}
 	mergedId := a.id | b.id
-	result, exists = directory.table[mergedId]
+	if a.id == NO_ID || b.id == NO_ID || a.directory != b.directory {
+		// Embedded or foreign nodes.
+		mergedId = NO_ID
+	} else {
+		// Valid merger.
+		result, exists = directory.table[mergedId]
+	}
 	if !exists {
 		result = newReTrieNode(directory, mergedId, a.rootNode.Copy())
-		directory.table[mergedId] = result
 		result.rootNode.Union(b.rootNode)
+		if mergedId != NO_ID {
+			directory.table[mergedId] = result
+		}
 	}
 	return result, exists
 }
