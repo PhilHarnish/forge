@@ -336,11 +336,18 @@ var _ = Describe("ConcatLengths", func() {
 			mask.LengthString(expected)))
 	})
 
-	It("Handles repeats", func() {
-		first := mask.RepeatLengths(0b100, 5)
-		second := mask.Mask(0b101)
-		Expect(mask.LengthString(mask.ConcatLengths(first, second))).To(Equal(
-			"◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●◌●◌◌●●···"))
+	It("Handles (a, repeats)", func() {
+		a := mask.Mask(0b10100000000)
+		repeats := mask.RepeatLengths(0b100, 4)
+		Expect(mask.LengthString(mask.ConcatLengths(a, repeats))).To(Equal(
+			"◌◌◌◌◌◌◌◌◌◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●●···"))
+	})
+
+	It("Handles (repeats, b)", func() {
+		repeats := mask.RepeatLengths(0b100, 4)
+		b := mask.Mask(0b10100000000)
+		Expect(mask.LengthString(mask.ConcatLengths(repeats, b))).To(Equal(
+			"◌◌◌◌◌◌◌◌◌◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●●···"))
 	})
 })
 

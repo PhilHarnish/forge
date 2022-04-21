@@ -77,7 +77,7 @@ func (node *Node) MaskConcatenateChild(child *Node) {
 	node.ProvideMask |= child.ProvideMask
 	// Require anything the child requires.
 	node.RequireMask |= child.RequireMask
-	node.LengthsMask = mask.ConcatLengths(node.LengthsMask, child.LengthsMask)
+	node.LengthsMask = mask.ConcatLengths(child.LengthsMask, node.LengthsMask)
 }
 
 func (node *Node) MaskEdgeMask(edgeMask mask.Mask) {

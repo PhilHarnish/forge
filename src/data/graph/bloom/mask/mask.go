@@ -225,6 +225,9 @@ For optimal execution first should contain fewer bits.
 */
 func ConcatLengths(first Mask, second Mask) Mask {
 	result := Mask(0)
+	highBit := (first | second) & ALL_REMAINING_LENGTH
+	first &= VALID_LENGTHS
+	second &= VALID_LENGTHS
 	for first != 0 {
 		oneBitRemoved := first & (first - 1)
 		removedBit := first - oneBitRemoved
@@ -232,7 +235,7 @@ func ConcatLengths(first Mask, second Mask) Mask {
 		result |= second * removedBit
 	}
 	// Copy over the ALL_REMAINING_LENGTH bit if it was set.
-	result |= (first | second) & ALL_REMAINING_LENGTH
+	result |= highBit
 	return result
 }
 

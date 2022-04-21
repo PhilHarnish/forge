@@ -63,6 +63,55 @@ var _ = Describe("Matches", func() {
 	})
 })
 
+func concatLengths(a mask.Mask, b mask.Mask) *node.Node {
+	aNode := node.NewNode()
+	aNode.LengthsMask = a
+	bNode := node.NewNode()
+	bNode.LengthsMask = b
+	aNode.MaskConcatenateChild(bNode)
+	return aNode
+}
+
+var _ = Describe("MaskConcatenateChild", func() {
+	It("Returns zeros out for zeros in", func() {
+		Expect(concatLengths(0b0, 0b0).String()).To(Equal("Node"))
+	})
+
+	It("Returns one for ones in", func() {
+		Expect(concatLengths(0b1, 0b1).String()).To(Equal("Node: 0 ●"))
+	})
+
+	It("Returns shifted input for twos", func() {
+		Expect(concatLengths(0b10, 0b10).String()).To(Equal("Node: ◌◌●"))
+	})
+
+	It("Mirrors input for multiples", func() {
+		first := mask.Mask((1 << 3) | (1 << 5))
+		second := mask.Mask((1 << 7) | (1 << 11))
+		expected := mask.Mask(
+			(1<<3)*(1<<7) |
+				(1<<3)*(1<<11) |
+				(1<<5)*(1<<7) |
+				(1<<5)*(1<<11))
+		Expect(concatLengths(first, second).String()).To(Equal(
+			"Node: " + mask.LengthString(expected)))
+	})
+
+	It("Handles (a, repeats)", func() {
+		a := mask.Mask(0b10100000000)
+		repeats := mask.RepeatLengths(0b100, 4)
+		Expect(concatLengths(a, repeats).String()).To(Equal(
+			"Node: ◌◌◌◌◌◌◌◌◌◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●●···"))
+	})
+
+	It("Handles (repeats, b)", func() {
+		repeats := mask.RepeatLengths(0b100, 4)
+		b := mask.Mask(0b10100000000)
+		Expect(concatLengths(repeats, b).String()).To(Equal(
+			"Node: ◌◌◌◌◌◌◌◌◌◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●◌●●···"))
+	})
+})
+
 var _ = Describe("MaskEdgeMask", func() {
 	It("Applies simple mask", func() {
 		root := node.NewNode()
