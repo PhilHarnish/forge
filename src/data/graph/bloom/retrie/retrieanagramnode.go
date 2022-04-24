@@ -1,9 +1,7 @@
 package retrie
 
 import (
-	"fmt"
 	"regexp/syntax"
-	"strconv"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
@@ -41,7 +39,6 @@ func newReTrieAnagramNode(directory *reTrieDirectory, options []*syntax.Regexp,
 	child *reTrieNode, repeats bool) *reTrieAnagramNode {
 	remaining, offset := precomputeAnagramTable(directory, options, child, repeats)
 	rootNodes := precomputeAnagramNodes(options, child, repeats)
-	fmt.Println("Anagram node created with remaining =", strconv.FormatUint(remaining, 2))
 	return &reTrieAnagramNode{
 		directory: directory,
 		options:   options,
@@ -116,7 +113,6 @@ func precomputeAnagramTable(directory *reTrieDirectory, options []*syntax.Regexp
 	}
 	for i, option := range options {
 		directory.linker(parents[i], child, option, repeats)
-		fmt.Println("Indexing", parents[i].id, "which is", option.String(), "to", parents[i].String())
 	}
 	return remaining, offset
 }

@@ -74,9 +74,9 @@ func (root *reTrieNode) linkAnagram(options *syntax.Regexp, child *reTrieNode, r
 }
 
 func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) *reTrieNode {
-	root.rootNode.MaskEdgeMaskToChild(mask.ALL, child.rootNode)
+	root.Root().MaskEdgeMaskToChild(mask.ALL, child.Root())
 	if repeats {
-		root.rootNode.RepeatLengthMask(1)
+		root.Root().RepeatLengthMask(1)
 	}
 	root.addLink(newReTrieLinkFromRunes(mask.AlphabetRuneRanges, child))
 	return root
@@ -93,7 +93,7 @@ func (root *reTrieNode) linkEmbeddedNode(embeddedNode node.NodeIterator, child *
 		root.embeddedNode = op.Or(root.embeddedNode, embeddedNode)
 	}
 	// Note: Linking must be additive; union root nodes.
-	root.rootNode.Union(root.embeddedNode.Root())
+	root.Root().Union(root.embeddedNode.Root())
 	return root
 }
 
@@ -102,7 +102,7 @@ func (root *reTrieNode) linkPath(path string, child *reTrieNode, repeats bool) *
 	if err != nil {
 		panic(err)
 	} else if repeats {
-		root.rootNode.RepeatLengthMask(len(path))
+		root.Root().RepeatLengthMask(len(path))
 	}
 	root.addLink(newReTrieLinkForPrefix(path, child))
 	return root
@@ -133,9 +133,9 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 		}
 		i += 2
 	}
-	root.rootNode.MaskEdgeMaskToChild(pathMask, child.rootNode)
+	root.Root().MaskEdgeMaskToChild(pathMask, child.Root())
 	if repeats {
-		root.rootNode.RepeatLengthMask(1)
+		root.Root().RepeatLengthMask(1)
 	}
 	root.addLink(newReTrieLink(filteredRunes, child, pathMask))
 	return root
