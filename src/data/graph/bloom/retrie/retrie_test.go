@@ -71,7 +71,7 @@ var _ = Describe("Special syntax", func() {
 		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
 			ReTrie: ABXYZ
 			│◌◌◌◌◌●
-			└a ->ReTrie: BXYZ
+			└a ->((ReTrie: XYZ) + (ReTrie: B)): BXYZ
 			·│◌◌◌◌●
 			·└xyz ->ReTrie: B
 			·   │◌●
@@ -90,7 +90,7 @@ var _ = Describe("Special syntax", func() {
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
 				ReTrie: ABXYZ
 				│◌◌◌◌◌●◌◌●
-				└a ->ReTrie: BXYZ
+				└a ->((ReTrie: XYZ) + (ReTrie: Bxyz)): BXYZ
 				·│◌◌◌◌●◌◌●
 				·└xyz ->ReTrie: Bxyz
 				·   │◌●◌◌●
@@ -112,13 +112,13 @@ var _ = Describe("Special syntax", func() {
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
 			ReTrie: Axyz
 			│◌◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌●···
-			└a ->ReTrie: xyz
+			└a ->((ReTrie: XYZ) + (((ReTrie: XYZ) + <cycle>): xyz)): xyz
 			·│◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●···
-			·└xyz●->ReTrie: 100 xyz
+			·└xyz●->((ReTrie: XYZ) + <cycle>): xyz
 			·   │●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●···
-			·   └xyz●->ReTrie: 100 xyz
+			·   └xyz●->((ReTrie: XYZ) + <cycle>): xyz
 			·      │●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●···
-			·      └xyz●->ReTrie: 100 xyz
+			·      └xyz●->((ReTrie: XYZ) + <cycle>): xyz
 		`))
 	})
 
@@ -127,7 +127,7 @@ var _ = Describe("Special syntax", func() {
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
 			ReTrie: ABXYZ
 			│◌◌◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●●···
-			└a ->ReTrie: BXYZ
+			└a ->((ReTrie: XYZ) + (ReTrie: Bxyz)): BXYZ
 			·│◌◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌●···
 			·└xyz ->ReTrie: Bxyz
 			·   │◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌●···
@@ -145,7 +145,7 @@ var _ = Describe("Special syntax", func() {
 		retrie.Register("c", retrie.NewReTrie("bbb", 1.0))
 		trie := retrie.NewReTrie("({a}|{b}|{c}|aba)", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-				ReTrie: AB
+				ReTrie: aB
 				│◌◌◌●
 				├bbb●->ReTrie: 100
 				└a ->ReTrie: aB
@@ -173,20 +173,6 @@ var _ = Describe("Special syntax", func() {
 				·  │●●
 				·  └a●->ReTrie: 100
 		`))
-	})
-
-	It("matches <anagram> pattern", func() {
-		Expect(func() {
-			trie := retrie.NewReTrie(`a<xyz>b`, 1.0)
-			Expect(trie.String()).To(Equal("TODO"))
-		}).To(PanicWith("Anagram pattern not implemented."))
-	})
-
-	It("matches <anagram>{x,y} pattern", func() {
-		Expect(func() {
-			trie := retrie.NewReTrie(`a<xyz>{1,2}b`, 1.0)
-			Expect(trie.String()).To(Equal("TODO"))
-		}).To(PanicWith("Anagram pattern not implemented."))
 	})
 })
 

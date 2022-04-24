@@ -73,7 +73,9 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 			parent.linkEmbeddedNode(embeddedNode, child, repeats)
 			return parent
 		} else if re.Name[0] == '<' {
-			panic("Anagram pattern not implemented.")
+			parent = directory.ensureNode(parent)
+			parent.linkAnagram(re.Sub[0], child, repeats)
+			return parent
 		}
 		return directory.linker(parent, child, re.Sub[0], repeats)
 	case syntax.OpCharClass: // [xyz]

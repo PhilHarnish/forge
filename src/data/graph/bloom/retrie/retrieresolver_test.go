@@ -33,7 +33,7 @@ var _ = Describe("ReTrie resolver", func() {
 		retrie.Register("defined", child)
 		parent := retrie.NewReTrie("{defined}", 1.0)
 		Expect(node.StringChildren(parent)).To(matchers.LookLike(`
-			ReTrie: aelmpx
+			((ReTrie: AELMPX) + (ReTrie: 100)): aelmpx
 			│◌◌◌◌◌◌◌●
 			└example●->ReTrie: 100
 		`))

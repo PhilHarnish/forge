@@ -2,6 +2,7 @@ package retrie
 
 import (
 	"container/heap"
+	"regexp/syntax"
 	"unicode"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
@@ -28,6 +29,14 @@ func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTri
 	}
 }
 
+func newEmbeddedReTrieNode(embeddedNode node.NodeIterator) *reTrieNode {
+	return &reTrieNode{
+		id:           NO_ID,
+		rootNode:     embeddedNode.Root().Copy(),
+		embeddedNode: embeddedNode,
+	}
+}
+
 func (root *reTrieNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
 	if root.embeddedNode != nil && len(root.links) == 0 {
 		// Optimized path: simply expand embeddedNode.
@@ -42,7 +51,21 @@ func (root *reTrieNode) Root() *node.Node {
 }
 
 func (root *reTrieNode) String() string {
+	if root.embeddedNode != nil && len(root.links) == 0 {
+		// Optimized path: simply expand embeddedNode.
+		return root.embeddedNode.String()
+	}
+	root.fixLinks()
 	return node.Format("ReTrie", root.Root())
+}
+
+func (root *reTrieNode) linkAnagram(options *syntax.Regexp, child *reTrieNode, repeats bool) *reTrieNode {
+	if options.Op != syntax.OpConcat {
+		panic("linkAnagram requires OpConcat")
+	}
+	allRemaining := (dfaId(1) << len(options.Sub)) - 1
+	rootNodes := precomputeAnagramNodes(options.Sub, child, repeats)
+	return expandAnagram(root.directory, options.Sub, rootNodes, allRemaining, root, child, repeats)
 }
 
 func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) *reTrieNode {

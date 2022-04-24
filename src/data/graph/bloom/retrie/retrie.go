@@ -25,10 +25,12 @@ const customNodeIdentifyingPrefix = "__RETRIE__"
 const customNodeColonSubstitution = "__RETRIE_COLON__"
 const matchedCaptureSubstitution = "__RETRIE_CAPTURE__"
 const retrieAnagramIdentifier = "__RETRIE_ANAGRAM__"
+const retrieAnagramCaptureIdentifier = "__RETRIE_ANAGRAM_CAPTURE__"
 const retrieAnagramStartMarker = "(?P<" + retrieAnagramIdentifier + ">"
 const retrieAnagramEndMarker = ")"
 
 var embeddedNodeRegexp = regexp.MustCompile(`{[a-zA-Z][\w: ]*}`)
+var retrieSimpleAnagram = regexp.MustCompile(`<[a-z. ]{2,}>`)
 var namedCaptureGroup = regexp.MustCompile(`\(?P<\w*>`)
 var matchedCaptureSubstitutionRegexp = regexp.MustCompile(matchedCaptureSubstitution)
 
@@ -40,7 +42,7 @@ func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 	}
 
 	embeddedNodes := embeddedNodesMap{}
-	re = processSpecialOpCodes(re, embeddedNodes)
+	re = processSpecialOpCodes(re, embeddedNodes, false)
 	captureNames := processCaptureNames(re.CapNames())
 	re = re.Simplify()
 	directory := newDfaDirectory()
@@ -91,30 +93,37 @@ func (root *reTrie) String() string {
 
 func processCaptureNames(captureNames []string) []string {
 	captureNames = captureNames[1:]
-	for i, name := range captureNames {
+	out := 0
+	for _, name := range captureNames {
 		if name == "" {
-			captureNames[i] = fmt.Sprintf("%d", i+1)
+			captureNames[out] = fmt.Sprintf("%d", out+1)
+		} else if name == retrieAnagramCaptureIdentifier || name[0] == '<' {
+			continue // Ignore automatic anagram capture groups.
 		} else {
-			captureNames[i] = name
+			captureNames[out] = name
 		}
+		out++
 	}
-	return captureNames
+	return captureNames[0:out]
 }
 
-func processSpecialOpCodes(re *syntax.Regexp, embeddedNodes embeddedNodesMap) *syntax.Regexp {
+func processSpecialOpCodes(re *syntax.Regexp, embeddedNodes embeddedNodesMap, inAnagram bool) *syntax.Regexp {
 	if re.Name == retrieAnagramIdentifier {
-		// Note: Name is decorative.
-		re.Name = fmt.Sprintf("<%s>", re.String())
+		// Note: "<" prefix is significant.
+		re.Name = fmt.Sprintf("<%s>", re.Sub[0].String())
+		inAnagram = true // Overwrite child capture groups as they were auto-created.
 	} else if strings.HasPrefix(re.Name, customNodeIdentifyingPrefix) {
 		// Remove customNodeIdentifyingPrefix.
 		suffix := re.Name[len(customNodeIdentifyingPrefix):]
 		suffix = strings.ReplaceAll(suffix, customNodeColonSubstitution, ":")
 		re.Name = fmt.Sprintf("$%s", suffix)
+	} else if inAnagram && re.Op == syntax.OpCapture {
+		re.Name = retrieAnagramCaptureIdentifier
 	}
 	for position := 0; position < len(re.Sub); position++ {
 		child := re.Sub[position]
 		if len(child.Sub) > 0 {
-			processSpecialOpCodes(child, embeddedNodes)
+			processSpecialOpCodes(child, embeddedNodes, inAnagram)
 		}
 	}
 	return re
@@ -127,7 +136,19 @@ func preprocessRegularExpression(regularExpression string) string {
 		matchedCaptures = append(matchedCaptures, match)
 		return matchedCaptureSubstitution
 	})
-	// Next, replace all remaining < and > characters.
+	// Next, process remaining < and > characters as anagram expression.
+	regularExpression = retrieSimpleAnagram.ReplaceAllStringFunc(regularExpression, func(match string) string {
+		result := strings.Builder{}
+		result.WriteString("<(") // <
+		result.WriteByte(match[1])
+		// Automatically convert "<abc>" to "<(a)(b)(c)>" to match Nutrimatic behavior.
+		for _, c := range match[2 : len(match)-1] {
+			result.WriteString(")(")
+			result.WriteRune(c)
+		}
+		result.WriteString(")>")
+		return result.String()
+	})
 	regularExpression = strings.ReplaceAll(regularExpression, ">", retrieAnagramEndMarker)
 	regularExpression = strings.ReplaceAll(regularExpression, "<", retrieAnagramStartMarker)
 	// Restore "?P<...>" expressions.
