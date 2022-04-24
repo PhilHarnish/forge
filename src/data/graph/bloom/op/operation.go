@@ -8,9 +8,10 @@ import (
 )
 
 type operation struct {
-	operator *operator
-	operands []node.NodeIterator
-	node     *node.Node
+	operator   *operator
+	operands   []node.NodeIterator
+	node       *node.Node
+	formatting bool
 }
 
 func (op *operation) Root() *node.Node {
@@ -25,10 +26,16 @@ func (op *operation) Items(acceptor node.NodeAcceptor) node.NodeItems {
 }
 
 func (op *operation) String() string {
-	return node.Format(
+	if op.formatting {
+		return "<cycle>"
+	}
+	op.formatting = true
+	result := node.Format(
 		fmt.Sprintf(op.operator.template, formatOperands(op.operator.infix, op.operands)),
 		op.Root(),
 	)
+	op.formatting = false
+	return result
 }
 
 func formatOperands(infix string, operands []node.NodeIterator) string {

@@ -4,6 +4,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/null"
 	"github.com/philharnish/forge/src/data/graph/bloom/op"
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 )
@@ -129,5 +130,24 @@ var _ = Describe("Operations", func() {
 			o := op.Join("", a, b)
 			Expect(o.String()).To(Equal("(Trie + Trie)"))
 		})
+	})
+})
+
+type proxyNodeIterator struct {
+	node.NodeIterator
+}
+
+func (n proxyNodeIterator) Root() *node.Node {
+	return null.Null.Root()
+}
+
+var _ = Describe("Advanced situations", func() {
+	It("Detects and mitigates String() cycles", func() {
+		a := trie.NewTrie()
+		a.Add("a", 1.0)
+		cycle := &proxyNodeIterator{}
+		parent := op.Concat(a, cycle)
+		cycle.NodeIterator = parent
+		Expect(cycle.String()).To(Equal("((Trie: A ◌●) + <cycle>): a ◌●"))
 	})
 })
