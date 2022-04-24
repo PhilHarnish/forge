@@ -32,14 +32,14 @@ func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTri
 func newEmbeddedReTrieNode(embeddedNode node.NodeIterator) *reTrieNode {
 	return &reTrieNode{
 		id:           NO_ID,
-		rootNode:     embeddedNode.Root().Copy(),
+		rootNode:     nil,
 		embeddedNode: embeddedNode,
 	}
 }
 
 func (root *reTrieNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
 	if root.embeddedNode != nil && len(root.links) == 0 {
-		// Optimized path: simply expand embeddedNode.
+		// Optimized path: simply use embeddedNode.
 		return root.embeddedNode.Items(acceptor)
 	}
 	root.fixLinks()
@@ -47,6 +47,13 @@ func (root *reTrieNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
 }
 
 func (root *reTrieNode) Root() *node.Node {
+	if root.rootNode == nil {
+		if len(root.links) != 0 {
+			panic("Unable to expand Root when links are present")
+		} else if root.embeddedNode != nil {
+			root.rootNode = root.embeddedNode.Root()
+		}
+	}
 	return root.rootNode
 }
 
@@ -63,9 +70,7 @@ func (root *reTrieNode) linkAnagram(options *syntax.Regexp, child *reTrieNode, r
 	if options.Op != syntax.OpConcat {
 		panic("linkAnagram requires OpConcat")
 	}
-	allRemaining := (dfaId(1) << len(options.Sub)) - 1
-	rootNodes := precomputeAnagramNodes(options.Sub, child, repeats)
-	return expandAnagram(root.directory, options.Sub, rootNodes, allRemaining, root, child, repeats)
+	return newReTrieAnagramNodeParent(root, options.Sub, child, repeats)
 }
 
 func (root *reTrieNode) linkAnyChar(child *reTrieNode, repeats bool) *reTrieNode {
@@ -93,7 +98,7 @@ func (root *reTrieNode) linkEmbeddedNode(embeddedNode node.NodeIterator, child *
 }
 
 func (root *reTrieNode) linkPath(path string, child *reTrieNode, repeats bool) *reTrieNode {
-	err := root.rootNode.MaskPathToChild(path, child.rootNode)
+	err := root.Root().MaskPathToChild(path, child.Root())
 	if err != nil {
 		panic(err)
 	} else if repeats {

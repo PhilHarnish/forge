@@ -110,15 +110,15 @@ var _ = Describe("Special syntax", func() {
 	It("matches {child}+ repeats", func() {
 		trie := retrie.NewReTrie("a{child}+", 1.0)
 		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-			ReTrie: Axyz
+			ReTrie: AXYZ
 			│◌◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌●···
-			└a ->((ReTrie: XYZ) + (((ReTrie: XYZ) + <cycle>): xyz)): xyz
+			└a ->((ReTrie: XYZ) + (((ReTrie: XYZ) + <cycle>): XYZ)): XYZ
 			·│◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●···
-			·└xyz●->((ReTrie: XYZ) + <cycle>): xyz
+			·└xyz●->((ReTrie: XYZ) + <cycle>): XYZ
 			·   │●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●···
-			·   └xyz●->((ReTrie: XYZ) + <cycle>): xyz
+			·   └xyz●->((ReTrie: XYZ) + <cycle>): XYZ
 			·      │●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●···
-			·      └xyz●->((ReTrie: XYZ) + <cycle>): xyz
+			·      └xyz●->((ReTrie: XYZ) + <cycle>): XYZ
 		`))
 	})
 

@@ -9,6 +9,38 @@ import (
 )
 
 var _ = Describe("Special syntax", func() {
+	It("matches simple <anagram> pattern", func() {
+		trie := retrie.NewReTrie(`<abc>`, 1.0)
+		Expect(node.StringChildren(trie, 5)).To(matchers.LookLike(`
+				ReTrie: ABC
+				│◌◌◌●
+				├a ->ReTrieAnagram: BC
+				││◌◌●
+				│├b ->ReTrieAnagram: C
+				│││◌●
+				││└c●->ReTrie: 100
+				│└c ->ReTrieAnagram: B
+				│ │◌●
+				│ └b●->ReTrie: 100
+				├b ->ReTrieAnagram: AC
+				││◌◌●
+				│├a ->ReTrieAnagram: C
+				│││◌●
+				││└c●->ReTrie: 100
+				│└c ->ReTrieAnagram: A
+				│ │◌●
+				│ └a●->ReTrie: 100
+				└c ->ReTrieAnagram: AB
+				·│◌◌●
+				·├a ->ReTrieAnagram: B
+				·││◌●
+				·│└b●->ReTrie: 100
+				·└b ->ReTrieAnagram: A
+				· │◌●
+				· └a●->ReTrie: 100
+		`))
+	})
+
 	It("matches <anagram> pattern", func() {
 		trie := retrie.NewReTrie(`a<xy>(bbbb)`, 1.0)
 		Expect(trie.Labels()).To(Equal([]string{"1"}))
@@ -30,29 +62,29 @@ var _ = Describe("Special syntax", func() {
 		`))
 	})
 
-	It("matches <anagram>{x,y} pattern", func() {
+	XIt("matches <anagram>{x,y} pattern", func() {
 		trie := retrie.NewReTrie(`<ab>{1,2}`, 1.0)
 		Expect(node.StringChildren(trie, 5)).To(matchers.LookLike(`
 				ReTrie: AB
 				│◌◌●◌●
 				├a ->ReTrieAnagram: aB
 				││◌●◌●
-				│└b●->ReTrie: 100 ab
+				│└b●->ReTrie: 100 AB
 				│ │●◌●
-				│ ├a ->ReTrieAnagram: b
+				│ ├a ->ReTrieAnagram: B
 				│ ││◌●
 				│ │└b●->ReTrie: 100
-				│ └b ->ReTrieAnagram: a
+				│ └b ->ReTrieAnagram: A
 				│  │◌●
 				│  └a●->ReTrie: 100
 				└b ->ReTrieAnagram: Ab
 				·│◌●◌●
-				·└a●->ReTrie: 100 ab
+				·└a●->ReTrie: 100 AB
 				· │●◌●
-				· ├a ->ReTrieAnagram: b
+				· ├a ->ReTrieAnagram: B
 				· ││◌●
 				· │└b●->ReTrie: 100
-				· └b ->ReTrieAnagram: a
+				· └b ->ReTrieAnagram: A
 				·  │◌●
 				·  └a●->ReTrie: 100
 		`))

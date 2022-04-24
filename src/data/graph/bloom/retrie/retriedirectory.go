@@ -8,7 +8,7 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
-type dfaId = int64
+type dfaId = uint64
 
 const NO_ID = dfaId(0)
 
@@ -24,6 +24,9 @@ func newDfaDirectory() *reTrieDirectory {
 }
 
 func (directory *reTrieDirectory) addNode(source *node.Node) *reTrieNode {
+	if directory.next >= 64 {
+		panic("Directory is full")
+	}
 	dfaId := dfaId(1) << directory.next
 	directory.next++
 	dfaNode := newReTrieNode(directory, dfaId, source)
