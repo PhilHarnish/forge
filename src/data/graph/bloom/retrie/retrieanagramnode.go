@@ -82,12 +82,13 @@ func (root *reTrieAnagramNode) expandParent() {
 	if root.parent != nil {
 		return
 	}
-	indexed, found := root.directory.table[root.remaining]
-	if found {
+	indexed := root.directory.find(root.remaining)
+	if indexed == nil {
+		root.parent = root.expandAnagram(nil)
+		root.directory.table[root.remaining] = root.parent
+	} else {
 		root.parent = indexed
-		return
 	}
-	root.parent = root.expandAnagram(nil)
 }
 
 func (root *reTrieAnagramNode) expandAnagram(parent *reTrieNode) *reTrieNode {
@@ -97,9 +98,6 @@ func (root *reTrieAnagramNode) expandAnagram(parent *reTrieNode) *reTrieNode {
 			continue
 		}
 		childRemaining := root.remaining - optionId
-		if childRemaining == 0 {
-			return root.directory.linker(parent, root.child, option, root.repeats)
-		}
 		embeddedNode := newReTrieAnagramNodeChild(root, childRemaining)
 		out := newEmbeddedReTrieNode(embeddedNode)
 		parent = root.directory.linker(parent, out, option, root.repeats)

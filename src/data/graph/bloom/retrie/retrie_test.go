@@ -65,6 +65,10 @@ var _ = Describe("Special syntax", func() {
 		retrie.Register("child", child)
 	})
 
+	AfterEach(func() {
+		retrie.ClearRegistry()
+	})
+
 	It("matches {child} pattern", func() {
 		trie := retrie.NewReTrie(`a{child}b`, 1.0)
 		Expect(trie.Labels()).To(Equal([]string{"$child"}))

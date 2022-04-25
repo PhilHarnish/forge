@@ -46,6 +46,11 @@ func (directory *reTrieDirectory) ensureNode(given *reTrieNode) *reTrieNode {
 	return given
 }
 
+func (directory *reTrieDirectory) find(id dfaId) *reTrieNode {
+	result, _ := directory.table[id]
+	return result
+}
+
 func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bool) *reTrieNode {
 	switch re.Op {
 	case syntax.OpAlternate:

@@ -8,7 +8,17 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/retrie"
 )
 
-var _ = Describe("Special syntax", func() {
+type proxyNodeIterator struct {
+	node.NodeIterator
+	iterations int
+}
+
+func (node *proxyNodeIterator) Items(acceptor node.NodeAcceptor) node.NodeItems {
+	node.iterations++
+	return node.NodeIterator.Items(acceptor)
+}
+
+var _ = Describe("Anagram syntax", func() {
 	It("matches simple <anagram> pattern", func() {
 		trie := retrie.NewReTrie(`<abc>`, 1.0)
 		Expect(node.StringChildren(trie, 5)).To(matchers.LookLike(`
@@ -88,5 +98,25 @@ var _ = Describe("Special syntax", func() {
 				·  │◌●
 				·  └a●->ReTrie: 100
 		`))
+	})
+
+	Describe("benchmarks", func() {
+		var child *proxyNodeIterator
+		BeforeEach(func() {
+			child = &proxyNodeIterator{
+				NodeIterator: node.NewNode(1.0),
+			}
+			retrie.Register("child", child)
+		})
+
+		AfterEach(func() {
+			retrie.ClearRegistry()
+		})
+
+		It("should expand everything", func() {
+			trie := retrie.NewReTrie(`<abcde>{child}`, 1.0)
+			node.StringChildren(trie, 999)
+			Expect(child.iterations).To(Equal(5 * 4 * 3 * 2 * 1))
+		})
 	})
 })
