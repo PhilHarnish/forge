@@ -27,7 +27,7 @@ func (op *operator) synthesizeNode(operands []node.NodeIterator) *node.Node {
 		for i > 0 {
 			i--
 			next := operands[i].Root()
-			result.MaskConcatenateChild(next)
+			result.MaskPrependChild(next)
 		}
 		return result
 	case allOperands:

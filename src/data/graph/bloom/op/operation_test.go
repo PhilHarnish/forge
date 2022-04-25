@@ -148,6 +148,6 @@ var _ = Describe("Advanced situations", func() {
 		cycle := &proxyNodeIterator{}
 		parent := op.Concat(a, cycle)
 		cycle.NodeIterator = parent
-		Expect(cycle.String()).To(Equal("((Trie: A ◌●) + <cycle>): a ◌●"))
+		Expect(cycle.String()).To(Equal("((Trie: A ◌●) + <cycle>): A ◌●"))
 	})
 })
