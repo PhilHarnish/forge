@@ -68,7 +68,7 @@ func concatLengths(a mask.Mask, b mask.Mask) *node.Node {
 	aNode.LengthsMask = a
 	bNode := node.NewNode()
 	bNode.LengthsMask = b
-	aNode.MaskConcatenateChild(bNode)
+	aNode.MaskPrependChild(bNode)
 	return aNode
 }
 
@@ -272,11 +272,27 @@ var _ = Describe("MaskPathToChild", func() {
 	})
 })
 
-var _ = Describe("MaskPathToChild", func() {
-	It("Repeats path if requested", func() {
-		root := node.NewNode()
-		root.MaskPathToChild("abcd", node.NewNode(1.0))
-		Expect(root.String()).To(Equal("Node: ABCD ◌◌◌◌●"))
+var _ = Describe("MaskPrependChild", func() {
+	It("Prepends child (which matches)", func() {
+		child := node.NewNode(1.0)
+		parent := node.NewNode()
+		parent.MaskPathToChild("abc", child)
+		root := node.NewNode(1.0) // NB: Root DOES match.
+		root.MaskPathToChild("xy", node.NewNode(1.0))
+		root.MaskPrependChild(parent)
+		// Result: a->b->c (match) ->x->y (optional).
+		Expect(root.String()).To(Equal("Node: ABCxy ◌◌◌●◌●"))
+	})
+
+	It("Prepends child (which does not match)", func() {
+		child := node.NewNode(1.0)
+		parent := node.NewNode()
+		parent.MaskPathToChild("abc", child)
+		root := node.NewNode() // NB: Root DOES NOT match.
+		root.MaskPathToChild("xy", node.NewNode(1.0))
+		root.MaskPrependChild(parent)
+		// Result: a->b->c->x->y (all required).
+		Expect(root.String()).To(Equal("Node: ABCXY ◌◌◌◌◌●"))
 	})
 })
 

@@ -72,14 +72,6 @@ func (node *Node) Match(weight weight.Weight) {
 	node.Weight(weight)
 }
 
-func (node *Node) MaskConcatenateChild(child *Node) {
-	// Provide anything the child provides.
-	node.ProvideMask |= child.ProvideMask
-	// Require anything the child requires.
-	node.RequireMask |= child.RequireMask
-	node.LengthsMask = mask.ConcatLengths(child.LengthsMask, node.LengthsMask)
-}
-
 func (node *Node) MaskEdgeMask(edgeMask mask.Mask) {
 	// Provide anything the edge provides.
 	node.ProvideMask |= edgeMask
@@ -99,20 +91,9 @@ func (node *Node) MaskEdgeMaskToChild(edgeMask mask.Mask, child *Node) {
 		// If node's RequireMask is still unset...
 		if node.RequireMask == mask.UNSET {
 			// Clear it because multiple runes implies path to child is not required.
-			node.RequireMask = mask.Mask(0)
+			node.RequireMask = mask.NONE
 		}
 	}
-}
-
-func (node *Node) MaskPath(path string) error {
-	edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
-	if err != nil {
-		return err
-	}
-	node.MaskEdgeMask(edgeMask)
-	// Set match at the end of path.
-	node.LengthsMask |= 1 << runeLength
-	return nil
 }
 
 func (node *Node) MaskDistanceToChild(distance int, child *Node) {
@@ -133,8 +114,19 @@ func (node *Node) MaskDistanceToChild(distance int, child *Node) {
 		// Since the child is a match no requirements are inherited.
 	} else {
 		// Require anything ALL children requires.
-		node.RequireMask &= mask.Mask(child.RequireMask)
+		node.RequireMask &= child.RequireMask
 	}
+}
+
+func (node *Node) MaskPath(path string) error {
+	edgeMask, runeLength, err := mask.EdgeMaskAndLength(path)
+	if err != nil {
+		return err
+	}
+	node.MaskEdgeMask(edgeMask)
+	// Set match at the end of path.
+	node.LengthsMask |= 1 << runeLength
+	return nil
 }
 
 func (node *Node) MaskPathToChild(path string, child *Node) error {
@@ -143,6 +135,25 @@ func (node *Node) MaskPathToChild(path string, child *Node) error {
 		return err
 	}
 	return node.maskMaskDistanceToChild(edgeMask, runeLength, child)
+}
+
+func (node *Node) MaskPrependChild(child *Node) {
+	// Provide anything the child provides.
+	node.ProvideMask |= child.ProvideMask
+	if node.Matches() {
+		// If the (old) end-point was a match then the prepend requirements
+		// are the only requirements which matter.
+		node.RequireMask = child.RequireMask
+	} else if node.RequireMask == mask.UNSET {
+		node.RequireMask = child.RequireMask
+	} else {
+		// Require anything the child requires.
+		node.RequireMask |= child.RequireMask
+	}
+	node.LengthsMask = mask.ConcatLengths(child.LengthsMask, node.LengthsMask)
+	if !node.Matches() {
+		node.MatchWeight = 0
+	}
 }
 
 func (node *Node) maskMaskDistanceToChild(edgeMask mask.Mask, distance int, child *Node) error {
