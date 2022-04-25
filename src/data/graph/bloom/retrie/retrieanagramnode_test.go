@@ -62,7 +62,7 @@ var _ = Describe("Special syntax", func() {
 		`))
 	})
 
-	XIt("matches <anagram>{x,y} pattern", func() {
+	It("matches <anagram>{x,y} pattern", func() {
 		trie := retrie.NewReTrie(`<ab>{1,2}`, 1.0)
 		Expect(node.StringChildren(trie, 5)).To(matchers.LookLike(`
 				ReTrie: AB

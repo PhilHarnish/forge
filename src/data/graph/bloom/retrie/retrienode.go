@@ -32,7 +32,6 @@ func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTri
 func newEmbeddedReTrieNode(embeddedNode node.NodeIterator) *reTrieNode {
 	return &reTrieNode{
 		id:           NO_ID,
-		rootNode:     nil,
 		embeddedNode: embeddedNode,
 	}
 }

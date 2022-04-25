@@ -58,12 +58,16 @@ func (root *reTrieAnagramNode) Items(acceptor node.NodeAcceptor) node.NodeItems 
 func (root *reTrieAnagramNode) Root() *node.Node {
 	if root.rootNode == nil {
 		root.rootNode = root.child.Root().Copy()
+		remaining := root.remaining
 		for i, rootNode := range root.rootNodes {
 			optionId := dfaId(1) << (root.offset + dfaId(i))
-			if (root.remaining & optionId) == 0 {
+			if (remaining & optionId) == 0 {
 				continue
-			} else {
-				root.rootNode.MaskConcatenateChild(rootNode)
+			}
+			root.rootNode.MaskPrependChild(rootNode)
+			remaining -= optionId
+			if remaining == 0 {
+				break
 			}
 		}
 	}
@@ -112,6 +116,7 @@ func precomputeAnagramTable(directory *reTrieDirectory, options []*syntax.Regexp
 		remaining |= parent.id
 	}
 	for i, option := range options {
+		// Add each exit path to directory. These will be used on exit.
 		directory.linker(parents[i], child, option, repeats)
 	}
 	return remaining, offset
@@ -120,10 +125,10 @@ func precomputeAnagramTable(directory *reTrieDirectory, options []*syntax.Regexp
 func precomputeAnagramNodes(options []*syntax.Regexp, child *reTrieNode, repeats bool) []*node.Node {
 	tempDirectory := newDfaDirectory()
 	result := make([]*node.Node, len(options))
-	exit := tempDirectory.addNode(node.NewNode(child.rootNode.MaxWeight))
+	exit := tempDirectory.addNode(node.NewNode(child.Root().MaxWeight))
 	for i, option := range options {
 		tempParent := tempDirectory.linker(nil, exit, option, repeats)
-		result[i] = tempParent.rootNode
+		result[i] = tempParent.Root()
 	}
 	return result
 }
