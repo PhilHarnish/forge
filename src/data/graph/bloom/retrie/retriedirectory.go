@@ -46,9 +46,38 @@ func (directory *reTrieDirectory) ensureNode(given *reTrieNode) *reTrieNode {
 	return given
 }
 
-func (directory *reTrieDirectory) find(id dfaId) *reTrieNode {
-	result, _ := directory.table[id]
-	return result
+func (directory *reTrieDirectory) get(id dfaId, missingSetter func() *reTrieNode) *reTrieNode {
+	node, found := directory.table[id]
+	if found {
+		return node
+	}
+	node = missingSetter()
+	node.id = id
+	directory.table[id] = node
+	return node
+}
+
+func (directory *reTrieDirectory) getMerged(a *reTrieNode, b *reTrieNode) (result *reTrieNode, exists bool) {
+	if directory != a.directory && a.directory == b.directory {
+		// Both a and b belong to a different directory. Reroute there.
+		return a.directory.getMerged(a, b)
+	}
+	mergedId := a.id | b.id
+	if a.id == NO_ID || b.id == NO_ID || a.directory != b.directory {
+		// Embedded or foreign nodes.
+		mergedId = NO_ID
+	} else {
+		// Valid merger.
+		result, exists = directory.table[mergedId]
+	}
+	if !exists {
+		result = newReTrieNode(directory, mergedId, a.rootNode.Copy())
+		result.rootNode.Union(b.rootNode)
+		if mergedId != NO_ID {
+			directory.table[mergedId] = result
+		}
+	}
+	return result, exists
 }
 
 func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, re *syntax.Regexp, repeats bool) *reTrieNode {
@@ -146,35 +175,12 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 }
 
 func (directory *reTrieDirectory) merge(a *reTrieNode, b *reTrieNode) *reTrieNode {
-	result, exists := directory.get(a, b)
+	result, exists := directory.getMerged(a, b)
 	if !exists {
 		result.mergeNode(a)
 		result.mergeNode(b)
 	}
 	return result
-}
-
-func (directory *reTrieDirectory) get(a *reTrieNode, b *reTrieNode) (result *reTrieNode, exists bool) {
-	if directory != a.directory && a.directory == b.directory {
-		// Both a and b belong to a different directory. Reroute there.
-		return a.directory.get(a, b)
-	}
-	mergedId := a.id | b.id
-	if a.id == NO_ID || b.id == NO_ID || a.directory != b.directory {
-		// Embedded or foreign nodes.
-		mergedId = NO_ID
-	} else {
-		// Valid merger.
-		result, exists = directory.table[mergedId]
-	}
-	if !exists {
-		result = newReTrieNode(directory, mergedId, a.rootNode.Copy())
-		result.rootNode.Union(b.rootNode)
-		if mergedId != NO_ID {
-			directory.table[mergedId] = result
-		}
-	}
-	return result, exists
 }
 
 func (directory *reTrieDirectory) split(link *reTrieLink) *reTrieLink {

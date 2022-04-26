@@ -223,7 +223,7 @@ func (root *reTrieNode) fixLinks() {
 		// The second batch is the portion which overlaps.
 		overlapEnd := min(first.runes[1], second.runes[1])
 		batch2 := []rune{second.runes[0], overlapEnd}
-		merged, exists := root.directory.get(firstDestination, secondDestination)
+		merged, exists := root.directory.getMerged(firstDestination, secondDestination)
 		overlapEdge := newReTrieLinkFromRunes(batch2, merged)
 		if !exists {
 			newNodes = append(newNodes, merged, firstDestination, secondDestination)

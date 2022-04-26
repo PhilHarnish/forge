@@ -13,7 +13,6 @@ type reTrieAnagramNode struct {
 	rootNode  *node.Node
 	remaining dfaId
 	offset    dfaId
-	parent    *reTrieNode
 	child     *reTrieNode
 	repeats   bool
 }
@@ -51,8 +50,7 @@ func newReTrieAnagramNode(directory *reTrieDirectory, options []*syntax.Regexp,
 }
 
 func (root *reTrieAnagramNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	root.expandParent()
-	return root.parent.Items(acceptor)
+	return root.directory.get(root.remaining, root.getParent).Items(acceptor)
 }
 
 func (root *reTrieAnagramNode) Root() *node.Node {
@@ -78,17 +76,8 @@ func (root *reTrieAnagramNode) String() string {
 	return node.Format("ReTrieAnagram", root.Root())
 }
 
-func (root *reTrieAnagramNode) expandParent() {
-	if root.parent != nil {
-		return
-	}
-	indexed := root.directory.find(root.remaining)
-	if indexed == nil {
-		root.parent = root.expandAnagram(nil)
-		root.directory.table[root.remaining] = root.parent
-	} else {
-		root.parent = indexed
-	}
+func (root *reTrieAnagramNode) getParent() *reTrieNode {
+	return root.expandAnagram(nil)
 }
 
 func (root *reTrieAnagramNode) expandAnagram(parent *reTrieNode) *reTrieNode {
