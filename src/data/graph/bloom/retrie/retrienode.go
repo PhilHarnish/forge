@@ -142,9 +142,6 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 
 func (root *reTrieNode) mergeNode(other *reTrieNode) {
 	other.fixLinks()
-	if root.embeddedNode != nil || other.embeddedNode != nil {
-		panic("Merging embedded nodes not implemented.")
-	}
 	root.overlapping |= root.edgeMask & other.edgeMask
 	root.edgeMask |= other.edgeMask
 	root.links = append(root.links, other.links...)
@@ -194,7 +191,8 @@ func (root *reTrieNode) fixLinks() {
 		second := linkHeap.Next()
 		firstDestination := first.node
 		secondDestination := second.node
-		if firstDestination.id == secondDestination.id {
+		if firstDestination.id != NO_ID && secondDestination.id != NO_ID &&
+			firstDestination.id == secondDestination.id {
 			// Both edges go to the same place; return super-set of the range.
 			var batch0 []rune
 			if first.edgeMask&second.edgeMask == 0 { // Non-overlapping.

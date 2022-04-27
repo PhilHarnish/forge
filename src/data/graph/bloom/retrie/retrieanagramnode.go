@@ -6,26 +6,25 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
 
-type reTrieAnagramNode struct {
+type reTrieAnagramBase struct {
 	directory *reTrieDirectory
 	options   []*syntax.Regexp
 	rootNodes []*node.Node
-	rootNode  *node.Node
-	remaining dfaId
 	offset    dfaId
 	child     *reTrieNode
 	repeats   bool
 }
 
+type reTrieAnagramNode struct {
+	*reTrieAnagramBase
+	rootNode  *node.Node
+	remaining dfaId
+}
+
 func newReTrieAnagramNodeChild(parent *reTrieAnagramNode, remaining dfaId) *reTrieAnagramNode {
 	return &reTrieAnagramNode{
-		directory: parent.directory,
-		options:   parent.options,
-		rootNodes: parent.rootNodes,
-		remaining: remaining,
-		offset:    parent.offset,
-		child:     parent.child,
-		repeats:   parent.repeats,
+		reTrieAnagramBase: parent.reTrieAnagramBase,
+		remaining:         remaining,
 	}
 }
 
@@ -39,13 +38,15 @@ func newReTrieAnagramNode(directory *reTrieDirectory, options []*syntax.Regexp,
 	remaining, offset := precomputeAnagramTable(directory, options, child, repeats)
 	rootNodes := precomputeAnagramNodes(options, child, repeats)
 	return &reTrieAnagramNode{
-		directory: directory,
-		options:   options,
-		rootNodes: rootNodes,
+		reTrieAnagramBase: &reTrieAnagramBase{
+			directory: directory,
+			options:   options,
+			rootNodes: rootNodes,
+			offset:    offset,
+			child:     child,
+			repeats:   repeats,
+		},
 		remaining: remaining,
-		offset:    offset,
-		child:     child,
-		repeats:   repeats,
 	}
 }
 

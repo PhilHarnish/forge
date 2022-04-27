@@ -100,6 +100,27 @@ var _ = Describe("Anagram syntax", func() {
 		`))
 	})
 
+	It("supports anagrams of regular expressions: character ranges", func() {
+		trie := retrie.NewReTrie(`<([ab])([bc])>`, 1.0)
+		Expect(node.StringChildren(trie, 5)).To(matchers.LookLike(`
+				ReTrie: abc
+				│◌◌●
+				├a ->ReTrie: bc
+				││◌●
+				│├b●->ReTrie: 100
+				│└c●->ReTrie: 100
+				├b ->ReTrie: abc
+				││◌●
+				│├c●->ReTrie: 100
+				│├a●->ReTrie: 100
+				│└b●->ReTrie: 100
+				└c ->ReTrie: ab
+				·│◌●
+				·├a●->ReTrie: 100
+				·└b●->ReTrie: 100
+		`))
+	})
+
 	Describe("benchmarks", func() {
 		var child *proxyNodeIterator
 		BeforeEach(func() {
