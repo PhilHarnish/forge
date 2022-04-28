@@ -409,7 +409,8 @@ var _ = Describe("NodeIterator", func() {
 })
 
 type TestIterator struct {
-	root *node.Node
+	root  *node.Node
+	items *TestItems
 }
 
 func (iterator *TestIterator) Root() *node.Node {
@@ -422,6 +423,9 @@ func (iterator *TestIterator) Root() *node.Node {
 }
 
 func (iterator *TestIterator) Items(acceptor node.NodeAcceptor) node.NodeItems {
+	if iterator.items != nil {
+		return iterator.items
+	}
 	return &TestItems{"a", "b"}
 }
 
@@ -491,6 +495,22 @@ var _ = Describe("TestIterator", func() {
 			·│●●●···
 			·├a●->TestIterator: 100
 			·└b●->TestIterator: 100
+		`))
+	})
+
+	It("Alerts when there are duplicate children", func() {
+		iterator.items = &TestItems{
+			"a", "b", "a", "b",
+		}
+		Expect(node.StringChildren(iterator)).To(matchers.LookLike(`
+			TestIterator:
+			│◌●●●···
+			├a●->TestIterator: 100
+			├b●->TestIterator: 100
+			├a●->TestIterator: 100
+			│ Duplicate edge: Ⓐ
+			└b●->TestIterator: 100
+			· Duplicate edge: Ⓑ
 		`))
 	})
 

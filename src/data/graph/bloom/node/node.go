@@ -302,8 +302,14 @@ func stringPathChildrenWithPrefix(iterator NodeIterator, base string, remainingP
 		results = append(results, base+"│"+mask.LengthString(iterator.Root().LengthsMask))
 	}
 	items := iterator.Items(NodeAcceptAll)
+	seen := mask.Mask(0)
 	for items.HasNext() {
 		path, item := items.Next()
+		edge, _ := utf8.DecodeRuneInString(path)
+		edgeMask, err := mask.AlphabetMask(edge)
+		if err != nil {
+			panic(err)
+		}
 		line := "├"
 		prefix := "│"
 		if !items.HasNext() {
@@ -332,6 +338,10 @@ func stringPathChildrenWithPrefix(iterator NodeIterator, base string, remainingP
 				results = append(results, fmt.Sprintf("%s%s└%s", base, prefix, childSummary))
 			}
 		}
+		if edgeMask&seen != 0 {
+			results = append(results, fmt.Sprintf(`%s%s Duplicate edge: %s`, base, prefix, mask.MaskString(0, edgeMask&seen)))
+		}
+		seen |= edgeMask
 	}
 	return strings.Join(results, "\n")
 }
