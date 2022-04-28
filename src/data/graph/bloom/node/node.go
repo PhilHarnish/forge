@@ -5,6 +5,7 @@ import (
 	"math"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
@@ -280,14 +281,18 @@ func Format(name string, node *Node) string {
 
 func StringChildren(iterator NodeIterator, depth ...int) string {
 	if len(depth) > 0 {
-		return stringChildrenWithPrefix(iterator, "", depth[0])
+		return stringPathChildrenWithPrefix(iterator, "", "", depth[0])
 	}
-	return stringChildrenWithPrefix(iterator, "", 1)
+	return stringPathChildrenWithPrefix(iterator, "", "", 1)
 }
 
-func stringChildrenWithPrefix(iterator NodeIterator, base string, remaining int) string {
+func StringPath(iterator NodeIterator, path string) string {
+	return stringPathChildrenWithPrefix(iterator, "", path, 0)
+}
+
+func stringPathChildrenWithPrefix(iterator NodeIterator, base string, remainingPath string, remaining int) string {
 	nodeString := lengthMaskRemover.ReplaceAllLiteralString(iterator.String(), "")
-	if remaining == 0 {
+	if remaining <= 0 && remainingPath == "" {
 		return nodeString
 	}
 	results := []string{
@@ -314,9 +319,39 @@ func stringChildrenWithPrefix(iterator NodeIterator, base string, remaining int)
 		if item.Root().Matches() {
 			matchString = "●"
 		}
+		childRemainingPath := ""
+		if strings.HasPrefix(remainingPath, path) {
+			childRemainingPath = remainingPath[len(path):]
+		}
 		results = append(results, fmt.Sprintf("%s%s%s->%s",
-			base+line, path, matchString, stringChildrenWithPrefix(item, base+prefix, remaining-1)))
-
+			base+line, path, matchString, stringPathChildrenWithPrefix(item, base+prefix, childRemainingPath, remaining-1)))
+		if remainingPath != "" && childRemainingPath == "" {
+			// Child was not expanded. Summarize instead.
+			childSummary := stringChildSummary(item)
+			if childSummary != "" {
+				results = append(results, fmt.Sprintf("%s%s└%s", base, prefix, childSummary))
+			}
+		}
 	}
 	return strings.Join(results, "\n")
+}
+
+func stringChildSummary(iterator NodeIterator) string {
+	items := iterator.Items(NodeAcceptAll)
+	if !items.HasNext() {
+		return ""
+	}
+	count := 0
+	seen := mask.Mask(0)
+	for items.HasNext() {
+		path, _ := items.Next()
+		count++
+		edge, _ := utf8.DecodeRuneInString(path)
+		edgeMask, err := mask.AlphabetMask(edge)
+		if err != nil {
+			panic(err)
+		}
+		seen |= edgeMask
+	}
+	return fmt.Sprintf("%s (%d children)", mask.MaskString(seen, mask.NONE), count)
 }

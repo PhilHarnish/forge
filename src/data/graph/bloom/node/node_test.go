@@ -493,4 +493,31 @@ var _ = Describe("TestIterator", func() {
 			·└b●->TestIterator: 100
 		`))
 	})
+
+	It("Follows specified path", func() {
+		Expect(node.StringPath(iterator, "abbab")).To(matchers.LookLike(`
+			TestIterator:
+			│◌●●●···
+			├a●->TestIterator: 100
+			││●●●···
+			│├a●->TestIterator: 100
+			││└ab (2 children)
+			│└b●->TestIterator: 100
+			│ │●●●···
+			│ ├a●->TestIterator: 100
+			│ │└ab (2 children)
+			│ └b●->TestIterator: 100
+			│  │●●●···
+			│  ├a●->TestIterator: 100
+			│  ││●●●···
+			│  │├a●->TestIterator: 100
+			│  ││└ab (2 children)
+			│  │└b●->TestIterator: 100
+			│  │ └ab (2 children)
+			│  └b●->TestIterator: 100
+			│   └ab (2 children)
+			└b●->TestIterator: 100
+			·└ab (2 children)
+		`))
+	})
 })
