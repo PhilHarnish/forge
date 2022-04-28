@@ -258,6 +258,13 @@ func NodeAcceptNone(path string, node *Node) weight.Weight {
 }
 
 var lengthMaskRemover = regexp.MustCompile(" [◌●]+·*")
+var horizontalLineReplacer = strings.NewReplacer(
+	"├", "╪",
+	"│", "╪",
+	"└", "╘",
+	"·", "═",
+	" ", "═",
+)
 
 func Format(name string, node *Node) string {
 	parts := []string{}
@@ -339,7 +346,8 @@ func stringPathChildrenWithPrefix(iterator NodeIterator, base string, remainingP
 			}
 		}
 		if edgeMask&seen != 0 {
-			results = append(results, fmt.Sprintf(`%s%s Duplicate edge: %s`, base, prefix, mask.MaskString(0, edgeMask&seen)))
+			horizontalLine := horizontalLineReplacer.Replace(base + prefix)
+			results = append(results, fmt.Sprintf(`%s> Duplicate edge: %s`, horizontalLine, mask.MaskString(0, edgeMask&seen)))
 		}
 		seen |= edgeMask
 	}

@@ -508,9 +508,9 @@ var _ = Describe("TestIterator", func() {
 			├a●->TestIterator: 100
 			├b●->TestIterator: 100
 			├a●->TestIterator: 100
-			│ Duplicate edge: Ⓐ
+			╪> Duplicate edge: Ⓐ
 			└b●->TestIterator: 100
-			· Duplicate edge: Ⓑ
+			═> Duplicate edge: Ⓑ
 		`))
 	})
 
