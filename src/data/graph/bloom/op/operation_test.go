@@ -3,6 +3,7 @@ package op_test
 import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/philharnish/forge/src/data/graph/bloom/debug"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/null"
 	"github.com/philharnish/forge/src/data/graph/bloom/op"
@@ -69,7 +70,7 @@ var _ = Describe("Operations", func() {
 
 		It("Returns empty result for empty nodes", func() {
 			o := op.And(a, b)
-			Expect(node.StringChildren(o)).To(Equal("(Trie && Trie)"))
+			Expect(debug.StringChildren(o)).To(Equal("(Trie && Trie)"))
 		})
 	})
 
