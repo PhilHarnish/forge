@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
-	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/debug"
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
 )
 
@@ -114,7 +114,7 @@ var _ = Describe("Add", func() {
 	It("Adds a child to a new path", func() {
 		err := root.Add("a", 1.0)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(node.StringChildren(root)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(root)).To(matchers.LookLike(`
 				Trie: A
 				│◌●
 				└a●->Trie: 100
@@ -125,7 +125,7 @@ var _ = Describe("Add", func() {
 		root.Add("a", 1.0)
 		err := root.Add("ab", 0.5)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(node.StringChildren(root, 2)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(root, 2)).To(matchers.LookLike(`
 				Trie: Ab
 				│◌●●
 				└a●->Trie: 100 B
