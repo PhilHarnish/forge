@@ -7,6 +7,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
+	"github.com/philharnish/forge/src/data/graph/bloom/debug"
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/retrie/dfa"
@@ -20,7 +21,7 @@ func Test(t *testing.T) {
 var _ = Describe("nfaToDfa", func() {
 	It("is initially empty", func() {
 		result := dfa.Dfa("", 1.0)
-		Expect(node.StringChildren(result, 2)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(result, 2)).To(matchers.LookLike(`
 				DFA{1,2}: 100
 		`))
 	})
@@ -33,7 +34,7 @@ var _ = Describe("nfaToDfa", func() {
 var _ = Describe("Regexp syntax", func() {
 	It("matches specified character", func() {
 		n := dfa.Dfa("x", 1.0)
-		Expect(node.StringChildren(n)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n)).To(matchers.LookLike(`
 				DFA{1}: X
 				│◌●
 				└x●->DFA{2}: 100
@@ -42,7 +43,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("ignores ^ and $", func() {
 		n := dfa.Dfa("^x$", 1.0)
-		Expect(node.StringChildren(n)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n)).To(matchers.LookLike(`
 				DFA{1,2}: X
 				│◌●
 				└x●->DFA{3,4}: 100
@@ -51,7 +52,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches specified characters", func() {
 		n := dfa.Dfa("abc", 1.0)
-		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 3)).To(matchers.LookLike(`
 				DFA{1}: ABC
 				│◌◌◌●
 				└abc●->DFA{4}: 100
@@ -60,7 +61,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches simple character class", func() {
 		n := dfa.Dfa("[abc]", 1.0)
-		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 3)).To(matchers.LookLike(`
 				DFA{1}: abc
 				│◌●
 				├a●->DFA{2}: 100
@@ -71,7 +72,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches sandwiched character classes", func() {
 		n := dfa.Dfa("a[bc]d", 1.0)
-		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 3)).To(matchers.LookLike(`
 				DFA{1}: AbcD
 				│◌◌◌●
 				└a ->DFA{2}: bcD
@@ -87,7 +88,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches complex character classes", func() {
 		n := dfa.Dfa("[a-cxyz]", 1.0)
-		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 3)).To(matchers.LookLike(`
 				DFA{1}: abcxyz
 				│◌●
 				├a●->DFA{2}: 100
@@ -131,7 +132,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches question mark", func() {
 		n := dfa.Dfa("ab?", 1.0)
-		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 3)).To(matchers.LookLike(`
 				DFA{1}: Ab
 				│◌●●
 				└a●->DFA{2,3,4}: 100 B
@@ -142,7 +143,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches question mark with suffix", func() {
 		n := dfa.Dfa("ab?c", 1.0)
-		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 3)).To(matchers.LookLike(`
 				DFA{1}: AbC
 				│◌◌●●
 				└a ->DFA{2,3,4}: bC
@@ -154,7 +155,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches question mark with tricky suffix", func() {
 		n := dfa.Dfa("a(?:bxyz)?[a-c]", 1.0)
-		Expect(node.StringChildren(n, 4)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 4)).To(matchers.LookLike(`
 				DFA{1}: Abcxyz
 				│◌◌●◌◌◌●
 				└a ->DFA{2,6,7}: abcxyz
@@ -173,7 +174,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches simple repeats", func() {
 		n := dfa.Dfa("a{2}", 1.0)
-		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 3)).To(matchers.LookLike(`
 				DFA{1}: A
 				│◌◌●
 				└aa●->DFA{3}: 100
@@ -182,7 +183,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches simple ranges", func() {
 		n := dfa.Dfa("a{2,4}", 1.0)
-		Expect(node.StringChildren(n, 4)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 4)).To(matchers.LookLike(`
 				DFA{1}: A
 				│◌◌●●●
 				└aa●->DFA{3,6,7}: 100 A
@@ -195,7 +196,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches hidden middle alternatives", func() {
 		n := dfa.Dfa("abc|axc", 1.0)
-		Expect(node.StringChildren(n, 4)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 4)).To(matchers.LookLike(`
 				DFA{1}: AbCx
 				│◌◌◌●
 				└a ->DFA{2,4,6}: bCx
@@ -207,7 +208,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches alternatives which cannot be easily simplified", func() {
 		n := dfa.Dfa("abc|acd|xyz", 1.0)
-		Expect(node.StringChildren(n, 4)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 4)).To(matchers.LookLike(`
 				DFA{1,7,10}: abcdxyz
 				│◌◌◌●
 				├a ->DFA{2,4,6}: bCd
@@ -220,7 +221,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches empty alternative", func() {
 		n := dfa.Dfa("abc|xyz|", 1.0)
-		Expect(node.StringChildren(n, 4)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 4)).To(matchers.LookLike(`
 				DFA{1,4,7,8,9,10}: 100 abcxyz
 				│●◌◌●
 				├abc●->DFA{10}: 100
@@ -230,7 +231,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches (?:non|capturing|groups|with|different|sizes)", func() {
 		n := dfa.Dfa("(?:a|bbbb|xyz)", 1.0)
-		Expect(node.StringChildren(n, 4)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 4)).To(matchers.LookLike(`
 				DFA{1,2,6,7,10}: abxyz
 				│◌●◌●●
 				├a●->DFA{11}: 100
@@ -241,7 +242,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches (?:non|capturing|groups|with|shared|prefix)", func() {
 		n := dfa.Dfa("(?:aaabc|aabc|abc)", 1.0)
-		Expect(node.StringChildren(n, 4)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 4)).To(matchers.LookLike(`
 				DFA{1}: ABC
 				│◌◌◌●●●
 				└a ->DFA{2,9,11}: aBC
@@ -256,7 +257,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches (?:non|capturing|groups|with|mixed|prefix)", func() {
 		n := dfa.Dfa("(?:aabc|abc|xyz)", 1.0)
-		Expect(node.StringChildren(n, 4)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 4)).To(matchers.LookLike(`
 				DFA{1,8,11}: abcxyz
 				│◌◌◌●●
 				├a ->DFA{2,5,7}: aBC
@@ -269,7 +270,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("matches +", func() {
 		n := dfa.Dfa("a+", 1.0)
-		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 3)).To(matchers.LookLike(`
 				DFA{1}: A
 				│◌●●●···
 				└a●->DFA{1,2,3}: 100 A
@@ -282,7 +283,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("dfa example online", func() {
 		n := dfa.Dfa("(a|b)*ab", 1.0)
-		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 3)).To(matchers.LookLike(`
 			DFA{1,2,4,5}: Ab
 			│◌◌●●●···
 			├a ->DFA{1,2,3,4,5,6}: ab
@@ -310,7 +311,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	It("dfa example online (variant)", func() {
 		n := dfa.Dfa("(a|b)*ba", 1.0)
-		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 3)).To(matchers.LookLike(`
 			DFA{1,2,4,5}: Ab
 			│◌◌●●●···
 			├a ->DFA{1,2,3,4,5}: Ab
@@ -338,7 +339,7 @@ var _ = Describe("Regexp syntax", func() {
 
 	XIt("providers within a cycle", func() {
 		n := dfa.Dfa("abc(wxc|wyzbc)*d", 1.0)
-		Expect(node.StringChildren(n, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(n, 3)).To(matchers.LookLike(`
 			DFA{1}: ABCDwxyz
 			│◌◌◌◌●◌◌●◌●●◌●●●···
 			└abc ->DFA{4,5,14,15}: bcdwxyz
