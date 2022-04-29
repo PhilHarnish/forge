@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
-	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/debug"
 	"github.com/philharnish/forge/src/data/graph/bloom/null"
 	"github.com/philharnish/forge/src/data/graph/bloom/order"
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("Alphabetized", func() {
 	It("is a no-op for null", func() {
-		Expect(node.StringChildren(order.Alphabetized(null.Null))).To(Equal("Null: 0"))
+		Expect(debug.StringChildren(order.Alphabetized(null.Null))).To(Equal("Null: 0"))
 	})
 
 	It("iterates children with equal weight in order", func() {
@@ -21,7 +21,7 @@ var _ = Describe("Alphabetized", func() {
 		t.Add("z", .5)
 		t.Add("b", 1)
 		t.Add("y", .5)
-		Expect(node.StringChildren(order.Alphabetized(t))).To(matchers.LookLike(`
+		Expect(debug.StringChildren(order.Alphabetized(t))).To(matchers.LookLike(`
 			Trie: abyz
 			│◌●
 			├a●->Trie: 100
