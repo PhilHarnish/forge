@@ -6,6 +6,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
+	"github.com/philharnish/forge/src/data/graph/bloom/debug"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/span"
 )
@@ -39,7 +40,7 @@ var _ = Describe("Node interfaces", func() {
 
 	It("StringChildren", func() {
 		parent := span.NewSpan("test", node.NewNode(1))
-		Expect(node.StringChildren(parent)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(parent)).To(matchers.LookLike(`
 				Span: 'test'->Node: 100
 				│◌◌◌◌●
 				└test●->Node: 100
