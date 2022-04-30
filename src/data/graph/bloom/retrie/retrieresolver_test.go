@@ -5,7 +5,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/philharnish/forge/spec/matchers"
-	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/debug"
 	"github.com/philharnish/forge/src/data/graph/bloom/retrie"
 )
 
@@ -32,7 +32,7 @@ var _ = Describe("ReTrie resolver", func() {
 		child := retrie.NewReTrie("example", 1.0)
 		retrie.Register("defined", child)
 		parent := retrie.NewReTrie("{defined}", 1.0)
-		Expect(node.StringChildren(parent)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(parent)).To(matchers.LookLike(`
 			((ReTrie: AELMPX) + (ReTrie: 100)): AELMPX
 			│◌◌◌◌◌◌◌●
 			└example●->ReTrie: 100

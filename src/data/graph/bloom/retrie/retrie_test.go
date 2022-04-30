@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
+	"github.com/philharnish/forge/src/data/graph/bloom/debug"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
 	"github.com/philharnish/forge/src/data/graph/bloom/retrie"
@@ -48,7 +49,7 @@ func find(source node.NodeIterator, path string) (result node.NodeIterator) {
 var _ = Describe("ReTrie", func() {
 	It("is initially empty", func() {
 		trie := retrie.NewReTrie("", 1.0)
-		Expect(node.StringChildren(trie, 2)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(trie, 2)).To(matchers.LookLike(`
 				ReTrie: 100
 		`))
 	})
@@ -72,7 +73,7 @@ var _ = Describe("Special syntax", func() {
 	It("matches {child} pattern", func() {
 		trie := retrie.NewReTrie(`a{child}b`, 1.0)
 		Expect(trie.Labels()).To(Equal([]string{"$child"}))
-		Expect(node.StringChildren(trie, 3)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(trie, 3)).To(matchers.LookLike(`
 			ReTrie: ABXYZ
 			│◌◌◌◌◌●
 			└a ->((ReTrie: XYZ) + (ReTrie: B)): BXYZ
@@ -91,17 +92,17 @@ var _ = Describe("Special syntax", func() {
 
 	It("matches {child}{x,y} pattern", func() {
 		trie := retrie.NewReTrie(`a{child}{1,2}b`, 1.0)
-		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-				ReTrie: ABXYZ
-				│◌◌◌◌◌●◌◌●
-				└a ->((ReTrie: XYZ) + (ReTrie: Bxyz)): BXYZ
-				·│◌◌◌◌●◌◌●
-				·└xyz ->ReTrie: Bxyz
-				·   │◌●◌◌●
-				·   ├xyz ->ReTrie: B
-				·   │  │◌●
-				·   │  └b●->ReTrie: 100
-				·   └b●->ReTrie: 100
+		Expect(debug.StringChildren(trie, 4)).To(matchers.LookLike(`
+			ReTrie: ABXYZ
+			│◌◌◌◌◌●◌◌●
+			└a ->((ReTrie: XYZ) + (ReTrie: Bxyz)): BXYZ
+			·│◌◌◌◌●◌◌●
+			·└xyz ->ReTrie: Bxyz
+			·   │◌●◌◌●
+			·   ├b●->ReTrie: 100
+			·   └xyz ->ReTrie: B
+			·      │◌●
+			·      └b●->ReTrie: 100
 		`))
 	})
 
@@ -113,7 +114,7 @@ var _ = Describe("Special syntax", func() {
 
 	It("matches {child}+ repeats", func() {
 		trie := retrie.NewReTrie("a{child}+", 1.0)
-		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(trie, 4)).To(matchers.LookLike(`
 			ReTrie: AXYZ
 			│◌◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌●···
 			└a ->((ReTrie: XYZ) + (((ReTrie: XYZ) + <cycle>): XYZ)): XYZ
@@ -128,7 +129,7 @@ var _ = Describe("Special syntax", func() {
 
 	It("matches {child}+ repeats with suffix", func() {
 		trie := retrie.NewReTrie("a{child}+b", 1.0)
-		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(trie, 4)).To(matchers.LookLike(`
 			ReTrie: ABXYZ
 			│◌◌◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●●···
 			└a ->((ReTrie: XYZ) + (ReTrie: Bxyz)): BXYZ
@@ -148,17 +149,17 @@ var _ = Describe("Special syntax", func() {
 		retrie.Register("b", retrie.NewReTrie("abb", 1.0))
 		retrie.Register("c", retrie.NewReTrie("bbb", 1.0))
 		trie := retrie.NewReTrie("({a}|{b}|{c}|aba)", 1.0)
-		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-				ReTrie: aB
-				│◌◌◌●
-				├bbb●->ReTrie: 100
-				└a ->ReTrie: aB
-				·│◌◌●
-				·├ab●->ReTrie: 100
-				·└b ->ReTrie: ab
-				· │◌●
-				· ├a●->ReTrie: 100
-				· └b●->ReTrie: 100
+		Expect(debug.StringChildren(trie, 4)).To(matchers.LookLike(`
+			ReTrie: aB
+			│◌◌◌●
+			├a ->ReTrie: aB
+			││◌◌●
+			│├ab●->ReTrie: 100
+			│└b ->ReTrie: ab
+			│ │◌●
+			│ ├a●->ReTrie: 100
+			│ └b●->ReTrie: 100
+			└bbb●->ReTrie: 100
 		`))
 	})
 
@@ -166,16 +167,16 @@ var _ = Describe("Special syntax", func() {
 		retrie.Register("a", retrie.NewReTrie("ab|aba|abaa", 1.0))
 		retrie.Register("b", retrie.NewReTrie("ab|aba|abaa", 1.0))
 		trie := retrie.NewReTrie("({a}|{b}|{b}|{a}|ab|aba|abaa)", 1.0)
-		Expect(node.StringChildren(trie, 4)).To(matchers.LookLike(`
-				ReTrie: AB
-				│◌◌●●●
-				└a ->ReTrie: aB
-				·│◌●●●
-				·└b●->ReTrie: 100 A
-				· │●●●
-				· └a●->ReTrie: 100 A
-				·  │●●
-				·  └a●->ReTrie: 100
+		Expect(debug.StringChildren(trie, 4)).To(matchers.LookLike(`
+			ReTrie: AB
+			│◌◌●●●
+			└a ->ReTrie: aB
+			·│◌●●●
+			·└b●->ReTrie: 100 A
+			· │●●●
+			· └a●->ReTrie: 100 A
+			·  │●●
+			·  └a●->((ReTrie: 100) || (ReTrie: 100) || (ReTrie: 100) || (ReTrie: 100)): 100
 		`))
 	})
 })

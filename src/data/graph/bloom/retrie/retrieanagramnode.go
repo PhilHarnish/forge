@@ -111,7 +111,7 @@ func precomputeAnagramTable(directory *reTrieDirectory, options []*syntax.Regexp
 }
 
 func precomputeAnagramNodes(options []*syntax.Regexp, child *reTrieNode, repeats bool) []*node.Node {
-	tempDirectory := newDfaDirectory()
+	var tempDirectory *reTrieDirectory
 	result := make([]*node.Node, len(options))
 	exit := tempDirectory.addNode(node.NewNode(child.Root().MaxWeight))
 	for i, option := range options {

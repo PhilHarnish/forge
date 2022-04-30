@@ -31,7 +31,6 @@ func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTri
 
 func newEmbeddedReTrieNode(embeddedNode node.NodeIterator) *reTrieNode {
 	return &reTrieNode{
-		id:           NO_ID,
 		embeddedNode: embeddedNode,
 	}
 }
@@ -41,17 +40,16 @@ func (root *reTrieNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
 		// Optimized path: simply use embeddedNode.
 		return root.embeddedNode.Items(acceptor)
 	}
-	root.fixLinks()
+	root.expandLinks()
 	return newTrieItems(acceptor, root)
 }
 
 func (root *reTrieNode) Root() *node.Node {
-	if root.rootNode == nil {
+	if root.rootNode == nil && root.embeddedNode != nil {
 		if len(root.links) != 0 {
 			panic("Unable to expand Root when links are present")
-		} else if root.embeddedNode != nil {
-			root.rootNode = root.embeddedNode.Root()
 		}
+		root.rootNode = root.embeddedNode.Root().Copy()
 	}
 	return root.rootNode
 }
@@ -61,7 +59,7 @@ func (root *reTrieNode) String() string {
 		// Optimized path: simply expand embeddedNode.
 		return root.embeddedNode.String()
 	}
-	root.fixLinks()
+	root.expandLinks()
 	return node.Format("ReTrie", root.Root())
 }
 
@@ -85,14 +83,7 @@ func (root *reTrieNode) linkEmbeddedNode(embeddedNode node.NodeIterator, child *
 	if repeats {
 		embeddedNode.Root().RepeatLengthMask(-1)
 	}
-	embeddedNode = op.Concat(embeddedNode, child)
-	if root.embeddedNode == nil {
-		root.embeddedNode = embeddedNode
-	} else {
-		root.embeddedNode = op.Or(root.embeddedNode, embeddedNode)
-	}
-	// Note: Linking must be additive; union root nodes.
-	root.Root().Union(root.embeddedNode.Root())
+	root.setEmbeddedNode(op.Concat(embeddedNode, child))
 	return root
 }
 
@@ -141,10 +132,22 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 }
 
 func (root *reTrieNode) mergeNode(other *reTrieNode) {
-	other.fixLinks()
-	root.overlapping |= root.edgeMask & other.edgeMask
+	root.setEmbeddedNode(other.embeddedNode)
+	root.overlapping |= (root.edgeMask & other.edgeMask) | other.overlapping
 	root.edgeMask |= other.edgeMask
 	root.links = append(root.links, other.links...)
+}
+
+func (root *reTrieNode) setEmbeddedNode(embeddedNode node.NodeIterator) {
+	if embeddedNode == nil {
+		return
+	} else if root.embeddedNode == nil {
+		root.embeddedNode = embeddedNode
+	} else {
+		root.embeddedNode = op.Or(root.embeddedNode, embeddedNode)
+	}
+	// Note: Linking must be additive; union root nodes.
+	root.Root().Union(root.embeddedNode.Root())
 }
 
 func (root *reTrieNode) addLink(link *reTrieLink) {
@@ -170,8 +173,12 @@ func (root *reTrieNode) expandEmbeddedNode() {
 	root.embeddedNode = nil
 }
 
-func (root *reTrieNode) fixLinks() {
+func (root *reTrieNode) expandLinks() {
 	root.expandEmbeddedNode()
+	root.fixLinks()
+}
+
+func (root *reTrieNode) fixLinks() {
 	if root.overlapping == 0 {
 		return
 	}
@@ -179,6 +186,15 @@ func (root *reTrieNode) fixLinks() {
 	filtered, linkHeap := filterLinks(root.directory, overlapping, root.links)
 	root.links = filtered
 	newNodes := []*reTrieNode{}
+	var appendLink = func(link *reTrieLink) {
+		if len(linkHeap) > 0 && overlapping&link.edgeMask != 0 {
+			// Unfortunately, this overlaping portion overlaps with yet-more edges.
+			// Return for further processing.
+			heap.Push(&linkHeap, link)
+		} else {
+			root.links = append(root.links, link)
+		}
+	}
 	for len(linkHeap) > 0 {
 		first := linkHeap.Next()
 		// First, confirm there are any remaining edges to compare with.
@@ -187,11 +203,12 @@ func (root *reTrieNode) fixLinks() {
 			root.links = append(root.links, first) // Finished; add and continue.
 			continue
 		}
-		// Edge has exactly one batch; this is a confirmed hit.
+		// Operate on edge batch {first, second}.
 		second := linkHeap.Next()
 		firstDestination := first.node
 		secondDestination := second.node
-		if firstDestination.id != NO_ID && secondDestination.id != NO_ID &&
+		if firstDestination.directory != nil && secondDestination.directory != nil &&
+			firstDestination.directory == secondDestination.directory &&
 			firstDestination.id == secondDestination.id {
 			// Both edges go to the same place; return super-set of the range.
 			var batch0 []rune
@@ -206,7 +223,7 @@ func (root *reTrieNode) fixLinks() {
 					max(first.runes[1], second.runes[1]),
 				}
 			}
-			root.links = append(root.links, newReTrieLinkFromRunes(batch0, first.node))
+			appendLink(newReTrieLinkFromRunes(batch0, first.node))
 			continue
 		} else if first.edgeMask&second.edgeMask == 0 {
 			// Non-overlapping. Add first, return second and try again.
@@ -216,23 +233,16 @@ func (root *reTrieNode) fixLinks() {
 		} else if first.runes[0] < second.runes[0] {
 			// Batch #1 will begin and end before second edge starts.
 			batch1 := []rune{first.runes[0], second.runes[0] - 1}
-			root.links = append(root.links, newReTrieLinkFromRunes(batch1, first.node))
+			appendLink(newReTrieLinkFromRunes(batch1, first.node))
 		}
 		// The second batch is the portion which overlaps.
 		overlapEnd := min(first.runes[1], second.runes[1])
 		batch2 := []rune{second.runes[0], overlapEnd}
 		merged, exists := root.directory.getMerged(firstDestination, secondDestination)
-		overlapEdge := newReTrieLinkFromRunes(batch2, merged)
 		if !exists {
 			newNodes = append(newNodes, merged, firstDestination, secondDestination)
 		}
-		if len(linkHeap) > 0 && linkHeap[0].edgeMask&overlapEdge.edgeMask != 0 {
-			// Unfortunately, this overlaping portion overlaps with yet-more edges.
-			// Return for further processing.
-			heap.Push(&linkHeap, overlapEdge)
-		} else {
-			root.links = append(root.links, overlapEdge)
-		}
+		appendLink(newReTrieLinkFromRunes(batch2, merged))
 		// Assign the remaining rune range depending on which group is larger.
 		if first.runes[1] != second.runes[1] {
 			// Guess that the first rune is larger.
@@ -243,14 +253,7 @@ func (root *reTrieNode) fixLinks() {
 				destination = second.node
 			}
 			batch3 := []rune{overlapEnd + 1, remainderEnd}
-			remainingEdge := newReTrieLinkFromRunes(batch3, destination)
-			if len(linkHeap) > 0 && linkHeap[0].edgeMask&remainingEdge.edgeMask != 0 {
-				// Unfortunately, this remaining portion overlaps with yet-more edges.
-				// Return for further processing.
-				heap.Push(&linkHeap, remainingEdge)
-			} else {
-				root.links = append(root.links, remainingEdge)
-			}
+			appendLink(newReTrieLinkFromRunes(batch3, destination))
 		} // Else: Both ended at the same time; there isn't a 3rd batch.
 	}
 	for i := 0; i < len(newNodes); i += 3 {
@@ -261,6 +264,7 @@ func (root *reTrieNode) fixLinks() {
 	root.overlapping = 0
 }
 
+// Sort `links` into non-overlapping (filtered) and overlapping (linkHeap).
 func filterLinks(directory *reTrieDirectory, overlapping mask.Mask, links reTrieLinks) (filtered reTrieLinks, linkHeap reTrieLinks) {
 	filtered = make(reTrieLinks, 0, len(links)*2)
 	linkHeap = make(reTrieLinks, 0, len(links)*2)

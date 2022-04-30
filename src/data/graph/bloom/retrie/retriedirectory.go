@@ -24,7 +24,10 @@ func newDfaDirectory() *reTrieDirectory {
 }
 
 func (directory *reTrieDirectory) addNode(source *node.Node) *reTrieNode {
-	if directory.next >= 64 {
+	if directory == nil {
+		// The new node cannot be indexed.
+		return newReTrieNode(directory, NO_ID, source)
+	} else if directory.next >= 64 {
 		panic("Directory is full")
 	}
 	dfaId := dfaId(1) << directory.next
@@ -71,8 +74,8 @@ func (directory *reTrieDirectory) getMerged(a *reTrieNode, b *reTrieNode) (resul
 		result, exists = directory.table[mergedId]
 	}
 	if !exists {
-		result = newReTrieNode(directory, mergedId, a.rootNode.Copy())
-		result.rootNode.Union(b.rootNode)
+		result = newReTrieNode(directory, mergedId, a.Root().Copy())
+		result.Root().Union(b.Root())
 		if mergedId != NO_ID {
 			directory.table[mergedId] = result
 		}
@@ -111,8 +114,7 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 			return parent
 		} else if re.Name[0] == '<' {
 			parent = directory.ensureNode(parent)
-			parent.linkAnagram(re.Sub[0], child, repeats)
-			return parent
+			return parent.linkAnagram(re.Sub[0], child, repeats)
 		}
 		return directory.linker(parent, child, re.Sub[0], repeats)
 	case syntax.OpCharClass: // [xyz]
