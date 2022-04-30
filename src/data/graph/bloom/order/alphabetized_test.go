@@ -39,6 +39,12 @@ var _ = Describe("Alphabetized", func() {
 			{Weight: 1.0, String: "c"},
 		})
 		Expect(debug.StringChildren(order.Alphabetized(iterator))).To(matchers.LookLike(`
+		  TestIterator: 100
+			├a●->TestIterator: 50
+			├b●->TestIterator: 75
+			╪> Weights out of order: 0.75 > 0.5
+			└c●->TestIterator: 100
+			═> Weights out of order: 1 > 0.75
 		`))
 	})
 })
