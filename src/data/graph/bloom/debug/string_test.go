@@ -65,6 +65,22 @@ var _ = Describe("StringChildren", func() {
 		`))
 	})
 
+	It("Alerts when children unsorted weights", func() {
+		iterator := debug.NewTestIterator(node.NewNode(), &debug.TestItems{
+			{String: "a", Weight: 0.0},
+			{String: "b", Weight: 0.5},
+			{String: "c", Weight: 1.0},
+		})
+		Expect(debug.StringChildren(iterator)).To(matchers.LookLike(`
+			TestIterator
+			├a ->TestIterator
+			├b●->TestIterator: 50
+			╪> Weights out of order: 0.5 > 0
+			└c●->TestIterator: 100
+			═> Weights out of order: 1 > 0.5
+		`))
+	})
+
 	It("Follows specified path", func() {
 		child := trie.NewTrie(1)
 		parent := trie.NewTrie()

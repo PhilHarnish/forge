@@ -2,6 +2,7 @@ package debug
 
 import (
 	"fmt"
+	"math"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -44,6 +45,7 @@ func stringPathChildrenWithPrefix(iterator node.NodeIterator, base string, remai
 	}
 	items := order.Alphabetized(iterator).Items(node.NodeAcceptAll)
 	seen := mask.Mask(0)
+	lastWeight := math.Inf(1)
 	for items.HasNext() {
 		path, item := items.Next()
 		edge, _ := utf8.DecodeRuneInString(path)
@@ -76,13 +78,19 @@ func stringPathChildrenWithPrefix(iterator node.NodeIterator, base string, remai
 				results = append(results, fmt.Sprintf("%s%s└%s", base, prefix, childSummary))
 			}
 		}
+		// Check for errors.
+		horizontalLine := horizontalLineReplacer.Replace(base + prefix)
 		if err != nil {
-			horizontalLine := horizontalLineReplacer.Replace(base + prefix)
 			results = append(results, fmt.Sprintf(`%s> Invalid path: %s`, horizontalLine, err.Error()))
-		} else if edgeMask&seen != 0 {
-			horizontalLine := horizontalLineReplacer.Replace(base + prefix)
+		}
+		if edgeMask&seen != 0 {
 			results = append(results, fmt.Sprintf(`%s> Duplicate edge: %s`, horizontalLine, mask.MaskString(0, edgeMask&seen)))
 		}
+		currentWeight := item.Root().MaxWeight
+		if currentWeight > lastWeight {
+			results = append(results, fmt.Sprintf(`%s> Weights out of order: %g > %g`, horizontalLine, currentWeight, lastWeight))
+		}
+		lastWeight = currentWeight
 		seen |= edgeMask
 	}
 	return strings.Join(results, "\n")
