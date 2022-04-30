@@ -40,7 +40,7 @@ var _ = Describe("StringChildren", func() {
 
 	It("Alerts when there are duplicate children", func() {
 		iterator := debug.NewTestIterator(node.NewNode(), &debug.TestItems{
-			"a", "b", "a", "b",
+			{String: "a"}, {String: "b"}, {String: "b"}, {String: "a"},
 		})
 		Expect(debug.StringChildren(iterator)).To(matchers.LookLike(`
 			TestIterator
@@ -55,7 +55,7 @@ var _ = Describe("StringChildren", func() {
 
 	It("Alerts when children have illegal paths", func() {
 		iterator := debug.NewTestIterator(node.NewNode(), &debug.TestItems{
-			"a", "$",
+			{String: "a"}, {String: "$"},
 		})
 		Expect(debug.StringChildren(iterator)).To(matchers.LookLike(`
 			TestIterator

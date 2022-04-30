@@ -2,6 +2,7 @@ package debug
 
 import (
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
+	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 type TestIterator struct {
@@ -17,9 +18,6 @@ func NewTestIterator(root *node.Node, items *TestItems) *TestIterator {
 }
 
 func (iterator *TestIterator) Root() *node.Node {
-	if iterator.root == nil {
-		return node.NewNode(1.0)
-	}
 	return iterator.root
 }
 
@@ -35,7 +33,7 @@ func (iterator *TestIterator) String() string {
 	return node.Format("TestIterator", iterator.Root())
 }
 
-type TestItems []string
+type TestItems []weight.WeightedString
 
 func (items *TestItems) HasNext() bool {
 	return len(*items) > 0
@@ -43,13 +41,17 @@ func (items *TestItems) HasNext() bool {
 
 func (items *TestItems) Next() (string, node.NodeIterator) {
 	if !items.HasNext() {
-		return "", nil
+		panic("TestIterator exhausted")
 	}
 	original := items
 	item := (*items)[0]
 	*items = (*items)[1:]
-	return item, &TestIterator{
-		root:  node.NewNode(),
+	root := node.NewNode()
+	if item.Weight > 0 {
+		root.Match(item.Weight)
+	}
+	return item.String, &TestIterator{
+		root:  root,
 		items: original,
 	}
 }
