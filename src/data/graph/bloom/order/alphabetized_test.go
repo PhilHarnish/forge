@@ -5,6 +5,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
 	"github.com/philharnish/forge/src/data/graph/bloom/debug"
+	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/null"
 	"github.com/philharnish/forge/src/data/graph/bloom/order"
 	"github.com/philharnish/forge/src/data/graph/bloom/trie"
@@ -28,6 +29,16 @@ var _ = Describe("Alphabetized", func() {
 			├b●->Trie: 100
 			├y●->Trie: 50
 			└z●->Trie: 50
+		`))
+	})
+
+	It("preserves original order if there are ordering errors", func() {
+		iterator := debug.NewTestIterator(node.NewNode(1.0), &debug.TestItems{
+			{Weight: .50, String: "a"},
+			{Weight: .75, String: "b"},
+			{Weight: 1.0, String: "c"},
+		})
+		Expect(debug.StringChildren(order.Alphabetized(iterator))).To(matchers.LookLike(`
 		`))
 	})
 })

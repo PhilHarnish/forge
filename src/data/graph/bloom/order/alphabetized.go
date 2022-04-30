@@ -2,6 +2,7 @@ package order
 
 import (
 	"container/heap"
+	"math"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 )
@@ -13,6 +14,7 @@ type alphabetized struct {
 type alphabetizedItems struct {
 	items     node.NodeItems
 	remaining alphabetizedHeap
+	hasErrors bool
 }
 
 type alphabetizedItem struct {
@@ -49,14 +51,27 @@ func (root *alphabetizedItems) HasNext() bool {
 
 func (root *alphabetizedItems) Next() (string, node.NodeIterator) {
 	if len(root.remaining) == 0 {
+		lastValue := math.Inf(1)
 		for root.items.HasNext() {
 			path, item := root.items.Next()
 			root.remaining = append(root.remaining, &alphabetizedItem{
 				path: path,
 				item: item,
 			})
+			currentValue := item.Root().MaxWeight
+			if currentValue > lastValue {
+				root.hasErrors = true
+			}
+			lastValue = currentValue
+		}
+		if !root.hasErrors {
 			heap.Init(&root.remaining)
 		}
+	}
+	if root.hasErrors {
+		nextItem := root.remaining[0]
+		root.remaining = root.remaining[1:]
+		return nextItem.path, nextItem.item
 	}
 	nextItem := root.remaining.Next()
 	return nextItem.path, nextItem.item
