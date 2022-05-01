@@ -12,12 +12,15 @@ type WeightedString struct {
 	String string
 }
 
-func CumulativeWeight(strings []WeightedString) Weight {
+func CumulativeWeight(strings []*WeightedString) Weight {
 	if len(strings) == 0 {
 		return 0.0
 	}
 	result := 1.0
 	for _, item := range strings {
+		if item == nil {
+			continue
+		}
 		result *= item.Weight
 	}
 	return result
