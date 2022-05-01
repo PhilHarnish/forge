@@ -82,6 +82,20 @@ var _ = Describe("ReTrie syntax", func() {
 		`))
 	})
 
+	It("matches negated character classes", func() {
+		trie := retrie.NewReTrie("[^d-z]", 1.0)
+		Expect(debug.StringChildren(trie, 3)).To(matchers.LookLike(`
+			ReTrie: abc␣-'
+			│◌●
+			├ ●->ReTrie: 100
+			├'●->ReTrie: 100
+			├-●->ReTrie: 100
+			├a●->ReTrie: 100
+			├b●->ReTrie: 100
+			└c●->ReTrie: 100
+		`))
+	})
+
 	It("matches \\w special character classes", func() {
 		trie := retrie.NewReTrie(`\w`, 1.0)
 		Expect(trie.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz ◌●"))

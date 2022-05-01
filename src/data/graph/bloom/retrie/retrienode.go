@@ -102,6 +102,10 @@ func (root *reTrieNode) linkRunes(runes []rune, child *reTrieNode, repeats bool)
 	if len(runes)%2 != 0 {
 		panic("linkRunes does not support an odd number of runes")
 	}
+	if runes[0] == 0 && runes[len(runes)-1] == unicode.MaxRune {
+		// Clamp runes if they look like a negation (i.e. span [0, MaxRun]).
+		runes = mask.ClampRunes(runes)
+	}
 	pathMask := mask.Mask(0b0)
 	i := 0
 	filteredRunes := make([]rune, 0, len(runes))
