@@ -1,6 +1,8 @@
 package retrie_test
 
 import (
+	"strings"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
@@ -92,10 +94,10 @@ var _ = Describe("Anagram syntax", func() {
 			·│◌●◌●
 			·└a●->ReTrie: 100 AB
 			· │●◌●
-			· ├a ->ReTrieAnagram: B
+			· ├a ->ReTrie: B
 			· ││◌●
 			· │└b●->ReTrie: 100
-			· └b ->ReTrieAnagram: A
+			· └b ->ReTrie: A
 			·  │◌●
 			·  └a●->ReTrie: 100
 		`))
@@ -139,7 +141,7 @@ var _ = Describe("Anagram syntax", func() {
 			│ └1 children: a
 			├b ->ReTrie: ABC
 			│└2 children: ac
-			└c ->ReTrieAnagram: ABC
+			└c ->ReTrie: ABC
 			·└1 children: a
 		`))
 	})
@@ -182,8 +184,8 @@ var _ = Describe("Anagram syntax", func() {
 
 		It("should expand everything", func() {
 			trie := retrie.NewReTrie(`<abcde>{child}`, 1.0)
-			debug.StringChildren(trie, 999)
-			Expect(child.iterations).To(Equal(5 * 4 * 3 * 2 * 1))
+			newlines := strings.Count(debug.StringChildren(trie, 999), "\n")
+			Expect(newlines).To(BeNumerically(">=", 5*4*3*2*1))
 		})
 	})
 })

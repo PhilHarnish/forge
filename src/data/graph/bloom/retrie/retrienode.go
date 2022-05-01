@@ -213,21 +213,13 @@ func (root *reTrieNode) fixLinks() {
 		secondDestination := second.node
 		if firstDestination.directory != nil && secondDestination.directory != nil &&
 			firstDestination.directory == secondDestination.directory &&
-			firstDestination.id == secondDestination.id {
-			// Both edges go to the same place; return super-set of the range.
-			var batch0 []rune
-			if first.edgeMask&second.edgeMask == 0 { // Non-overlapping.
-				batch0 = []rune{
-					first.runes[0], first.runes[1], // First set
-					second.runes[0], second.runes[1], // Then second set
-				}
-			} else { // Overlapping
-				batch0 = []rune{
-					min(first.runes[0], second.runes[0]),
-					max(first.runes[1], second.runes[1]),
-				}
-			}
-			appendLink(newReTrieLinkFromRunes(batch0, first.node))
+			firstDestination.id == secondDestination.id &&
+			first.edgeMask&second.edgeMask != 0 {
+			// Both edges go to the same place and overlap.
+			appendLink(newReTrieLinkFromRunes([]rune{
+				min(first.runes[0], second.runes[0]),
+				max(first.runes[1], second.runes[1]),
+			}, first.node))
 			continue
 		} else if first.edgeMask&second.edgeMask == 0 {
 			// Non-overlapping. Add first, return second and try again.
@@ -280,13 +272,13 @@ func filterLinks(directory *reTrieDirectory, overlapping mask.Mask, links reTrie
 		} else if len(link.runes) > 2 {
 			// This link overlaps and has multiple rune blocks.
 			runes := link.runes
-			for i := 0; i < len(runes); i += 2 {
-				batchEdge := newReTrieLinkFromRunes(runes[i:i+2], link.node)
+			for j := 0; j < len(runes); j += 2 {
+				batchEdge := newReTrieLinkFromRunes(runes[j:j+2], link.node)
 				if batchEdge.edgeMask&overlapping == 0 {
 					// This batch is OK.
 					filtered = append(filtered, batchEdge)
 				} else {
-					links = append(links, batchEdge) // Reprocess.
+					linkHeap = append(linkHeap, batchEdge)
 				}
 			}
 		} else { // Link overlaps

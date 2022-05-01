@@ -781,27 +781,45 @@ var _ = Describe("ReTrie syntax", func() {
 
 	It("Handles [ac]*c+[de]", func() {
 		trie := retrie.NewReTrie("[ac]*c+[de]", 1.0)
-		Expect(traverse(trie, "a", "a", "c", "d")).To(matchers.LookLike(`
-			ReTrie: aCde ◌◌●●●···
-			a = ReTrie: aCde ◌◌●●●···
-			a = ReTrie: aCde ◌◌●●●···
-			c = ReTrie: acde ◌●●●···
-			d = ReTrie: 100 ●
+		Expect(debug.StringPath(trie, "aacd")).To(matchers.LookLike(`
+			ReTrie: aCde
+			│◌◌●●●···
+			├a ->ReTrie: aCde
+			││◌◌●●●···
+			│├a ->ReTrie: aCde
+			│││◌◌●●●···
+			││├a ->ReTrie: aCde
+			│││└2 children: ac
+			││└c ->ReTrie: acde
+			││ │◌●●●···
+			││ ├a ->ReTrie: aCde
+			││ │└2 children: ac
+			││ ├c ->ReTrie: acde
+			││ │└4 children: acde
+			││ ├d●->ReTrie: 100
+			││ └e●->ReTrie: 100
+			│└c ->ReTrie: acde
+			│ └4 children: acde
+			└c ->ReTrie: acde
+			·└4 children: acde
 		`))
-		Expect(traverse(trie, "a", "c", "a")).To(matchers.LookLike(`
-			ReTrie: aCde ◌◌●●●···
-			a = ReTrie: aCde ◌◌●●●···
-			c = ReTrie: acde ◌●●●···
-			a = ReTrie: aCde ◌◌●●●···
-		`))
-	})
-
-	It("handles [abc]*c+[cd]*", func() {
-		trie := retrie.NewReTrie("c+.*", 1.0)
-		Expect(traverse(trie, "c", "d")).To(matchers.LookLike(`
-			ReTrie: abCdefghijklmnopqrstuvwxyz␣-' ◌●●●···
-			c = ReTrie: 100 abcdefghijklmnopqrstuvwxyz␣-' ●●●···
-			d = ReTrie: 100 abcdefghijklmnopqrstuvwxyz␣-' ●●●···
+		Expect(debug.StringPath(trie, "aca")).To(matchers.LookLike(`
+			ReTrie: aCde
+			│◌◌●●●···
+			├a ->ReTrie: aCde
+			││◌◌●●●···
+			│├a ->ReTrie: aCde
+			││└2 children: ac
+			│└c ->ReTrie: acde
+			│ │◌●●●···
+			│ ├a ->ReTrie: aCde
+			│ │└2 children: ac
+			│ ├c ->ReTrie: acde
+			│ │└4 children: acde
+			│ ├d●->ReTrie: 100
+			│ └e●->ReTrie: 100
+			└c ->ReTrie: acde
+			·└4 children: acde
 		`))
 	})
 
