@@ -3,6 +3,7 @@ package mask
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -128,6 +129,39 @@ func AlphabetMasks(runes []rune) ([]Mask, error) {
 }
 
 /*
+Returns a slice of runes which are valid.
+*/
+func ClampRunes(runes []rune) []rune {
+	result := make([]rune, 0, len(runes))
+	runesIndex := 0
+	alphaIndex := 0
+	for runesIndex < len(runes) && alphaIndex < len(AlphabetRuneRanges) {
+		runeStart := runes[runesIndex]
+		runeEnd := runes[runesIndex+1]
+		alphaStart := AlphabetRuneRanges[alphaIndex]
+		alphaEnd := AlphabetRuneRanges[alphaIndex+1]
+		if runeEnd < alphaStart {
+			// This `runes` block is useless; advance runes.
+			runesIndex += 2
+		} else if runeStart > alphaEnd {
+			// The first runesIndex is after alpha; advance alpha.
+			alphaIndex += 2
+		} else {
+			// Overlap.
+			result = append(result, max(runeStart, alphaStart), min(runeEnd, alphaEnd))
+			if runeEnd > alphaEnd {
+				// There may be more to process here.
+				alphaIndex += 2
+			} else {
+				// Finished processing this rune batch.
+				runesIndex += 2
+			}
+		}
+	}
+	return result
+}
+
+/*
 Returns a BitMask for the given edge if supported, otherwise error.
 */
 func EdgeMask(edge string) (Mask, error) {
@@ -212,11 +246,7 @@ func MaskString(provide Mask, require Mask) string {
 			acc.WriteRune(c)
 		}
 	}
-	result := acc.String()
-	if result == " " {
-		return `" "`
-	}
-	return result
+	return acc.String()
 }
 
 /*
@@ -300,5 +330,23 @@ func collectRuneRanges(runes []rune) []rune {
 		}
 		last = c
 	}
-	return append(result, start, last)
+	result = append(result, start, last)
+	sort.Slice(result, func(i int, j int) bool {
+		return result[i] < result[j]
+	})
+	return result
+}
+
+func max(a rune, b rune) rune {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func min(a rune, b rune) rune {
+	if a < b {
+		return a
+	}
+	return b
 }

@@ -3,6 +3,7 @@ package mask_test
 import (
 	"strings"
 	"testing"
+	"unicode"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -31,10 +32,10 @@ var _ = Describe("Default masks", func() {
 
 	It("sets AlphabetRuneRanges to all ranges", func() {
 		Expect(mask.AlphabetRuneRanges).To(Equal([]rune{
-			'a', 'z',
 			' ', ' ',
-			'-', '-',
 			'\'', '\'',
+			'-', '-',
+			'a', 'z',
 		}))
 	})
 })
@@ -118,7 +119,9 @@ var _ = Describe("AlphabetMaskRange", func() {
 	})
 
 	It("Rejects invalid input", func() {
-		_, err := mask.AlphabetMaskRange('a', '🚫')
+		_, err := mask.AlphabetMaskRange('🚫', 'b')
+		Expect(err).To(HaveOccurred())
+		_, err = mask.AlphabetMaskRange('a', '🚫')
 		Expect(err).To(HaveOccurred())
 	})
 
@@ -190,6 +193,33 @@ var _ = Describe("AlphabetMasks", func() {
 		Expect(masks[0]).To(Equal(mask.Mask(0b111)))
 		Expect(masks[1]).To(Equal(mask.Mask(0b110)))
 		Expect(masks[2]).To(Equal(mask.Mask(0b100)))
+	})
+
+	It("Handles errors", func() {
+		_, err := mask.AlphabetMasks([]rune{'a', 'b', '🚫'})
+		Expect(err).To(HaveOccurred())
+	})
+})
+
+var _ = Describe("ClampRunes", func() {
+	It("is a no-op for empty input", func() {
+		clamped := mask.ClampRunes(nil)
+		Expect(clamped).To(HaveLen(0))
+	})
+
+	It("returns everything for full range", func() {
+		clamped := mask.ClampRunes([]rune{0, unicode.MaxRune})
+		Expect(clamped).To(Equal(mask.AlphabetRuneRanges))
+	})
+
+	It("returns nothing for invalid ranges", func() {
+		clamped := mask.ClampRunes([]rune{'A', 'Z'})
+		Expect(clamped).To(HaveLen(0))
+	})
+
+	It("returns subset for overlaps", func() {
+		clamped := mask.ClampRunes([]rune{'A', 'c', 'x', 'z'})
+		Expect(clamped).To(Equal([]rune{'a', 'c', 'x', 'z'}))
 	})
 })
 
@@ -277,8 +307,18 @@ var _ = Describe("MaskString", func() {
 		Expect(mask.MaskString(0b111, 0)).To(Equal("abc"))
 	})
 
+	It("Indicates all provided characters", func() {
+		Expect(mask.MaskString(mask.ALL, 0)).To(Equal(
+			"abcdefghijklmnopqrstuvwxyz␣-'"))
+	})
+
 	It("Indicates required characters differently", func() {
 		Expect(mask.MaskString(0b111, 0b111)).To(Equal("ABC"))
+	})
+
+	It("Indicates all required characters", func() {
+		Expect(mask.MaskString(mask.ALL, mask.ALL)).To(Equal(
+			"ABCDEFGHIJKLMNOPQRSTUVWXYZ␣-'"))
 	})
 
 	It("Indicates unsatisfied characters differently", func() {
