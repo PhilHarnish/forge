@@ -6,7 +6,6 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
-	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 var _ = Describe("QueryRowHeader", func() {
@@ -52,7 +51,7 @@ var _ = Describe("QueryRow", func() {
 		row.AssignCells(
 			0,
 			row.Weight(),
-			[]query.QueryRowCell{weight.WeightedString{Weight: .50, String: "example"}})
+			[]query.QueryRowCell{{Weight: .50, String: "example"}})
 		Expect(row.Weight()).To(Equal(.50))
 		Expect(row.Cells()).To(HaveLen(1))
 		Expect(row.Cells()[0].String).To(Equal("example"))
@@ -62,9 +61,9 @@ var _ = Describe("QueryRow", func() {
 		child := query.Select().From(emptySource).As("a").From(emptySource).As("b")
 		parent := query.Select().From(emptySource).As("left").From(child).As("right")
 		row := query.NewQueryRowForQuery(parent)
-		cells := []query.QueryRowCell{weight.WeightedString{Weight: .50, String: "left"}}
+		cells := []query.QueryRowCell{{Weight: .50, String: "left"}}
 		row.AssignCells(0, row.Weight(), cells)
-		cells = append(cells, weight.WeightedString{Weight: .50, String: "right"})
+		cells = append(cells, []query.QueryRowCell{{Weight: .50, String: "right"}}...)
 		row.AssignCells(1, row.Weight(), cells)
 		Expect(row.Weight()).To(Equal(.5 * .5 * .5))
 		Expect(row.Cells()).To(HaveLen(3))
@@ -96,9 +95,9 @@ var _ = Describe("QueryRows", func() {
 
 	It("inserts items", func() {
 		var h query.QueryRows = newResults()
-		h.Insert(query.NewQueryRow([]weight.WeightedString{{Weight: 1.0, String: "first"}}))
-		h.Insert(query.NewQueryRow([]weight.WeightedString{{Weight: 0.5, String: "middle"}}))
-		h.Insert(query.NewQueryRow([]weight.WeightedString{{Weight: 0.1, String: "last"}}))
+		h.Insert(query.NewQueryRow([]query.QueryRowCell{{Weight: 1.0, String: "first"}}))
+		h.Insert(query.NewQueryRow([]query.QueryRowCell{{Weight: 0.5, String: "middle"}}))
+		h.Insert(query.NewQueryRow([]query.QueryRowCell{{Weight: 0.1, String: "last"}}))
 		row := h.Next()
 		Expect(row.Weight()).To(Equal(1.0))
 		Expect(row.Cells()[0].String).To(Equal("first"))

@@ -7,7 +7,7 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
-type QueryRowCell = weight.WeightedString
+type QueryRowCell = *weight.WeightedString
 
 type QueryRow interface {
 	Weight() weight.Weight
@@ -39,7 +39,7 @@ func (row *queryRow) Cells() []QueryRowCell {
 func (row *queryRow) Copy() QueryRow {
 	result := &queryRow{
 		weight: row.weight,
-		cells:  make([]weight.WeightedString, len(row.cells)),
+		cells:  make([]QueryRowCell, len(row.cells)),
 	}
 	copy(result.cells, row.cells)
 	return result
@@ -103,14 +103,14 @@ func newQueryRowHeaderForQuery(query *Query) *queryRowHeader {
 type queryRowForQuery struct {
 	query  *Query
 	weight weight.Weight
-	cells  []weight.WeightedString
+	cells  []QueryRowCell
 }
 
 func NewQueryRowForQuery(query *Query) *queryRowForQuery {
 	return &queryRowForQuery{
 		query:  query,
 		weight: 1.0,
-		cells:  make([]weight.WeightedString, len(query.Header().Labels())),
+		cells:  make([]QueryRowCell, len(query.Header().Labels())),
 	}
 }
 
@@ -126,7 +126,7 @@ func (row *queryRowForQuery) Copy() QueryRow {
 	result := &queryRowForQuery{
 		query:  row.query,
 		weight: row.weight,
-		cells:  make([]weight.WeightedString, len(row.cells)),
+		cells:  make([]QueryRowCell, len(row.cells)),
 	}
 	copy(result.cells, row.cells)
 	return result

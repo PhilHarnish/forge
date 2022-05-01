@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/philharnish/forge/spec/matchers"
 	"github.com/philharnish/forge/src/data/graph/bloom/query"
-	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 var _ = Describe("QueryResults parallel", func() {
@@ -115,21 +114,21 @@ var _ = Describe("QueryResults parallel", func() {
 		i := 0
 		score := rand.Float64()
 		for i < size {
-			a.results[i] = query.NewQueryRow([]weight.WeightedString{
+			a.results[i] = query.NewQueryRow([]query.QueryRowCell{
 				{
 					Weight: score,
 					String: fmt.Sprintf("a%.02f", score),
 				},
 			})
 			score = rand.Float64()
-			b.results[i] = query.NewQueryRow([]weight.WeightedString{
+			b.results[i] = query.NewQueryRow([]query.QueryRowCell{
 				{
 					Weight: score,
 					String: fmt.Sprintf("b%.02f", score),
 				},
 			})
 			score = rand.Float64()
-			c.results[i] = query.NewQueryRow([]weight.WeightedString{
+			c.results[i] = query.NewQueryRow([]query.QueryRowCell{
 				{
 					Weight: score,
 					String: fmt.Sprintf("c%.02f", score),
