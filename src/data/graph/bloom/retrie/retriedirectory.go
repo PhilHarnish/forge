@@ -116,7 +116,11 @@ func (directory *reTrieDirectory) linker(parent *reTrieNode, child *reTrieNode, 
 			parent = directory.ensureNode(parent)
 			return parent.linkAnagram(re.Sub[0], child, repeats)
 		}
-		return directory.linker(parent, child, re.Sub[0], repeats)
+		result := directory.linker(parent, child, re.Sub[0], repeats)
+		captureIndex := re.Cap - 1 // Standard library normally reserves 0 for entire string.
+		result.capture(captureIndex * 2)
+		child.capture(captureIndex*2 + 1)
+		return result
 	case syntax.OpCharClass: // [xyz]
 		parent = directory.ensureNode(parent)
 		return parent.linkRunes(re.Rune, child, repeats)

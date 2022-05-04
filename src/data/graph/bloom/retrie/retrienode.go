@@ -8,6 +8,7 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/mask"
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
 	"github.com/philharnish/forge/src/data/graph/bloom/op"
+	"github.com/philharnish/forge/src/data/slices"
 )
 
 type reTrieNode struct {
@@ -18,6 +19,7 @@ type reTrieNode struct {
 	edgeMask     mask.Mask
 	overlapping  mask.Mask
 	embeddedNode node.NodeIterator
+	captures     []int
 }
 
 func newReTrieNode(directory *reTrieDirectory, id dfaId, root *node.Node) *reTrieNode {
@@ -36,7 +38,7 @@ func newEmbeddedReTrieNode(embeddedNode node.NodeIterator) *reTrieNode {
 }
 
 func (root *reTrieNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	if root.embeddedNode != nil && len(root.links) == 0 {
+	if root.embeddedNode != nil && len(root.links) == 0 && len(root.captures) == 0 {
 		// Optimized path: simply use embeddedNode.
 		return root.embeddedNode.Items(acceptor)
 	}
@@ -61,6 +63,15 @@ func (root *reTrieNode) String() string {
 	}
 	root.expandLinks()
 	return node.Format("ReTrie", root.Root())
+}
+
+func (root *reTrieNode) capture(position int) {
+	captures := []int{position}
+	if root.captures == nil {
+		root.captures = captures
+	} else {
+		root.captures = slices.MergeInts(root.captures, captures)
+	}
 }
 
 func (root *reTrieNode) linkAnagram(options *syntax.Regexp, child *reTrieNode, repeats bool) *reTrieNode {
@@ -140,6 +151,7 @@ func (root *reTrieNode) mergeNode(other *reTrieNode) {
 	root.overlapping |= (root.edgeMask & other.edgeMask) | other.overlapping
 	root.edgeMask |= other.edgeMask
 	root.links = append(root.links, other.links...)
+	root.captures = slices.MergeInts(root.captures, other.captures)
 }
 
 func (root *reTrieNode) setEmbeddedNode(embeddedNode node.NodeIterator) {

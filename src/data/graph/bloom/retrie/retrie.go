@@ -74,15 +74,38 @@ func (root *reTrie) Labels() []string {
 	return root.captureNames
 }
 
-func (root *reTrie) Metadata(path string) []weight.WeightedString {
+func (root *reTrie) Metadata(pathList []string, itemList []node.NodeItems) node.NodeMetadata {
 	if len(root.captureNames) == 0 {
 		return nil
 	}
-	submatches := root.original.FindStringSubmatch(path)
-	result := make([]weight.WeightedString, len(submatches)-1)
-	for i, submatch := range submatches[1:] {
-		result[i].String = submatch
-		result[i].Weight = 1
+	captureIndexes := make([]int, len(root.captureNames)*2)
+	for i := range captureIndexes {
+		captureIndexes[i] = -1
+	}
+	matches := false
+	for i, item := range itemList {
+		reTrieItem, okay := item.(*reTrieItems)
+		if okay {
+			for _, captureIndex := range reTrieItem.root.captures {
+				captureIndexes[captureIndex] = i
+				matches = true
+			}
+		}
+	}
+	result := make([]*weight.WeightedString, len(root.captureNames))
+	if !matches {
+		return result
+	}
+	for i := range result {
+		start := captureIndexes[i*2]
+		end := captureIndexes[i*2+1]
+		if start == -1 || end == -1 {
+			continue
+		}
+		result[i] = &weight.WeightedString{
+			Weight: 1,
+			String: strings.Join(pathList[start:end], ""),
+		}
 	}
 	return result
 }

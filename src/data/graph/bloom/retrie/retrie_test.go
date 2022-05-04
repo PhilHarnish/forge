@@ -1,8 +1,6 @@
 package retrie_test
 
 import (
-	"fmt"
-	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -19,31 +17,30 @@ func Test(t *testing.T) {
 	RunSpecs(t, "Tests")
 }
 
-func traverse(source node.NodeIterator, path ...string) string {
-	acc := strings.Builder{}
-	acc.WriteString(source.String() + "\n")
+func traverse(source node.NodeIterator, path ...string) ([]string, []node.NodeItems) {
+	acc := make([]node.NodeItems, 0, len(path)+1)
 	for _, part := range path {
-		child := find(source, part)
-		if child == nil {
-			acc.WriteString(fmt.Sprintf("%s = nil\n", part))
+		items := source.Items(node.NodeAcceptAll)
+		acc = append(acc, items)
+		source = find(items, part)
+		if source == nil {
 			break
-		} else {
-			acc.WriteString(fmt.Sprintf("%s = %s\n", part, child.String()))
 		}
-		source = child
 	}
-	return acc.String()
+	if source != nil {
+		acc = append(acc, source.Items(node.NodeAcceptAll))
+	}
+	return path, acc
 }
 
-func find(source node.NodeIterator, path string) (result node.NodeIterator) {
-	items := source.Items(node.NodeAcceptAll)
+func find(items node.NodeItems, path string) node.NodeIterator {
 	for items.HasNext() {
 		itemPath, item := items.Next()
 		if path == itemPath {
 			return item
 		}
 	}
-	return result
+	return nil
 }
 
 var _ = Describe("ReTrie", func() {
@@ -194,7 +191,8 @@ var _ = Describe("ReTrie Header + Metadata", func() {
 		trie := retrie.NewReTrie("a", 1.0)
 		Expect(trie.Header()).NotTo(BeNil())
 		Expect(trie.Header().Labels()).To(HaveLen(0))
-		Expect(trie.Metadata("a")).To(HaveLen(0))
+		paths, items := traverse(trie, "a")
+		Expect(trie.Metadata(paths, items)).To(HaveLen(0))
 	})
 
 	It("has numbered headers for numbered capture groups", func() {
@@ -209,7 +207,8 @@ var _ = Describe("ReTrie Header + Metadata", func() {
 
 	It("provides metadata on matches", func() {
 		trie := retrie.NewReTrie("(a)(b)(c)", 1.0)
-		metadata := trie.Metadata("abc")
+		paths, items := traverse(trie, "a", "b", "c")
+		metadata := trie.Metadata(paths, items)
 		Expect(metadata).To(HaveLen(3))
 		for i, expected := range []string{"a", "b", "c"} {
 			Expect(metadata[i].Weight).To(Equal(1.0))
