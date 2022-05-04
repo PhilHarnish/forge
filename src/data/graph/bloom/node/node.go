@@ -33,8 +33,10 @@ type NodeItems interface {
 	Next() (string, NodeIterator)
 }
 
+type NodeMetadata = []*weight.WeightedString
+
 type NodeMetadataProvider interface {
-	Metadata(path string) []weight.WeightedString
+	Metadata(paths []string, items []NodeItems) NodeMetadata
 }
 
 func NewNode(matchWeight ...weight.Weight) *Node {
