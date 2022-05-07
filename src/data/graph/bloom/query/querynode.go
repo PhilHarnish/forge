@@ -77,10 +77,10 @@ func (results *queryNodeResults) String() string {
 
 func (results *queryNodeResults) maybeExpandIterator(
 	parent *queryNodeCursor, path string, iterator node.NodeIterator) {
-	if iterator.Root().Matches() {
-		results.resultsQueue.Insert(results.newQueryNodeQueryRow(parent, iterator.Root().MatchWeight, path))
-	}
 	items := iterator.Items(node.NodeAcceptAll)
+	if iterator.Root().Matches() {
+		results.resultsQueue.Insert(results.newQueryNodeQueryRow(parent, iterator.Root().MatchWeight, path, items))
+	}
 	if items.HasNext() {
 		heap.Push(&results.fringe, &queryNodeCursor{
 			parent: parent,
@@ -104,22 +104,41 @@ func (results *queryNodeResults) maybeContinueIteration(parent *queryNodeCursor)
 }
 
 func (results *queryNodeResults) newQueryNodeQueryRow(
-	cursor *queryNodeCursor, weight weight.Weight, suffix string) QueryRow {
+	cursor *queryNodeCursor, weight weight.Weight, suffixPath string, suffixItems node.NodeItems) QueryRow {
+	metadataProvider, isProvider := results.source.iterator.(node.NodeMetadataProvider)
 	// Join the paths to make the string.
-	end := len(suffix)
+	count := 0
+	end := len(suffixPath)
 	idx := cursor
 	for idx != nil {
 		end += len(idx.path)
+		count++
 		idx = idx.parent
 	}
 	path := make([]byte, end)
+	var pathList []string
+	var itemList []node.NodeItems
 	idx = cursor
-	copy(path[end-len(suffix):end], []byte(suffix))
-	end -= len(suffix)
+	copy(path[end-len(suffixPath):end], []byte(suffixPath))
+	if isProvider {
+		pathList = make([]string, count)
+		itemList = make([]node.NodeItems, count+1)
+		count--
+		itemList[count+1] = suffixItems
+		pathList[count] = suffixPath
+	}
+	end -= len(suffixPath)
 	for idx != nil {
 		if len(idx.path) > 0 {
 			copy(path[end-len(idx.path):end], []byte(idx.path))
 			end -= len(idx.path)
+		}
+		if isProvider {
+			count--
+			itemList[count+1] = idx.items
+			if count >= 0 {
+				pathList[count] = idx.path
+			}
 		}
 		idx = idx.parent
 	}
@@ -128,9 +147,8 @@ func (results *queryNodeResults) newQueryNodeQueryRow(
 		Weight: weight,
 		String: pathResult,
 	}}
-	metadataProvider, isProvider := results.source.iterator.(node.NodeMetadataProvider)
 	if isProvider {
-		cells = append(cells, metadataProvider.Metadata(pathResult)...)
+		cells = append(cells, metadataProvider.Metadata(pathList, itemList)...)
 	}
 	return NewQueryRow(cells)
 }

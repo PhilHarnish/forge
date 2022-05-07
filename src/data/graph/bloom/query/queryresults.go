@@ -82,7 +82,11 @@ func resultsString(header QueryRowHeader, results QueryResults) string {
 			resultRow := results.Next()
 			tableRow.AppendCell(table.C(fmt.Sprintf("%.2f", resultRow.Weight())))
 			for _, result := range resultRow.Cells() {
-				tableRow.AppendCell(table.C(result.String))
+				if result == nil {
+					tableRow.AppendCell(table.C("∅"))
+				} else {
+					tableRow.AppendCell(table.C(result.String))
+				}
 			}
 		}
 		lines = append(lines, resultsTable.Render())
