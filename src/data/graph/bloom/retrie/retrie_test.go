@@ -20,7 +20,7 @@ func Test(t *testing.T) {
 func traverse(source node.NodeIterator, path ...string) ([]string, []node.NodeItems) {
 	acc := make([]node.NodeItems, 0, len(path)+1)
 	for _, part := range path {
-		items := source.Items(node.NodeAcceptAll)
+		items := node.NodeAcceptAll.Items(source)
 		acc = append(acc, items)
 		source = find(items, part)
 		if source == nil {
@@ -28,7 +28,7 @@ func traverse(source node.NodeIterator, path ...string) ([]string, []node.NodeIt
 		}
 	}
 	if source != nil {
-		acc = append(acc, source.Items(node.NodeAcceptAll))
+		acc = append(acc, node.NodeAcceptAll.Items(source))
 	}
 	return path, acc
 }

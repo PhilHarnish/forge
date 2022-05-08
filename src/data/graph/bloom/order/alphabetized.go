@@ -40,7 +40,7 @@ func (root *alphabetized) String() string {
 
 func (root *alphabetized) Items(generator node.NodeGenerator) node.NodeItems {
 	return &alphabetizedItems{
-		items:     root.child.Items(generator),
+		items:     generator.Items(root.child),
 		remaining: alphabetizedHeap{},
 	}
 }

@@ -233,19 +233,6 @@ func (node *Node) Next() (string, NodeIterator) {
 	panic("Node has no children")
 }
 
-// Evaluate the `Weight` for a `node` at `path`.
-// Typically, when the result is non-zero the caller should immediately
-// return Cursor{node, path}
-type NodeGenerator = func(path string, node *Node) weight.Weight
-
-func NodeAcceptAll(path string, node *Node) weight.Weight {
-	return 1.0
-}
-
-func NodeAcceptNone(path string, node *Node) weight.Weight {
-	return 0.0
-}
-
 func Format(name string, node *Node) string {
 	parts := []string{}
 	if node.Matches() {

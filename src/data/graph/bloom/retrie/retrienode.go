@@ -40,7 +40,7 @@ func newEmbeddedReTrieNode(embeddedNode node.NodeIterator) *reTrieNode {
 func (root *reTrieNode) Items(generator node.NodeGenerator) node.NodeItems {
 	if root.embeddedNode != nil && len(root.links) == 0 && len(root.captures) == 0 {
 		// Optimized path: simply use embeddedNode.
-		return root.embeddedNode.Items(generator)
+		return generator.Items(root.embeddedNode)
 	}
 	root.expandLinks()
 	return newTrieItems(generator, root)
@@ -176,7 +176,7 @@ func (root *reTrieNode) expandEmbeddedNode() {
 	if root.embeddedNode == nil {
 		return
 	}
-	items := root.embeddedNode.Items(node.NodeAcceptAll)
+	items := node.NodeAcceptAll.Items(root.embeddedNode)
 	for items.HasNext() {
 		path, item := items.Next()
 		reTrieItem, okay := item.(*reTrieNode)

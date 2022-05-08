@@ -1,0 +1,14 @@
+package node
+
+// NodeGenerators are transient visitors used during Node traversal.
+type nodeGenerator struct{}
+
+type NodeGenerator interface {
+	Items(iterator NodeIterator) NodeItems
+}
+
+var NodeAcceptAll *nodeGenerator = nil
+
+func (generator *nodeGenerator) Items(iterator NodeIterator) NodeItems {
+	return iterator.Items(generator)
+}

@@ -12,7 +12,7 @@ var _ = Describe("TestIterator", func() {
 	It("is a no-op by default", func() {
 		root := node.NewNode(1.0)
 		t := debug.NewTestIterator(root, &debug.TestItems{})
-		items := t.Items(node.NodeAcceptAll)
+		items := node.NodeAcceptAll.Items(t)
 		Expect(t.Root()).To(Equal(root))
 		Expect(items.HasNext()).To(BeFalse())
 		Expect(func() { items.Next() }).To(Panic())

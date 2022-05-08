@@ -183,7 +183,7 @@ func processSequential(operation *operation, generator node.NodeGenerator) *oper
 	availableOutgoingEdges := operatorEdgeHeap{}
 	operand := operands[0]
 	hasMoreOperands := len(operands) > 1
-	items := operand.Items(generator)
+	items := generator.Items(operand)
 	for items.HasNext() {
 		path, item := items.Next()
 		if hasMoreOperands && item.Root().LengthsMask&0b1 == 0b1 {

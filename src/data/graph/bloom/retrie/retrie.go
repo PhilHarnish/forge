@@ -59,7 +59,7 @@ func NewReTrie(regularExpression string, matchWeight weight.Weight) *reTrie {
 }
 
 func (root *reTrie) Items(generator node.NodeGenerator) node.NodeItems {
-	return root.root.Items(generator)
+	return generator.Items(root.root)
 }
 
 func (root *reTrie) Root() *node.Node {

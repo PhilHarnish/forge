@@ -10,7 +10,7 @@ import (
 var _ = Describe("Items", func() {
 	It("Initially has no items", func() {
 		operation := op.And()
-		items := operation.Items(node.NodeAcceptAll)
+		items := node.NodeAcceptAll.Items(operation)
 		Expect(items.HasNext()).To(BeFalse())
 	})
 })
