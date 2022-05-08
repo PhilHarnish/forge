@@ -21,7 +21,7 @@ func (iterator *TestIterator) Root() *node.Node {
 	return iterator.root
 }
 
-func (iterator *TestIterator) Items(acceptor node.NodeAcceptor) node.NodeItems {
+func (iterator *TestIterator) Items(generator node.NodeGenerator) node.NodeItems {
 	result := &TestItems{}
 	if len(*iterator.items) > 0 {
 		*result = append(*result, *iterator.items...)

@@ -31,8 +31,8 @@ func (trie *Trie) Root() *node.Node {
 	return trie.Node
 }
 
-func (trie *Trie) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	return newTrieItems(acceptor, trie)
+func (trie *Trie) Items(generator node.NodeGenerator) node.NodeItems {
+	return newTrieItems(generator, trie)
 }
 
 func (trie *Trie) Link(path string, child *Trie) error {

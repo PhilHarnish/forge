@@ -5,14 +5,14 @@ import (
 )
 
 type operatorItems struct {
-	acceptor  node.NodeAcceptor
+	generator node.NodeGenerator
 	operation *operation
 	edges     *operatorEdgeHeap
 }
 
-func newOperatorItems(acceptor node.NodeAcceptor, operation *operation) *operatorItems {
+func newOperatorItems(generator node.NodeGenerator, operation *operation) *operatorItems {
 	return &operatorItems{
-		acceptor:  acceptor,
+		generator: generator,
 		operation: operation,
 	}
 }
@@ -38,7 +38,7 @@ func (items *operatorItems) Next() (string, node.NodeIterator) {
 func (items *operatorItems) getHeap() *operatorEdgeHeap {
 	if items.edges == nil {
 		items.edges = items.operation.operator.process(
-			items.operation, items.acceptor)
+			items.operation, items.generator)
 	}
 	return items.edges
 }

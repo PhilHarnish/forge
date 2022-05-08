@@ -50,8 +50,8 @@ func (root *dfaNode) String() string {
 	return node.Format(fmt.Sprintf("DFA{%s}", dfaIdToString(root.id)), root.nodeNode)
 }
 
-func (root *dfaNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	return newDfaItems(root.directory, root, acceptor)
+func (root *dfaNode) Items(generator node.NodeGenerator) node.NodeItems {
+	return newDfaItems(root.directory, root, generator)
 }
 
 func (root *dfaNode) Root() *node.Node {

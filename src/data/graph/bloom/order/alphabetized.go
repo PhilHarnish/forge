@@ -38,9 +38,9 @@ func (root *alphabetized) String() string {
 	return root.child.String()
 }
 
-func (root *alphabetized) Items(acceptor node.NodeAcceptor) node.NodeItems {
+func (root *alphabetized) Items(generator node.NodeGenerator) node.NodeItems {
 	return &alphabetizedItems{
-		items:     root.child.Items(acceptor),
+		items:     root.child.Items(generator),
 		remaining: alphabetizedHeap{},
 	}
 }

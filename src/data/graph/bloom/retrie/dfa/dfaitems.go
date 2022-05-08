@@ -10,7 +10,7 @@ type dfaItems struct {
 	runeOffset rune
 }
 
-func newDfaItems(directory *dfaDirectory, root *dfaNode, acceptor node.NodeAcceptor) node.NodeItems {
+func newDfaItems(directory *dfaDirectory, root *dfaNode, generator node.NodeGenerator) node.NodeItems {
 	return &dfaItems{
 		directory: directory,
 		root:      root,

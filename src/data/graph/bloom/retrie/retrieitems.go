@@ -5,17 +5,17 @@ import (
 )
 
 type reTrieItems struct {
-	acceptor   node.NodeAcceptor
+	generator  node.NodeGenerator
 	root       *reTrieNode
 	index      int
 	runeIndex  int
 	runeOffset rune
 }
 
-func newTrieItems(acceptor node.NodeAcceptor, root *reTrieNode) node.NodeItems {
+func newTrieItems(generator node.NodeGenerator, root *reTrieNode) node.NodeItems {
 	return &reTrieItems{
-		acceptor: acceptor,
-		root:     root,
+		generator: generator,
+		root:      root,
 	}
 }
 

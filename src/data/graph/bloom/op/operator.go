@@ -11,11 +11,11 @@ import (
 	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
-func (op *operator) process(operation *operation, acceptor node.NodeAcceptor) *operatorEdgeHeap {
+func (op *operator) process(operation *operation, generator node.NodeGenerator) *operatorEdgeHeap {
 	if op.processMethod == parallel {
-		return processParallel(operation, acceptor)
+		return processParallel(operation, generator)
 	} else {
-		return processSequential(operation, acceptor)
+		return processSequential(operation, generator)
 	}
 }
 
@@ -109,7 +109,7 @@ type operatorEdge struct {
 
 type operatorEdgeHeap []*operatorEdge
 
-func processParallel(operation *operation, acceptor node.NodeAcceptor) *operatorEdgeHeap {
+func processParallel(operation *operation, generator node.NodeGenerator) *operatorEdgeHeap {
 	operator := operation.operator
 	operands := operation.operands
 	minWeight := operator.maxWeightPolicy == useSmallest
@@ -120,7 +120,7 @@ func processParallel(operation *operation, acceptor node.NodeAcceptor) *operator
 	// Record outgoing edges when they exceed `edgeThreshold`.
 	availableOutgoingEdges := operatorEdgeHeap{}
 	for _, operand := range operands {
-		items := operand.Items(acceptor)
+		items := operand.Items(generator)
 		for items.HasNext() {
 			path, item := items.Next()
 			edge, _ := utf8.DecodeRuneInString(path)
@@ -178,12 +178,12 @@ func filterEdge(edge *operatorEdge, operator *operator, nOperands int) *operator
 	return nil
 }
 
-func processSequential(operation *operation, acceptor node.NodeAcceptor) *operatorEdgeHeap {
+func processSequential(operation *operation, generator node.NodeGenerator) *operatorEdgeHeap {
 	operands := operation.operands
 	availableOutgoingEdges := operatorEdgeHeap{}
 	operand := operands[0]
 	hasMoreOperands := len(operands) > 1
-	items := operand.Items(acceptor)
+	items := operand.Items(generator)
 	for items.HasNext() {
 		path, item := items.Next()
 		if hasMoreOperands && item.Root().LengthsMask&0b1 == 0b1 {

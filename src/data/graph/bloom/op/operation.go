@@ -21,8 +21,8 @@ func (op *operation) Root() *node.Node {
 	return op.node
 }
 
-func (op *operation) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	return newOperatorItems(acceptor, op)
+func (op *operation) Items(generator node.NodeGenerator) node.NodeItems {
+	return newOperatorItems(generator, op)
 }
 
 func (op *operation) String() string {

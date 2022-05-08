@@ -50,8 +50,8 @@ func newReTrieAnagramNode(directory *reTrieDirectory, options []*syntax.Regexp,
 	}
 }
 
-func (root *reTrieAnagramNode) Items(acceptor node.NodeAcceptor) node.NodeItems {
-	return root.directory.get(root.remaining, root.getParent).Items(acceptor)
+func (root *reTrieAnagramNode) Items(generator node.NodeGenerator) node.NodeItems {
+	return root.directory.get(root.remaining, root.getParent).Items(generator)
 }
 
 func (root *reTrieAnagramNode) Root() *node.Node {

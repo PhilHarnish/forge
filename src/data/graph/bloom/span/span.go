@@ -36,7 +36,7 @@ func (root *span) Root() *node.Node {
 	return root.node
 }
 
-func (root *span) Items(acceptor node.NodeAcceptor) node.NodeItems {
+func (root *span) Items(generator node.NodeGenerator) node.NodeItems {
 	return &spanItems{span: root}
 }
 

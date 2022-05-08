@@ -16,9 +16,9 @@ type proxyNodeIterator struct {
 	iterations int
 }
 
-func (node *proxyNodeIterator) Items(acceptor node.NodeAcceptor) node.NodeItems {
+func (node *proxyNodeIterator) Items(generator node.NodeGenerator) node.NodeItems {
 	node.iterations++
-	return node.NodeIterator.Items(acceptor)
+	return node.NodeIterator.Items(generator)
 }
 
 var _ = Describe("Anagram syntax", func() {

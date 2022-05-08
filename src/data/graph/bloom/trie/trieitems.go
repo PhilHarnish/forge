@@ -5,16 +5,16 @@ import (
 )
 
 type trieItems struct {
-	acceptor node.NodeAcceptor
-	root     *Trie
-	index    int
+	generator node.NodeGenerator
+	root      *Trie
+	index     int
 }
 
-func newTrieItems(acceptor node.NodeAcceptor, trie *Trie) *trieItems {
+func newTrieItems(generator node.NodeGenerator, trie *Trie) *trieItems {
 	return &trieItems{
-		acceptor: acceptor,
-		root:     trie,
-		index:    0,
+		generator: generator,
+		root:      trie,
+		index:     0,
 	}
 }
 
@@ -26,7 +26,7 @@ func (items *trieItems) Next() (string, node.NodeIterator) {
 	for items.HasNext() {
 		link := items.root.links[items.index]
 		items.index++
-		if items.acceptor(link.prefix, link.node.Node) > 0 {
+		if items.generator(link.prefix, link.node.Node) > 0 {
 			return link.prefix, link.node
 		}
 	}

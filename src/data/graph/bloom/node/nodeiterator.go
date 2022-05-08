@@ -1,7 +1,7 @@
 package node
 
 type NodeIterator interface {
-	Items(acceptor NodeAcceptor) NodeItems
+	Items(generator NodeGenerator) NodeItems
 	Root() *Node
 	String() string
 }

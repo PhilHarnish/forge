@@ -221,7 +221,7 @@ func (node *Node) Root() *Node {
 	return node
 }
 
-func (node *Node) Items(acceptor NodeAcceptor) NodeItems {
+func (node *Node) Items(generator NodeGenerator) NodeItems {
 	return node
 }
 
@@ -236,7 +236,7 @@ func (node *Node) Next() (string, NodeIterator) {
 // Evaluate the `Weight` for a `node` at `path`.
 // Typically, when the result is non-zero the caller should immediately
 // return Cursor{node, path}
-type NodeAcceptor = func(path string, node *Node) weight.Weight
+type NodeGenerator = func(path string, node *Node) weight.Weight
 
 func NodeAcceptAll(path string, node *Node) weight.Weight {
 	return 1.0

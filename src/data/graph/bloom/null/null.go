@@ -12,7 +12,7 @@ func (root *null) Root() *node.Node {
 	return nullNode
 }
 
-func (root *null) Items(acceptor node.NodeAcceptor) node.NodeItems {
+func (root *null) Items(generator node.NodeGenerator) node.NodeItems {
 	return root
 }
 
