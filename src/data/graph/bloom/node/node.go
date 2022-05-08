@@ -22,17 +22,6 @@ type Node struct {
 	LengthsMask mask.Mask
 }
 
-type NodeIterator interface {
-	Items(acceptor NodeAcceptor) NodeItems
-	Root() *Node
-	String() string
-}
-
-type NodeItems interface {
-	HasNext() bool
-	Next() (string, NodeIterator)
-}
-
 type NodeMetadata = []*weight.WeightedString
 
 type NodeMetadataProvider interface {
