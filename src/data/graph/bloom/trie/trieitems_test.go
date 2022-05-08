@@ -33,7 +33,7 @@ func expectNext(s node.NodeItems, p string, w weight.Weight) node.NodeIterator {
 var _ = Describe("Items", func() {
 	It("Initially has no items", func() {
 		t := trie.NewTrie()
-		items := node.NodeAcceptAll.Items(t)
+		items := node.NodeGenerateAll.Items(t)
 		Expect(items.HasNext()).To(BeFalse())
 	})
 
@@ -42,7 +42,7 @@ var _ = Describe("Items", func() {
 		t.Link("c", trie.NewTrie(0.5))
 		t.Link("a", trie.NewTrie(1.0))
 		t.Link("b", trie.NewTrie(0.9))
-		items := node.NodeAcceptAll.Items(t)
+		items := node.NodeGenerateAll.Items(t)
 		expectNext(items, "a", 1.0)
 		expectNext(items, "b", 0.9)
 		expectNext(items, "c", 0.5)
@@ -51,9 +51,9 @@ var _ = Describe("Items", func() {
 
 	It("Iterates deeply", func() {
 		t := extend(trie.NewTrie(1.0), "a", "b", "c")
-		t = expectNext(node.NodeAcceptAll.Items(t), "a", 0.0)
-		t = expectNext(node.NodeAcceptAll.Items(t), "b", 0.0)
-		t = expectNext(node.NodeAcceptAll.Items(t), "c", 1.0)
-		Expect(node.NodeAcceptAll.Items(t).HasNext()).To(BeFalse())
+		t = expectNext(node.NodeGenerateAll.Items(t), "a", 0.0)
+		t = expectNext(node.NodeGenerateAll.Items(t), "b", 0.0)
+		t = expectNext(node.NodeGenerateAll.Items(t), "c", 1.0)
+		Expect(node.NodeGenerateAll.Items(t).HasNext()).To(BeFalse())
 	})
 })

@@ -109,7 +109,7 @@ var _ = Describe("ReTrie syntax", func() {
 	It("matches dot", func() {
 		trie := retrie.NewReTrie(".", 1.0)
 		Expect(trie.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz␣-' ◌●"))
-		items := node.NodeAcceptAll.Items(trie)
+		items := node.NodeGenerateAll.Items(trie)
 		seen := mask.Mask(0b0)
 		for items.HasNext() {
 			path, _ := items.Next()
@@ -558,7 +558,7 @@ var _ = Describe("ReTrie syntax", func() {
 		Expect(item.String()).To(Equal("ReTrie: abcdefghijklmnopqrstuvwxyz␣-' ◌●●●···"))
 		for depth > 0 {
 			depth--
-			items := node.NodeAcceptAll.Items(item)
+			items := node.NodeGenerateAll.Items(item)
 			Expect(items.HasNext()).To(BeTrue())
 			_, item = items.Next()
 			Expect(item.String()).To(Equal("ReTrie: 100 abcdefghijklmnopqrstuvwxyz␣-' ●●●···"))

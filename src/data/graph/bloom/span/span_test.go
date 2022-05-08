@@ -31,7 +31,7 @@ var _ = Describe("Node interfaces", func() {
 
 	It("Items", func() {
 		s := span.NewSpan("test", node.NewNode(1))
-		items := node.NodeAcceptAll.Items(s)
+		items := node.NodeGenerateAll.Items(s)
 		Expect(items.HasNext()).To(BeTrue())
 		path, next := items.Next()
 		Expect(path).To(Equal("test"))

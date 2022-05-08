@@ -13,7 +13,7 @@ import (
 var _ = Describe("process", func() {
 	It("Does nothing for empty input", func() {
 		operation := op.And()
-		items := node.NodeAcceptAll.Items(operation)
+		items := node.NodeGenerateAll.Items(operation)
 		Expect(items.HasNext()).To(BeFalse())
 	})
 

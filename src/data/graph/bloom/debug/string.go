@@ -43,7 +43,7 @@ func stringPathChildrenWithPrefix(iterator node.NodeIterator, base string, remai
 	if iterator.Root().LengthsMask > 1 {
 		results = append(results, base+"│"+mask.LengthString(iterator.Root().LengthsMask))
 	}
-	items := node.NodeAcceptAll.Items(order.Alphabetized(iterator))
+	items := node.NodeGenerateAll.Items(order.Alphabetized(iterator))
 	seen := mask.Mask(0)
 	lastWeight := math.Inf(1)
 	for items.HasNext() {
@@ -97,7 +97,7 @@ func stringPathChildrenWithPrefix(iterator node.NodeIterator, base string, remai
 }
 
 func stringChildSummary(iterator node.NodeIterator) string {
-	items := node.NodeAcceptAll.Items(iterator)
+	items := node.NodeGenerateAll.Items(iterator)
 	if !items.HasNext() {
 		return ""
 	}

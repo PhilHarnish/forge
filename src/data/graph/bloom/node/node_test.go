@@ -398,7 +398,7 @@ var _ = Describe("NodeIterator", func() {
 	It("Has no children", func() {
 		n := node.NewNode()
 		Expect(n.HasNext()).To(BeFalse())
-		items := node.NodeAcceptAll.Items(n)
+		items := node.NodeGenerateAll.Items(n)
 		Expect(items.HasNext()).To(BeFalse())
 	})
 

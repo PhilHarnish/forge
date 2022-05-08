@@ -20,7 +20,7 @@ var _ = Describe("Node interfaces", func() {
 	})
 
 	It("includes Items func", func() {
-		items := node.NodeAcceptAll.Items(null.Null)
+		items := node.NodeGenerateAll.Items(null.Null)
 		Expect(items).NotTo(BeNil())
 		Expect(items.HasNext()).To(BeFalse())
 		Expect(func() { items.Next() }).To(Panic())

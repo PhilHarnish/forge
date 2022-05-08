@@ -77,7 +77,7 @@ func (results *queryNodeResults) String() string {
 
 func (results *queryNodeResults) maybeExpandIterator(
 	parent *queryNodeCursor, path string, iterator node.NodeIterator) {
-	items := node.NodeAcceptAll.Items(iterator)
+	items := node.NodeGenerateAll.Items(iterator)
 	if iterator.Root().Matches() {
 		results.resultsQueue.Insert(results.newQueryNodeQueryRow(parent, iterator.Root().MatchWeight, path, items))
 	}

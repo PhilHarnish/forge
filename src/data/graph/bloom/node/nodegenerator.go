@@ -7,7 +7,7 @@ type NodeGenerator interface {
 	Items(iterator NodeIterator) NodeItems
 }
 
-var NodeAcceptAll *nodeGenerator = nil
+var NodeGenerateAll *nodeGenerator = nil
 
 func (generator *nodeGenerator) Items(iterator NodeIterator) NodeItems {
 	return iterator.Items(generator)

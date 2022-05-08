@@ -176,7 +176,7 @@ func (root *reTrieNode) expandEmbeddedNode() {
 	if root.embeddedNode == nil {
 		return
 	}
-	items := node.NodeAcceptAll.Items(root.embeddedNode)
+	items := node.NodeGenerateAll.Items(root.embeddedNode)
 	for items.HasNext() {
 		path, item := items.Next()
 		reTrieItem, okay := item.(*reTrieNode)
