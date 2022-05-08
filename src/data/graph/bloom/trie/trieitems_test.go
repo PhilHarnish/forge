@@ -34,14 +34,7 @@ var _ = Describe("Items", func() {
 	It("Initially has no items", func() {
 		t := trie.NewTrie()
 		items := t.Items(node.NodeAcceptAll)
-		expectNext(items, "", 0)
-	})
-
-	It("Returns nothing if no nodes are accepted", func() {
-		t := trie.NewTrie()
-		t.Link("a", trie.NewTrie(1.0))
-		items := t.Items(node.NodeAcceptNone)
-		expectNext(items, "", 0.0)
+		Expect(items.HasNext()).To(BeFalse())
 	})
 
 	It("Iterates immediate children, best to worst", func() {
@@ -53,7 +46,7 @@ var _ = Describe("Items", func() {
 		expectNext(items, "a", 1.0)
 		expectNext(items, "b", 0.9)
 		expectNext(items, "c", 0.5)
-		expectNext(items, "", 0.0)
+		Expect(items.HasNext()).To(BeFalse())
 	})
 
 	It("Iterates deeply", func() {
@@ -61,6 +54,6 @@ var _ = Describe("Items", func() {
 		t = expectNext(t.Items(node.NodeAcceptAll), "a", 0.0)
 		t = expectNext(t.Items(node.NodeAcceptAll), "b", 0.0)
 		t = expectNext(t.Items(node.NodeAcceptAll), "c", 1.0)
-		expectNext(t.Items(node.NodeAcceptAll), "", 0.0)
+		Expect(t.Items(node.NodeAcceptAll).HasNext()).To(BeFalse())
 	})
 })
