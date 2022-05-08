@@ -31,7 +31,7 @@ func newResults(results ...interface{}) []query.QueryRow {
 	result := []query.QueryRow{}
 	x := 0
 	for x < len(results) {
-		result = append(result, query.NewQueryRow([]weight.WeightedString{
+		result = append(result, query.NewQueryRow([]query.QueryRowCell{
 			{
 				Weight: results[x].(weight.Weight),
 				String: results[x+1].(string),
