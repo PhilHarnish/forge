@@ -22,12 +22,6 @@ type Node struct {
 	LengthsMask mask.Mask
 }
 
-type NodeMetadata = []*weight.WeightedString
-
-type NodeMetadataProvider interface {
-	Metadata(paths []string, items []NodeItems) NodeMetadata
-}
-
 func NewNode(matchWeight ...weight.Weight) *Node {
 	result := &Node{
 		RequireMask: mask.UNSET,
