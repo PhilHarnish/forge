@@ -182,9 +182,9 @@ var _ = Describe("ReTrie Header + Metadata", func() {
 	It("implements Header provider and Metadata provider", func() {
 		trie := retrie.NewReTrie("a", 1.0)
 		var headerProvider query.QueryHeaderProvider = trie
-		var metadatProvider node.NodeMetadataProvider = trie
+		var metadataProvider node.NodeMetadataProvider = trie
 		Expect(headerProvider).NotTo(BeNil())
-		Expect(metadatProvider).NotTo(BeNil())
+		Expect(metadataProvider).NotTo(BeNil())
 	})
 
 	It("initially has no special headers or metadata", func() {
