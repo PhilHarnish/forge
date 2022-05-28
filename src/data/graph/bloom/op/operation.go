@@ -12,6 +12,7 @@ import (
 type operation struct {
 	operator         *operator
 	operands         []node.NodeIterator
+	generators       []node.NodeGenerator
 	labels           []string
 	metadataOperands []node.NodeMetadataProvider
 	node             *node.Node
@@ -77,8 +78,9 @@ func (op *operation) fork(alternate node.NodeIterator) *operation {
 	alternate = op.substitute(0, alternate)
 	exit := op.slice(1, len(op.operands))
 	return &operation{
-		operator: orOperator,
-		operands: []node.NodeIterator{alternate, exit},
+		operator:   orOperator,
+		operands:   []node.NodeIterator{alternate, exit},
+		generators: op.generators[0:2],
 	}
 }
 
@@ -93,9 +95,12 @@ func (op *operation) slice(start int, end int) node.NodeIterator {
 func (op *operation) sliceCopy(start int, end int) *operation {
 	operands := make([]node.NodeIterator, end-start)
 	copy(operands, op.operands[start:end])
+	generators := make([]node.NodeGenerator, end-start)
+	copy(generators, op.generators[start:end])
 	return &operation{
-		operator: op.operator,
-		operands: operands,
+		operator:   op.operator,
+		operands:   operands,
+		generators: generators,
 	}
 }
 
@@ -104,6 +109,16 @@ func (op *operation) substitute(position int, item node.NodeIterator) *operation
 	result := op.sliceCopy(0, len(op.operands))
 	result.operands[0] = item
 	return result
+}
+
+func (op *operation) getGenerators(generator node.NodeGenerator) []node.NodeGenerator {
+	if op.generators == nil {
+		op.generators = make([]node.NodeGenerator, len(op.operands))
+		for i := range op.operands {
+			op.generators[i] = generator.ReserveNext()
+		}
+	}
+	return op.generators
 }
 
 func formatOperands(infix string, operands []node.NodeIterator) string {
