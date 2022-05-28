@@ -126,7 +126,7 @@ var _ = Describe("Special syntax", func() {
 
 	It("matches {child}+ repeats with suffix", func() {
 		trie := retrie.NewReTrie("a{child}+b", 1.0)
-		Expect(debug.StringChildren(trie, 4)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(trie, 5)).To(matchers.LookLike(`
 			ReTrie: ABXYZ
 			│◌◌◌◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●●···
 			└a ->((ReTrie: XYZ) + (ReTrie: Bxyz)): BXYZ
@@ -138,6 +138,9 @@ var _ = Describe("Special syntax", func() {
 			·      │◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌●···
 			·      ├b●->ReTrie: 100
 			·      └xyz ->ReTrie: Bxyz
+			·         │◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌◌●◌●···
+			·         ├b●->ReTrie: 100
+			·         └xyz ->ReTrie: Bxyz
 		`))
 	})
 
