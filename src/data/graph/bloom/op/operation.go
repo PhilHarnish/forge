@@ -5,18 +5,14 @@ import (
 	"strings"
 
 	"github.com/philharnish/forge/src/data/graph/bloom/node"
-	"github.com/philharnish/forge/src/data/graph/bloom/query"
-	"github.com/philharnish/forge/src/data/graph/bloom/weight"
 )
 
 type operation struct {
-	operator         *operator
-	operands         []node.NodeIterator
-	generators       []node.NodeGenerator
-	labels           []string
-	metadataOperands []node.NodeMetadataProvider
-	node             *node.Node
-	formatting       bool // Used to detect cycles during formatting.
+	operator   *operator
+	operands   []node.NodeIterator
+	generators []node.NodeGenerator
+	node       *node.Node
+	formatting bool // Used to detect cycles during formatting.
 }
 
 func (op *operation) Root() *node.Node {
@@ -40,37 +36,6 @@ func (op *operation) String() string {
 		op.Root(),
 	)
 	op.formatting = false
-	return result
-}
-
-func (op *operation) Header() query.QueryRowHeader {
-	return op
-}
-
-func (op *operation) Labels() []string {
-	if op.labels == nil {
-		op.metadataOperands = make([]node.NodeMetadataProvider, 0, len(op.operands))
-		op.labels = make([]string, 0, len(op.operands))
-		for _, operand := range op.operands {
-			metadataOperand, hasMetadata := operand.(node.NodeMetadataProvider)
-			headerOperand, hasHeader := operand.(query.QueryRowHeader)
-			if hasMetadata && hasHeader {
-				op.metadataOperands = append(op.metadataOperands, metadataOperand)
-				op.labels = append(op.labels, headerOperand.Labels()...)
-			}
-		}
-	}
-	return op.labels
-}
-
-func (op *operation) Metadata(paths []string, items []node.NodeItems) node.NodeMetadata {
-	if len(op.Labels()) == 0 {
-		return nil
-	}
-	result := make([]*weight.WeightedString, 0, len(op.Labels()))
-	for _, operand := range op.metadataOperands {
-		result = append(result, operand.Metadata(paths, items)...)
-	}
 	return result
 }
 
