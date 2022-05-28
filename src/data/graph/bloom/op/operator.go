@@ -101,10 +101,11 @@ var concatOperator = &operator{
 }
 
 type operatorEdge struct {
-	path     string
-	operands []node.NodeIterator
-	weight   weight.Weight
-	node     *node.Node
+	path       string
+	operands   []node.NodeIterator
+	generators []node.NodeGenerator
+	weight     weight.Weight
+	node       *node.Node
 }
 
 type operatorEdgeHeap []*operatorEdge
@@ -112,14 +113,16 @@ type operatorEdgeHeap []*operatorEdge
 func processParallel(operation *operation, generator node.NodeGenerator) *operatorEdgeHeap {
 	operator := operation.operator
 	operands := operation.operands
+	generators := operation.getGenerators(generator)
 	minWeight := operator.maxWeightPolicy == useSmallest
 	nOperands := len(operands)
 	// Create max.SIZE number of buckets for the edges we find.
 	// This enables O(1) lookup later.
 	outgoingEdgeList := [mask.SIZE]operatorEdge{}
 	availableOutgoingEdges := operatorEdgeHeap{}
-	for _, operand := range operands {
-		items := operand.Items(generator)
+	for i, operand := range operands {
+		itemsGenerator := generators[i]
+		items := itemsGenerator.Items(operand)
 		for items.HasNext() {
 			path, item := items.Next()
 			edge, _ := utf8.DecodeRuneInString(path)
@@ -144,6 +147,7 @@ func processParallel(operation *operation, generator node.NodeGenerator) *operat
 				}
 			}
 			outgoingEdge.operands = append(outgoingEdge.operands, item)
+			outgoingEdge.generators = append(outgoingEdge.generators, itemsGenerator)
 			availableEdge := filterEdge(outgoingEdge, operator, nOperands)
 			if availableEdge != nil {
 				// If append is allowed, add to availableOutgoingEdges.

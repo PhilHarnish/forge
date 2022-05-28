@@ -28,9 +28,10 @@ func (items *operatorItems) Next() (string, node.NodeIterator) {
 		return next.path, next.operands[0]
 	}
 	nextOperation := &operation{
-		operator: items.operation.operator,
-		operands: next.operands,
-		node:     next.node, // May be `nil`.
+		operator:   items.operation.operator,
+		operands:   next.operands,
+		generators: next.generators,
+		node:       next.node, // May be `nil`.
 	}
 	return next.path, nextOperation
 }
