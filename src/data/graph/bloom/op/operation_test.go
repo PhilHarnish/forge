@@ -11,19 +11,19 @@ import (
 )
 
 var _ = Describe("Root", func() {
-	It("Is initially empty", func() {
+	It("is initially empty", func() {
 		a := trie.NewTrie()
 		o := op.And(a, a)
 		Expect(o.Root().String()).To(Equal("Node"))
 	})
 
-	It("Is includes weights", func() {
+	It("includes weights", func() {
 		a := trie.NewTrie(1.0)
 		o := op.And(a, a)
 		Expect(o.Root().String()).To(Equal("Node: 100 ●"))
 	})
 
-	It("Is includes required characters", func() {
+	It("includes required characters", func() {
 		a := trie.NewTrie()
 		a.MaskPath("abc")
 		o := op.And(a, a)
@@ -52,82 +52,82 @@ var _ = Describe("Operations", func() {
 	})
 
 	Describe("And", func() {
-		It("Returns Null for zero operands", func() {
+		It("returns Null for zero operands", func() {
 			a := op.And()
 			Expect(a.String()).To(Equal("Null: 0 ●"))
 		})
 
-		It("Returns original for 1 operands", func() {
+		It("returns original for 1 operands", func() {
 			original := trie.NewTrie(1.0)
 			a := op.And(original)
 			Expect(a.String()).To(Equal(original.String()))
 		})
 
-		It("Creates operation for 2+ operands", func() {
+		It("creates operation for 2+ operands", func() {
 			o := op.And(a, b)
 			Expect(o.String()).To(Equal("(Trie && Trie)"))
 		})
 
-		It("Returns empty result for empty nodes", func() {
+		It("returns empty result for empty nodes", func() {
 			o := op.And(a, b)
 			Expect(debug.StringChildren(o)).To(Equal("(Trie && Trie)"))
 		})
 	})
 
 	Describe("Or", func() {
-		It("Returns Null for zero operands", func() {
+		It("returns Null for zero operands", func() {
 			a := op.Or()
 			Expect(a.String()).To(Equal("Null: 0 ●"))
 		})
 
-		It("Returns original for 1 operands", func() {
+		It("returns original for 1 operands", func() {
 			original := trie.NewTrie(1.0)
 			a := op.Or(original)
 			Expect(a.String()).To(Equal(original.String()))
 		})
 
-		It("Creates operation for 2+ operands", func() {
+		It("creates operation for 2+ operands", func() {
 			o := op.Or(a, b)
 			Expect(o.String()).To(Equal("(Trie || Trie)"))
 		})
 	})
 
 	Describe("Concat", func() {
-		It("Returns Null for zero operands", func() {
+		It("returns Null for zero operands", func() {
 			a := op.Concat()
 			Expect(a.String()).To(Equal("Null: 0 ●"))
 		})
 
-		It("Returns original for 1 operands", func() {
+		It("returns original for 1 operands", func() {
 			original := trie.NewTrie(1.0)
 			a := op.Concat(original)
 			Expect(a.String()).To(Equal(original.String()))
 		})
 
-		It("Creates operation for 2+ operands", func() {
+		It("creates operation for 2+ operands", func() {
 			o := op.Concat(a, b)
 			Expect(o.String()).To(Equal("(Trie + Trie)"))
 		})
 	})
 
 	Describe("Join", func() {
-		It("Returns Null for zero operands", func() {
+		It("returns Null for zero operands", func() {
 			a := op.Join("")
 			Expect(a.String()).To(Equal("Null: 0 ●"))
 		})
 
-		It("Returns original for 1 operands", func() {
+		It("returns original for 1 operands", func() {
 			original := trie.NewTrie(1.0)
 			a := op.Join("", original)
 			Expect(a.String()).To(Equal(original.String()))
 		})
 
-		It("Creates operation for 2+ operands", func() {
+		It("creates operation for 2+ operands", func() {
 			o := op.Join(" ", a, b)
 			Expect(o.String()).To(Equal("(Trie + (Span: ' '->Trie)): ␣"))
 		})
 
-		It("Reuses Concat when separator is ''", func() {
+		It("reuses Concat when separator is ''", func() {
 			o := op.Join("", a, b)
 			Expect(o.String()).To(Equal("(Trie + Trie)"))
 		})
@@ -143,7 +143,7 @@ func (n proxyNodeIterator) Root() *node.Node {
 }
 
 var _ = Describe("Advanced situations", func() {
-	It("Detects and mitigates String() cycles", func() {
+	It("detects and mitigates String() cycles", func() {
 		a := trie.NewTrie()
 		a.Add("a", 1.0)
 		cycle := &proxyNodeIterator{}
