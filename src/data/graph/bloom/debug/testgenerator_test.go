@@ -20,7 +20,7 @@ var _ = Describe("TestGenerator", func() {
 			{String: "c", Weight: 0.0},
 		}
 		t := debug.NewTestIterator(node.NewNode(), &expected)
-		var generator node.NodeGenerator = debug.NewTestGenerator()
+		generator := debug.NewTestGenerator()
 		items := generator.Items(t)
 		for _, expect := range expected {
 			Expect(items.HasNext()).To(BeTrue())
@@ -28,5 +28,12 @@ var _ = Describe("TestGenerator", func() {
 			Expect(path).To(Equal(expect.String))
 			Expect(item.Root().MatchWeight).To(Equal(expect.Weight))
 		}
+	})
+
+	It("remembers subscribers", func() {
+		generator := debug.NewTestGenerator()
+		Expect(generator.Subscribers).To(HaveLen(0))
+		generator.Subscribe(nil)
+		Expect(generator.Subscribers).To(HaveLen(1))
 	})
 })

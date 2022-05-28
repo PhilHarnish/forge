@@ -2,15 +2,18 @@ package debug
 
 import "github.com/philharnish/forge/src/data/graph/bloom/node"
 
-type testGenerator struct{}
-
-func NewTestGenerator() *testGenerator {
-	return &testGenerator{}
+type TestGenerator struct {
+	Subscribers []node.NodeStateUpdater
 }
 
-func (generator *testGenerator) Items(iterator node.NodeIterator) node.NodeItems {
+func NewTestGenerator() *TestGenerator {
+	return &TestGenerator{}
+}
+
+func (generator *TestGenerator) Items(iterator node.NodeIterator) node.NodeItems {
 	return iterator.Items(generator)
 }
 
-func (generator *testGenerator) Subscribe(setter node.NodeStateUpdater) {
+func (generator *TestGenerator) Subscribe(setter node.NodeStateUpdater) {
+	generator.Subscribers = append(generator.Subscribers, setter)
 }
