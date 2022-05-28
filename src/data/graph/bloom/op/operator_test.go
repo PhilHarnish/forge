@@ -274,21 +274,35 @@ var _ = Describe("process", func() {
 		})
 
 		It("Traverses multiple paths if needed", func() {
-			a := trie.NewTrie()
-			a.Add("a", 1.0)
-			a.Add("aa", .5)
+			a := extend(trie.NewTrie(1.0), "a", "b", "c")
+			a.Add("b", 1.0)
+			a.Add("bb", .5)
 			b := trie.NewTrie()
-			b.Add("b", 0.5)
+			b.Add("d", 0.5)
+			b.Add("dd", 0.25)
 			operation := op.Concat(a, b)
-			Expect(debug.StringChildren(operation, 3)).To(matchers.LookLike(`
-					((Trie: A) + (Trie: B)): AB
-					│◌◌●●
-					└a ->((((Trie: 100 A) + (Trie: B)): AB) || (Trie: B)): aB
-					·│◌●●
-					·├a ->Trie: B
-					·││◌●
-					·│└b●->Trie: 50
-					·└b●->Trie: 50
+			Expect(debug.StringChildren(operation, 5)).To(matchers.LookLike(`
+					((Trie: aBc) + (Trie: D)): aBcD
+					│◌◌●●●●
+					├a ->((Trie: BC) + (Trie: D)): BCD
+					││◌◌◌●●
+					│└b ->((Trie: C) + (Trie: D)): CD
+					│ │◌◌●●
+					│ └c ->Trie: D
+					│  │◌●●
+					│  └d●->Trie: 50 D
+					│   │●●
+					│   └d●->Trie: 25
+					└b ->((((Trie: 100 B) + (Trie: D)): BD) || (Trie: D)): bD
+					·│◌●●●
+					·├b ->Trie: D
+					·││◌●●
+					·│└d●->Trie: 50 D
+					·│ │●●
+					·│ └d●->Trie: 25
+					·└d●->Trie: 50 D
+					· │●●
+					· └d●->Trie: 25
 			`))
 		})
 

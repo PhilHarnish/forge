@@ -15,7 +15,7 @@ type operation struct {
 	labels           []string
 	metadataOperands []node.NodeMetadataProvider
 	node             *node.Node
-	formatting       bool
+	formatting       bool // Used to detect cycles during formatting.
 }
 
 func (op *operation) Root() *node.Node {
@@ -70,6 +70,39 @@ func (op *operation) Metadata(paths []string, items []node.NodeItems) node.NodeM
 	for _, operand := range op.metadataOperands {
 		result = append(result, operand.Metadata(paths, items)...)
 	}
+	return result
+}
+
+func (op *operation) fork(alternate node.NodeIterator) *operation {
+	alternate = op.substitute(0, alternate)
+	exit := op.slice(1, len(op.operands))
+	return &operation{
+		operator: orOperator,
+		operands: []node.NodeIterator{alternate, exit},
+	}
+}
+
+// Return a slice of operands from [start:end].
+func (op *operation) slice(start int, end int) node.NodeIterator {
+	if end-start == 1 {
+		return op.operands[start]
+	}
+	return op.sliceCopy(start, end)
+}
+
+func (op *operation) sliceCopy(start int, end int) *operation {
+	operands := make([]node.NodeIterator, end-start)
+	copy(operands, op.operands[start:end])
+	return &operation{
+		operator: op.operator,
+		operands: operands,
+	}
+}
+
+// Return a copy with `position` replaced with `item`.
+func (op *operation) substitute(position int, item node.NodeIterator) *operation {
+	result := op.sliceCopy(0, len(op.operands))
+	result.operands[0] = item
 	return result
 }
 

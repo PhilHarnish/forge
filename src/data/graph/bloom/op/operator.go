@@ -117,7 +117,6 @@ func processParallel(operation *operation, generator node.NodeGenerator) *operat
 	// Create max.SIZE number of buckets for the edges we find.
 	// This enables O(1) lookup later.
 	outgoingEdgeList := [mask.SIZE]operatorEdge{}
-	// Record outgoing edges when they exceed `edgeThreshold`.
 	availableOutgoingEdges := operatorEdgeHeap{}
 	for _, operand := range operands {
 		items := operand.Items(generator)
@@ -180,29 +179,32 @@ func filterEdge(edge *operatorEdge, operator *operator, nOperands int) *operator
 
 func processSequential(operation *operation, generator node.NodeGenerator) *operatorEdgeHeap {
 	operands := operation.operands
+	if len(operands) <= 1 {
+		panic("Sequential processing unecessary.")
+	}
 	availableOutgoingEdges := operatorEdgeHeap{}
 	operand := operands[0]
-	hasMoreOperands := len(operands) > 1
 	items := generator.Items(operand)
 	for items.HasNext() {
 		path, item := items.Next()
-		if hasMoreOperands && item.Root().LengthsMask&0b1 == 0b1 {
+		if item.Root().Matches() {
 			// This item is a valid location to exit.
 			canKeepGoing := item.Root().LengthsMask > 1
 			if canKeepGoing {
-				// This path branches (keep going vs continue) so use OR.
-				keepGoing := make([]node.NodeIterator, len(operands))
-				copy(keepGoing, operands)
-				keepGoing[0] = item
-				item = Or(Concat(keepGoing...), Concat(operands[1:]...))
+				// This path branches so create fork to both {item, exit}.
+				item = operation.fork(item)
 			} else {
 				// Otherwise, the path continues sequentially.
-				item = Concat(operands[1:]...)
+				item = operation.slice(1, len(operands))
 			}
+		} else {
+			// Path does not fork but must still keep going.
+			item = operation.substitute(0, item)
 		}
 		outgoingEdge := &operatorEdge{
 			path:     path,
 			operands: []node.NodeIterator{item},
+			// NB: `generators` is nil since there is always 1 outgoing choice.
 		}
 		availableOutgoingEdges = append(availableOutgoingEdges, outgoingEdge)
 	}
