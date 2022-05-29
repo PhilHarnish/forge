@@ -66,6 +66,9 @@ func (root *reTrieNode) String() string {
 }
 
 func (root *reTrieNode) capture(position int) {
+	if position < 0 {
+		return
+	}
 	captures := []int{position}
 	if root.captures == nil {
 		root.captures = captures

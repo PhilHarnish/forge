@@ -747,17 +747,24 @@ var _ = Describe("ReTrie syntax", func() {
 
 	It("matches capturing groups", func() {
 		trie := retrie.NewReTrie("(a|b)(x|y)", 1.0)
-		Expect(debug.StringChildren(trie, 2)).To(matchers.LookLike(`
+		Expect(debug.StringChildren(trie, 3)).To(matchers.LookLike(`
 			ReTrie: abxy
+			│Subscribe(ReTrieItems[0])
 			│◌◌●
 			├a ->ReTrie: xy
+			││Subscribe(ReTrieItems[1 2])
 			││◌●
 			│├x●->ReTrie: 100
+			││ Subscribe(ReTrieItems[3])
 			│└y●->ReTrie: 100
+			│  Subscribe(ReTrieItems[3])
 			└b ->ReTrie: xy
+			·│Subscribe(ReTrieItems[1 2])
 			·│◌●
 			·├x●->ReTrie: 100
+			·│ Subscribe(ReTrieItems[3])
 			·└y●->ReTrie: 100
+			·  Subscribe(ReTrieItems[3])
 		`))
 	})
 
@@ -765,21 +772,26 @@ var _ = Describe("ReTrie syntax", func() {
 		trie := retrie.NewReTrie("(a|b)?(x|y)", 1.0)
 		Expect(debug.StringChildren(trie, 2)).To(matchers.LookLike(`
 			ReTrie: abxy
+			│Subscribe(ReTrieItems[0 1 2])
 			│◌●●
 			├a ->ReTrie: xy
+			││Subscribe(ReTrieItems[1 2])
 			││◌●
 			│├x●->ReTrie: 100
 			│└y●->ReTrie: 100
 			├b ->ReTrie: xy
+			││Subscribe(ReTrieItems[1 2])
 			││◌●
 			│├x●->ReTrie: 100
 			│└y●->ReTrie: 100
 			├x●->ReTrie: 100
+			│ Subscribe(ReTrieItems[3])
 			└y●->ReTrie: 100
+			· Subscribe(ReTrieItems[3])
 		`))
 	})
 
-	It("Handles [ac]*c+[de]", func() {
+	It("handles [ac]*c+[de]", func() {
 		trie := retrie.NewReTrie("[ac]*c+[de]", 1.0)
 		Expect(debug.StringPath(trie, "aacd")).To(matchers.LookLike(`
 			ReTrie: aCde

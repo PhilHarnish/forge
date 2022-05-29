@@ -65,13 +65,17 @@ var _ = Describe("Anagram syntax", func() {
 			·├x ->ReTrieAnagram: BY
 			·││◌◌◌◌◌●
 			·│└y ->ReTrie: B
+			·│ │Subscribe(ReTrieItems[0])
 			·│ │◌◌◌◌●
 			·│ └bbbb●->ReTrie: 100
+			·│      Subscribe(ReTrieItems[1])
 			·└y ->ReTrieAnagram: BX
 			· │◌◌◌◌◌●
 			· └x ->ReTrie: B
+			·  │Subscribe(ReTrieItems[0])
 			·  │◌◌◌◌●
 			·  └bbbb●->ReTrie: 100
+			·       Subscribe(ReTrieItems[1])
 		`))
 	})
 
@@ -94,10 +98,10 @@ var _ = Describe("Anagram syntax", func() {
 			·│◌●◌●
 			·└a●->ReTrie: 100 AB
 			· │●◌●
-			· ├a ->ReTrie: B
+			· ├a ->ReTrieAnagram: B
 			· ││◌●
 			· │└b●->ReTrie: 100
-			· └b ->ReTrie: A
+			· └b ->ReTrieAnagram: A
 			·  │◌●
 			·  └a●->ReTrie: 100
 		`))
@@ -107,20 +111,30 @@ var _ = Describe("Anagram syntax", func() {
 		trie := retrie.NewReTrie(`<([ab])([bc])>`, 1.0)
 		Expect(debug.StringChildren(trie, 5)).To(matchers.LookLike(`
 			ReTrie: abc
+			│Subscribe(ReTrieItems[0 2])
 			│◌◌●
 			├a ->ReTrieAnagram: bc
+			││Subscribe(ReTrieItems[1])
 			││◌●
 			│├b●->ReTrie: 100
+			││ Subscribe(ReTrieItems[1 3])
 			│└c●->ReTrie: 100
+			│  Subscribe(ReTrieItems[1 3])
 			├b ->((ReTrieAnagram: bc) || (ReTrieAnagram: ab)): abc
+			││Subscribe(ReTrieItems[1 3])
 			││◌●
 			│├a●->ReTrie: 100
+			││ Subscribe(ReTrieItems[1 3])
 			│├b●->((ReTrie: 100) || (ReTrie: 100)): 100
 			│└c●->ReTrie: 100
+			│  Subscribe(ReTrieItems[1 3])
 			└c ->ReTrieAnagram: ab
+			·│Subscribe(ReTrieItems[3])
 			·│◌●
 			·├a●->ReTrie: 100
+			·│ Subscribe(ReTrieItems[1 3])
 			·└b●->ReTrie: 100
+			·  Subscribe(ReTrieItems[1 3])
 		`))
 	})
 
@@ -128,11 +142,14 @@ var _ = Describe("Anagram syntax", func() {
 		trie := retrie.NewReTrie(`<(a?b?c?)(abc)>`, 1.0)
 		Expect(debug.StringPath(trie, "abc")).To(matchers.LookLike(`
 			ReTrie: ABC
+			│Subscribe(ReTrieItems[0 1 2])
 			│◌◌◌●●●●
 			├a ->ReTrie: aBC
+			││Subscribe(ReTrieItems[1])
 			││◌◌●●●●
 			│├abc●->ReTrie: 100
 			│├b ->ReTrie: abC
+			│││Subscribe(ReTrieItems[1])
 			│││◌●●●●
 			││├abc●->ReTrie: 100
 			││└c●->((ReTrieAnagram: 100 abc) || (ReTrieAnagram: ABC)): 100 abc
@@ -152,16 +169,21 @@ var _ = Describe("Anagram syntax", func() {
 			ReTrie: AbcD
 			│◌◌●●●
 			└a ->ReTrie: bcD
+			·│Subscribe(ReTrieItems[0 1 2 3])
 			·│◌●●●
 			·├b ->ReTrie: cD
+			·││Subscribe(ReTrieItems[1 3])
 			·││◌●●
 			·│├c ->ReTrie: D
+			·│││Subscribe(ReTrieItems[1 3])
 			·│││◌●
 			·││└d●->ReTrie: 100
 			·│└d●->ReTrie: 100
 			·├c ->ReTrie: bD
+			·││Subscribe(ReTrieItems[1 3])
 			·││◌●●
 			·│├b ->ReTrie: D
+			·│││Subscribe(ReTrieItems[1 3])
 			·│││◌●
 			·││└d●->ReTrie: 100
 			·│└d●->ReTrie: 100

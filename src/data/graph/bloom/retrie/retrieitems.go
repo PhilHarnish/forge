@@ -13,10 +13,14 @@ type reTrieItems struct {
 }
 
 func newTrieItems(generator node.NodeGenerator, root *reTrieNode) node.NodeItems {
-	return &reTrieItems{
+	result := &reTrieItems{
 		generator: generator,
 		root:      root,
 	}
+	if len(root.captures) > 0 {
+		generator.Subscribe(result)
+	}
+	return result
 }
 
 func (items *reTrieItems) HasNext() bool {

@@ -148,7 +148,7 @@ var _ = Describe("Special syntax", func() {
 		retrie.Register("a", retrie.NewReTrie("aab", 1.0))
 		retrie.Register("b", retrie.NewReTrie("abb", 1.0))
 		retrie.Register("c", retrie.NewReTrie("bbb", 1.0))
-		trie := retrie.NewReTrie("({a}|{b}|{c}|aba)", 1.0)
+		trie := retrie.NewReTrie("(?:{a}|{b}|{c}|aba)", 1.0)
 		Expect(debug.StringChildren(trie, 4)).To(matchers.LookLike(`
 			ReTrie: aB
 			│◌◌◌●
@@ -166,7 +166,7 @@ var _ = Describe("Special syntax", func() {
 	It("merges duplicate expressions", func() {
 		retrie.Register("a", retrie.NewReTrie("ab|aba|abaa", 1.0))
 		retrie.Register("b", retrie.NewReTrie("ab|aba|abaa", 1.0))
-		trie := retrie.NewReTrie("({a}|{b}|{b}|{a}|ab|aba|abaa)", 1.0)
+		trie := retrie.NewReTrie("(?:{a}|{b}|{b}|{a}|ab|aba|abaa)", 1.0)
 		Expect(debug.StringChildren(trie, 4)).To(matchers.LookLike(`
 			ReTrie: AB
 			│◌◌●●●
