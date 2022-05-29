@@ -6,8 +6,9 @@ import (
 )
 
 type TestIterator struct {
-	root  *node.Node
-	items *TestItems
+	root          *node.Node
+	items         *TestItems
+	Subscriptions []node.NodeStateUpdater
 }
 
 func NewTestIterator(root *node.Node, items *TestItems) *TestIterator {
@@ -26,7 +27,14 @@ func (iterator *TestIterator) Items(generator node.NodeGenerator) node.NodeItems
 	if len(*iterator.items) > 0 {
 		*result = append(*result, *iterator.items...)
 	}
+	for _, subscription := range iterator.Subscriptions {
+		generator.Subscribe(subscription)
+	}
 	return result
+}
+
+func (iterator *TestIterator) Subscribe(subscription node.NodeStateUpdater) {
+	iterator.Subscriptions = append(iterator.Subscriptions, subscription)
 }
 
 func (iterator *TestIterator) String() string {

@@ -14,6 +14,10 @@ func (generator *TestGenerator) Items(iterator node.NodeIterator) node.NodeItems
 	return iterator.Items(generator)
 }
 
+func (generator *TestGenerator) ReserveNext() node.NodeGenerator {
+	return NewTestGenerator()
+}
+
 func (generator *TestGenerator) Subscribe(setter node.NodeStateUpdater) {
 	generator.Subscribers = append(generator.Subscribers, setter)
 }

@@ -36,4 +36,11 @@ var _ = Describe("TestGenerator", func() {
 		generator.Subscribe(nil)
 		Expect(generator.Subscribers).To(HaveLen(1))
 	})
+
+	It("should return new generator from ReserveNext()", func() {
+		a := debug.NewTestGenerator()
+		b := a.ReserveNext()
+		a.Subscribe(nil)
+		Expect(a).NotTo(Equal(b))
+	})
 })

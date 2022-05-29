@@ -10,7 +10,7 @@ import (
 )
 
 var _ = Describe("StringChildren", func() {
-	It("Produces shallow string results", func() {
+	It("produces shallow string results", func() {
 		t := trie.NewTrie(1)
 		t.Add("a", 1.0)
 		t.Add("b", 1.0)
@@ -22,7 +22,7 @@ var _ = Describe("StringChildren", func() {
 		`))
 	})
 
-	It("Produces deeper string results", func() {
+	It("produces deeper string results", func() {
 		child := trie.NewTrie(1)
 		child.Add("a", 1.0)
 		child.Add("b", 1.0)
@@ -38,7 +38,20 @@ var _ = Describe("StringChildren", func() {
 		`))
 	})
 
-	It("Alerts when there are duplicate children", func() {
+	It("illustrates when there are subscriptions", func() {
+		iterator := debug.NewTestIterator(node.NewNode(), &debug.TestItems{
+			{String: "a"}, {String: "b"},
+		})
+		iterator.Subscribe(nil)
+		Expect(debug.StringChildren(iterator, 2)).To(matchers.LookLike(`
+			TestIterator
+			│Subscribe(%!s(<nil>))
+			├a ->TestIterator
+			└b ->TestIterator
+		`))
+	})
+
+	It("alerts when there are duplicate children", func() {
 		iterator := debug.NewTestIterator(node.NewNode(), &debug.TestItems{
 			{String: "a"}, {String: "b"}, {String: "b"}, {String: "a"},
 		})
@@ -53,7 +66,7 @@ var _ = Describe("StringChildren", func() {
 		`))
 	})
 
-	It("Alerts when children have illegal paths", func() {
+	It("alerts when children have illegal paths", func() {
 		iterator := debug.NewTestIterator(node.NewNode(), &debug.TestItems{
 			{String: "a"}, {String: "$"},
 		})
@@ -65,7 +78,7 @@ var _ = Describe("StringChildren", func() {
 		`))
 	})
 
-	It("Alerts when children unsorted weights", func() {
+	It("alerts when children unsorted weights", func() {
 		iterator := debug.NewTestIterator(node.NewNode(), &debug.TestItems{
 			{String: "a", Weight: 0.0},
 			{String: "b", Weight: 0.5},
@@ -81,7 +94,7 @@ var _ = Describe("StringChildren", func() {
 		`))
 	})
 
-	It("Follows specified path", func() {
+	It("follows specified path", func() {
 		child := trie.NewTrie(1)
 		parent := trie.NewTrie()
 		parent.Link("a", child)

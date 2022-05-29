@@ -40,16 +40,9 @@ func stringPathChildrenWithPrefix(iterator node.NodeIterator, base string, remai
 	results := []string{
 		nodeString,
 	}
-	if iterator.Root().LengthsMask > 1 {
-		results = append(results, base+"│"+mask.LengthString(iterator.Root().LengthsMask))
-	}
-	items := node.NodeGenerateAll.Items(order.Alphabetized(iterator))
-	seen := mask.Mask(0)
-	lastWeight := math.Inf(1)
-	for items.HasNext() {
-		path, item := items.Next()
-		edge, _ := utf8.DecodeRuneInString(path)
-		edgeMask, err := mask.AlphabetMask(edge)
+	generator := NewTestGenerator()
+	items := generator.Items(order.Alphabetized(iterator))
+	getLinePrefix := func() (string, string) {
 		line := "├"
 		prefix := "│"
 		if !items.HasNext() {
@@ -60,6 +53,24 @@ func stringPathChildrenWithPrefix(iterator node.NodeIterator, base string, remai
 				prefix = " "
 			}
 		}
+		return base + line, base + prefix
+	}
+	if len(generator.Subscribers) > 0 {
+		for _, subscriber := range generator.Subscribers {
+			_, prefix := getLinePrefix()
+			results = append(results, fmt.Sprintf("%sSubscribe(%s)", prefix, subscriber))
+		}
+	}
+	if iterator.Root().LengthsMask > 1 {
+		results = append(results, base+"│"+mask.LengthString(iterator.Root().LengthsMask))
+	}
+	seen := mask.Mask(0)
+	lastWeight := math.Inf(1)
+	for items.HasNext() {
+		path, item := items.Next()
+		edge, _ := utf8.DecodeRuneInString(path)
+		edgeMask, err := mask.AlphabetMask(edge)
+		line, prefix := getLinePrefix()
 		prefix += strings.Repeat(" ", len(path)-1)
 		matchString := " "
 		if item.Root().Matches() {
@@ -70,16 +81,16 @@ func stringPathChildrenWithPrefix(iterator node.NodeIterator, base string, remai
 			childRemainingPath = remainingPath[len(path):]
 		}
 		results = append(results, fmt.Sprintf("%s%s%s->%s",
-			base+line, path, matchString, stringPathChildrenWithPrefix(item, base+prefix, childRemainingPath, remaining-1)))
+			line, path, matchString, stringPathChildrenWithPrefix(item, prefix, childRemainingPath, remaining-1)))
 		if remainingPath != "" && childRemainingPath == "" {
 			// Child was not expanded. Summarize instead.
 			childSummary := stringChildSummary(item)
 			if childSummary != "" {
-				results = append(results, fmt.Sprintf("%s%s└%s", base, prefix, childSummary))
+				results = append(results, fmt.Sprintf("%s└%s", prefix, childSummary))
 			}
 		}
 		// Check for errors.
-		horizontalLine := horizontalLineReplacer.Replace(base + prefix)
+		horizontalLine := horizontalLineReplacer.Replace(prefix)
 		if err != nil {
 			results = append(results, fmt.Sprintf(`%s> Invalid path: %s`, horizontalLine, err.Error()))
 		}
