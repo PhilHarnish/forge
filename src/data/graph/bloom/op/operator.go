@@ -54,14 +54,14 @@ type operator struct {
 	edgePolicy      edgePolicy
 }
 
-type processMethod int
+type processMethod = int
 
 const (
 	parallel processMethod = iota
 	sequential
 )
 
-type maxWeightPolicy int
+type maxWeightPolicy = int
 
 const (
 	useLargest maxWeightPolicy = iota
