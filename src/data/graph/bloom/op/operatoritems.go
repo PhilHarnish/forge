@@ -23,10 +23,6 @@ func (items *operatorItems) HasNext() bool {
 
 func (items *operatorItems) Next() (string, node.NodeIterator) {
 	next := items.getHeap().Next()
-	if len(next.operands) == 1 {
-		// Operation only needed for 1+ arguments.
-		return next.path, next.operands[0]
-	}
 	nextOperation := &operation{
 		operator:   items.operation.operator,
 		operands:   next.operands,
