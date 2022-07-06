@@ -38,19 +38,6 @@ var _ = Describe("StringChildren", func() {
 		`))
 	})
 
-	It("illustrates when there are subscriptions", func() {
-		iterator := debug.NewTestIterator(node.NewNode(), &debug.TestItems{
-			{String: "a"}, {String: "b"},
-		})
-		iterator.Subscribe(nil)
-		Expect(debug.StringChildren(iterator, 2)).To(matchers.LookLike(`
-			TestIterator
-			│Subscribe(%!s(<nil>))
-			├a ->TestIterator
-			└b ->TestIterator
-		`))
-	})
-
 	It("alerts when there are duplicate children", func() {
 		iterator := debug.NewTestIterator(node.NewNode(), &debug.TestItems{
 			{String: "a"}, {String: "b"}, {String: "b"}, {String: "a"},

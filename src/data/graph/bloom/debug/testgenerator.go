@@ -3,7 +3,6 @@ package debug
 import "github.com/philharnish/forge/src/data/graph/bloom/node"
 
 type TestGenerator struct {
-	Subscribers []node.NodeStateUpdater
 }
 
 func NewTestGenerator() *TestGenerator {
@@ -16,8 +15,4 @@ func (generator *TestGenerator) Items(iterator node.NodeIterator) node.NodeItems
 
 func (generator *TestGenerator) ReserveNext() node.NodeGenerator {
 	return NewTestGenerator()
-}
-
-func (generator *TestGenerator) Subscribe(setter node.NodeStateUpdater) {
-	generator.Subscribers = append(generator.Subscribers, setter)
 }

@@ -55,12 +55,6 @@ func stringPathChildrenWithPrefix(iterator node.NodeIterator, base string, remai
 		}
 		return base + line, base + prefix
 	}
-	if len(generator.Subscribers) > 0 {
-		for _, subscriber := range generator.Subscribers {
-			_, prefix := getLinePrefix()
-			results = append(results, fmt.Sprintf("%sSubscribe(%s)", prefix, subscriber))
-		}
-	}
 	if iterator.Root().LengthsMask > 1 {
 		results = append(results, base+"│"+mask.LengthString(iterator.Root().LengthsMask))
 	}

@@ -29,18 +29,4 @@ var _ = Describe("TestGenerator", func() {
 			Expect(item.Root().MatchWeight).To(Equal(expect.Weight))
 		}
 	})
-
-	It("remembers subscribers", func() {
-		generator := debug.NewTestGenerator()
-		Expect(generator.Subscribers).To(HaveLen(0))
-		generator.Subscribe(nil)
-		Expect(generator.Subscribers).To(HaveLen(1))
-	})
-
-	It("should return new generator from ReserveNext()", func() {
-		a := debug.NewTestGenerator()
-		b := a.ReserveNext()
-		a.Subscribe(nil)
-		Expect(a).NotTo(Equal(b))
-	})
 })

@@ -31,11 +31,4 @@ var _ = Describe("TestIterator", func() {
 			└c ->TestIterator
 		`))
 	})
-
-	It("remembers subscriptions", func() {
-		t := debug.NewTestIterator(node.NewNode(), &debug.TestItems{})
-		Expect(t.Subscriptions).To(HaveLen(0))
-		t.Subscribe(nil)
-		Expect(t.Subscriptions).To(HaveLen(1))
-	})
 })
