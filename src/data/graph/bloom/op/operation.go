@@ -27,12 +27,19 @@ func (op *operation) Items(generator node.NodeGenerator) node.NodeItems {
 }
 
 func (op *operation) String() string {
+	operands := op.operands
+	if op.operator.processMethod == sequential {
+		operands = operands[sequentialOffset:]
+	}
+	if len(operands) == 1 {
+		return operands[0].iterator.String()
+	}
 	if op.formatting {
 		return "<cycle>"
 	}
 	op.formatting = true
 	result := node.Format(
-		fmt.Sprintf(op.operator.template, formatOperands(op.operator.infix, op.operands)),
+		fmt.Sprintf(op.operator.template, formatOperands(op.operator.infix, operands)),
 		op.Root(),
 	)
 	op.formatting = false
